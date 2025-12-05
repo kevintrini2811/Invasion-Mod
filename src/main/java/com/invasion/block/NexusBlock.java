@@ -1,5 +1,9 @@
 package com.invasion.block;
 
+import com.invasion.nexus.Nexus;
+import com.invasion.nexus.WorldNexusStorage;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.item.InvItems;
@@ -52,8 +56,42 @@ public class NexusBlock extends BlockWithEntity {
     }
 
     @Override
-    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!stack.isOf(InvItems.MATERIAL_PROBE) && !stack.isOf(InvItems.NEXUS_ADJUSTER) && !stack.getRegistryEntry().matchesKey(InvItems.DEBUG_WAND)) {
+    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world,
+                                             BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+
+        // SERVER: Nexus für die Commands merken
+        if (!world.isClient) {
+            ServerWorld sw = (ServerWorld) world;
+
+            world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(be -> {
+                NexusBlockEntity nexusBe = (NexusBlockEntity) be;
+
+                // Über die BlockEntity den Nexus holen (erzwingt, dass er in WorldNexusStorage existiert)
+                var access = nexusBe.getNexus();
+                if (access instanceof Nexus nexus) {
+                    WorldNexusStorage storage = WorldNexusStorage.of(sw);
+                    if (storage.setActiveNexus(nexus)) {
+                        player.sendMessage(
+                                Text.literal("Nexus für /invasion-Befehle ausgewählt.")
+                                        .formatted(Formatting.GREEN),
+                                false
+                        );
+                    } else {
+                        player.sendMessage(
+                                Text.literal("Ein anderer Nexus ist bereits aktiv.")
+                                        .formatted(Formatting.RED),
+                                false
+                        );
+                    }
+                }
+            });
+        }
+
+        // Vorhandenes Verhalten (GUI öffnen) beibehalten
+        if (!stack.isOf(InvItems.MATERIAL_PROBE)
+                && !stack.isOf(InvItems.NEXUS_ADJUSTER)
+                && !stack.getRegistryEntry().matchesKey(InvItems.DEBUG_WAND)) {
+
             NamedScreenHandlerFactory factory = createScreenHandlerFactory(state, world, pos);
             if (factory != null) {
                 player.openHandledScreen(factory);
@@ -63,6 +101,7 @@ public class NexusBlock extends BlockWithEntity {
 
         return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
+
 
     @Override
     public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {

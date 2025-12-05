@@ -72,10 +72,9 @@ public class WorldNexusStorage extends PersistentState {
         });
         resumed = false;
 
-        activeNexus = activeNexus.filter(nexusId -> {
-            Nexus nexus = instances.get(nexusId);
-            return nexus != null && (nexus.isActivating() || nexus.isActive());
-        });
+        // Aktiven Nexus nur vergessen, wenn er wirklich nicht mehr existiert
+        activeNexus = activeNexus.filter(nexusId -> instances.containsKey(nexusId));
+
 
         if (!instances.isEmpty()) {
             markDirty();

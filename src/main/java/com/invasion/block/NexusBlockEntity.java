@@ -43,6 +43,9 @@ public class NexusBlockEntity extends BlockEntity implements SidedInventory, Nam
         }
         return nexus;
     }
+    public UUID getNexusId() {
+        return nexusId;
+    }
 
     @Override
     public void setWorld(World world) {
