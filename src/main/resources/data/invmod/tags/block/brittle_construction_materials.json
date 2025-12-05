@@ -1,9 +1,15 @@
 {
   "replace": false,
   "values": [
-    "#c:sandstone_blocks",
-    "#c:sandstone_slabs",
-    "#c:sandstone_stairs",
+    "minecraft:sandstone",
+    "minecraft:chiseled_sandstone",
+    "minecraft:cut_sandstone",
+    "minecraft:smooth_sandstone",
+    "minecraft:sandstone_slab",
+    "minecraft:cut_sandstone_slab",
+    "minecraft:smooth_sandstone_slab",
+    "minecraft:sandstone_stairs",
+    "minecraft:smooth_sandstone_stairs",
     "minecraft:bricks",
     "minecraft:nether_bricks",
     "#minecraft:stone_bricks",
