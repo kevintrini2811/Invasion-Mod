@@ -41,7 +41,10 @@ abstract class PathNodeMixin implements ActionablePathNode {
     private static void invasion_after_readFromBuf(PacketByteBuf buf, PathNode target, CallbackInfo info) {
         ((ActionablePathNode)target).setAction(buf.readEnumConstant(PathAction.class));
     }
-
+    /**
+     * @reason Added toString output for debugging path node actions.
+     * @author Cedric
+     */
     @Override
     @Overwrite
     public String toString() {
