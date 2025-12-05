@@ -279,11 +279,16 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
             }
 
             BlockState stateAtNode = world.getBlockState(previousNodePosition);
-            if (PathingUtil.isLadder(stateAtNode)) {
+
+            // Sicherstellen, dass es wirklich eine Leiter ist
+            if (stateAtNode.getBlock() instanceof LadderBlock && stateAtNode.contains(LadderBlock.FACING)) {
                 return stateAtNode.get(LadderBlock.FACING);
             }
+
+            // Alles andere (z.B. Vines) -> keine spezielle Ausrichtung, einfach UP
             return Direction.UP;
         }
+
 
         private PathNode getBridgeNode(int x, int y, int z) {
             PathNode node = getNode(x, y, z);
