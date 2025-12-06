@@ -10,8 +10,11 @@ import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
+import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
+import com.invasion.nexus.Nexus;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.ai.goal.LookAroundGoal;
@@ -33,16 +36,96 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import com.invasion.nexus.NexusAccess;
+
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.World;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 2.8F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
 
     private float supportThisTick;
+    @org.jetbrains.annotations.Nullable
+    private BlockPos currentBuildTarget;
+
+    private void tryEmergencyTowerBuild() {
+        if (terrainModifier.isBusy()) {
+            // Gerade schon mit einem anderen Baujob beschäftigt
+            return;
+        }
+
+        // Zugriff auf Nexus
+        NexusAccess nexus = getNexus();
+        if (nexus == null) {
+            return;
+        }
+
+        World world = getWorld();
+        BlockPos nexusPos = nexus.getOrigin();
+        BlockPos mobPos = this.getBlockPos();
+
+        // Vertikaler Abstand zum Nexus
+        int dy = nexusPos.getY() - mobPos.getY();
+        if (dy <= 2) {
+            // Wir sind fast auf Nexus-Höhe -> kein Turm nötig
+            return;
+        }
+
+        // Horizontaler Abstand (2D) zum Nexus
+        double dx = (nexusPos.getX() + 0.5D) - this.getX();
+        double dz = (nexusPos.getZ() + 0.5D) - this.getZ();
+        double horizDistSq = dx * dx + dz * dz;
+
+        if (horizDistSq > 4.0D * 4.0D) {
+            // Zu weit weg (mehr als ~4 Blöcke horizontal) -> erst näher laufen
+            return;
+        }
+
+        // Sind wir direkt UNTER einer Decke? (z.B. Nexusboden)
+        BlockPos above = mobPos.up();
+        if (world.getBlockState(above).isAir()) {
+            // Über uns ist Luft -> noch nicht direkt unter dem Nexus
+            return;
+        }
+
+        // Richtung zum Nexus bestimmen (nur horizontal)
+        Direction orientation = Direction.getFacing(dx, 0.0D, dz);
+        if (!orientation.getAxis().isHorizontal()) {
+            orientation = this.getHorizontalFacing();
+        }
+
+        // Basis-Position für den Turm: Block auf dem wir stehen
+        BlockPos basePos = mobPos;
+
+        // Sicherstellen, dass wir nicht im Block drin stehen
+        // Sicherstellen, dass wir nicht in einem soliden Block stehen
+        BlockState baseState = world.getBlockState(basePos);
+        if (!PathingUtil.isAirOrReplaceable(baseState)) {
+            // Dann eine Position vor uns nehmen
+            basePos = basePos.offset(orientation);
+        }
+
+
+        // Anzahl der Ebenen, die wir nach oben bauen wollen
+        int layers = Math.min(32, dy + 1); // ausreichend hoch, aber nicht unendlich
+
+        final Direction towerDir = orientation;
+        final int towerLayers = Math.max(4, layers); // mindestens 4 hoch
+
+        this.currentBuildTarget = basePos;
+
+        // Job direkt einreichen (Notifiable: wir selbst)
+        terrainModifier.submitJob(basePos, Notifiable.NONE, p ->
+                terrainBuilder.askBuildLadderTower(p, towerDir, towerLayers)
+        );
+
+    }
+
+
 
     public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, World world) {
         super(type, world);
@@ -106,7 +189,24 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public void mobTick() {
         super.mobTick();
         terrainModifier.onUpdate();
+
+        if (!getWorld().isClient) {
+            // Wenn gerade kein anderer Baujob läuft:
+            if (!terrainModifier.isBusy()) {
+                // Notfall-Turm direkt unter dem Nexus ausprobieren
+                tryEmergencyTowerBuild();
+            }
+
+            // Wenn nach onUpdate + evtl. Emergency-Build nichts mehr zu tun ist,
+            // Build-Target zurücksetzen
+            if (!terrainModifier.isBusy()) {
+                currentBuildTarget = null;
+            }
+        }
     }
+
+
+
 
     @Override
     public void tickMovement() {
@@ -114,6 +214,31 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         terrainBuilder.setBuildRate(1 + supportThisTick * 0.33F);
         supportThisTick = 0;
     }
+
+
+    @Override
+    public void travel(Vec3d movementInput) {
+        if (!this.getWorld().isClient && terrainModifier.isBusy() && currentBuildTarget != null) {
+
+            double maxReach = 4.5D;           // wie im TerrainModifier
+            double maxReachSq = maxReach * maxReach;
+
+            double distSq = this.getEyePos().squaredDistanceTo(
+                    Vec3d.ofCenter(currentBuildTarget)
+            );
+
+            // Erst wenn er WIRKLICH in Reichweite ist, einfrieren
+            if (distSq <= maxReachSq) {
+                super.travel(Vec3d.ZERO);
+                return;
+            }
+        }
+
+        super.travel(movementInput);
+    }
+
+
+
 
     @Override
     public void baseTick() {
@@ -133,27 +258,68 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
+
     @Override
     public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
         if (action.getType() == PathAction.Type.BRIDGE) {
+            // NEU: Build-Target merken
+            this.currentBuildTarget = pos;
             return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildBridge);
         }
 
         if (action.getType() == PathAction.Type.SCAFFOLD) {
+            this.currentBuildTarget = pos;
             return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildScaffoldLayer);
         }
+
+        if (action.getType() == PathAction.Type.TOWER) {
+            Direction dir = action.getOrientation();
+            if (dir == null || !dir.getAxis().isHorizontal()) {
+                dir = getHorizontalFacing();
+            }
+
+            int startY = pos.getY();
+            int targetY = startY;
+            NexusAccess nexus = getNexus();
+            if (nexus != null) {
+                targetY = nexus.getOrigin().getY(); // Y-Höhe des Nexus
+            }
+
+            int diff = targetY - startY;
+            int layers = Math.max(1, diff);      // so viele Layer wie nötig nach oben
+            layers = Math.min(layers, 32);       // Sicherheitslimit, notfalls höher setzen
+
+            final Direction towerDir = dir;
+            final int towerLayers = layers;
+
+            this.currentBuildTarget = pos; // falls noch nicht drin
+
+            return terrainModifier.submitJob(pos, asker, p ->
+                    terrainBuilder.askBuildLadderTower(p, towerDir, towerLayers)
+            );
+        }
+
 
         if (action.getType() == PathAction.Type.LADDER) {
             return terrainModifier.submitJob(pos, asker, p -> {
                 Direction direction = action.getOrientation();
-                if (direction == Direction.UP) {
-                    return terrainBuilder.askBuildLadderTower(p, direction, (int)getRandom().nextTriangular(10, 4));
+                if (direction == null) {
+                    direction = getHorizontalFacing();
                 }
+
+                // NEU:
+                this.currentBuildTarget = p;
+
                 return terrainBuilder.askBuildLadder(p, direction);
             });
         }
+
         return true;
     }
+
+
+
+
 
     @Override
     public void onPathSet() {

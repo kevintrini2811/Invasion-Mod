@@ -251,7 +251,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
                     if (ClimberUtil.canPositionSupportLadder(world, mutable.set(x, y, z), ladderOrientation)) {
                         if (ascentionHeight <= 0 || ascentionHeight > MAX_LADDER_TOWER_HEIGHT) {
-                           // return null;
+                            // return null;
                         }
 
                         return getLadderNode(x, y, z, PathAction.getLadderActionForDirection(ladderOrientation), 1.25F);
@@ -263,6 +263,22 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                     }
                 }
             }
+                // --- NEU: Fallback-Tower, wenn wir direkt unter einer Decke stehen ---
+                // Falls keine sinnvolle Ladder-Orientierung vorhanden war, prüfen wir,
+                // ob direkt über uns ein solider Block ist (z.B. Nexus-Boden).
+                BlockPos.Mutable ceiling = mutable.set(x, y + 1, z);
+                if (!PathingUtil.isAirOrReplaceable(world.getBlockState(ceiling))) {
+                    // Über uns ist ein solider Block -> versuch irgendeine Turm-Richtung
+                    for (Direction dir : Direction.Type.HORIZONTAL) {
+                        if (canPositionFitTower(mutable.set(x, y, z), dir)) {
+                            return getLadderNode(
+                                    x, y, z,
+                                    PathAction.getTowerActionForDirection(dir),
+                                    1.75F
+                            );
+                        }
+                    }
+                }
 
             return node;
         }

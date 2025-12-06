@@ -54,26 +54,68 @@ public class TerrainBuilder implements ITerrainBuild {
         BlockState block = world.getBlockState(mutable.set(pos).move(offset).move(Direction.DOWN));
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
 
+        // NEU: Ladder-State mit richtigem Facing
+        BlockState ladderState = Blocks.LADDER.getDefaultState()
+                .with(LadderBlock.FACING, offset.getOpposite());
+
+
+        // Unterste Ebene direkt über Boden / Einstieg
         if (height == 1) {
+            // Block vor der Leiter (Boden) mit Planks auffüllen
             if (!block.isFullCube(world, mutable)) {
-                builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.OAK_PLANKS.getDefaultState(), (int) (PLANKS_COST / buildRate)));
+                builder.add(new ModifyBlockEntry(
+                        mutable.toImmutable(),
+                        Blocks.OAK_PLANKS.getDefaultState(),
+                        (int) (PLANKS_COST / buildRate)
+                ));
             }
-            if (world.isAir(mutable.set(pos).move(Direction.DOWN))) {
-                builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.LADDER.getDefaultState(), (int) (LADDER_COST / buildRate)));
+
+            // Leiter unterhalb der aktuellen Position setzen,
+            // aber nur wenn da überhaupt eine Leiter dran halten kann
+            mutable.set(pos).move(Direction.DOWN);
+            if (world.isAir(mutable)
+                    && ClimberUtil.canPositionSupportLadder(world, mutable, offset)) {
+                builder.add(new ModifyBlockEntry(
+                        mutable.toImmutable(),
+                        ladderState,
+                        (int) (LADDER_COST / buildRate)
+                ));
             }
         }
 
-        if (!world.getBlockState(mutable.set(pos).move(offset)).isFullCube(world, mutable)) {
-            builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.OAK_PLANKS.getDefaultState(), (int) (PLANKS_COST / buildRate)));
-        }
-        if (!world.getBlockState(pos).isOf(Blocks.LADDER)) {
-            builder.add(new ModifyBlockEntry(pos, Blocks.LADDER.getDefaultState(), (int) (LADDER_COST / buildRate)));
+        // Block vor der Leiter (Scaffold-Wand) auf dieser Höhe schließen
+        mutable.set(pos).move(offset);
+        if (!world.getBlockState(mutable).isFullCube(world, mutable)) {
+            builder.add(new ModifyBlockEntry(
+                    mutable.toImmutable(),
+                    Blocks.OAK_PLANKS.getDefaultState(),
+                    (int) (PLANKS_COST / buildRate)
+            ));
         }
 
+        // Leiter auf der aktuellen Scaffold-Position
+        mutable.set(pos);
+        if (!world.getBlockState(mutable).isOf(Blocks.LADDER)
+                && ClimberUtil.canPositionSupportLadder(world, mutable, offset)) {
+            builder.add(new ModifyBlockEntry(
+                    mutable.toImmutable(),
+                    ladderState,
+                    (int) (LADDER_COST / buildRate)
+            ));
+        }
+
+        // Plattform-Layer: Ring aus Planks um die Leiter herum
         if (scaffold.isPlatformLayer(height)) {
             for (Vec3i i : PosUtils.OFFSET_RING) {
-                if (!i.equals(offset.getVector()) && !world.getBlockState(mutable.set(pos).move(i)).isFullCube(world, mutable)) {
-                    builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.OAK_PLANKS.getDefaultState(), (int) (PLANKS_COST / buildRate)));
+                if (!i.equals(offset.getVector())) {
+                    mutable.set(pos).move(i);
+                    if (!world.getBlockState(mutable).isFullCube(world, mutable)) {
+                        builder.add(new ModifyBlockEntry(
+                                mutable.toImmutable(),
+                                Blocks.OAK_PLANKS.getDefaultState(),
+                                (int) (PLANKS_COST / buildRate)
+                        ));
+                    }
                 }
             }
         }
@@ -81,55 +123,97 @@ public class TerrainBuilder implements ITerrainBuild {
         return builder.build();
     }
 
-    @Override
-    public Stream<ModifyBlockEntry> askBuildLadderTower(BlockPos pos, Direction orientation, int layersToBuild) {
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
 
-        BlockPos.Mutable mutable = pos.mutableCopy();
+    @Override
+    public Stream<ModifyBlockEntry> askBuildLadderTower(BlockPos basePos, Direction orientation, int layersToBuild) {
+        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
         World world = mob.asEntity().getWorld();
 
-        if (!world.getBlockState(mutable.set(pos).move(orientation).move(Direction.DOWN)).isFullCube(world, mutable)) {
-            builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.OAK_PLANKS.getDefaultState(), (int) (PLANKS_COST / buildRate)));
-        }
-        if (world.isAir(mutable.move(Direction.DOWN))) {
-            builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.LADDER.getDefaultState(), (int) (LADDER_COST / buildRate)));
+        if (!orientation.getAxis().isHorizontal()) {
+            orientation = mob.asEntity().getHorizontalFacing();
         }
 
-        for (int i = 0; i < layersToBuild; i++) {
-            if (!world.getBlockState(mutable.set(pos).move(orientation).move(Direction.UP, i)).isFullCube(world, mutable)) {
-                builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.OAK_PLANKS.getDefaultState(), (int) (PLANKS_COST / buildRate)));
+        BlockState ladderState = Blocks.LADDER.getDefaultState()
+                .with(LadderBlock.FACING, orientation.getOpposite());
+
+        BlockPos.Mutable mutable = basePos.mutableCopy();
+
+        // Wenn layersToBuild zu klein ist (oder 0), bau wenigstens 6 hoch,
+        // damit man den Effekt deutlich sieht.
+        int height = Math.max(layersToBuild, 6);
+
+        for (int i = 0; i < height; i++) {
+            // Position der Leiter
+            mutable.set(basePos).move(Direction.UP, i);
+            BlockPos ladderPos = mutable.toImmutable();
+
+            // Support dahinter
+            BlockPos supportPos = ladderPos.offset(orientation);
+
+            if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
+                builder.add(new ModifyBlockEntry(
+                        supportPos,
+                        Blocks.OAK_PLANKS.getDefaultState(),
+                        (int) (PLANKS_COST / buildRate)
+                ));
             }
-            if (world.getBlockState(mutable.move(Direction.UP, i)).isOf(Blocks.LADDER)) {
-                builder.add(new ModifyBlockEntry(mutable.toImmutable(), Blocks.LADDER.getDefaultState(), (int) (LADDER_COST / buildRate)));
-            }
+
+            // Leiter setzen
+            builder.add(new ModifyBlockEntry(
+                    ladderPos,
+                    ladderState,
+                    (int) (LADDER_COST / buildRate)
+            ));
         }
 
         return builder.build();
     }
+
+
+
+
 
     @Override
     public Stream<ModifyBlockEntry> askBuildLadder(BlockPos pos, Direction orientation) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-
         World world = mob.asEntity().getWorld();
-        BlockState ladderState = Blocks.LADDER.getDefaultState().with(LadderBlock.FACING, orientation);
         BlockPos.Mutable mutable = pos.mutableCopy();
 
-        if (!world.getBlockState(pos).isOf(Blocks.LADDER)) {
-            if (!ClimberUtil.canPositionSupportLadder(world, mutable, orientation)) {
-                return Stream.empty();
+        // Leiter nach vorn ausgerichtet
+        BlockState ladderState = Blocks.LADDER.getDefaultState()
+                .with(LadderBlock.FACING, orientation.getOpposite());
+
+        // Wir bauen pauschal 4 Blöcke hoch (kannst du später erhöhen)
+        int height = 4;
+
+        for (int i = 0; i < height; i++) {
+            // Position der Leiter
+            mutable.set(pos).move(Direction.UP, i);
+            BlockPos ladderPos = mutable.toImmutable();
+
+            // Block HINTER der Leiter (Support)
+            BlockPos supportPos = ladderPos.offset(orientation);
+
+            // Support immer aus Planks setzen, wenn nicht voll
+            if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
+                builder.add(new ModifyBlockEntry(
+                        supportPos,
+                        Blocks.OAK_PLANKS.getDefaultState(),
+                        (int) (PLANKS_COST / buildRate)
+                ));
             }
 
-            builder.add(new ModifyBlockEntry(mutable.toImmutable(), ladderState, (int) (LADDER_COST / buildRate)));
-            for (int i = 0; i < 4; i++) {
-                if (ClimberUtil.canPositionSupportLadder(world, mutable.move(Direction.UP), orientation)) {
-                    builder.add(new ModifyBlockEntry(mutable.toImmutable(), ladderState, (int) (LADDER_COST / buildRate)));
-                }
-            }
+            // Leiter selbst setzen – ohne irgendwelche Checks
+            builder.add(new ModifyBlockEntry(
+                    ladderPos,
+                    ladderState,
+                    (int) (LADDER_COST / buildRate)
+            ));
         }
 
         return builder.build();
     }
+
 
     @Override
     public Stream<ModifyBlockEntry> askBuildBridge(BlockPos pos) {
