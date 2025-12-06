@@ -54,11 +54,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     private void tryEmergencyTowerBuild() {
         if (terrainModifier.isBusy()) {
-            // Gerade schon mit einem anderen Baujob beschäftigt
             return;
         }
 
-        // Zugriff auf Nexus
         NexusAccess nexus = getNexus();
         if (nexus == null) {
             return;
@@ -70,8 +68,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         // Vertikaler Abstand zum Nexus
         int dy = nexusPos.getY() - mobPos.getY();
-        if (dy <= 2) {
-            // Wir sind fast auf Nexus-Höhe -> kein Turm nötig
+        if (Math.abs(dy) <= 2) {
+            // fast gleiche Höhe -> nichts bauen
             return;
         }
 
@@ -81,49 +79,61 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         double horizDistSq = dx * dx + dz * dz;
 
         if (horizDistSq > 4.0D * 4.0D) {
-            // Zu weit weg (mehr als ~4 Blöcke horizontal) -> erst näher laufen
+            // Zu weit weg -> erst näher laufen
             return;
         }
 
-        // Sind wir direkt UNTER einer Decke? (z.B. Nexusboden)
-        BlockPos above = mobPos.up();
-        if (world.getBlockState(above).isAir()) {
-            // Über uns ist Luft -> noch nicht direkt unter dem Nexus
-            return;
-        }
-
-        // Richtung zum Nexus bestimmen (nur horizontal)
+        // Richtung zum Nexus (nur horizontal)
         Direction orientation = Direction.getFacing(dx, 0.0D, dz);
         if (!orientation.getAxis().isHorizontal()) {
             orientation = this.getHorizontalFacing();
         }
 
-        // Basis-Position für den Turm: Block auf dem wir stehen
+        // Basis-Position: Block auf dem wir stehen / vor uns
         BlockPos basePos = mobPos;
-
-        // Sicherstellen, dass wir nicht im Block drin stehen
-        // Sicherstellen, dass wir nicht in einem soliden Block stehen
         BlockState baseState = world.getBlockState(basePos);
         if (!PathingUtil.isAirOrReplaceable(baseState)) {
-            // Dann eine Position vor uns nehmen
             basePos = basePos.offset(orientation);
         }
 
+        // Nexus über uns -> Turm nach oben
+        if (dy > 0) {
+            BlockPos above = basePos.up();
+            if (world.getBlockState(above).isAir()) {
+                // Über uns ist Luft -> noch nicht direkt unter der Decke
+                return;
+            }
 
-        // Anzahl der Ebenen, die wir nach oben bauen wollen
-        int layers = Math.min(32, dy + 1); // ausreichend hoch, aber nicht unendlich
+            int layers = Math.min(32, dy + 1);
+            final Direction towerDir = orientation;
+            final int towerLayers = Math.max(4, layers);
 
-        final Direction towerDir = orientation;
-        final int towerLayers = Math.max(4, layers); // mindestens 4 hoch
+            this.currentBuildTarget = basePos;
 
-        this.currentBuildTarget = basePos;
+            terrainModifier.submitJob(basePos, Notifiable.NONE, p ->
+                    terrainBuilder.askBuildLadderTower(p, towerDir, towerLayers)
+            );
+        } else {
+            // Nexus unter uns -> Schacht nach unten
+            BlockPos below = basePos.down();
+            if (world.getBlockState(below).isAir()) {
+                // Unter uns ist Luft -> kein solider Boden zum Reinarbeiten
+                return;
+            }
 
-        // Job direkt einreichen (Notifiable: wir selbst)
-        terrainModifier.submitJob(basePos, Notifiable.NONE, p ->
-                terrainBuilder.askBuildLadderTower(p, towerDir, towerLayers)
-        );
+            int depth = Math.min(32, -dy + 1);
+            final Direction shaftDir = orientation;
+            final int shaftDepth = Math.max(4, depth);
 
+            this.currentBuildTarget = basePos;
+
+            terrainModifier.submitJob(basePos, Notifiable.NONE, p ->
+                    terrainBuilder.askBuildLadderShaftDown(p, shaftDir, shaftDepth)
+            );
+        }
     }
+
+
 
 
 
@@ -282,22 +292,37 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             int targetY = startY;
             NexusAccess nexus = getNexus();
             if (nexus != null) {
-                targetY = nexus.getOrigin().getY(); // Y-Höhe des Nexus
+                targetY = nexus.getOrigin().getY();
             }
 
             int diff = targetY - startY;
-            int layers = Math.max(1, diff);      // so viele Layer wie nötig nach oben
-            layers = Math.min(layers, 32);       // Sicherheitslimit, notfalls höher setzen
+
+            // Sicherstellen, dass wir überhaupt etwas tun
+            if (diff == 0) {
+                diff = 4; // z.B. kleine Standardhöhe nach oben, kannst du anpassen
+            }
 
             final Direction towerDir = dir;
-            final int towerLayers = layers;
 
-            this.currentBuildTarget = pos; // falls noch nicht drin
+            if (diff > 0) {
+                // Nexus liegt höher -> normalen Leiter-Tower nach oben bauen
+                int layersUp = Math.min(diff, 32);
+                this.currentBuildTarget = pos;
 
-            return terrainModifier.submitJob(pos, asker, p ->
-                    terrainBuilder.askBuildLadderTower(p, towerDir, towerLayers)
-            );
+                return terrainModifier.submitJob(pos, asker, p ->
+                        terrainBuilder.askBuildLadderTower(p, towerDir, layersUp)
+                );
+            } else {
+                // Nexus liegt tiefer -> Schacht nach unten bauen
+                int depthDown = Math.min(-diff, 32); // positive Tiefe
+                this.currentBuildTarget = pos;
+
+                return terrainModifier.submitJob(pos, asker, p ->
+                        terrainBuilder.askBuildLadderShaftDown(p, towerDir, depthDown)
+                );
+            }
         }
+
 
 
         if (action.getType() == PathAction.Type.LADDER) {

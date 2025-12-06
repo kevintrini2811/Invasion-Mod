@@ -3,6 +3,9 @@ package com.invasion.entity;
 import java.util.List;
 
 import com.invasion.InvSounds;
+import com.invasion.InvasionMod;
+import com.invasion.entity.ai.builder.TerrainBuilder;
+import com.invasion.entity.ai.builder.TerrainModifier;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.MineBlockGoal;
@@ -37,6 +40,12 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import com.invasion.Notifiable;
+import com.invasion.entity.ai.builder.TerrainBuilder;
+import com.invasion.entity.ai.builder.TerrainModifier;
+import com.invasion.nexus.NexusAccess;
+import net.minecraft.util.math.Direction;
+
 
 public class EntityIMZombie extends AbstractIMZombieEntity {
     static final int OLD_ZOMBIE = 0;
@@ -52,7 +61,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // masSelfDamage = max damage loss before the mob can no longer mine blocks. If health is less than (maxHealth - maxSelfDamage) it stops.
     protected int selfDamage = 2;
     protected int maxSelfDamage = 6;
-
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.0F);
+    private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
     private static DefaultAttributeContainer.Builder createBaseAttributes() {
         return ZombieEntity.createZombieAttributes()
                 .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.19F)
@@ -132,6 +142,101 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
             doFireball();
         }
     }
+    @Override
+    public void mobTick() {
+        super.mobTick();
+
+        terrainModifier.onUpdate();
+
+        if (!getWorld().isClient) {
+            if (!terrainModifier.isBusy()) {
+                tryDigDownToNexus();
+            }
+        }
+    }
+
+
+
+    // Darf dieser Zombie-Typ überhaupt "buddeln"?
+    // Darf dieser konkrete Zombie-Typ nach unten buddeln?
+    private boolean canDigDown() {
+        int tier = getTier();
+        int flavour = getFlavour();
+
+        // Nur die Varianten, die sowieso Blöcke zerstören können:
+        if (tier == 1 && flavour == 0) return true; // T1, Var 0
+        if (tier == 2 && flavour == 0) return true; // T2, Var 0
+        if (isTar()) return true;
+        if (isPigman()) return true;
+        if (isBrute()) return true;
+
+        return false;
+    }
+
+
+
+    /**
+     * Versucht, einen Schacht nach unten in Richtung Nexus zu graben.
+     * Kein Leitern-Bau – nur Blöcke zu AIR machen.
+     */
+    private void tryDigDownToNexus() {
+        // Nur bestimmte Varianten dürfen buddeln
+        if (!canDigDown()) {
+            return;
+        }
+
+        // Wenn eh gerade ein Job läuft -> nichts tun
+        if (terrainModifier.isBusy()) {
+            return;
+        }
+
+        // Nexus bestimmen (über IHasNexus)
+        NexusAccess nexus = getNexus();
+        if (nexus == null) {
+            return;
+        }
+
+        World world = getWorld();
+        BlockPos nexusPos = nexus.getOrigin();
+        BlockPos mobPos = this.getBlockPos();
+
+        // Wir sind interessanter, wenn wir ÜBER dem Nexus stehen
+        int dy = mobPos.getY() - nexusPos.getY(); // Achtung: diesmal MOB - NEXUS
+
+        // Nur buddeln, wenn wir mindestens 3 Blöcke über dem Nexus sind
+        if (dy <= 3) {
+            return;
+        }
+
+        // -> Horizontaler Abstand ist uns erstmal egal
+        // Wenn du willst, kannst du später noch ein Limit nachrüsten.
+
+        // Wenn direkt unter uns schon Luft ist, stehen wir evtl. in einer Höhle
+        // => dann lassen wir es (sonst buddeln sie sich durch die gesamte Map)
+        BlockPos below = mobPos.down();
+        if (world.getBlockState(below).isAir()) {
+            return;
+        }
+
+        // Wie tief wollen wir maximal buddeln?
+        int maxDepthToNexus = dy - 1;              // bissl über Nexus aufhören
+        int depth = Math.min(maxDepthToNexus, 16); // erstmal max. 16 Blöcke
+
+        if (depth <= 0) {
+            return;
+        }
+
+        final int shaftDepth = depth;
+
+        // Job an TerrainModifier übergeben
+        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
+                terrainBuilder.askDigShaftDown(pos, shaftDepth)
+        );
+    }
+
+
+
+
 
     public boolean isTar() {
         return isTar(this);

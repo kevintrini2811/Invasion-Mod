@@ -21,6 +21,7 @@ public class TerrainBuilder implements ITerrainBuild {
     private static final float LADDER_COST = 25;
     private static final float PLANKS_COST = 45;
     private static final float COBBLE_COST = 65;
+    private final float DIG_COST = 35;
 
     private final NexusEntity mob;
     private float buildRate;
@@ -170,7 +171,128 @@ public class TerrainBuilder implements ITerrainBuild {
     }
 
 
+    public Stream<ModifyBlockEntry> askBuildLadderShaftDown(BlockPos basePos, Direction orientation, int depth) {
+        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
+        World world = mob.asEntity().getWorld();
 
+        // Orientierung sicherstellen
+        if (!orientation.getAxis().isHorizontal()) {
+            orientation = mob.asEntity().getHorizontalFacing();
+        }
+
+        BlockState ladderState = Blocks.LADDER.getDefaultState()
+                .with(LadderBlock.FACING, orientation.getOpposite());
+
+        BlockPos.Mutable mutable = basePos.mutableCopy();
+
+        // Tiefe begrenzen
+        int depthClamped = Math.max(1, Math.min(depth, 32));
+
+        for (int i = 1; i <= depthClamped; i++) {
+            // Leiter-Position nach unten
+            mutable.set(basePos).move(Direction.DOWN, i);
+            BlockPos ladderPos = mutable.toImmutable();
+
+            // Support-Block hinter der Leiter
+            BlockPos supportPos = ladderPos.offset(orientation);
+            if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
+                builder.add(new ModifyBlockEntry(
+                        supportPos,
+                        Blocks.OAK_PLANKS.getDefaultState(),
+                        (int) (PLANKS_COST / buildRate)
+                ));
+            }
+
+            // Leiter selbst
+            builder.add(new ModifyBlockEntry(
+                    ladderPos,
+                    ladderState,
+                    (int) (LADDER_COST / buildRate)
+            ));
+        }
+
+        return builder.build();
+    }
+
+
+
+
+
+
+
+
+/**
+     * Hilfsfunktion, falls du so etwas noch nicht hast:
+     * Nur bestimmte Blöcke dürfen zerstört werden
+     * (kein Bedrock, kein Nexus, kein Wasser, etc.).
+     */
+    // Hilfsfunktion: darf dieser Block in Luft verwandelt werden?
+    private boolean canModifyBlock(World world, BlockPos pos) {
+        BlockState state = world.getBlockState(pos);
+
+        // Luft ignorieren
+        if (state.isAir()) {
+            return false;
+        }
+
+        // Unzerstörbare Blöcke (Bedrock etc.) nicht anfassen
+        if (state.getHardness(world, pos) < 0.0F) {
+            return false;
+        }
+
+        // Wenn du bestimmte Blöcke schützen willst, hier ergänzen
+        // z.B. Nexusblock, spezielle Deko, etc.
+
+        return true;
+    }
+
+    /**
+     * Baut einen senkrechten Schacht nach unten, indem Blöcke zu AIR werden.
+     * Es wird eine 2-Blöcke-hohe Luftsäule erzeugt, damit der Mob durchpasst.
+     *
+     * @param basePos Startposition (z.B. Position des Zombies)
+     * @param depth   maximale Tiefe in Blöcken
+     */
+    public Stream<ModifyBlockEntry> askDigShaftDown(BlockPos basePos, int depth) {
+        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
+        World world = mob.asEntity().getWorld();
+
+        // Sicherheitslimit
+        int depthClamped = Math.max(1, Math.min(depth, 32));
+
+        // *** WICHTIGER UNTERSCHIED ***
+        // Wir nehmen NICHT basePos, sondern IMMER die echte Mob-Position
+        BlockPos entityPos = mob.asEntity().getBlockPos();
+        BlockPos.Mutable mutable = entityPos.mutableCopy();
+
+        for (int i = 1; i <= depthClamped; i++) {
+            // Oberer Block dieses "Segments"
+            mutable.set(entityPos).move(Direction.DOWN, i);
+            BlockPos pos0 = mutable.toImmutable();
+
+            // Block direkt darunter -> 2-Blöcke-Höhe
+            mutable.move(Direction.DOWN);
+            BlockPos pos1 = mutable.toImmutable();
+
+            if (canModifyBlock(world, pos0)) {
+                builder.add(new ModifyBlockEntry(
+                        pos0,
+                        Blocks.AIR.getDefaultState(),
+                        (int) (DIG_COST / buildRate)
+                ));
+            }
+
+            if (canModifyBlock(world, pos1)) {
+                builder.add(new ModifyBlockEntry(
+                        pos1,
+                        Blocks.AIR.getDefaultState(),
+                        (int) (DIG_COST / buildRate)
+                ));
+            }
+        }
+
+        return builder.build();
+    }
 
 
     @Override
