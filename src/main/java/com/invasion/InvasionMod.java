@@ -16,6 +16,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
 
+
+
 public class InvasionMod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(InvasionMod.class);
 

@@ -4,6 +4,8 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.NumberRange.IntRange;
 import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
@@ -239,15 +241,22 @@ public class IMWaveSpawner implements Spawner {
 				return true;
 			}
 
-			if (spawnPoint.trySpawnEntity((ServerWorld)nexus.getWorld(), mob)) {
-				successfulSpawns++;
-				if (debugMode) {
-				    InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave() / 1000 + "  Type: " + mob + "  Coords: " + mob.getX() + ", " + mob.getY() + ", " + mob.getZ() + "  θ" + spawnPoint.getAngle() + "  Specified: " + angle);
-				}
+            if (spawnPoint.trySpawnEntity((ServerWorld) nexus.getWorld(), mob)) {
+                successfulSpawns++;
 
-				return true;
-			}
-		}
+                // ➜ HIER: nach erfolgreichem Spawn ins Team packen
+                markAsInvasionAlly(mob);
+
+                if (debugMode) {
+                    InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave()
+                            + "  Mob: " + mob.getName().getString()
+                            + "  Coords: " + mob.getX() + ", " + mob.getY() + ", " + mob.getZ()
+                            + "  θ" + spawnPoint.getAngle() + "  Specified: " + angle);
+                }
+
+                return true;
+            }
+        }
 		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mob.getName().getString() + "' after " + spawnTries + " tries");
 		return false;
 	}
@@ -323,4 +332,30 @@ public class IMWaveSpawner implements Spawner {
         compound.putLong("elapsed", elapsed);
         return compound;
     }
+    private void markAsInvasionAlly(MobEntity mob) {
+        ServerWorld world = (ServerWorld) mob.getWorld();
+        Scoreboard scoreboard = world.getScoreboard();
+
+        // Team holen oder erstellen
+        Team team = scoreboard.getTeam("invasion_allies");
+        if (team == null) {
+            team = scoreboard.addTeam("invasion_allies");
+            team.setFriendlyFireAllowed(false);              // kein Damage untereinander
+            team.setCollisionRule(Team.CollisionRule.NEVER); // optional: keine Kollision
+        }
+
+        // WICHTIG: eindeutigen ScoreHolder-Namen benutzen
+        String holderName = mob.getNameForScoreboard();
+        scoreboard.addScoreHolderToTeam(holderName, team);
+
+        // existende Aggro resetten
+        mob.setTarget(null);
+        mob.setAttacking(null);
+        mob.setAttacker(null);
+    }
+
+
+
+
+
 }

@@ -7,10 +7,84 @@ import java.util.Optional;
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
 
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 
 public interface EntityPatterns {
     Map<Identifier, PatternType> REGISTRY = new HashMap<>();
+
+    // ================================
+    // EXTERNE MOBS AUS ANDEREN MODS
+    // ================================
+
+    // ===== Mutant Monsters (Fuzs) =====
+    EntityPattern MUTANT_ZOMBIE = registerExternal(
+            "mutant_zombie",
+            "mutantmonsters",
+            "mutant_zombie",
+            0.5F
+    );
+
+    EntityPattern MUTANT_CREEPER = registerExternal(
+            "mutant_creeper",
+            "mutantmonsters",
+            "mutant_creeper",
+            0.4F
+    );
+
+    EntityPattern MUTANT_SKELETON = registerExternal(
+            "mutant_skeleton",
+            "mutantmonsters",
+            "mutant_skeleton",
+            0.4F
+    );
+
+    EntityPattern MUTANT_ENDERMAN = registerExternal(
+            "mutant_enderman",
+            "mutantmonsters",
+            "mutant_enderman",
+            0.3F
+    );
+
+    EntityPattern MUTANT_SNOW_GOLEM = registerExternal(
+            "mutant_snow_golem",
+            "mutantmonsters",
+            "mutant_snow_golem",
+            0.3F
+    );
+
+    EntityPattern SPIDER_PIG = registerExternal(
+            "spider_pig",
+            "mutantmonsters",
+            "spider_pig",
+            0.3F
+    );
+
+
+    /**
+     * Registriert ein EntityPattern für einen Mob aus einer anderen Mod, falls vorhanden.
+     * Gibt null zurück, wenn die Entity-ID nicht existiert.
+     */
+    @SuppressWarnings("unchecked")
+    private static EntityPattern registerExternal(String name, String modid, String entityName, float spawnWeight) {
+        Identifier entityId = Identifier.of(modid, entityName);
+        EntityType<?> type = Registries.ENTITY_TYPE.get(entityId);
+
+        // Prüfen, ob es den EntityType wirklich gibt
+        if (!Registries.ENTITY_TYPE.getId(type).equals(entityId)) {
+            InvasionMod.LOGGER.warn("Mod-Mob {}:{} nicht gefunden, übersprungen.", modid, entityName);
+            return null;
+        }
+
+        EntityType<? extends MobEntity> mobType = (EntityType<? extends MobEntity>) type;
+        return register(name, new EntityPattern.Builder(mobType), spawnWeight);
+    }
+
+    // ================================
+    // INTERNE INVASION-MOBS (DEINE)
+    // ================================
 
     EntityPattern ZOMBIE_T1_ANY = register("zombie_t1_any", new EntityPattern.Builder(InvEntities.ZOMBIE).addTier(1, 1).addFlavour(0, 3).addFlavour(1, 1), 1);
     EntityPattern ZOMBIE_T2_ANY_BASIC = register("zombie_t2_any_basic", new EntityPattern.Builder(InvEntities.ZOMBIE).addTier(2, 1).addFlavour(0, 2).addFlavour(1, 1).addFlavour(2, 0.4F), 1);

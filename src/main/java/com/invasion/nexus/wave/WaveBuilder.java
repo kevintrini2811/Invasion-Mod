@@ -133,36 +133,65 @@ public class WaveBuilder {
         float mobScale = (float) Math.pow(1.090000033378601D, waveNumber - 11);
         float timeScale = 1 + (waveNumber - 11) * 0.04F;
 
-        return Wave.builder((int) (timeScale * 120000), (int) (timeScale * 35000))
-                // ENTRY 1: Früher Teil der Wave
-                .entry(WaveEntry.random()
-                        .entry(EntityPatterns.ZOMBIE_T1_ANY, 1.5F)
-                        .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2.2F)
-                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.26F)
-                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 0.8F)
-                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.5F)
-                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.054F) // <-- doppelt!
-                        .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
-                        .entry(EntityPatterns.THROWER_T1, 0.18F)
-                        .entry(EntityPatterns.THROWER_T2, 0.054F)
-                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.054F)
-                        .entry(EntityPatterns.IMP_T1, 0.4F)
-                        .end((int) (timeScale * 30000))
-                        .amount((int) (mobScale * 7))
-                        .granularity(2000)
-                        .angle(45)
-                        .minSpawns(5))
+        // Wir bauen mit einem Builder-Objekt, damit wir Zwischenschritte machen können
+        var builder = Wave.builder((int) (timeScale * 120000), (int) (timeScale * 35000));
 
-                // ENTRY 2: Mittelteil, nur Spiders + Engineer
-                .entry(WaveEntry.random()
-                        .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
-                        .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F)
+        // ENTRY 1: Früher Teil der Wave (leicht bereinigt: Pigman T3 statt doppeltem T2)
+        // ENTRY 1: Früher Teil der Wave mit Mutant-Monstern
+        {
+            var entry = WaveEntry.random()
+                    .entry(EntityPatterns.ZOMBIE_T1_ANY, 1.2F)
+                    .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2.0F)
+                    .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.3F)
+                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 0.8F)
+                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.5F)
+                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 0.05F)
+                    .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
+                    .entry(EntityPatterns.THROWER_T1, 0.18F)
+                    .entry(EntityPatterns.THROWER_T2, 0.05F)
+                    .entry(EntityPatterns.CREEPER_T1_BASIC, 0.05F)
+                    .entry(EntityPatterns.IMP_T1, 0.4F);
+
+            // Mutant Monsters sicher hinzufügen, falls vorhanden
+            if (EntityPatterns.MUTANT_ZOMBIE != null)
+                entry.entry(EntityPatterns.MUTANT_ZOMBIE, 0.05F);
+            if (EntityPatterns.MUTANT_SKELETON != null)
+                entry.entry(EntityPatterns.MUTANT_SKELETON, 0.04F);
+            if (EntityPatterns.MUTANT_CREEPER != null)
+                entry.entry(EntityPatterns.MUTANT_CREEPER, 0.01F);
+            if (EntityPatterns.MUTANT_ENDERMAN != null)
+                entry.entry(EntityPatterns.MUTANT_ENDERMAN, 0.005F);
+            if (EntityPatterns.SPIDER_PIG != null)
+                entry.entry(EntityPatterns.SPIDER_PIG, 0.02F);
+
+            // abschließende Parameter
+            entry.end((int) (timeScale * 30000))
+                    .amount((int) (mobScale * 8))
+                    .granularity(2000)
+                    .angle(45)
+                    .minSpawns(5);
+
+            builder.entry(entry);
+        }
+
+
+        // ENTRY 2: Mittelteil – Spider, Engineer + Mutant-Mobs (nur, wenn verfügbar)
+        var midPool = WaveEntry.random()
+                .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
+                .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F);
+
+
+
+        builder.entry(
+                midPool
                         .end((int) (timeScale * 90000))
                         .amount((int) (mobScale * 3))
-                        .granularity(500))
+                        .granularity(500)
+        );
 
-                // ENTRY 3: kurzer Burst (~65–67s)
-                .entry(WaveEntry.random()
+        // ENTRY 3: kurzer Burst (~65–67s)
+        builder.entry(
+                WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 1.5F)
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.7F)
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 0.35F)
@@ -180,10 +209,12 @@ public class WaveBuilder {
                         .amount((int) (mobScale * 7))
                         .granularity(500)
                         .angle(25)
-                        .minSpawns(3))
+                        .minSpawns(3)
+        );
 
-                // ENTRY 4: kurzer Burst (~95–97s)
-                .entry(WaveEntry.random()
+        // ENTRY 4: kurzer Burst (~95–97s)
+        builder.entry(
+                WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2F)
                         .entry(EntityPatterns.ZOMBIE_T1_ANY, 3F)
                         .entry(EntityPatterns.SPIDER_T3_ANY, 1F)
@@ -192,7 +223,11 @@ public class WaveBuilder {
                         .amount((int) (mobScale * 6))
                         .granularity(500)
                         .angle(45)
-                        .minSpawns(2));
+                        .minSpawns(2)
+        );
+
+        return builder;
     }
+
 
 }
