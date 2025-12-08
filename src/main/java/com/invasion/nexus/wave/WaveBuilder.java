@@ -132,22 +132,36 @@ public class WaveBuilder {
     private static Wave.Builder generateExtendedWave(int waveNumber) {
         float mobScale = (float) Math.pow(1.090000033378601D, waveNumber - 11);
         float timeScale = 1 + (waveNumber - 11) * 0.04F;
+
         return Wave.builder((int) (timeScale * 120000), (int) (timeScale * 35000))
+                // ENTRY 1: Früher Teil der Wave
                 .entry(WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_T1_ANY, 1.5F)
                         .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2.2F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.26F)
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 0.8F)
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.5F)
-                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.054F)
+                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.054F) // <-- doppelt!
                         .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
                         .entry(EntityPatterns.THROWER_T1, 0.18F)
                         .entry(EntityPatterns.THROWER_T2, 0.054F)
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.054F)
-                        .entry(EntityPatterns.IMP_T1, 0.4F).end((int) (timeScale * 30000)).amount((int) (mobScale * 7)).granularity(2000).angle(45).minSpawns(5))
+                        .entry(EntityPatterns.IMP_T1, 0.4F)
+                        .end((int) (timeScale * 30000))
+                        .amount((int) (mobScale * 7))
+                        .granularity(2000)
+                        .angle(45)
+                        .minSpawns(5))
+
+                // ENTRY 2: Mittelteil, nur Spiders + Engineer
                 .entry(WaveEntry.random()
                         .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
-                        .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F).end((int) (timeScale * 90000)).amount((int) (mobScale * 3)).granularity(500))
+                        .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F)
+                        .end((int) (timeScale * 90000))
+                        .amount((int) (mobScale * 3))
+                        .granularity(500))
+
+                // ENTRY 3: kurzer Burst (~65–67s)
                 .entry(WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 1.5F)
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.7F)
@@ -160,10 +174,25 @@ public class WaveBuilder {
                         .entry(EntityPatterns.THROWER_T2, 0.42F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.5F)
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.42F)
-                        .entry(EntityPatterns.IMP_T1, 0.4F).begin((int) (timeScale * 65000)).end((int) (timeScale * 67000)).amount((int) (mobScale * 7)).granularity(500).angle(25).minSpawns(3))
+                        .entry(EntityPatterns.IMP_T1, 0.4F)
+                        .begin((int) (timeScale * 65000))
+                        .end((int) (timeScale * 67000))
+                        .amount((int) (mobScale * 7))
+                        .granularity(500)
+                        .angle(25)
+                        .minSpawns(3))
+
+                // ENTRY 4: kurzer Burst (~95–97s)
                 .entry(WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2F)
                         .entry(EntityPatterns.ZOMBIE_T1_ANY, 3F)
-                        .entry(EntityPatterns.SPIDER_T3_ANY, 1F).begin((int) (timeScale * 95000)).end((int) (timeScale * 97000)).amount((int) (mobScale * 6)).granularity(500).angle(45).minSpawns(2));
+                        .entry(EntityPatterns.SPIDER_T3_ANY, 1F)
+                        .begin((int) (timeScale * 95000))
+                        .end((int) (timeScale * 97000))
+                        .amount((int) (mobScale * 6))
+                        .granularity(500)
+                        .angle(45)
+                        .minSpawns(2));
     }
+
 }

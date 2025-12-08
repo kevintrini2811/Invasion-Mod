@@ -35,7 +35,7 @@ record RandomSelectionPool<T>(List<Entry<T>> pool, float totalWeight) implements
 
     public static class Builder<T> implements Select.PoolBuilder<T, Float> {
         private final List<Entry.Builder<T>> entries = new ArrayList<>();
-        private int total;
+        private float total;
 
         @Override
         public Builder<T> entry(Select.Builder<T> entry, Float amount) {
