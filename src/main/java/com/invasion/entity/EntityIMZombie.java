@@ -61,7 +61,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // masSelfDamage = max damage loss before the mob can no longer mine blocks. If health is less than (maxHealth - maxSelfDamage) it stops.
     protected int selfDamage = 2;
     protected int maxSelfDamage = 6;
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.0F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 32.0F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
     private static DefaultAttributeContainer.Builder createBaseAttributes() {
         return ZombieEntity.createZombieAttributes()
@@ -150,10 +150,17 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
         if (!getWorld().isClient) {
             if (!terrainModifier.isBusy()) {
-                tryDigDownToNexus();
+                // erst schräg nach oben versuchen
+                if (!tryDigUpToNexus()) {
+                    // sonst ggf. nach unten
+                    tryDigDownToNexus();
+                }
             }
         }
     }
+
+
+
 
 
 
@@ -173,6 +180,76 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         return false;
     }
 
+    /**
+     * Versucht, eine schräge Rampe nach oben in Richtung Nexus zu buddeln.
+     * Kein Leitern-Bau – nur Blöcke zu AIR machen.
+     *
+     * @return true, wenn ein Buddel-Job gestartet wurde, sonst false
+     */
+    private boolean tryDigUpToNexus() {
+        // Nur Zombies, die generell buddeln dürfen
+        if (!canDigDown()) {
+            return false;
+        }
+
+        if (terrainModifier.isBusy()) {
+            return false;
+        }
+
+        NexusAccess nexus = getNexus();
+        if (nexus == null) {
+            return false;
+        }
+
+        World world = getWorld();
+        BlockPos nexusPos = nexus.getOrigin();
+        BlockPos mobPos = this.getBlockPos();
+
+        // Vertikaler Abstand: Nexus über uns?
+        int dyUp = nexusPos.getY() - mobPos.getY(); // positiv = Nexus höher
+        if (dyUp <= 3) {
+            // Nexus nicht deutlich höher -> hier keine Rampe bauen
+            return false;
+        }
+
+        // Horizontale Richtung zum Nexus bestimmen
+        double dx = (nexusPos.getX() + 0.5D) - this.getX();
+        double dz = (nexusPos.getZ() + 0.5D) - this.getZ();
+
+        Direction dir = Direction.getFacing(dx, 0.0D, dz);
+        if (!dir.getAxis().isHorizontal()) {
+            dir = this.getHorizontalFacing();
+        }
+
+        // Optional: nicht rampen, wenn wir SEHR weit weg sind
+        double horizDistSq = dx * dx + dz * dz;
+        if (horizDistSq > 16.0D * 16.0D) {
+            // zu weit weg, erstmal normal hinlaufen lassen
+            return false;
+        }
+
+        // Wenn direkt vor/nach oben schon Luft ist, kann es sein, dass wir
+        // in einem offenen Bereich stehen -> dann lieber nicht sinnlos Rampen spammen
+        BlockPos forwardPos = mobPos.offset(dir);
+        BlockPos forwardUpPos = forwardPos.up();
+        if (world.getBlockState(forwardPos).isAir() && world.getBlockState(forwardUpPos).isAir()) {
+            return false;
+        }
+
+        // Wie viele "Stufen" wollen wir bauen?
+        // Grob: so viele wie vertikaler Abstand, aber gedeckelt
+        int steps = Math.min(dyUp + 1, 16);
+        steps = Math.max(3, steps);
+
+        final Direction rampDir = dir;
+        final int rampSteps = steps;
+
+        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
+                terrainBuilder.askBuildRampUp(pos, rampDir, rampSteps)
+        );
+
+        return true;
+    }
 
 
     /**

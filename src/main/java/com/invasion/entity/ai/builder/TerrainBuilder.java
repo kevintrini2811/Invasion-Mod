@@ -294,6 +294,73 @@ public class TerrainBuilder implements ITerrainBuild {
         return builder.build();
     }
 
+    /**
+     * Baut eine schräge Rampe nach oben, indem Blöcke in einer 45°-Linie
+     * (vorwärts + nach oben) zu AIR gemacht werden.
+     * Es wird jeweils eine 2-Blöcke-hohe "Gänge"-Säule freigeräumt.
+     *
+     * @param basePos  (wird ignoriert, wir nehmen die Mob-Position)
+     * @param dir      horizontale Richtung, in die der Gang gehen soll
+     * @param steps    wie viele "Stufen" die Rampe haben soll
+     */
+    public Stream<ModifyBlockEntry> askBuildRampUp(BlockPos basePos, Direction dir, int steps) {
+        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
+        World world = mob.asEntity().getWorld();
+
+        if (!dir.getAxis().isHorizontal()) {
+            dir = mob.asEntity().getHorizontalFacing();
+        }
+
+        int clamped = Math.max(1, Math.min(steps, 16));
+        BlockPos entityPos = mob.asEntity().getBlockPos();
+        BlockPos.Mutable mut = entityPos.mutableCopy();
+
+        for (int i = 1; i <= clamped; i++) {
+            // „Stufe“, auf die er treten soll:
+            mut.set(entityPos).move(dir, i).move(Direction.UP, i - 1);
+            BlockPos stepPos = mut.toImmutable();
+
+            // Kopf-Freiraum: Block über der Stufe + noch einer drüber
+            BlockPos head1 = stepPos.up();
+            BlockPos head2 = stepPos.up(2);
+
+            // Stufe platzieren, wenn leer
+            if (world.getBlockState(stepPos).isAir()) {
+                builder.add(new ModifyBlockEntry(
+                        stepPos,
+                        Blocks.COBBLESTONE.getDefaultState(),  // oder Slab/Stair
+                        (int) (COBBLE_COST / buildRate)
+                ));
+            } else if (canModifyBlock(world, stepPos)) {
+                // Wenn da schon irgendwas im Weg ist: weg damit und dann unsere Stufe drauf
+                builder.add(new ModifyBlockEntry(
+                        stepPos,
+                        Blocks.COBBLESTONE.getDefaultState(),
+                        (int) (COBBLE_COST / buildRate)
+                ));
+            }
+
+            // Kopf freimachen
+            if (canModifyBlock(world, head1)) {
+                builder.add(new ModifyBlockEntry(
+                        head1,
+                        Blocks.AIR.getDefaultState(),
+                        (int) (DIG_COST / buildRate)
+                ));
+            }
+            if (canModifyBlock(world, head2)) {
+                builder.add(new ModifyBlockEntry(
+                        head2,
+                        Blocks.AIR.getDefaultState(),
+                        (int) (DIG_COST / buildRate)
+                ));
+            }
+        }
+
+        return builder.build();
+    }
+
+
 
     @Override
     public Stream<ModifyBlockEntry> askBuildLadder(BlockPos pos, Direction orientation) {
