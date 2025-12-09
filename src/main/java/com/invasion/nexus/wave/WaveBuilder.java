@@ -163,6 +163,8 @@ public class WaveBuilder {
                 entry.entry(EntityPatterns.MUTANT_ENDERMAN, 0.005F);
             if (EntityPatterns.SPIDER_PIG != null)
                 entry.entry(EntityPatterns.SPIDER_PIG, 0.02F);
+            if (EntityPatterns.Gigant != null)
+                entry.entry(EntityPatterns.Gigant, 0.008F);
 
             // abschließende Parameter
             entry.end((int) (timeScale * 30000))

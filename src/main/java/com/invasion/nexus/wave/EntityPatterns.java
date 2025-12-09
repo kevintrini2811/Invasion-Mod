@@ -61,7 +61,12 @@ public interface EntityPatterns {
             "spider_pig",
             0.3F
     );
-
+    EntityPattern Gigant = registerExternal(
+            "giant",
+            "minecraft",
+            "giant",
+            0.3F
+    );
 
     /**
      * Registriert ein EntityPattern für einen Mob aus einer anderen Mod, falls vorhanden.
