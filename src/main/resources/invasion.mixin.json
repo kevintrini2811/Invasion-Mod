@@ -6,7 +6,8 @@
     "compatibilityLevel": "JAVA_16",
     "mixins": [
       "EntityMixin",
-      "PathNodeMixin"
+      "PathNodeMixin",
+      "MobEntityAccessor"
     ],
     "client": [
       "client.DebugRendererMixin",

@@ -1,5 +1,8 @@
 package com.invasion.nexus.spawns;
 
+import com.invasion.entity.ai.goal.ExternalAttackNexusGoal;
+import com.invasion.mixin.MobEntityAccessor;
+import com.invasion.nexus.wave.*;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.NumberRange.IntRange;
@@ -22,10 +25,6 @@ import com.invasion.entity.InvEntities;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.NexusAccess;
-import com.invasion.nexus.wave.WaveBuilder;
-import com.invasion.nexus.wave.EntityPattern;
-import com.invasion.nexus.wave.Wave;
-import com.invasion.nexus.wave.WaveSpawnerException;
 
 public class IMWaveSpawner implements Spawner {
 	private static final int MAX_SPAWN_TRIES = 20;
@@ -245,6 +244,13 @@ public class IMWaveSpawner implements Spawner {
                 successfulSpawns++;
 
                 // ➜ HIER: nach erfolgreichem Spawn ins Team packen
+                if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
+                    MobEntityAccessor accessor = (MobEntityAccessor)(Object)mob;
+                    accessor.getGoalSelector().add(2, new ExternalAttackNexusGoal(mob, nexus));
+                    mob.setPersistent();
+
+                }
+
                 markAsInvasionAlly(mob);
 
                 if (debugMode) {

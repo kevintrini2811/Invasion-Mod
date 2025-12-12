@@ -86,6 +86,25 @@ public interface EntityPatterns {
         EntityType<? extends MobEntity> mobType = (EntityType<? extends MobEntity>) type;
         return register(name, new EntityPattern.Builder(mobType), spawnWeight);
     }
+    public static boolean isExternalInvasionMob(EntityType<?> type) {
+        Identifier id = Registries.ENTITY_TYPE.getId(type);
+        if (id == null) return false;
+
+        // Mutant Monsters
+        if (id.getNamespace().equals("mutantmonsters")) {
+            return true;
+        }
+
+        // Vanilla Giant als “externer” Invasions-Mob
+        if (id.getNamespace().equals("minecraft") && id.getPath().equals("giant")) {
+            return true;
+        }
+
+        // später weitere externe Mods hier ergänzen
+        return false;
+    }
+
+
 
     // ================================
     // INTERNE INVASION-MOBS (DEINE)
