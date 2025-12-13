@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Random;
 
 import com.invasion.InvasionMod;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
+import com.invasion.util.ChatUtils;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.wave.pool.Select;
@@ -84,20 +84,20 @@ public class WaveBuilder {
             }
         }
         return Select.<EntityPattern>random()
-            .entry(Select.<EntityPattern>random()
                 .entry(Select.<EntityPattern>random()
-                        .entry(EntityPatterns.ZOMBIE_T1_ANY, ZOMBIE_T1_WEIGHT * weights[0])
-                        .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * weights[2])
-                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * weights[3]), 3.1F)
+                        .entry(Select.<EntityPattern>random()
+                                .entry(EntityPatterns.ZOMBIE_T1_ANY, ZOMBIE_T1_WEIGHT * weights[0])
+                                .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * weights[2])
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * weights[3]), 3.1F)
+                        .entry(Select.<EntityPattern>random()
+                                .entry(EntityPatterns.SPIDER_T1_ANY, SPIDER_T1_WEIGHT * weights[0])
+                                .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * weights[2]), 0.7F)
+                        .entry(EntityPatterns.SKELETON_T1_ANY, 0.8F), weight * 0.8333333F)
                 .entry(Select.<EntityPattern>random()
-                        .entry(EntityPatterns.SPIDER_T1_ANY, SPIDER_T1_WEIGHT * weights[0])
-                        .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * weights[2]), 0.7F)
-                .entry(EntityPatterns.SKELETON_T1_ANY, 0.8F), weight * 0.8333333F)
-            .entry(Select.<EntityPattern>random()
-                .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 4F)
-                .entry(EntityPatterns.THROWER_T1, 1.1F * weights[4])
-                .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
-                .entry(EntityPatterns.CREEPER_T1_BASIC, 0.7F * weights[3]), weight * 0.1666667F);
+                        .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 4F)
+                        .entry(EntityPatterns.THROWER_T1, 1.1F * weights[4])
+                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
+                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.7F * weights[3]), weight * 0.1666667F);
     }
 
     private Select.PoolBuilder<EntityPattern, Float> generateSteadyPool(float tierLevel) {
@@ -109,19 +109,19 @@ public class WaveBuilder {
         }
 
         return Select.<EntityPattern>random()
-            .entry(Select.<EntityPattern>random()
-                    .entry(Select.<EntityPattern>random()
-                            .entry(EntityPatterns.ZOMBIE_T1_ANY, ZOMBIE_T1_WEIGHT * weights[0])
-                            .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * weights[2])
-                            .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * weights[3]), 3.1F)
-                    .entry(Select.<EntityPattern>random()
-                            .entry(EntityPatterns.SPIDER_T1_ANY, SPIDER_T1_WEIGHT * weights[0])
-                            .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * weights[2]), 0.7F)
-                    .entry(EntityPatterns.SKELETON_T1_ANY, 0.8F), 9F)
-            .entry(Select.<EntityPattern>random()
-                    .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 3F)
-                    .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
-                    .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F * weights[3]), 1F);
+                .entry(Select.<EntityPattern>random()
+                        .entry(Select.<EntityPattern>random()
+                                .entry(EntityPatterns.ZOMBIE_T1_ANY, ZOMBIE_T1_WEIGHT * weights[0])
+                                .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * weights[2])
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * weights[3]), 3.1F)
+                        .entry(Select.<EntityPattern>random()
+                                .entry(EntityPatterns.SPIDER_T1_ANY, SPIDER_T1_WEIGHT * weights[0])
+                                .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * weights[2]), 0.7F)
+                        .entry(EntityPatterns.SKELETON_T1_ANY, 0.8F), 9F)
+                .entry(Select.<EntityPattern>random()
+                        .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 3F)
+                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
+                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F * weights[3]), 1F);
     }
 
     @Nullable
@@ -158,8 +158,13 @@ public class WaveBuilder {
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F)
                     .entry(EntityPatterns.IMP_T1, 2F);
 
-            if (EntityPatterns.SPIDER_PIG != null)
-                entry.entry(EntityPatterns.SPIDER_PIG, 1F);
+            // Spider Pig über Lazy-Getter
+            var spiderPig = EntityPatterns.getSpiderPig();
+            if (spiderPig != null) {
+                entry.entry(spiderPig, 1F);
+            }
+
+            // Giant bleibt wie gehabt (Vanilla, kein Lazy nötig)
             if (EntityPatterns.Gigant != null)
                 entry.entry(EntityPatterns.Gigant, 0.08F);
 
@@ -178,22 +183,29 @@ public class WaveBuilder {
             var mutantEntry = WaveEntry.random();
             int available = 0;
 
-            if (EntityPatterns.MUTANT_ZOMBIE != null) {
-                mutantEntry.entry(EntityPatterns.MUTANT_ZOMBIE, 3F);
+            var mutantZombie   = EntityPatterns.getMutantZombie();
+            var mutantSkeleton = EntityPatterns.getMutantSkeleton();
+            var mutantCreeper  = EntityPatterns.getMutantCreeper();
+            var mutantEnderman = EntityPatterns.getMutantEnderman();
+
+            if (mutantZombie != null) {
+                mutantEntry.entry(mutantZombie, 3F);
                 available++;
             }
-            if (EntityPatterns.MUTANT_SKELETON != null) {
-                mutantEntry.entry(EntityPatterns.MUTANT_SKELETON, 2F);
+            if (mutantSkeleton != null) {
+                mutantEntry.entry(mutantSkeleton, 2F);
                 available++;
             }
-            if (EntityPatterns.MUTANT_CREEPER != null) {
-                mutantEntry.entry(EntityPatterns.MUTANT_CREEPER, 1.5F);
+            if (mutantCreeper != null) {
+                mutantEntry.entry(mutantCreeper, 1.5F);
                 available++;
             }
-            if (EntityPatterns.MUTANT_ENDERMAN != null) {
-                mutantEntry.entry(EntityPatterns.MUTANT_ENDERMAN, 1F);
+            if (mutantEnderman != null) {
+                mutantEntry.entry(mutantEnderman, 1F);
                 available++;
             }
+
+            //ChatUtils.broadcastGlobal("LOG: " + available + " available Mutant-Patterns", Formatting.DARK_RED);
 
             if (available > 0) {
                 mutantEntry
@@ -261,9 +273,4 @@ public class WaveBuilder {
 
         return builder;
     }
-
-
-
-
-
 }

@@ -28,6 +28,7 @@ public class InvasionCommand {
     public static LiteralArgumentBuilder<ServerCommandSource> create(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registries) {
         return addTestCommands(CommandManager.literal("invasion")
                 .then(CommandManager.literal("help").executes(context -> help(dispatcher, context.getSource())))
+                .then(CommandManager.literal("pause").executes(context -> pause(context.getSource())))
                 .then(CommandManager.literal("status").executes(context -> status(context.getSource())))
                 .then(CommandManager.literal("start").then(CommandManager.argument("wave", IntegerArgumentType.integer(1)).executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
                 .then(CommandManager.literal("stop").executes(context -> stop(context.getSource())))
@@ -145,8 +146,39 @@ public class InvasionCommand {
 
 	    return 0;
 	}
+    private static int pause(ServerCommandSource source) {
+        handleWithNexus(source, nexus -> {
+            // Wenn weder aktiv noch pausiert → es gibt nichts zu tun
+            if (!nexus.isActive() && !nexus.isPaused()) {
+                source.sendFeedback(
+                        () -> Text.literal("Es läuft gerade keine Invasion, die pausiert oder fortgesetzt werden könnte.")
+                                .formatted(Formatting.RED),
+                        false
+                );
+                return;
+            }
 
-	private static int help(CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source) {
+            boolean nowPaused = nexus.togglePause();
+
+            if (nowPaused) {
+                // Jetzt PAUSIERT
+                source.getServer().sendMessage(
+                        Text.literal(source.getName() + " hat die Invasion pausiert. Alle Invasions-Mobs wurden entfernt.")
+                                .formatted(Formatting.GOLD)
+                );
+            } else {
+                // Jetzt wieder aktiv
+                source.getServer().sendMessage(
+                        Text.literal(source.getName() + " hat die Invasion fortgesetzt.")
+                                .formatted(Formatting.GREEN)
+                );
+            }
+        });
+        return 0;
+    }
+
+
+    private static int help(CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source) {
 	    Map<CommandNode<ServerCommandSource>, String> map = dispatcher.getSmartUsage(dispatcher.getRoot().getChild("invasion"), source);
 
         for (String name : map.values()) {

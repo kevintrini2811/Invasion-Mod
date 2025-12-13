@@ -3,6 +3,7 @@ package com.invasion.nexus.spawns;
 import com.invasion.entity.ai.goal.ExternalAttackNexusGoal;
 import com.invasion.mixin.MobEntityAccessor;
 import com.invasion.nexus.wave.*;
+import com.invasion.util.ChatUtils;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.NumberRange.IntRange;
@@ -287,7 +288,9 @@ public class IMWaveSpawner implements Spawner {
                 }
 
                 markAsInvasionAlly(mob);
-
+                if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
+                    ChatUtils.broadcastGlobal("Ein Mutant ist gespawnt: " + mob.getName().getString(), Formatting.DARK_RED);
+                }
                 if (debugMode) {
                     InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave()
                             + "  Mob: " + mob.getName().getString()

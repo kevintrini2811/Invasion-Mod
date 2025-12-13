@@ -80,6 +80,8 @@ public class Nexus implements ControllableNexusAccess {
 
     private boolean activated;
     private boolean discarded;
+    private boolean paused;
+
 
     private final IMWaveSpawner waveSpawner = new IMWaveSpawner(this, INITIAL_SPAWN_RADIUS);
     private final WaveBuilder waveBuilder = new WaveBuilder();
@@ -241,7 +243,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     public void tick() {
-        if (!mode.isActive()) {
+        if (!mode.isActive() || paused) {
             return;
         }
         try {
@@ -264,7 +266,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     public void onLoaded() {
-        if (!mode.isActive()) {
+        if (!mode.isActive() || paused) {
             return;
         }
         boundingBoxToRadius = getChunkBox(world);
@@ -291,10 +293,44 @@ public class Nexus implements ControllableNexusAccess {
         activationTimer = 0;
         currentWave = 0;
         activated = false;
+        paused = false;
 
         if (killEnemies) {
             killAllMobs();
         }
+    }
+    @Override
+    public boolean togglePause() {
+        // Wenn momentan gar keine Invasion läuft, nichts tun
+        if (!mode.isActive() && !paused) {
+            return false;
+        }
+
+        // Von "läuft" -> "pausiert"
+        if (!paused) {
+            paused = true;
+
+            // Spawner anhalten (stoppt neue Spawns, killt externe Invasionsmobs)
+            waveSpawner.stop();
+
+            // Alle aktuellen Invasions-Mobs despawnen
+            killAllMobs();
+
+            return true; // jetzt PAUSIERT
+        }
+
+        // Von "pausiert" -> "läuft weiter"
+        paused = false;
+
+        // Nutzt die bestehende Resume-Logik (wie beim Welt-Laden)
+        onLoaded();
+
+        return false; // jetzt NICHT mehr pausiert
+    }
+
+    @Override
+    public boolean isPaused() {
+        return paused;
     }
 
     @Override
@@ -389,6 +425,7 @@ public class Nexus implements ControllableNexusAccess {
         }
 
         try {
+            paused = false; // falls vorher pausiert war
             boundingBoxToRadius = computeSpawnArea();
             currentWave = startWave;
             waveSpawner.beginNextWave(currentWave);
@@ -702,6 +739,7 @@ public class Nexus implements ControllableNexusAccess {
         daysToAttack = compound.getInt("daysToAttack");
         continuousAttack = compound.getBoolean("continuousAttack");
         activated = compound.getBoolean("activated");
+        paused = compound.getBoolean("paused");
 
         nexusItemStacks.readNbt(compound.getCompound("inventory"), lookup);
         boundPlayers.readNbt(compound.getCompound("boundPlayers"), lookup);
@@ -726,6 +764,8 @@ public class Nexus implements ControllableNexusAccess {
         compound.putInt("daysToAttack", daysToAttack);
         compound.putBoolean("continuousAttack", continuousAttack);
         compound.putBoolean("activated", isActive());
+        compound.putBoolean("paused", paused);
+
 
         compound.put("inventory", nexusItemStacks.writeNbt(new NbtCompound(), lookup));
         compound.put("boundPlayers", boundPlayers.writeNbt(new NbtCompound(), lookup));
