@@ -1,5 +1,7 @@
 package com.invasion;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +22,7 @@ import net.minecraft.util.Identifier;
 
 public class InvasionMod implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(InvasionMod.class);
-
+    public static MinecraftServer SERVER;
     private static final InvasionConfig CONFIG = new InvasionConfig();
 
     public static void log(@Nullable String s) {
@@ -47,6 +49,7 @@ public class InvasionMod implements ModInitializer {
             BountyHunter.of(world).tick();
             WorldNexusStorage.of(world).tick();
         });
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> SERVER = server);
         InvBlocks.bootstrap();
         InvItems.bootstrap();
         InvSounds.boostrap();

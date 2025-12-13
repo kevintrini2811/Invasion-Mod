@@ -14,6 +14,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
+import net.minecraft.util.math.Box;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -140,11 +141,45 @@ public class IMWaveSpawner implements Spawner {
 		return numberOfSpawns;
 	}
 
-	public void stop() {
-		active = false;
-	}
+    public void stop() {
+        active = false;
+        killExternalInvasionMobs();
+    }
 
-	public boolean isActive() {
+    /**
+     * Killt alle externen Invasions-Mobs (Mutant Monsters, Giant, etc.) in der Nähe des Nexus,
+     * wenn die Invasion endet oder der Nexus zerstört wurde.
+     */
+    private void killExternalInvasionMobs() {
+        if (!(nexus.getWorld() instanceof ServerWorld world)) {
+            return;
+        }
+
+        // Bereich um den Nexus, in dem wir nach Zusatzmobs suchen
+        BlockPos origin = nexus.getOrigin();
+        double radius = this.spawnRadius + 32; // etwas größer als Spawnradius
+        Box searchBox = new Box(
+                origin.getX() - radius, origin.getY() - radius, origin.getZ() - radius,
+                origin.getX() + radius, origin.getY() + radius, origin.getZ() + radius
+        );
+
+        List<MobEntity> mobs = world.getEntitiesByClass(
+                MobEntity.class,
+                searchBox,
+                mob -> EntityPatterns.isExternalInvasionMob(mob.getType())
+        );
+
+        for (MobEntity mob : mobs) {
+            // "sterben" lassen – entweder kill() oder discard()
+            //mob.kill();        // versucht normalen Tod (Death-Events etc.)
+            mob.discard();  // Alternative: einfach verschwinden lassen
+        }
+
+        InvasionMod.LOGGER.info("Killed {} external invasion mobs after nexus end.", mobs.size());
+    }
+
+
+    public boolean isActive() {
 		return active;
 	}
 
@@ -327,6 +362,8 @@ public class IMWaveSpawner implements Spawner {
 			spawnPoints.add(new SpawnPoint(pos.toImmutable(), angle, SpawnType.HUMANOID));
 		}
 	}
+
+
 
     public void readNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
         setRadius(compound.getInt("spawnRadius"));

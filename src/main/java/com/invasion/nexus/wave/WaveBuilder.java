@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.invasion.InvasionMod;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.wave.pool.Select;
@@ -133,40 +136,33 @@ public class WaveBuilder {
         float mobScale = (float) Math.pow(1.090000033378601D, waveNumber - 11);
         float timeScale = 1 + (waveNumber - 11) * 0.04F;
 
-        // Wir bauen mit einem Builder-Objekt, damit wir Zwischenschritte machen können
         var builder = Wave.builder((int) (timeScale * 120000), (int) (timeScale * 35000));
 
-        // ENTRY 1: Früher Teil der Wave (leicht bereinigt: Pigman T3 statt doppeltem T2)
-        // ENTRY 1: Früher Teil der Wave mit Mutant-Monstern
+        // Hilfsfunktion: Nur ins Log schreiben (kein Chat)
+        java.util.function.Consumer<String> announce = msg ->
+                InvasionMod.LOGGER.info("[Wave] " + msg + " (Welle " + waveNumber + ")");
+
+        // ENTRY 1: Früher Teil der Wave mit Standard-Mobs
+        announce.accept("Phase 1 gestartet: Standardmobs greifen an!");
         {
             var entry = WaveEntry.random()
-                    .entry(EntityPatterns.ZOMBIE_T1_ANY, 1.2F)
-                    .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2.0F)
-                    .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.3F)
-                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 0.8F)
-                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.5F)
-                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 0.05F)
-                    .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
-                    .entry(EntityPatterns.THROWER_T1, 0.18F)
-                    .entry(EntityPatterns.THROWER_T2, 0.05F)
-                    .entry(EntityPatterns.CREEPER_T1_BASIC, 0.05F)
-                    .entry(EntityPatterns.IMP_T1, 0.4F);
+                    .entry(EntityPatterns.ZOMBIE_T1_ANY, 200F)
+                    .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 20F)
+                    .entry(EntityPatterns.ZOMBIE_T3_ANY, 5F)
+                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 50F)
+                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 10F)
+                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 3F)
+                    .entry(EntityPatterns.SKELETON_T1_ANY, 30F)
+                    .entry(EntityPatterns.THROWER_T1, 5F)
+                    .entry(EntityPatterns.THROWER_T2, 0.5F)
+                    .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F)
+                    .entry(EntityPatterns.IMP_T1, 2F);
 
-            // Mutant Monsters sicher hinzufügen, falls vorhanden
-            if (EntityPatterns.MUTANT_ZOMBIE != null)
-                entry.entry(EntityPatterns.MUTANT_ZOMBIE, 0.05F);
-            if (EntityPatterns.MUTANT_SKELETON != null)
-                entry.entry(EntityPatterns.MUTANT_SKELETON, 0.04F);
-            if (EntityPatterns.MUTANT_CREEPER != null)
-                entry.entry(EntityPatterns.MUTANT_CREEPER, 0.01F);
-            if (EntityPatterns.MUTANT_ENDERMAN != null)
-                entry.entry(EntityPatterns.MUTANT_ENDERMAN, 0.005F);
             if (EntityPatterns.SPIDER_PIG != null)
-                entry.entry(EntityPatterns.SPIDER_PIG, 0.02F);
+                entry.entry(EntityPatterns.SPIDER_PIG, 1F);
             if (EntityPatterns.Gigant != null)
-                entry.entry(EntityPatterns.Gigant, 0.008F);
+                entry.entry(EntityPatterns.Gigant, 0.08F);
 
-            // abschließende Parameter
             entry.end((int) (timeScale * 30000))
                     .amount((int) (mobScale * 8))
                     .granularity(2000)
@@ -176,13 +172,46 @@ public class WaveBuilder {
             builder.entry(entry);
         }
 
+        // === NEUER ENTRY: Garantiert genau 1 Mutant-Mob pro Extended-Wave ===
+        announce.accept("Phase 2 gestartet: Ein Mutant erscheint!");
+        {
+            var mutantEntry = WaveEntry.random();
+            int available = 0;
 
-        // ENTRY 2: Mittelteil – Spider, Engineer + Mutant-Mobs (nur, wenn verfügbar)
+            if (EntityPatterns.MUTANT_ZOMBIE != null) {
+                mutantEntry.entry(EntityPatterns.MUTANT_ZOMBIE, 3F);
+                available++;
+            }
+            if (EntityPatterns.MUTANT_SKELETON != null) {
+                mutantEntry.entry(EntityPatterns.MUTANT_SKELETON, 2F);
+                available++;
+            }
+            if (EntityPatterns.MUTANT_CREEPER != null) {
+                mutantEntry.entry(EntityPatterns.MUTANT_CREEPER, 1.5F);
+                available++;
+            }
+            if (EntityPatterns.MUTANT_ENDERMAN != null) {
+                mutantEntry.entry(EntityPatterns.MUTANT_ENDERMAN, 1F);
+                available++;
+            }
+
+            if (available > 0) {
+                mutantEntry
+                        .begin((int) (timeScale * 40000))
+                        .end((int)   (timeScale * 60000))
+                        .amount(1)               // genau 1 Mutant
+                        .granularity(500)
+                        .angle(45)
+                        .minSpawns(1);
+                builder.entry(mutantEntry);
+            }
+        }
+
+        // ENTRY 3: Mittelteil – Spider, Engineer etc.
+        announce.accept("Phase 3 gestartet: Spezialisten greifen an!");
         var midPool = WaveEntry.random()
                 .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
                 .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F);
-
-
 
         builder.entry(
                 midPool
@@ -191,7 +220,8 @@ public class WaveBuilder {
                         .granularity(500)
         );
 
-        // ENTRY 3: kurzer Burst (~65–67s)
+        // ENTRY 4: kurzer Burst (~65–67s)
+        announce.accept("Phase 4 gestartet: Starker Angriff!");
         builder.entry(
                 WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 1.5F)
@@ -214,7 +244,8 @@ public class WaveBuilder {
                         .minSpawns(3)
         );
 
-        // ENTRY 4: kurzer Burst (~95–97s)
+        // ENTRY 5: kurzer Burst (~95–97s)
+        announce.accept("Phase 5 gestartet: Finale Angriffswelle!");
         builder.entry(
                 WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2F)
@@ -230,6 +261,9 @@ public class WaveBuilder {
 
         return builder;
     }
+
+
+
 
 
 }
