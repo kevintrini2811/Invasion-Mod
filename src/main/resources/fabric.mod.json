@@ -2,10 +2,16 @@
   "schemaVersion": 1,
   "id": "invmod",
   "version": "${version}",
-  "name": "Invasion",
-  "description": "So you think your base is tough, do you?",
+  "name": "Invasion (Fabric Fork)",
+  "description": "Fork der klassischen Invasion-Mod, aktualisiert und erweitert für moderne Minecraft-Versionen von Cedric.",
   "authors": [
-    "Lieu", "Elsee", "Davidee", "UnstoppableN", "Doenerstyle", "Sollace"
+    "Cedric",
+    "Lieu (Originalautor)",
+    "Elsee",
+    "Davidee",
+    "UnstoppableN",
+    "Doenerstyle",
+    "Sollace"
   ],
   "contact": {
     "sources": "https://github.com/Sollace/Invasion-Mod",
