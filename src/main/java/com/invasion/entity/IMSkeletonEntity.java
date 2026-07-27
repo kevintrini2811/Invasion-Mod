@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -60,6 +61,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new EntityAIKillWithArrow<>(this, Player.class, 65, 16F));
+        goalSelector.addGoal(2, new SkeletonAttackNexusGoal(this));
         // goalSelector.add(1, new EntityAIRallyBehindEntity(this, EntityIMCreeper.class, 4.0F));
         goalSelector.addGoal(3, new AttackNexusGoal<>(this));
         goalSelector.addGoal(4, new GoToNexusGoal(this));
@@ -110,5 +112,16 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
 
     protected AbstractArrow createArrowProjectile(ItemStack arrow, float damageModifier, @Nullable ItemStack shotFrom) {
         return ProjectileUtil.getMobArrow(this, arrow, damageModifier, shotFrom);
+    }
+
+    public void performRangedNexusAttack(net.minecraft.world.phys.Vec3 target) {
+        SkeletonArrowEntity projectile = new SkeletonArrowEntity(level(), this, getMainHandItem());
+        double dX = target.x - getX();
+        double dY = target.y - projectile.getY();
+        double dZ = target.z - getZ();
+        double horizontalDistance = Math.sqrt(dX * dX + dZ * dZ);
+        projectile.shoot(dX, dY + horizontalDistance * 0.2F, dZ, 1.1F, 12);
+        playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
+        level().addFreshEntity(projectile);
     }
 }
