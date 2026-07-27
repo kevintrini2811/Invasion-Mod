@@ -4,6 +4,7 @@ import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.KillEntityGoal;
 import com.invasion.entity.ai.goal.NoNexusPathGoal;
+import com.invasion.entity.ai.goal.ProvideSupportGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
 import net.minecraft.world.entity.Entity;
