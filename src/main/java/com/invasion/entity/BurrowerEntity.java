@@ -8,6 +8,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
@@ -18,8 +25,13 @@ import org.joml.Vector3f;
 import com.invasion.Notifiable;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
+import com.invasion.entity.ai.goal.AttackNexusGoal;
+import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
+import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.BurrowerNavigation;
 import com.invasion.entity.pathfinding.Navigation;
+import com.invasion.entity.pathfinding.PathNavigateAdapter;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.util.math.PosRotate3D;
 
@@ -44,7 +56,35 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 35)
+                .add(Attributes.MOVEMENT_SPEED, 0.2)
+                .add(Attributes.ATTACK_DAMAGE, 8)
+                .add(Attributes.FOLLOW_RANGE, 32)
+                .add(Attributes.GRAVITY, 0)
                 .add(Attributes.STEP_HEIGHT, 0);
+    }
+
+    @Override
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(2, new GoToNexusGoal(this));
+        goalSelector.addGoal(3, new MobMeleeAttackGoal(this, 1.0, false));
+        goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 0.8));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8));
+        goalSelector.addGoal(9, new RandomLookAroundGoal(this));
+
+        targetSelector.addGoal(1,
+                new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
+        targetSelector.addGoal(2,
+                new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
+        targetSelector.addGoal(3, new HurtByTargetGoal(this));
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level world) {
+        Navigation burrowerNavigation = createIMNavigation();
+        return new PathNavigateAdapter(this, world, burrowerNavigation);
     }
 
     @Override
