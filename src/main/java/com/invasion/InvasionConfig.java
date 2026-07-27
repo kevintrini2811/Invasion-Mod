@@ -13,6 +13,18 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
+import com.invasion.entity.EntityIMGiantBird;
+import com.invasion.entity.EntityIMZombie;
+import com.invasion.entity.EntityIMZombiePigman;
+import com.invasion.entity.IMCreeperEntity;
+import com.invasion.entity.IMEndermanEntity;
+import com.invasion.entity.IMSkeletonEntity;
+import com.invasion.entity.ImpEnitty;
+import com.invasion.entity.JumpingSpiderEntity;
+import com.invasion.entity.NexusSpiderEntity;
+import com.invasion.entity.PigmanEngineerEntity;
+import com.invasion.entity.QueenSpiderEntity;
+import com.invasion.entity.ThrowerEntity;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.wave.EntityPattern;
 import com.invasion.nexus.wave.EntityPatterns;
@@ -26,7 +38,7 @@ public class InvasionConfig extends Config {
         m.put("IMPigManEngineer-T1", 20);
         m.put("IMSkeleton-T1", 20);
         m.put("IMSpider-T1-Spider", 18);
-        m.put("IMSpider-T1-Baby-Spider", 2);
+        m.put("IMSpider-T1-Baby-Spider", 3);
         m.put("IMSpider-T2-Jumping-Spider", 18);
         m.put("IMSpider-T2-Mother-Spider", 23);
         m.put("IMThrower-T1", 50);
@@ -37,6 +49,7 @@ public class InvasionConfig extends Config {
         m.put("IMZombiePigman-T1", 20);
         m.put("IMZombiePigman-T2", 30);
         m.put("IMZombiePigman-T3", 65);
+        m.put("IMEnderman-T1", 40);
     });
     private static final boolean DEFAULT_NIGHT_SPAWNS_ENABLED = false;
     private static final int DEFAULT_MIN_CONT_MODE_DAYS = 2;
@@ -86,8 +99,35 @@ public class InvasionConfig extends Config {
     }
 
     public int getHealth(Combatant<?> mob) {
-        // TODO:
-        return getHealth(mob.getLegacyName(), !mob.hasNexus());
+        String healthKey;
+        if (mob instanceof EntityIMZombiePigman pigman) {
+            healthKey = "IMZombiePigman-T" + pigman.getTier();
+        } else if (mob instanceof EntityIMZombie zombie) {
+            healthKey = "IMZombie-T" + zombie.getTier();
+        } else if (mob instanceof ThrowerEntity thrower) {
+            healthKey = "IMThrower-T" + thrower.getTier();
+        } else if (mob instanceof QueenSpiderEntity) {
+            healthKey = "IMSpider-T2-Mother-Spider";
+        } else if (mob instanceof JumpingSpiderEntity) {
+            healthKey = "IMSpider-T2-Jumping-Spider";
+        } else if (mob instanceof NexusSpiderEntity spider) {
+            healthKey = spider.isBaby() ? "IMSpider-T1-Baby-Spider" : "IMSpider-T1-Spider";
+        } else if (mob instanceof PigmanEngineerEntity) {
+            healthKey = "IMPigManEngineer-T1";
+        } else if (mob instanceof IMSkeletonEntity) {
+            healthKey = "IMSkeleton-T1";
+        } else if (mob instanceof IMCreeperEntity) {
+            healthKey = "IMCreeper-T1";
+        } else if (mob instanceof ImpEnitty) {
+            healthKey = "IMImp-T1";
+        } else if (mob instanceof EntityIMGiantBird) {
+            healthKey = "IMVulture-T1";
+        } else if (mob instanceof IMEndermanEntity) {
+            healthKey = "IMEnderman-T1";
+        } else {
+            healthKey = mob.getLegacyName();
+        }
+        return getHealth(healthKey, !mob.hasNexus());
     }
 
     public synchronized Select<EntityPattern> getSpawnPool() {

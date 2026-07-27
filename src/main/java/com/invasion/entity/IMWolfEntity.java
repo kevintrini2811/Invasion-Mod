@@ -65,7 +65,9 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Wolf.createAttributes();
+        return Wolf.createAttributes()
+                .add(Attributes.MAX_HEALTH, 8)
+                .add(Attributes.MOVEMENT_SPEED, 0.3);
     }
 
     @Override
@@ -97,8 +99,12 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
 
     @Override
     protected void applyTamingSideEffects() {
-        getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3);
         super.applyTamingSideEffects();
+        getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3);
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(isTame() ? 25 : 8);
+        if (getHealth() > getMaxHealth()) {
+            setHealth(getMaxHealth());
+        }
     }
 
     @Override

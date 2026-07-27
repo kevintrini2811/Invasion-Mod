@@ -67,6 +67,7 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
     @Override
     default void onSpawned(@Nullable NexusAccess nexus, EntityConstruct spawnConditions) {
         setNexus(nexus);
+        resetHealth();
     }
 
     default void onFollowingEntity(Entity entity) {

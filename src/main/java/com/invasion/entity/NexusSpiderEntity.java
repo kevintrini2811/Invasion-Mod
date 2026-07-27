@@ -71,6 +71,7 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
     public NexusSpiderEntity(EntityType<? extends NexusSpiderEntity> type, Level world) {
         super(type, world);
         moveControl = new IMSpiderMoveControl(this);
+        resetHealth();
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -169,11 +170,15 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
 
     @Override
     public void setBaby(boolean baby) {
+        boolean changed = baby != isBaby();
         entityData.set(CHILD, baby);
         ticksToGrow = baby ? MAX_TIME_TO_GROW : FULLY_GROWN_AGE;
         if (level() != null && !level().isClientSide()) {
             AttributeUtil.toggleAttribute(this, Attributes.MOVEMENT_SPEED, BABY_SPEED_BONUS, isBaby());
             AttributeUtil.toggleAttribute(this, GROWTH_SCALING_ATTRIBUTES, BABY_ATTACK_BONUS, isBaby());
+            if (changed) {
+                resetHealth();
+            }
         }
     }
 
