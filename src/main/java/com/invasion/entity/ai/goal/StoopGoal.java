@@ -24,9 +24,7 @@ public class StoopGoal extends Goal {
         }
 
         updateTimer = 10;
-        return !theEntity.level()
-                .getBlockState(theEntity.blockPosition().above(2))
-                .isPathfindable(PathComputationType.LAND);
+        return isObstructed();
     }
 
     @Override
@@ -42,9 +40,18 @@ public class StoopGoal extends Goal {
 
     @Override
     public void tick() {
-        if (canUse()) {
+        if (--updateTimer <= 0) {
+            updateTimer = 10;
+        }
+        if (!isObstructed()) {
             theEntity.setShiftKeyDown(false);
             stopStoop = true;
         }
+    }
+
+    private boolean isObstructed() {
+        return !theEntity.level()
+                .getBlockState(theEntity.blockPosition().above(2))
+                .isPathfindable(PathComputationType.LAND);
     }
 }

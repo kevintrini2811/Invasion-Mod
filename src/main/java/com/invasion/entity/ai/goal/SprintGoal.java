@@ -18,7 +18,7 @@ import com.invasion.entity.ai.ClimbableMoveControl;
 
 public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minecraft.world.entity.ai.goal.Goal {
     private static final AttributeModifier SPRINTING_SPEED_BOOST = new AttributeModifier(
-            InvasionMod.id("sprinting"), 2.3F, Operation.ADD_MULTIPLIED_BASE
+            InvasionMod.id("sprinting"), 1.3F, Operation.ADD_MULTIPLIED_BASE
     );
 
     protected final T theEntity;

@@ -24,6 +24,7 @@ import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
+import com.invasion.entity.Miner;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 
 public class MineBlockGoal extends Goal {
@@ -90,7 +91,11 @@ public class MineBlockGoal extends Goal {
             breakProgress += speed;
             if (breakProgress >= 10) {
                 mob.level().destroyBlockProgress(mob.getId(), pos, -1);
-                mob.level().destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
+                boolean removed = mob.level().destroyBlock(pos,
+                        InvasionMod.getConfig().destructedBlocksDrop);
+                if (removed && mob instanceof Miner miner) {
+                    miner.onBlockRemoved(pos, breakingState);
+                }
                 breakProgress = 0;
                 return false;
             } else {
