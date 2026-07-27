@@ -156,6 +156,7 @@ public class WaveBuilder {
                     .entry(EntityPatterns.SKELETON_T1_ANY, 30F)
                     .entry(EntityPatterns.THROWER_T1, 5F)
                     .entry(EntityPatterns.THROWER_T2, 0.5F)
+                    .entry(EntityPatterns.BURROWER, 0.15F)
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F)
                     .entry(EntityPatterns.IMP_T1, 2F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.2F);
@@ -226,6 +227,7 @@ public class WaveBuilder {
         var midPool = WaveEntry.random()
                 .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
                 .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F)
+                .entry(EntityPatterns.BURROWER, 0.2F)
                 .entry(EntityPatterns.ENDERMAN_T1, 0.08F);
 
         builder.entry(
@@ -248,6 +250,7 @@ public class WaveBuilder {
                         .entry(EntityPatterns.SKELETON_T1_ANY, 1F)
                         .entry(EntityPatterns.THROWER_T1, 0.5F)
                         .entry(EntityPatterns.THROWER_T2, 0.42F)
+                        .entry(EntityPatterns.BURROWER, 0.12F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.5F)
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.42F)
                         .entry(EntityPatterns.IMP_T1, 0.4F)
