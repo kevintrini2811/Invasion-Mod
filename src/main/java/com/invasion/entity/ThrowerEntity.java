@@ -51,6 +51,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.Notifiable;
 import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
+import com.invasion.item.InvItems;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
@@ -60,6 +61,12 @@ import com.invasion.entity.ai.goal.ThrowerKillEntityGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 
 public class ThrowerEntity extends TieredIMMobEntity {
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
+        spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+    }
+
     private int throwTime;
     private int punchTimer;
 

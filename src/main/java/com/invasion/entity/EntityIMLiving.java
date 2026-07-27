@@ -7,6 +7,7 @@ import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.particle.InvParticles;
+import com.invasion.item.InvItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -122,6 +123,14 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
 
     protected void sunlightDamageTick() {
         igniteForSeconds(8);
+    }
+
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
+        if (getRandom().nextInt(4) == 0) {
+            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+        }
     }
 
     @Override

@@ -16,8 +16,11 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.Level;
 import com.invasion.InvSounds;
+import com.invasion.item.InvItems;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.IHasNexus;
 
@@ -46,6 +49,14 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.01);
+    }
+
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
+        if (getRandom().nextInt(4) == 0) {
+            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+        }
     }
 
     @Override

@@ -71,6 +71,21 @@ import com.invasion.nexus.NexusAccess;
 
 
 public class EntityIMZombie extends AbstractIMZombieEntity {
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
+        if (getRandom().nextFloat() < 0.35F) {
+            spawnAtLocation(level, Items.ROTTEN_FLESH);
+        }
+        if (getTier() == 1 && getFlavour() == 1 && getRandom().nextFloat() < 0.2F) {
+            spawnAtLocation(level, Items.WOODEN_SWORD);
+        } else if (getTier() == 2 && getFlavour() == 0 && getRandom().nextFloat() < 0.25F) {
+            spawnAtLocation(level, Items.IRON_CHESTPLATE);
+        } else if (getTier() == 2 && getFlavour() == 1 && getRandom().nextFloat() < 0.25F) {
+            spawnAtLocation(level, Items.IRON_SWORD);
+        }
+    }
+
     static final int OLD_ZOMBIE = 0;
     static final int ZOMBIE = 1;
     static final int ZOMBIE_T2 = 2;

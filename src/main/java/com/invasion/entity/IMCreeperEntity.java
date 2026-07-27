@@ -46,6 +46,7 @@ import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
@@ -57,6 +58,13 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.Vec3;
 
 public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
+    private static final Item[] CLASSIC_MUSIC_DISCS = {
+            Items.MUSIC_DISC_13, Items.MUSIC_DISC_CAT, Items.MUSIC_DISC_BLOCKS,
+            Items.MUSIC_DISC_CHIRP, Items.MUSIC_DISC_FAR, Items.MUSIC_DISC_MALL,
+            Items.MUSIC_DISC_MELLOHI, Items.MUSIC_DISC_STAL, Items.MUSIC_DISC_STRAD,
+            Items.MUSIC_DISC_WARD
+    };
+
     private static final int MAX_STATIONARY_TICKS = 20 * 10;
     private static final double STATIONARY_TOLERANCE_SQR = 0.2 * 0.2;
 
@@ -210,10 +218,11 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel world, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(world, source, causedByPlayer);
+        spawnAtLocation(world, Items.GUNPOWDER);
         Entity entity = source.getEntity();
-        if (entity != this && entity instanceof Creeper) {
-            spawnAtLocation(world, Items.CREEPER_HEAD);
+        if (entity instanceof net.minecraft.world.entity.monster.skeleton.AbstractSkeleton
+                || entity instanceof IMSkeletonEntity) {
+            spawnAtLocation(world, CLASSIC_MUSIC_DISCS[getRandom().nextInt(CLASSIC_MUSIC_DISCS.length)]);
         }
     }
 

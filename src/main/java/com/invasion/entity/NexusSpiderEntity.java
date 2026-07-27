@@ -5,6 +5,7 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
+import com.invasion.item.InvItems;
 import com.invasion.entity.ai.IMSpiderMoveControl;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
@@ -44,6 +45,8 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.spider.Spider;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
@@ -117,6 +120,19 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
 
     protected void initExtraGoals() {
 
+    }
+
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        if (isBaby()) {
+            return;
+        }
+        if (getRandom().nextInt(4) == 0) {
+            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+        }
+        if (getRandom().nextFloat() < 0.35F) {
+            spawnAtLocation(level, Items.STRING);
+        }
     }
 
     @Override
