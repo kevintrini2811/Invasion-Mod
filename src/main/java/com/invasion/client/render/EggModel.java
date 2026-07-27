@@ -1,25 +1,25 @@
-package com.invasion.client.render.entity.model;
+package com.invasion.client.render;
 
-import com.invasion.entity.SpiderEggEntity;
-import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 
-public class EggModel extends HierarchicalModel<SpiderEggEntity> {
-    private final ModelPart root;
-
+public class EggModel extends EntityModel<EntityRenderState> {
     public EggModel(ModelPart root) {
-        this.root = root;
+        super(root);
     }
 
     public static LayerDefinition getTexturedModelData() {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
-        root.addOrReplaceChild("top", CubeListBuilder.create().mirror()
+        PartDefinition egg = root.addOrReplaceChild("egg", CubeListBuilder.create(),
+                PartPose.offset(-4.5F, 0, -4.5F));
+        egg.addOrReplaceChild("top", CubeListBuilder.create().mirror()
                 .texOffs(0, 0).addBox(1F, 0F, 1F, 7, 1, 7)
                 .texOffs(0, 8).addBox(2F, -11F, 2F, 5, 1, 5)
                 .texOffs(28, 23).addBox(1F, -10F, 2F, 1, 3, 6)
@@ -37,16 +37,8 @@ public class EggModel extends HierarchicalModel<SpiderEggEntity> {
                 .texOffs(28, 0).addBox(0F, -1F, 1F, 1, 1, 8)
                 .texOffs(0, 14).addBox(0F, -1F, 0F, 8, 1, 1)
                 .texOffs(28, 0).addBox(8F, -1F, 0F, 1, 1, 8), PartPose.ZERO);
-        root.addOrReplaceChild("bottom", CubeListBuilder.create().mirror().texOffs(0, 14).addBox(0F, 0F, 0F, 8, 1, 1), PartPose.offset(1F, -1F, 8F));
+        egg.addOrReplaceChild("bottom", CubeListBuilder.create().mirror().texOffs(0, 14)
+                .addBox(0F, 0F, 0F, 8, 1, 1), PartPose.offset(1F, -1F, 8F));
         return LayerDefinition.create(data, 64, 32);
-    }
-
-    @Override
-    public ModelPart root() {
-        return root;
-    }
-
-    @Override
-    public void setAngles(SpiderEggEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
     }
 }

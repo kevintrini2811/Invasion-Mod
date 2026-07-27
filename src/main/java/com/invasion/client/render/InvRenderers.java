@@ -44,8 +44,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.SFX, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.SPAWN_PROXY,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/test.png"), 0.25F));
-        EntityRendererRegistry.register(InvEntities.SPIDER_EGG,
-                context -> new GenericHumanoidMobRenderer<>(context, texture("entity/spider_egg.png"), 0.25F));
+        EntityRendererRegistry.register(InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
         EntityRendererRegistry.register(InvEntities.CREEPER, GenericCreeperRenderer::new);
         EntityRendererRegistry.register(InvEntities.BIRD,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/vulture.png"), 0.5F));
