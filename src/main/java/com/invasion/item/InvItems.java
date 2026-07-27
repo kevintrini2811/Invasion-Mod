@@ -68,7 +68,9 @@ public interface InvItems {
     Item NEXUS_CORE = register("nexus_core", p -> new BlockItem(InvBlocks.NEXUS_CORE, p));
 
     Item ZOMBIE_SPAWN_EGG = register("zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x6B753F, 0x281B0A, NexusEntity.createVariant(0, 1)));
+    Item ARMED_ZOMBIE_SPAWN_EGG = register("armed_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x6B753F, 0x563A20, NexusEntity.createVariant(1, 1)));
     Item TIER_TWO_ZOMBIE_SPAWN_EGG = register("tier_two_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x497533, 0x7C7C7C, NexusEntity.createVariant(0, 2)));
+    Item TIER_TWO_ARMED_ZOMBIE_SPAWN_EGG = register("tier_two_armed_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x497533, 0xA0A0A0, NexusEntity.createVariant(1, 2)));
     Item TAR_ZOMBIE_SPAWN_EGG = register("tar_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x3A4225, 0x191C13, NexusEntity.createVariant(2, 2)));
     Item ZOMBIE_BRUTE_SPAWN_EGG = register("zombie_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x3A4225, 0x191C13, NexusEntity.createVariant(0, 3)));
     Item SKELETON_SPAWN_EGG = register("skeleton_spawn_egg", p -> createSpawnEgg(p, InvEntities.SKELETON, 0x9B9B9B, 0x797979));
@@ -83,21 +85,27 @@ public interface InvItems {
     Item BIG_THROWER_SPAWN_EGG = register("big_thrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.THROWER, 0x5303814, 0x632808, NexusEntity.createVariant(0, 2)));
     Item IMP_SPAWN_EGG = register("imp_spawn_egg", p -> createSpawnEgg(p, InvEntities.IMP, 0xB40113, 0xFF0000));
     Item ENDERMAN_SPAWN_EGG = register("enderman_spawn_egg", p -> createSpawnEgg(p, InvEntities.ENDERMAN, 0x161616, 0xE079FA));
+    Item BURROWER_SPAWN_EGG = register("burrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.BURROWER, 0x44372C, 0x8A735D));
+    Item WOLF_SPAWN_EGG = register("wolf_spawn_egg", p -> createSpawnEgg(p, InvEntities.WOLF, 0xD7D3D3, 0xCEAF96));
     Item ZOMBIE_PIGMAN_SPAWN_EGG = register("pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 1)));
     Item TIER_TWO_ZOMBIE_PIGMAN_SPAWN_EGG = register("tier_two_pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 2)));
     Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
 
-    ResourceKey<Item> BIRD_SPAWN_EGG = ResourceKey.create(Registries.ITEM, InvasionMod.id("bird_spawn_egg"));
-    ResourceKey<Item> VULTURE_SPAWN_EGG = ResourceKey.create(Registries.ITEM, InvasionMod.id("vulture_spawn_egg"));
+    Item BIRD_SPAWN_EGG = register("bird_spawn_egg", p -> createSpawnEgg(p, InvEntities.BIRD, 0x2B2B2B, 0xEA7EDC));
+    Item VULTURE_SPAWN_EGG = register("vulture_spawn_egg", p -> createSpawnEgg(p, InvEntities.VULTURE, 0x2B2B2B, 0x7C5B40));
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
-        return new InvasionSpawnEggItem(properties.component(
+        InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
                 DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, data.copyTag())), type);
+        SPAWN_EGGS.add(egg);
+        return egg;
     }
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor) {
-        return new InvasionSpawnEggItem(properties.component(
+        InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
                 DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, new CompoundTag())), type);
+        SPAWN_EGGS.add(egg);
+        return egg;
     }
 
     private static <T extends Item> T register(String name, Function<Item.Properties, T> factory) {
@@ -111,8 +119,6 @@ public interface InvItems {
     static void bootstrap() {
         if (InvasionMod.getConfig().debugMode) {
             register("debug_wand", p -> new DebugWandItem(p.stacksTo(1)));
-            register("bird_spawn_egg", p -> createSpawnEgg(p, InvEntities.BIRD, 0x2B2B2B, 0xEA7EDC));
-            register("vulture_spawn_egg", p -> createSpawnEgg(p, InvEntities.VULTURE, 0x2B2B2B, 0xEA7EDC));
         }
         Identifier tabId = InvasionMod.id("invasion_mod");
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabId, FabricCreativeModeTab.builder().displayItems((context, entries) -> {
