@@ -1,6 +1,5 @@
 package com.invasion.entity.ai.goal;
 
-import java.util.EnumSet;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PathfinderMob;
@@ -8,7 +7,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
 import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
@@ -34,7 +32,6 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
 
     public SprintGoal(T entity) {
         theEntity = entity;
-        setFlags(EnumSet.of(Goal.Flag.MOVE));
     }
 
     @Override
@@ -56,6 +53,13 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
     public void start() {
         isExecuting = true;
         timer = 60;
+    }
+
+    @Override
+    public void stop() {
+        isExecuting = false;
+        isInWindup = false;
+        endSprint();
     }
 
     @Override
