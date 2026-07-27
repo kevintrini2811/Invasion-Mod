@@ -66,6 +66,7 @@ public class TrapEntity extends Entity {
         if (!isValidPlacement()) {
             spawnAtLocation(InvItems.EMPTY_TRAP);
             discard();
+            return;
         }
 
         if (getTrapType() != Type.EMPTY) {
@@ -203,7 +204,7 @@ public class TrapEntity extends Entity {
         }
 
         for (Entity entity : level().getEntities(this, getBoundingBox().inflate(size))) {
-            entity.setRemainingFireTicks(8);
+            entity.igniteForSeconds(8);
             entity.hurt(damageSources().onFire(), initialDamage);
         }
     }
@@ -224,6 +225,7 @@ public class TrapEntity extends Entity {
     @Override
     protected void addAdditionalSaveData(CompoundTag compound) {
         compound.putString("type", getTrapType().getSerializedName());
+        compound.putInt("time_triggered", timeTriggered);
     }
 
     public enum Type implements StringRepresentable {
