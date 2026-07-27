@@ -733,6 +733,9 @@ public class Nexus implements ControllableNexusAccess {
     private boolean resumeSpawnerInvasion() {
         try {
             waveSpawner.resumeFromState(currentWave);
+            if (mobsToKillInWave <= 0) {
+                initializeWaveProgress();
+            }
             return true;
         } catch (WaveSpawnerException e) {
             InvasionMod.LOGGER.error("Error resuming spawner", e);
@@ -781,6 +784,9 @@ public class Nexus implements ControllableNexusAccess {
         compound.putBoolean("continuousAttack", continuousAttack);
         compound.putBoolean("activated", isActive());
         compound.putBoolean("paused", paused);
+        compound.putInt("mobsLeftInWave", mobsLeftInWave);
+        compound.putInt("lastMobsLeftInWave", lastMobsLeftInWave);
+        compound.putInt("mobsToKillInWave", mobsToKillInWave);
 
 
         compound.put("inventory", nexusItemStacks.writeNbt(new CompoundTag(), lookup));
