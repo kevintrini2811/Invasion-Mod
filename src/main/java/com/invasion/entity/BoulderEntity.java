@@ -28,6 +28,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -57,9 +58,23 @@ public class BoulderEntity extends AbstractArrow {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        if (tickCount > 60) {
+            discard();
+        }
+    }
+
+    @Override
     protected void onHitEntity(EntityHitResult hit) {
-        playSound(InvSounds.ENTITY_BOULDER_LAND, 1, 0.9F / (getRandom().nextFloat() * 0.2F + 0.9F));
-        level().gameEvent(this, GameEvent.HIT_GROUND, blockPosition());
+        if (level() instanceof ServerLevel serverLevel) {
+            float damage = Math.min(14, Math.max(tickCount / 20.0F, 1) * 6);
+            if (hit.getEntity().hurtServer(serverLevel, damageSources().arrow(this, getOwner()), damage)) {
+                playSound(InvSounds.ENTITY_BOULDER_LAND, 1, 0.9F / (getRandom().nextFloat() * 0.2F + 0.9F));
+                level().gameEvent(this, GameEvent.PROJECTILE_LAND, blockPosition());
+                discard();
+            }
+        }
     }
 
     @Override
@@ -75,7 +90,7 @@ public class BoulderEntity extends AbstractArrow {
             if (state.is(InvBlocks.NEXUS_CORE) && level().getBlockEntity(hit.getBlockPos()) instanceof NexusBlockEntity nexus) {
                 // TODO: Boulder damage source type
                 nexus.getNexus().damage(damageSources().arrow(this, getOwner()), 2);
-            } else if (state.getDestroySpeed(level(), hit.getBlockPos()) >= 0) {
+            } else if (!state.is(Blocks.CHEST) && state.getDestroySpeed(level(), hit.getBlockPos()) >= 0) {
 
                 if (!state.is(BlockTags.WITHER_IMMUNE) && !state.is(BlockTags.DRAGON_IMMUNE)) {
                     level().gameEvent(this, GameEvent.HIT_GROUND, hit.getBlockPos());
