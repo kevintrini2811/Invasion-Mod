@@ -3,9 +3,7 @@ package com.invasion.entity.ai.goal;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Optional;
-import com.invasion.block.InvBlocks;
 import com.invasion.entity.IMEndermanEntity;
-import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -33,10 +31,9 @@ public final class CarryBlockingBlockGoal extends Goal {
         }
         BlockPos next = mob.getNavigation().getPath().getNextNodePos();
         Optional<BlockPos> obstacle = BlockPos.betweenClosedStream(
-                        mob.getDimensions(mob.getPose()).makeBoundingBox(
+                mob.getDimensions(mob.getPose()).makeBoundingBox(
                                 com.invasion.util.math.PosUtils.bottomCenter(next)))
-                .filter(pos -> !mob.level().getBlockState(pos).is(InvBlocks.NEXUS_CORE))
-                .filter(pos -> IMLandPathNodeMaker.canMineBlock(mob, pos))
+                .filter(pos -> !mob.level().getBlockState(pos).isAir())
                 .map(BlockPos::immutable)
                 .min(Comparator.comparingDouble(pos ->
                         mob.distanceToSqr(com.invasion.util.math.PosUtils.center(pos))));
