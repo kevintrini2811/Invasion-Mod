@@ -87,16 +87,6 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
             }
         }
     }
-    @Override
-    public void aiStep() {
-        if (isAlive() && !hasNexus() && level().isBrightOutside() && level().canSeeSky(blockPosition())) {
-            igniteForSeconds(8);
-        }
-
-        super.aiStep();
-    }
-
-
     private void hatch() {
         playSound(InvSounds.ENTITY_SPIDER_EGG_HATCH, 1, 1);
         setHatched(true);
