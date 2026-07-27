@@ -146,7 +146,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
     @Override
     protected Component getTypeName() {
         if (isBrute()) {
-            return Component.translatable(getType().toShortString() + ".brute");
+            return Component.translatable(getType().getDescriptionId() + ".brute");
         }
         return super.getTypeName();
     }

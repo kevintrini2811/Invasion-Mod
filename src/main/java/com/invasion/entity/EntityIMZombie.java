@@ -364,10 +364,10 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     protected Component getTypeName() {
         if (isTar()) {
-            return Component.translatable(getType().toShortString() + ".tar");
+            return Component.translatable(getType().getDescriptionId() + ".tar");
         }
         if (isPigman()) {
-            return Component.translatable(getType().toShortString() + ".pigman");
+            return Component.translatable(getType().getDescriptionId() + ".pigman");
         }
         return super.getTypeName();
     }
