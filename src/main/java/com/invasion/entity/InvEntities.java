@@ -44,6 +44,8 @@ public interface InvEntities {
             .sized(0.6F, 1.99F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<ImpEnitty> IMP = register("imp", EntityType.Builder.<ImpEnitty>of(ImpEnitty::new, MobCategory.MONSTER)
             .sized(0.6F, 1.99F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMEndermanEntity> ENDERMAN = register("enderman", EntityType.Builder.<IMEndermanEntity>of(IMEndermanEntity::new, MobCategory.MONSTER)
+            .sized(0.6F, 2.9F).eyeHeight(2.55F).clientTrackingRange(8));
     EntityType<IMWolfEntity> WOLF = register("wolf", EntityType.Builder.<IMWolfEntity>of(IMWolfEntity::new, MobCategory.CREATURE)
             .sized(0.6F, 0.85F).eyeHeight(0.68F).passengerAttachments(new Vec3(0.0, 0.81875, -0.0625)).clientTrackingRange(10));
 
@@ -93,6 +95,7 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(THROWER, ThrowerEntity.createT1V0Attributes());
         FabricDefaultAttributeRegistry.register(BURROWER, BurrowerEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(IMP, ImpEnitty.createAttributes());
+        FabricDefaultAttributeRegistry.register(ENDERMAN, IMEndermanEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(WOLF, IMWolfEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPIDER_EGG, SpiderEggEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPAWN_PROXY, Mob.createMobAttributes());

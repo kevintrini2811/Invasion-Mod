@@ -32,6 +32,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.PIGMAN_ENGINEER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/pigman_engineer.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.IMP, ImpRenderer::new);
+        EntityRendererRegistry.register(InvEntities.ENDERMAN, IMEndermanRenderer::new);
         EntityRendererRegistry.register(InvEntities.THROWER, ThrowerRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/burrower.png"), 0.5F));

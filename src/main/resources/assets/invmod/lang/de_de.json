@@ -33,6 +33,7 @@
   "item.invmod.thrower_spawn_egg": "Werfer-Spawn-Ei",
   "item.invmod.big_thrower_spawn_egg": "Großer-Werfer-Spawn-Ei",
   "item.invmod.imp_spawn_egg": "Kobold-Spawn-Ei",
+  "item.invmod.enderman_spawn_egg": "IM-Enderman-Spawn-Ei",
   "item.invmod.pigman_zombie_spawn_egg": "Pigman-Zombie-Spawn-Ei",
   "item.invmod.tier_two_pigman_zombie_spawn_egg": "Pigman-Zombie Stufe 2-Spawn-Ei",
   "item.invmod.zombie_pigman_brute_spawn_egg": "Pigman-Zombie-Grobian-Spawn-Ei",
@@ -55,6 +56,7 @@
     "entity.invmod.spider_egg": "IM Spinnenei",
     "entity.invmod.trap": "Falle",
     "entity.invmod.imp": "IM Kobold",
+    "entity.invmod.enderman": "IM Enderman",
 
     "invmod.message.probe.rangechanged": "Nexus-Reichweite geändert auf: %s",
     "invmod.message.probe.cannotchangerange": "Nexus ist bereits aktiv! Reichweite: %s",

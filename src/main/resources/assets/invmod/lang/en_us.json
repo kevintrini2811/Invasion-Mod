@@ -33,6 +33,7 @@
   "item.invmod.thrower_spawn_egg": "Thrower Spawn Egg",
   "item.invmod.big_thrower_spawn_egg": "Big Thrower Spawn Egg",
   "item.invmod.imp_spawn_egg": "Imp Spawn Egg",
+  "item.invmod.enderman_spawn_egg": "IM Enderman Spawn Egg",
   "item.invmod.pigman_zombie_spawn_egg": "Pigman Zombie Spawn Egg",
   "item.invmod.tier_two_pigman_zombie_spawn_egg": "Tier 2 Pigman Zombie Spawn Egg",
   "item.invmod.zombie_pigman_brute_spawn_egg": "Pigman Zombie Brute Spawn Egg",
@@ -58,6 +59,7 @@
     "entity.invmod.spider_egg": "IM Spider Egg",
     "entity.invmod.trap": "Trap",
     "entity.invmod.imp": "IM Imp",
+    "entity.invmod.enderman": "IM Enderman",
 
     "invmod.message.probe.rangechanged": "Nexus range changed to: %s",
     "invmod.message.probe.cannotchangerange": "Nexus is currently active! Range: %s",

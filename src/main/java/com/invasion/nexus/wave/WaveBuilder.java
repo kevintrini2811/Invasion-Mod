@@ -96,6 +96,7 @@ public class WaveBuilder {
                         .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 4F)
                         .entry(EntityPatterns.THROWER_T1, 1.1F * weights[4])
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
+                        .entry(EntityPatterns.ENDERMAN_T1, 0.15F * weights[4])
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.7F * weights[3]), weight * 0.1666667F);
     }
 
@@ -120,6 +121,7 @@ public class WaveBuilder {
                 .entry(Select.<EntityPattern>random()
                         .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 3F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
+                        .entry(EntityPatterns.ENDERMAN_T1, 0.12F * weights[4])
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F * weights[3]), 1F);
     }
 
@@ -155,7 +157,8 @@ public class WaveBuilder {
                     .entry(EntityPatterns.THROWER_T1, 5F)
                     .entry(EntityPatterns.THROWER_T2, 0.5F)
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F)
-                    .entry(EntityPatterns.IMP_T1, 2F);
+                    .entry(EntityPatterns.IMP_T1, 2F)
+                    .entry(EntityPatterns.ENDERMAN_T1, 0.2F);
 
             // Spider Pig über Lazy-Getter
             var spiderPig = EntityPatterns.getSpiderPig();
@@ -222,7 +225,8 @@ public class WaveBuilder {
         announce.accept("Phase 3 gestartet: Spezialisten greifen an!");
         var midPool = WaveEntry.random()
                 .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
-                .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F);
+                .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F)
+                .entry(EntityPatterns.ENDERMAN_T1, 0.08F);
 
         builder.entry(
                 midPool
