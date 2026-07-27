@@ -1,6 +1,7 @@
 package com.invasion.client.render;
 
 import com.invasion.entity.IMSkeletonEntity;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.monster.skeleton.SkeletonModel;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
@@ -9,6 +10,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.Items;
 
 public final class InvSkeletonRenderer extends
@@ -33,6 +35,16 @@ public final class InvSkeletonRenderer extends
         super.extractRenderState(entity, state, tickDelta);
         state.isAggressive = entity.isAggressive();
         state.isHoldingBow = entity.getMainHandItem().is(Items.BOW);
+    }
+
+    @Override
+    protected HumanoidModel.ArmPose getArmPose(IMSkeletonEntity entity, HumanoidArm arm) {
+        if (arm == entity.getMainArm()
+                && entity.isAggressive()
+                && entity.getMainHandItem().is(Items.BOW)) {
+            return HumanoidModel.ArmPose.BOW_AND_ARROW;
+        }
+        return super.getArmPose(entity, arm);
     }
 
     @Override
