@@ -28,7 +28,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -90,7 +89,7 @@ public class BoulderEntity extends AbstractArrow {
             if (state.is(InvBlocks.NEXUS_CORE) && level().getBlockEntity(hit.getBlockPos()) instanceof NexusBlockEntity nexus) {
                 // TODO: Boulder damage source type
                 nexus.getNexus().damage(damageSources().arrow(this, getOwner()), 2);
-            } else if (!state.is(Blocks.CHEST) && state.getDestroySpeed(level(), hit.getBlockPos()) >= 0) {
+            } else if (state.getDestroySpeed(level(), hit.getBlockPos()) >= 0) {
 
                 if (!state.is(BlockTags.WITHER_IMMUNE) && !state.is(BlockTags.DRAGON_IMMUNE)) {
                     level().gameEvent(this, GameEvent.HIT_GROUND, hit.getBlockPos());
