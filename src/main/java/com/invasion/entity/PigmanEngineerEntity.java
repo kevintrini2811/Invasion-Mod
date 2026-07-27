@@ -88,6 +88,57 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @org.jetbrains.annotations.Nullable
     private BlockPos currentBuildTarget;
 
+    /**
+     * Vanilla's modern ground navigator rejects a node over a gap before our
+     * actionable node can always be considered. Detect the next ledge while
+     * attacking a nexus so the engineer can still start the original bridge
+     * building action.
+     */
+    private void tryBuildBridgeAhead() {
+        if (terrainModifier.isBusy() || !hasNexus() || getAIGoal() != HasAiGoals.Goal.BREAK_NEXUS) {
+            return;
+        }
+
+        BlockPos mobPos = blockPosition();
+        BlockPos nextPos = null;
+        var path = getNavigation().getPath();
+        if (path != null && !path.isDone()) {
+            BlockPos pathPos = path.getNextNodePos();
+            int horizontalDistance = Math.abs(pathPos.getX() - mobPos.getX())
+                    + Math.abs(pathPos.getZ() - mobPos.getZ());
+            if (horizontalDistance > 0 && horizontalDistance <= 2
+                    && Math.abs(pathPos.getY() - mobPos.getY()) <= 1) {
+                nextPos = new BlockPos(pathPos.getX(), mobPos.getY(), pathPos.getZ());
+            }
+        }
+
+        if (nextPos == null) {
+            BlockPos nexusPos = getNexus().getOrigin();
+            double dx = nexusPos.getX() - mobPos.getX();
+            double dz = nexusPos.getZ() - mobPos.getZ();
+            Direction direction = Direction.getApproximateNearest(dx, 0, dz);
+            if (!direction.getAxis().isHorizontal()) {
+                return;
+            }
+            nextPos = mobPos.relative(direction);
+        }
+
+        Level world = level();
+        BlockPos currentFloor = mobPos.below();
+        BlockPos bridgeFloor = nextPos.below();
+        boolean standingAtLedge = world.getBlockState(currentFloor)
+                .isCollisionShapeFullBlock(world, currentFloor);
+        boolean spaceIsClear = PathingUtil.isAirOrReplaceable(world.getBlockState(nextPos))
+                && PathingUtil.isAirOrReplaceable(world.getBlockState(nextPos.above()));
+        boolean floorIsMissing = !world.getBlockState(bridgeFloor)
+                .isCollisionShapeFullBlock(world, bridgeFloor);
+
+        if (standingAtLedge && spaceIsClear && floorIsMissing) {
+            currentBuildTarget = nextPos;
+            terrainModifier.submitJob(nextPos, Notifiable.NONE, terrainBuilder::askBuildBridge);
+        }
+    }
+
     private void tryEmergencyTowerBuild() {
         if (terrainModifier.isBusy()) {
             return;
@@ -238,6 +289,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         if (!level().isClientSide()) {
             // Wenn gerade kein anderer Baujob läuft:
+            if (!terrainModifier.isBusy()) {
+                tryBuildBridgeAhead();
+            }
             if (!terrainModifier.isBusy()) {
                 // Notfall-Turm direkt unter dem Nexus ausprobieren
                 tryEmergencyTowerBuild();

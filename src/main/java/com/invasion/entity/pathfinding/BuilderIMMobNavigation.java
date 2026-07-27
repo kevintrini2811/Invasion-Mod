@@ -206,7 +206,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
             if (isNoAction && isHorizontal) {
 
-                if (isBridgableGap(currentContext.level(), mutable.set(x, y - MAX_LADDER_TOWER_HEIGHT, z), MAX_LADDER_TOWER_HEIGHT)) {
+                if (isBridgableGap(mutable.set(x, y, z))) {
                     return getBridgeNode(x, y, z);
                 }
 
@@ -319,16 +319,11 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
             return ActionablePathNode.setAction(node, action);
         }
 
-        private boolean isBridgableGap(CollisionGetter world, BlockPos.MutableBlockPos mutable, int height) {
-            int originalY = mutable.getY() + 1;
+        private boolean isBridgableGap(BlockPos.MutableBlockPos mutable) {
+            int originalY = mutable.getY();
             try {
-                for (int yOffset = 0; yOffset < height; yOffset++) {
-                    PathType type = getPathTypeStatic(mob, mutable.setY(originalY + yOffset));
-                    if (type != PathType.OPEN && type != PathType.WATER && type != PathType.LAVA) {
-                        return false;
-                    }
-                }
-                return true;
+                PathType type = getPathTypeStatic(mob, mutable.setY(originalY - 1));
+                return type == PathType.OPEN || type == PathType.WATER || type == PathType.LAVA;
             } finally {
                 mutable.setY(originalY);
             }
