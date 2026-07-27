@@ -51,8 +51,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
 public class NexusSpiderEntity extends Spider implements NexusEntity, MountableEntity, Stunnable {
-    private static final AttributeModifier BABY_SPEED_BONUS = AttributeUtil.addPercentage(InvasionMod.id("baby_speed"), 50);
-    private static final AttributeModifier BABY_ATTACK_BONUS = AttributeUtil.multiplyTotal(InvasionMod.id("baby_attack"), 0.1F);
+    private static final AttributeModifier BABY_SPEED_BONUS = AttributeUtil.addToBase(InvasionMod.id("baby_speed"), 0.05F);
+    private static final AttributeModifier BABY_ATTACK_BONUS = AttributeUtil.addToBase(InvasionMod.id("baby_attack"), -2F);
 
     private static final List<Holder<Attribute>> GROWTH_SCALING_ATTRIBUTES = List.of(
             Attributes.ATTACK_DAMAGE,
