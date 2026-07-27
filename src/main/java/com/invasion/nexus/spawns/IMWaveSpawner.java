@@ -118,26 +118,30 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	public int resumeFromState(Wave wave) throws WaveSpawnerException {
+		long savedElapsed = elapsed;
 		stop();
 		beginNextWave(wave);
 		setPermitSpawns(false);
 		int numberOfSpawns = 0;
-		for (long i = 0; i < elapsed; i += 100L) {
+		for (long i = 0; i < savedElapsed; i += 100L) {
 			numberOfSpawns += currentWave.doNextSpawns(100, this);
 		}
 		setPermitSpawns(true);
+		elapsed = savedElapsed;
 		return numberOfSpawns;
 	}
 
 	public int resumeFromState(int waveNumber) throws WaveSpawnerException {
+		long savedElapsed = elapsed;
 		stop();
 		beginNextWave(waveNumber);
 		setPermitSpawns(false);
 		int numberOfSpawns = 0;
-		for (long i = 0; i < elapsed; i += 100L) {
+		for (long i = 0; i < savedElapsed; i += 100L) {
 		    numberOfSpawns += currentWave.doNextSpawns(100, this);
 		}
 		setPermitSpawns(true);
+		elapsed = savedElapsed;
 		return numberOfSpawns;
 	}
 
