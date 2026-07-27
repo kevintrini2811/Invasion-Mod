@@ -71,6 +71,7 @@ public class TrapEntity extends Entity {
         if (!isValidPlacement()) {
             spawnAtLocation((ServerLevel) level(), InvItems.EMPTY_TRAP);
             discard();
+            return;
         }
 
         if (getTrapType() != Type.EMPTY) {
@@ -206,7 +207,7 @@ public class TrapEntity extends Entity {
         }
 
         for (Entity entity : level().getEntities(this, getBoundingBox().inflate(size))) {
-            entity.setRemainingFireTicks(8);
+            entity.igniteForSeconds(8);
             entity.hurt(damageSources().onFire(), initialDamage);
         }
     }
@@ -222,11 +223,13 @@ public class TrapEntity extends Entity {
     @Override
     protected void readAdditionalSaveData(ValueInput compound) {
         setTrapType(Type.of(compound.getStringOr("type", "")));
+        timeTriggered = compound.getIntOr("time_triggered", 0);
     }
 
     @Override
     protected void addAdditionalSaveData(ValueOutput compound) {
         compound.putString("type", getTrapType().getSerializedName());
+        compound.putInt("time_triggered", timeTriggered);
     }
 
     @Override

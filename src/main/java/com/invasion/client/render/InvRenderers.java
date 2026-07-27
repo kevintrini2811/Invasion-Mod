@@ -38,7 +38,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.BOULDER, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.TNT, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.WOLF, WolfRenderer::new);
-        EntityRendererRegistry.register(InvEntities.TRAP, NoopRenderer::new);
+        EntityRendererRegistry.register(InvEntities.TRAP, TrapRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOLT, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.SFX, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.SPAWN_PROXY,
