@@ -223,7 +223,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 mob.fallDistance = 0;
                 mob.setJumping(false);
             }
-        } else if (action.getType() != PathAction.Type.DIG) {
+        } else {
             InvasionMod.LOGGER.info("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 waitingForNotify = MAX_WAIT_TIME;

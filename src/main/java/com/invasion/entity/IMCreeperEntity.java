@@ -13,6 +13,8 @@ import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.IMMobNavigation;
+import com.invasion.entity.pathfinding.path.PathAction;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.storage.ValueInput;
@@ -106,13 +108,26 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     @Override
     public boolean onPathBlocked(Path path, Notifiable notifee) {
         if (!path.isDone()) {
-            Vec3 delta = path.getEntityPosAtNode(this, path.getNextNodeIndex()).subtract(position());
-            float facing = (float) (Math.atan2(delta.x(), delta.z()) * Mth.RAD_TO_DEG) - 90;
-            explodeDirection = Direction.fromYRot(facing);
-            commitToExplode = true;
-            setFuseSpeed(1);
+            commitToExplosion(path.getNextNodePos());
         }
-        return false;
+        return commitToExplode;
+    }
+
+    @Override
+    public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
+        if (action.getType() != PathAction.Type.DIG || getTarget() != null) {
+            return false;
+        }
+        commitToExplosion(pos);
+        return true;
+    }
+
+    private void commitToExplosion(BlockPos obstacle) {
+        Vec3 delta = com.invasion.util.math.PosUtils.center(obstacle).subtract(position());
+        float facing = (float)(Math.atan2(delta.x(), delta.z()) * Mth.RAD_TO_DEG) - 90;
+        explodeDirection = Direction.fromYRot(facing);
+        commitToExplode = true;
+        setFuseSpeed(1);
     }
 
     @Override
