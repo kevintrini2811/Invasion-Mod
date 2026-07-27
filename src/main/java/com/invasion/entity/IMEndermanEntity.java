@@ -4,6 +4,9 @@ import java.util.Optional;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.CarryBlockingBlockGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
+import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
+import com.invasion.entity.ai.goal.target.RetaliateGoal;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,8 +22,12 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
@@ -80,6 +87,16 @@ public final class IMEndermanEntity extends IMMobEntity {
         goalSelector.addGoal(1, new CarryBlockingBlockGoal(this));
         goalSelector.addGoal(2, new AttackNexusGoal<>(this));
         goalSelector.addGoal(3, new GoToNexusGoal(this));
+        goalSelector.addGoal(4, new MobMeleeAttackGoal(this, 1.2, false));
+        goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1));
+        goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8));
+        goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+
+        targetSelector.addGoal(0, new RetaliateGoal(this));
+        targetSelector.addGoal(1,
+                new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
+        targetSelector.addGoal(2,
+                new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
     }
 
     public Optional<BlockState> getCarriedBlock() {
