@@ -7,6 +7,7 @@ import com.invasion.block.InvBlocks;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.IMCreeperIgniteGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.ProvideSupportGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
@@ -84,6 +85,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new IMCreeperIgniteGoal(this));
         goalSelector.addGoal(2, new AvoidEntityGoal<>(this, Cat.class, 6.0F, 0.25D, 0.300000011920929D));
+        goalSelector.addGoal(3, new MobMeleeAttackGoal(this, 1.0, false));
         goalSelector.addGoal(4, new AttackNexusGoal<>(this));
         goalSelector.addGoal(5, new ProvideSupportGoal(this, 4.0F, true));
         goalSelector.addGoal(7, new GoToNexusGoal(this));
