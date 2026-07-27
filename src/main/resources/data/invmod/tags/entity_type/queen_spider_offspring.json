@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "invmod:spider"
+    "invmod:spider",
+    "invmod:jumping_spider"
   ]
 }
