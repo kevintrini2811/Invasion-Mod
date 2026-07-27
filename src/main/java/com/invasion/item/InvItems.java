@@ -24,7 +24,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.nbt.CompoundTag;
@@ -92,13 +91,13 @@ public interface InvItems {
     ResourceKey<Item> VULTURE_SPAWN_EGG = ResourceKey.create(Registries.ITEM, InvasionMod.id("vulture_spawn_egg"));
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
-        return new SpawnEggItem(properties.component(
-                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, data.copyTag())));
+        return new InvasionSpawnEggItem(properties.component(
+                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, data.copyTag())), type);
     }
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor) {
-        return new SpawnEggItem(properties.component(
-                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, new CompoundTag())));
+        return new InvasionSpawnEggItem(properties.component(
+                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, new CompoundTag())), type);
     }
 
     private static <T extends Item> T register(String name, Function<Item.Properties, T> factory) {
