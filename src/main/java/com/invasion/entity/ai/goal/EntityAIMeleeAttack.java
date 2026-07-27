@@ -1,15 +1,18 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
-
+import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.server.level.ServerLevel;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.MathHelper;
 
-public class EntityAIMeleeAttack<T extends LivingEntity, E extends PathAwareEntity & NexusEntity> extends Goal {
+public class EntityAIMeleeAttack<T extends LivingEntity, E extends PathfinderMob & NexusEntity> extends Goal {
 	protected final E mob;
 	private final Class<? extends T> targetClass;
 	private float attackRange = 0.6F;
@@ -20,14 +23,14 @@ public class EntityAIMeleeAttack<T extends LivingEntity, E extends PathAwareEnti
 		this.mob = entity;
 		this.targetClass = targetClass;
 		this.attackDelay = attackDelay;
-		setControls(EnumSet.of(Control.MOVE, Control.LOOK));
+		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 
 	@Override
-    public boolean canStart() {
+    public boolean canUse() {
 		LivingEntity target = mob.getTarget();
 		return target != null && target.isAlive() && mob.hasGoal(HasAiGoals.Goal.MELEE_TARGET)
-		        && mob.squaredDistanceTo(target) < (attackRange + mob.getWidth() + target.getWidth()) * 4
+		        && mob.distanceToSqr(target) < (attackRange + mob.getBbWidth() + target.getBbWidth()) * 4
 		        && target.getClass().isAssignableFrom(targetClass);
 	}
 
@@ -45,12 +48,12 @@ public class EntityAIMeleeAttack<T extends LivingEntity, E extends PathAwareEnti
 	}
 
 	protected void attackEntity(LivingEntity target) {
-		mob.tryAttack(target);
+		mob.doHurtTarget((ServerLevel) mob.level(), target);
 		setAttackTime(getAttackDelay());
 	}
 
 	protected boolean canAttackEntity(LivingEntity target) {
-		return getAttackTime() <= 0 && mob.squaredDistanceTo(target.getPos()) < MathHelper.square(mob.getWidth() + attackRange);
+		return getAttackTime() <= 0 && mob.distanceToSqr(target.position()) < Mth.square(mob.getBbWidth() + attackRange);
 	}
 
 	protected int getAttackTime() {

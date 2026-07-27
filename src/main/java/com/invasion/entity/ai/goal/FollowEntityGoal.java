@@ -1,23 +1,22 @@
 package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.NexusEntity;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
 
 public class FollowEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
     private final float followDistanceSq;
 
     @SuppressWarnings("unchecked")
-    public <E extends PathAwareEntity & NexusEntity> FollowEntityGoal(E entity, float followDistance) {
+    public <E extends PathfinderMob & NexusEntity> FollowEntityGoal(E entity, float followDistance) {
         this(entity, (Class<T>)LivingEntity.class, followDistance);
     }
 
-    public <E extends PathAwareEntity & NexusEntity> FollowEntityGoal(E entity, Class<? extends T> target, float followDistance) {
+    public <E extends PathfinderMob & NexusEntity> FollowEntityGoal(E entity, Class<? extends T> target, float followDistance) {
         super(entity, target);
-        followDistanceSq = MathHelper.square(followDistance);
+        followDistanceSq = Mth.square(followDistance);
     }
 
     @Override
@@ -40,7 +39,7 @@ public class FollowEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T
     public void tick() {
         super.tick();
         Entity target = getTarget();
-        if (target != null && mob.squaredDistanceTo(target) < followDistanceSq) {
+        if (target != null && mob.distanceToSqr(target) < followDistanceSq) {
             navigation.haltForTick();
         }
     }

@@ -2,49 +2,48 @@ package com.invasion.entity.pathfinding;
 
 import java.util.List;
 import java.util.stream.Stream;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.CollisionView;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.Heightmap.Type;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap.Types;
 
 public interface ClimberUtil {
-    static boolean isLadder(CollisionView world, BlockPos pos) {
-        return world.getBlockState(pos).isOf(Blocks.LADDER);
+    static boolean isLadder(CollisionGetter world, BlockPos pos) {
+        return world.getBlockState(pos).is(Blocks.LADDER);
     }
 
-    static boolean canPositionSupportLadder(WorldView world, BlockPos.Mutable pos, Direction facing) {
+    static boolean canPositionSupportLadder(LevelReader world, BlockPos.MutableBlockPos pos, Direction facing) {
         BlockState state = world.getBlockState(pos);
-        return state.isOf(Blocks.LADDER)
-            || (PathingUtil.isAirOrReplaceable(state) && Blocks.LADDER.getDefaultState().with(LadderBlock.FACING, facing).canPlaceAt(world, pos));
+        return state.is(Blocks.LADDER)
+            || (PathingUtil.isAirOrReplaceable(state) && Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, facing).canSurvive(world, pos));
     }
 
-    static Stream<Direction> getPossibleLadderOrientations(WorldView world, BlockPos.Mutable pos) {
+    static Stream<Direction> getPossibleLadderOrientations(LevelReader world, BlockPos.MutableBlockPos pos) {
         BlockState state = world.getBlockState(pos);
         if (!PathingUtil.isAirOrReplaceable(state)) {
             return Stream.empty();
         }
-        return Direction.Type.HORIZONTAL.stream().filter(facing -> canPositionSupportLadder(world, pos, facing));
+        return Direction.Plane.HORIZONTAL.stream().filter(facing -> canPositionSupportLadder(world, pos, facing));
     }
 
-    static Direction getOrientationFromNeighbors(CollisionView world, BlockPos.Mutable mutable, List<Direction> possibleOrientations) {
+    static Direction getOrientationFromNeighbors(CollisionGetter world, BlockPos.MutableBlockPos mutable, List<Direction> possibleOrientations) {
         BlockState above = world.getBlockState(mutable.move(Direction.UP));
         BlockState below = world.getBlockState(mutable.move(Direction.DOWN, 2));
         mutable.move(Direction.UP);
 
-        if (above.isOf(Blocks.LADDER)) {
-            Direction aboveDirection = above.get(LadderBlock.FACING);
+        if (above.is(Blocks.LADDER)) {
+            Direction aboveDirection = above.getValue(LadderBlock.FACING);
             if (possibleOrientations.contains(aboveDirection)) {
                 return aboveDirection;
             }
         }
-        if (below.isOf(Blocks.LADDER)) {
-            Direction belowDirection = below.get(LadderBlock.FACING);
+        if (below.is(Blocks.LADDER)) {
+            Direction belowDirection = below.getValue(LadderBlock.FACING);
             if (possibleOrientations.contains(belowDirection)) {
                 return belowDirection;
             }
@@ -53,20 +52,20 @@ public interface ClimberUtil {
         return possibleOrientations.get(0);
     }
 
-    static int getWallHeight(WorldView world, BlockPos.Mutable mutable, Direction facing, int max) {
+    static int getWallHeight(LevelReader world, BlockPos.MutableBlockPos mutable, Direction facing, int max) {
         return PathingUtil.scanVertically(world, mutable, max, pos -> canPositionSupportLadder(world, pos, facing));
     }
 
-    static int getGapHeight(World world, BlockPos.Mutable mutable, int max) {
-        int maxY = world.getTopY(Type.WORLD_SURFACE, mutable.getX(), mutable.getZ());
+    static int getGapHeight(Level world, BlockPos.MutableBlockPos mutable, int max) {
+        int maxY = world.getHeight(Types.WORLD_SURFACE, mutable.getX(), mutable.getZ());
         return PathingUtil.scanVertically(world, mutable, max, pos -> {
             return pos.getY() < maxY && PathingUtil.isAirOrReplaceable(world.getBlockState(pos));
         });
     }
 
-    static int getWallHeightPermittingGaps(World world, BlockPos.Mutable mutable, Direction facing, int maxWall, int maxGap) {
-        BlockPos initial = mutable.toImmutable();
-        int maxY = world.getTopY(Type.WORLD_SURFACE, mutable.getX(), mutable.getZ());
+    static int getWallHeightPermittingGaps(Level world, BlockPos.MutableBlockPos mutable, Direction facing, int maxWall, int maxGap) {
+        BlockPos initial = mutable.immutable();
+        int maxY = world.getHeight(Types.WORLD_SURFACE, mutable.getX(), mutable.getZ());
 
         int wallHeight = 0;
         int gapHeight = 0;
@@ -75,7 +74,7 @@ public interface ClimberUtil {
         for (; i < maxY; i++) {
             mutable.set(initial).move(Direction.UP, i);
             boolean isWall = canPositionSupportLadder(world, mutable, facing);
-            boolean isGap = PathingUtil.isAirOrReplaceable(world.getBlockState(mutable.offset(facing)));
+            boolean isGap = PathingUtil.isAirOrReplaceable(world.getBlockState(mutable.relative(facing)));
 
             if (isWall) {
                 gapHeight = 0;

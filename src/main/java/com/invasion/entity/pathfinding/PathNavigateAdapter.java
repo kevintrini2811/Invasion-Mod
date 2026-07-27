@@ -1,18 +1,18 @@
 package com.invasion.entity.pathfinding;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.ai.pathing.PathNodeNavigator;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraft.world.phys.Vec3;
 
 @Deprecated
-public class PathNavigateAdapter extends EntityNavigation {
+public class PathNavigateAdapter extends PathNavigation {
     private final Navigation navigator;
 
-    public PathNavigateAdapter(MobEntity entity, World world, Navigation navigator) {
+    public PathNavigateAdapter(Mob entity, Level world, Navigation navigator) {
         super(entity, world);
         this.navigator = navigator;
     }
@@ -27,12 +27,12 @@ public class PathNavigateAdapter extends EntityNavigation {
     }
 
     @Override
-    public void recalculatePath() {
+    public void recomputePath() {
 
     }
 
     @Override
-    public boolean isIdle() {
+    public boolean isDone() {
         return navigator.isIdle();
     }
 
@@ -42,47 +42,52 @@ public class PathNavigateAdapter extends EntityNavigation {
     }
 
     @Override
-    public void setSpeed(double speed) {
+    public void setSpeedModifier(double speed) {
         ((IMNavigation)navigator).setSpeed(speed);
     }
 
     @Override
-    public boolean startMovingTo(double x, double y, double z, double movespeed) {
+    public boolean moveTo(double x, double y, double z, double movespeed) {
         return ((IMNavigation)navigator).startMovingTo(x, y, z, (float) movespeed);
     }
 
     @Override
-    public boolean startMovingTo(Entity entity, double movespeed) {
+    public boolean moveTo(Entity entity, double movespeed) {
         return ((IMNavigation)navigator).startMovingTo(entity, (float) movespeed);
     }
 
     @Override
-    public PathNodeMaker getNodeMaker() {
+    public NodeEvaluator getNodeEvaluator() {
         return null;
     }
 
     @Override
-    public void setCanSwim(boolean canSwim) {
+    public void setCanFloat(boolean canSwim) {
         navigator.getActor().setCanSwim(canSwim);
     }
 
     @Override
-    public boolean canSwim() {
+    public boolean canFloat() {
         return true;
     }
 
     @Override
-    protected PathNodeNavigator createPathNodeNavigator(int range) {
+    protected PathFinder createPathFinder(int range) {
         return null;
     }
 
     @Override
-    protected Vec3d getPos() {
+    protected Vec3 getTempMobPos() {
         return ((IMNavigation)navigator).getPos();
     }
 
     @Override
-    protected boolean isAtValidPosition() {
+    protected boolean canUpdatePath() {
+        return true;
+    }
+
+    @Override
+    public boolean canNavigateGround() {
         return true;
     }
 }

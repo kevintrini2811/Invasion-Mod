@@ -1,27 +1,26 @@
 package com.invasion.nexus.ai;
 
 import java.util.List;
-
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.CollisionView;
-import net.minecraft.world.border.WorldBorder;
 
-class TerrainDataLayer extends TerrainDataLayerChunk implements CollisionView {
-    private final Long2ObjectMap<BlockView> chunks = new Long2ObjectOpenHashMap<>();
-    private final CollisionView world;
+class TerrainDataLayer extends TerrainDataLayerChunk implements CollisionGetter {
+    private final Long2ObjectMap<BlockGetter> chunks = new Long2ObjectOpenHashMap<>();
+    private final CollisionGetter world;
 
-    public TerrainDataLayer(CollisionView world) {
+    public TerrainDataLayer(CollisionGetter world) {
         super(world);
         this.world = world;
     }
 
-    public TerrainDataLayer(CollisionView world, Long2ObjectMap<Integer> dataLayer) {
+    public TerrainDataLayer(CollisionGetter world, Long2ObjectMap<Integer> dataLayer) {
         this(world);
         this.data.putAll(dataLayer);
     }
@@ -32,13 +31,13 @@ class TerrainDataLayer extends TerrainDataLayerChunk implements CollisionView {
     }
 
     @Override
-    public BlockView getChunkAsView(int chunkX, int chunkZ) {
-        BlockView chunk = world.getChunkAsView(chunkX, chunkZ);
-        return chunk == null ? null : chunks.computeIfAbsent(ChunkPos.toLong(chunkX, chunkZ), l -> new TerrainDataLayerChunk(chunk));
+    public BlockGetter getChunkForCollisions(int chunkX, int chunkZ) {
+        BlockGetter chunk = world.getChunkForCollisions(chunkX, chunkZ);
+        return chunk == null ? null : chunks.computeIfAbsent(ChunkPos.pack(chunkX, chunkZ), l -> new TerrainDataLayerChunk(chunk));
     }
 
     @Override
-    public List<VoxelShape> getEntityCollisions(Entity entity, Box box) {
+    public List<VoxelShape> getEntityCollisions(Entity entity, AABB box) {
         return world.getEntityCollisions(entity, box);
     }
 }

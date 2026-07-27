@@ -2,21 +2,19 @@ package com.invasion.nexus.test;
 
 import java.util.List;
 import java.util.UUID;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity.RemovalReason;
+import net.minecraft.world.level.Level;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.ControllableNexusAccess;
 import com.invasion.nexus.Mode;
 import com.invasion.nexus.Participants;
 import com.invasion.nexus.ai.AttackerAI;
 
-import net.minecraft.entity.Entity.RemovalReason;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
 public class DummyNexus implements ControllableNexusAccess {
-    private World world;
+    private Level world;
 
     private final UUID uuid = UUID.randomUUID();
 
@@ -25,7 +23,7 @@ public class DummyNexus implements ControllableNexusAccess {
         return uuid;
     }
 
-    public void setWorld(World world) {
+    public void setWorld(Level world) {
         this.world = world;
     }
 
@@ -64,11 +62,11 @@ public class DummyNexus implements ControllableNexusAccess {
 
     @Override
     public BlockPos getOrigin() {
-        return BlockPos.ORIGIN;
+        return BlockPos.ZERO;
     }
 
     @Override
-    public World getWorld() {
+    public Level getWorld() {
         return world;
     }
 
@@ -102,7 +100,7 @@ public class DummyNexus implements ControllableNexusAccess {
     }
 
     @Override
-    public List<Text> getStatus() {
+    public List<Component> getStatus() {
         return List.of();
     }
 

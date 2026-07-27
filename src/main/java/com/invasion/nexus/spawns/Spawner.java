@@ -1,19 +1,18 @@
 package com.invasion.nexus.spawns;
 
 import com.invasion.nexus.EntityConstruct;
-
-import net.minecraft.predicate.NumberRange.IntRange;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.util.RandomSource;
 
 public interface Spawner {
-    Random getRandom();
+    RandomSource getRandom();
 
-    boolean attemptSpawn(EntityConstruct mobConstruct, IntRange angle);
+    boolean attemptSpawn(EntityConstruct mobConstruct, Ints angle);
 
-    int getNumberOfPointsInRange(IntRange angle, SpawnType type);
+    int getNumberOfPointsInRange(Ints angle, SpawnType type);
 
-    void sendSpawnAlert(String message, Formatting color);
+    void sendSpawnAlert(String message, ChatFormatting color);
 
     void noSpawnPointNotice();
 }

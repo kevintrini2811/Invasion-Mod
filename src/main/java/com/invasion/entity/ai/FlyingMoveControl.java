@@ -2,11 +2,10 @@ package com.invasion.entity.ai;
 
 import com.invasion.entity.EntityIMFlying;
 import com.invasion.util.math.MathUtil;
-
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public class FlyingMoveControl extends ClimbableMoveControl {
 	private EntityIMFlying entity;
@@ -23,22 +22,22 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 	}
 
 	@Override
-    public void moveTo(double x, double y, double z, double speed) {
-	    super.moveTo(x, y, z, speed);
+    public void setWantedPosition(double x, double y, double z, double speed) {
+	    super.setWantedPosition(x, y, z, speed);
 	    needsUpdate = true;
 	}
 
 	@Override
-    public void strafeTo(float forward, float sideways) {
-	    super.strafeTo(forward, sideways);
+    public void strafe(float forward, float sideways) {
+	    super.strafe(forward, sideways);
 	    needsUpdate = true;
 	}
 
 	public void setHeading(float yaw, float pitch, float idealSpeed, int time) {
-		double x = entity.getX() + Math.sin(yaw * MathHelper.RADIANS_PER_DEGREE) * idealSpeed * time;
-		double y = entity.getY() + Math.sin(pitch * MathHelper.RADIANS_PER_DEGREE) * idealSpeed * time;
-		double z = entity.getZ() + Math.cos(yaw * MathHelper.RADIANS_PER_DEGREE) * idealSpeed * time;
-		moveTo(x, y, z, idealSpeed);
+		double x = entity.getX() + Math.sin(yaw * Mth.DEG_TO_RAD) * idealSpeed * time;
+		double y = entity.getY() + Math.sin(pitch * Mth.DEG_TO_RAD) * idealSpeed * time;
+		double z = entity.getZ() + Math.cos(yaw * Mth.DEG_TO_RAD) * idealSpeed * time;
+		setWantedPosition(x, y, z, idealSpeed);
 	}
 
 	public void setWantsToBeFlying(boolean flag) {
@@ -47,12 +46,12 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 
 	@Override
     public void tick() {
-		entity.setForwardSpeed(0);
-		entity.setAcceleration(Vec3d.ZERO);
+		entity.setZza(0);
+		entity.setAcceleration(Vec3.ZERO);
 		if ((!needsUpdate) && (entity.getMoveState() != MoveState.FLYING)) {
 			entity.setMoveState(MoveState.STANDING);
 			entity.setFlyState(FlyState.GROUNDED);
-			entity.setPitch(wrapDegrees(entity.getPitch(), 50, 4));
+			entity.setXRot(rotlerp(entity.getXRot(), 50, 4));
 			return;
 		}
 		needsUpdate = false;
@@ -95,45 +94,45 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 			entity.setFlyState(result);
 		} else {
 		    entity.setGroundFriction(0);
-	        entity.setRoll(wrapDegrees(entity.getRoll(1), 0, 6));
-	        targetSpeed = entity.getMovementSpeed();
-	        entity.setPitch(wrapDegrees(entity.getPitch(), 50, 4));
+	        entity.setRoll(rotlerp(entity.getRoll(1), 0, 6));
+	        targetSpeed = entity.getSpeed();
+	        entity.setXRot(rotlerp(entity.getXRot(), 50, 4));
 			super.tick();
 		}
 	}
 
 	protected FlyState doFlying() {
-		this.targetFlySpeed = this.speed;
+		this.targetFlySpeed = this.speedModifier;
 		return fly();
 	}
 
 	protected FlyState fly() {
 		entity.setGroundFriction(1);
-		Vec3d delta = new Vec3d(targetX, targetY, targetZ).subtract(entity.getPos());
+		Vec3 delta = new Vec3(wantedX, wantedY, wantedZ).subtract(entity.position());
 
-		double dXZSq = delta.horizontalLengthSquared();
-		double distanceSquared = dXZSq + MathHelper.square(delta.y);
+		double dXZSq = delta.horizontalDistanceSqr();
+		double distanceSquared = dXZSq + Mth.square(delta.y);
 
 		if (distanceSquared > 0.04D) {
 			int timeToTurn = 10;
-			float gravity = (float)entity.getFinalGravity();
+			float gravity = (float)entity.getGravity();
 			float liftConstant = gravity;
-			Vec3d acelleration = Vec3d.ZERO;
-			Vec3d velocity = entity.getVelocity();
-			double hSpeedSq = velocity.horizontalLengthSquared();
+			Vec3 acelleration = Vec3.ZERO;
+			Vec3 velocity = entity.getDeltaMovement();
+			double hSpeedSq = velocity.horizontalDistanceSqr();
 			if (hSpeedSq == 0) {
 				hSpeedSq = 1.0E-008D;
 			}
 			double horizontalSpeed = Math.sqrt(hSpeedSq);
-			double flySpeed = Math.sqrt(hSpeedSq + MathHelper.square(velocity.y));
+			double flySpeed = Math.sqrt(hSpeedSq + Mth.square(velocity.y));
 
 			double desiredYVelocity = delta.y / timeToTurn;
 			double dVelY = desiredYVelocity - (velocity.y - gravity);
 
 			float minFlightSpeed = 0.05F;
 			if (flySpeed < minFlightSpeed) {
-				entity.setYaw(wrapDegrees(entity.getYaw(), (float) (Math.atan2(delta.z, delta.x) * MathHelper.DEGREES_PER_RADIAN - 90), getTurnRate()));
-				if (entity.isOnGround()) {
+				entity.setYRot(rotlerp(entity.getYRot(), (float) (Math.atan2(delta.z, delta.x) * Mth.RAD_TO_DEG - 90), getTurnRate()));
+				if (entity.onGround()) {
 					return FlyState.GROUNDED;
 				}
 			} else {
@@ -181,8 +180,8 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 					else if (climbForceRatio < -1.0D) {
 						climbForceRatio = -1.0D;
 					}
-					double xzSpeed = velocity.horizontalLength();
-					double velPitch = xzSpeed > 0 ? Math.atan(velocity.y / xzSpeed) * MathHelper.DEGREES_PER_RADIAN : -180;
+					double xzSpeed = velocity.horizontalDistance();
+					double velPitch = xzSpeed > 0 ? Math.atan(velocity.y / xzSpeed) * Mth.RAD_TO_DEG : -180;
 					double pitchInfluence = Math.max(0, (entity.getMaxPoweredFlightSpeed() - Math.abs(velocity.y)) / entity.getMaxPoweredFlightSpeed());
 					newPitch = velPitch + 15 * climbForceRatio * pitchInfluence;
 				} else {
@@ -190,12 +189,12 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 					double climbForceRatio = Math.min(acelleration.y / climbForce, 1.0D);
 					newPitch = middlePitch + (pitchLimit - middlePitch) * climbForceRatio;
 				}
-				newPitch = wrapDegrees(entity.getPitch(), (float) newPitch, 1.5F);
-				double newYaw = Math.atan2(velocity.z, velocity.x) * MathHelper.DEGREES_PER_RADIAN - 90;
-				newYaw = wrapDegrees(entity.getYaw(), (float) newYaw, getTurnRate());
-				entity.updatePositionAndAngles(entity.getX(), entity.getY(), entity.getZ(), (float) newYaw, (float) newPitch);
+				newPitch = rotlerp(entity.getXRot(), (float) newPitch, 1.5F);
+				double newYaw = Math.atan2(velocity.z, velocity.x) * Mth.RAD_TO_DEG - 90;
+				newYaw = rotlerp(entity.getYRot(), (float) newYaw, getTurnRate());
+				entity.absSnapTo(entity.getX(), entity.getY(), entity.getZ(), (float) newYaw, (float) newPitch);
 				double newRoll = 60 * bankForce / turnForce;
-				entity.setRoll(wrapDegrees(entity.getRoll(1), (float) newRoll, 6));
+				entity.setRoll(rotlerp(entity.getRoll(1), (float) newRoll, 6));
 				double horizontalForce = velocity.y > 0 ? -climbAccel : forwardForce;
 				int xDirection = velocity.x > 0 ? 1 : -1;
 				int zDirection = velocity.z > 0 ? 1 : -1;
@@ -236,21 +235,21 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 		entity.setGroundFriction(0.98F);
 		entity.setThrustOn(true);
 		entity.setThrustEffort(1);
-		targetSpeed = entity.getMovementSpeed();
+		targetSpeed = entity.getSpeed();
 
 		tick();
 		if (entity.getMoveState() == MoveState.STANDING) {
 			return FlyState.GROUNDED;
 		}
 		if (entity.horizontalCollision) {
-			entity.getJumpControl().setActive();
+			entity.getJumpControl().jump();
 		}
 		entity.setAcceleration(calcThrust(0));
-		double speed = entity.getVelocity().length();
+		double speed = entity.getDeltaMovement().length();
 
-		entity.setPitch(wrapDegrees(entity.getPitch(), 40, 4));
+		entity.setXRot(rotlerp(entity.getXRot(), 40, 4));
 
-		float gravity = (float)entity.getFinalGravity();
+		float gravity = (float)entity.getGravity();
 		float liftConstant = gravity;
 		double liftForce = speed / (entity.getMaxPoweredFlightSpeed() * entity.getLiftFactor()) * liftConstant;
 
@@ -259,36 +258,36 @@ public class FlyingMoveControl extends ClimbableMoveControl {
 
 	protected FlyState doLanding() {
 		entity.setGroundFriction(0.3F);
-		BlockPos.Mutable mutable = entity.getBlockPos().mutableCopy();
+		BlockPos.MutableBlockPos mutable = entity.blockPosition().mutable();
 
 		for (int i = 1; i < 5; i++) {
-			if (!entity.getWorld().isAir(mutable.move(Direction.DOWN))) {
+			if (!entity.level().isEmptyBlock(mutable.move(Direction.DOWN))) {
 				break;
 			}
-			targetFlySpeed = (speed * (0.66F - (0.4F - (i - 1) * 0.133F)));
+			targetFlySpeed = (speedModifier * (0.66F - (0.4F - (i - 1) * 0.133F)));
 		}
 
 		FlyState result = fly();
 		entity.setThrustOn(true);
-		if (result == FlyState.FLYING && entity.isOnGround()) {
-			if (entity.getVelocity().length() < entity.getLandingSpeedThreshold()) {
+		if (result == FlyState.FLYING && entity.onGround()) {
+			if (entity.getDeltaMovement().length() < entity.getLandingSpeedThreshold()) {
 				return FlyState.GROUNDED;
 			}
 
-			entity.setRoll(wrapDegrees(entity.getRoll(1), 40, 6));
+			entity.setRoll(rotlerp(entity.getRoll(1), 40, 6));
 			return FlyState.TOUCHDOWN;
 		}
 
 		return FlyState.LANDING;
 	}
 
-	protected Vec3d calcThrust(double desiredVThrustRatio) {
-		double vThrustRatio = MathHelper.clamp(desiredVThrustRatio, entity.getThrustComponentRatioMin(), entity.getThrustComponentRatioMax());
+	protected Vec3 calcThrust(double desiredVThrustRatio) {
+		double vThrustRatio = Mth.clamp(desiredVThrustRatio, entity.getThrustComponentRatioMin(), entity.getThrustComponentRatioMax());
 		double hThrust = (1 - vThrustRatio) * entity.getThrust();
-		return new Vec3d(
-		        hThrust * -Math.sin(entity.getYaw() * MathHelper.RADIANS_PER_DEGREE),
+		return new Vec3(
+		        hThrust * -Math.sin(entity.getYRot() * Mth.DEG_TO_RAD),
 		        vThrustRatio * entity.getThrust(),
-		        hThrust * Math.cos(entity.getYaw() * MathHelper.RADIANS_PER_DEGREE)
+		        hThrust * Math.cos(entity.getYRot() * Mth.DEG_TO_RAD)
         );
 	}
 }

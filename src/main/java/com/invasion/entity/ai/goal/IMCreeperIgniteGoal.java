@@ -1,13 +1,11 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
-
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.IMCreeperEntity;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
 
 /**
  * Copy of CreeperIgniteGoal with the only change to replace CreeperEntity with EntityIMCreeper
@@ -20,13 +18,13 @@ public class IMCreeperIgniteGoal extends Goal {
 
     public IMCreeperIgniteGoal(IMCreeperEntity creeper) {
         this.creeper = creeper;
-        this.setControls(EnumSet.of(Goal.Control.MOVE));
+        this.setFlags(EnumSet.of(Goal.Flag.MOVE));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         LivingEntity livingEntity = this.creeper.getTarget();
-        return this.creeper.getFuseSpeed() > 0 || livingEntity != null && this.creeper.squaredDistanceTo(livingEntity) < 9.0;
+        return this.creeper.getFuseSpeed() > 0 || livingEntity != null && this.creeper.distanceToSqr(livingEntity) < 9.0;
     }
 
     @Override
@@ -41,7 +39,7 @@ public class IMCreeperIgniteGoal extends Goal {
     }
 
     @Override
-    public boolean shouldRunEveryTick() {
+    public boolean requiresUpdateEveryTick() {
         return true;
     }
 
@@ -49,9 +47,9 @@ public class IMCreeperIgniteGoal extends Goal {
     public void tick() {
         if (this.target == null) {
             this.creeper.setFuseSpeed(-1);
-        } else if (this.creeper.squaredDistanceTo(this.target) > 49.0) {
+        } else if (this.creeper.distanceToSqr(this.target) > 49.0) {
             this.creeper.setFuseSpeed(-1);
-        } else if (!this.creeper.getVisibilityCache().canSee(this.target)) {
+        } else if (!this.creeper.getSensing().hasLineOfSight(this.target)) {
             this.creeper.setFuseSpeed(-1);
         } else {
             this.creeper.setFuseSpeed(1);

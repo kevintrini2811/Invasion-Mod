@@ -6,23 +6,33 @@ import com.invasion.client.render.animation.AnimationState;
 import com.invasion.entity.animation.LegController;
 import com.invasion.entity.animation.MouthController;
 import com.invasion.entity.animation.WingController;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.world.World;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 public class VultureEntity extends EntityIMFlying {
     @Deprecated
-    private static final TrackedData<Integer> TIER = DataTracker.registerData(VultureEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Boolean> CLAWS_FORWARD = DataTracker.registerData(VultureEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> BEAK_DOWN = DataTracker.registerData(VultureEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Boolean> ATTACKING_WITH_WINGS = DataTracker.registerData(VultureEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
+    private static final EntityDataAccessor<Integer> TIER = SynchedEntityData.defineId(VultureEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> CLAWS_FORWARD = SynchedEntityData.defineId(VultureEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> BEAK_DOWN = SynchedEntityData.defineId(VultureEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> ATTACKING_WITH_WINGS = SynchedEntityData.defineId(VultureEntity.class, EntityDataSerializers.BOOLEAN);
 
     private final WingController wingController = AnimationRegistry.instance().get("wing_flap_2_piece").createState(this, AnimationAction.WINGTUCK, WingController::new);
     private final LegController legController = AnimationRegistry.instance().get("bird_run").createState(this, AnimationAction.STAND, LegController::new);
@@ -30,64 +40,64 @@ public class VultureEntity extends EntityIMFlying {
 
     private float carriedEntityYawOffset;
 
-    public VultureEntity(EntityType<? extends VultureEntity> type, World world) {
+    public VultureEntity(EntityType<? extends VultureEntity> type, Level world) {
         super(type, world);
         setThrust(0.1F);
         setMaxPoweredFlightSpeed(0.5F);
         setLiftFactor(0.35F);
         setThrustComponentRatioMin(0);
         setThrustComponentRatioMax(0.5F);
-        setMaxTurnForce((float)getGravity() * 8);
+        setMaxTurnForce((float)getDefaultGravity() * 8);
     }
 
-    public static DefaultAttributeContainer.Builder createBirdAttributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 1)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 1)
-                .add(EntityAttributes.GENERIC_GRAVITY, 0.025);
+    public static AttributeSupplier.Builder createBirdAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 1)
+                .add(Attributes.ATTACK_DAMAGE, 1)
+                .add(Attributes.GRAVITY, 0.025);
     }
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(TIER, 1);
-        builder.add(CLAWS_FORWARD, false);
-        builder.add(ATTACKING_WITH_WINGS, false);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TIER, 1);
+        builder.define(CLAWS_FORWARD, false);
+        builder.define(ATTACKING_WITH_WINGS, false);
     }
 
     @Deprecated
     public int getTier() {
-        return dataTracker.get(TIER);
+        return entityData.get(TIER);
     }
 
     @Deprecated
     protected void setTier(int tier) {
         tier = Math.max(1, tier);
-        dataTracker.set(TIER, tier);
+        entityData.set(TIER, tier);
     }
 
     public boolean getClawsForward() {
-        return dataTracker.get(CLAWS_FORWARD);
+        return entityData.get(CLAWS_FORWARD);
     }
 
     public void setClawsForward(boolean flag) {
-        dataTracker.set(CLAWS_FORWARD, flag);
+        entityData.set(CLAWS_FORWARD, flag);
     }
 
     public boolean isAttackingWithWings() {
-        return dataTracker.get(ATTACKING_WITH_WINGS);
+        return entityData.get(ATTACKING_WITH_WINGS);
     }
 
     public void setAttackingWithWings(boolean flag) {
-        dataTracker.set(ATTACKING_WITH_WINGS, flag);
+        entityData.set(ATTACKING_WITH_WINGS, flag);
     }
 
     public boolean isBeakOpen() {
-        return dataTracker.get(BEAK_DOWN);
+        return entityData.get(BEAK_DOWN);
     }
 
     protected void setBeakOpen(boolean flag) {
-        dataTracker.set(BEAK_DOWN, flag);
+        entityData.set(BEAK_DOWN, flag);
     }
 
     public float getCarriedEntityYawOffset() {
@@ -113,7 +123,7 @@ public class VultureEntity extends EntityIMFlying {
     @Override
     public void baseTick() {
         super.baseTick();
-        if (getWorld().isClient) {
+        if (level().isClientSide()) {
             updateFlapAnimation();
             updateLegAnimation();
             updateBeakAnimation();
@@ -121,7 +131,7 @@ public class VultureEntity extends EntityIMFlying {
     }
 
     @Override
-    protected void mobTick() {
+    protected void customServerAiStep(ServerLevel serverLevel) {
 
     }
 
@@ -138,8 +148,8 @@ public class VultureEntity extends EntityIMFlying {
     }
 
     @Override
-    public void onDeath(DamageSource source) {
-        super.onDeath(source);
+    public void die(DamageSource source) {
+        super.die(source);
         doDeathSound();
     }
 
@@ -154,7 +164,7 @@ public class VultureEntity extends EntityIMFlying {
     }
 
     protected void onPickedUpEntity(Entity entity) {
-        carriedEntityYawOffset = (entity.getYaw() - entity.getYaw());
+        carriedEntityYawOffset = (entity.getYRot() - entity.getYRot());
     }
 
     protected void updateFlapAnimation() {

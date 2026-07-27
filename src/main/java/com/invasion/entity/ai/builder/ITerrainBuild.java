@@ -1,9 +1,8 @@
 package com.invasion.entity.ai.builder;
 
 import java.util.stream.Stream;
-
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 
 public interface ITerrainBuild {
     Stream<ModifyBlockEntry> askBuildScaffoldLayer(BlockPos pos);

@@ -1,7 +1,18 @@
 package com.invasion.entity;
 
 import java.util.Arrays;
-
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.server.level.ServerLevel;
 import org.joml.Vector3f;
 
 import com.invasion.Notifiable;
@@ -11,13 +22,6 @@ import com.invasion.entity.pathfinding.BurrowerNavigation;
 import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.util.math.PosRotate3D;
-
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.world.World;
 
 
 public class BurrowerEntity extends IMMobEntity implements Miner {
@@ -31,16 +35,16 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
     protected final Vector3f rot = new Vector3f();
     protected final Vector3f prevRot = new Vector3f();
 
-    public BurrowerEntity(EntityType<BurrowerEntity> type, World world) {
+    public BurrowerEntity(EntityType<BurrowerEntity> type, Level world) {
         super(type, world);
         Arrays.fill(segments3D, PosRotate3D.ZERO);
         Arrays.fill(segments3DLastTick, PosRotate3D.ZERO);
         getNavigatorNew().setCanDestroyBlocks(true);
     }
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_STEP_HEIGHT, 0);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.STEP_HEIGHT, 0);
     }
 
     @Override
@@ -50,7 +54,7 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     @Override
     public boolean onPathBlocked(Path path, Notifiable notifee) {
-        return terrainDigger.askClearPosition(path.getCurrentNodePos(), notifee, 1);
+        return terrainDigger.askClearPosition(path.getNextNodePos(), notifee, 1);
     }
 
     public Vector3f getRotation() {
@@ -82,8 +86,8 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
     }
 
     @Override
-    public void mobTick() {
-        super.mobTick();
+    public void customServerAiStep(ServerLevel serverLevel) {
+        super.customServerAiStep(serverLevel);
         terrainModifier.onUpdate();
     }
 

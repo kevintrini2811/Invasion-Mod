@@ -6,57 +6,69 @@ import com.invasion.entity.ai.goal.KillEntityGoal;
 import com.invasion.entity.ai.goal.NoNexusPathGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 import com.invasion.entity.ai.goal.ProvideSupportGoal;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
 
 public class ImpEnitty extends IMMobEntity {
-    public ImpEnitty(EntityType<ImpEnitty> type, World world) {
+    public ImpEnitty(EntityType<ImpEnitty> type, Level world) {
         super(type, world);
         getNavigatorNew().getActor().setCanClimb(true);
     }
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.3)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 3)
-                .add(EntityAttributes.GENERIC_STEP_HEIGHT, 1);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.3)
+                .add(Attributes.ATTACK_DAMAGE, 3)
+                .add(Attributes.STEP_HEIGHT, 1);
     }
 
     @Override
-    protected void initGoals() {
-        goalSelector.add(0, new SwimGoal(this));
-        goalSelector.add(1, new KillEntityGoal<>(this, PlayerEntity.class, 40));
-        goalSelector.add(2, new AttackNexusGoal<>(this));
-        goalSelector.add(3, new ProvideSupportGoal(this, 4, true));
-        goalSelector.add(4, new KillEntityGoal<>(this, MobEntity.class, 40));
-        goalSelector.add(5, new GoToNexusGoal(this));
-        goalSelector.add(6, new WanderAroundFarGoal(this, 1));
-        goalSelector.add(7, new LookAtEntityGoal(this, PlayerEntity.class, 8));
-        goalSelector.add(8, new LookAtEntityGoal(this, IMCreeperEntity.class, 12));
-        goalSelector.add(8, new LookAroundGoal(this));
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new KillEntityGoal<>(this, Player.class, 40));
+        goalSelector.addGoal(2, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(3, new ProvideSupportGoal(this, 4, true));
+        goalSelector.addGoal(4, new KillEntityGoal<>(this, Mob.class, 40));
+        goalSelector.addGoal(5, new GoToNexusGoal(this));
+        goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1));
+        goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12));
+        goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
-        targetSelector.add(0, new RetaliateGoal(this));
-        targetSelector.add(1, new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getSenseRange, false));
-        targetSelector.add(2, new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getAggroRange, true));
-        targetSelector.add(5, new RevengeGoal(this));
-        targetSelector.add(3, new NoNexusPathGoal(this, new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F)));
+        targetSelector.addGoal(0, new RetaliateGoal(this));
+        targetSelector.addGoal(1, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
+        targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
+        targetSelector.addGoal(5, new HurtByTargetGoal(this));
+        targetSelector.addGoal(3, new NoNexusPathGoal(this, new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F)));
     }
 
     @Override
-    public boolean tryAttack(Entity entity) {
-        if (super.tryAttack(entity)) {
-            entity.setFireTicks(3);
+    public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
+        if (super.doHurtTarget(serverLevel, entity)) {
+            entity.setRemainingFireTicks(3);
             return true;
         }
         return false;

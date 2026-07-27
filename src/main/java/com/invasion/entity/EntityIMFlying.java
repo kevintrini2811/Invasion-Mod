@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import com.invasion.entity.ai.FlyState;
 import com.invasion.entity.ai.FlyingEntityLookControl;
@@ -10,33 +11,32 @@ import com.invasion.entity.pathfinding.FlyingNavigation;
 import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.util.math.MathUtil;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.MovementType;
-import net.minecraft.entity.ai.control.BodyControl;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.ai.control.BodyRotationControl;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 
 public abstract class EntityIMFlying extends EntityIMLiving implements Animatable {
-    private static final TrackedData<Vector3f> TARGET_POS = DataTracker.registerData(EntityIMFlying.class, TrackedDataHandlerRegistry.VECTOR3F);
-    private static final TrackedData<Boolean> THRUSTING = DataTracker.registerData(EntityIMFlying.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final TrackedData<Float> THRUST_EFFORT = DataTracker.registerData(EntityIMFlying.class, TrackedDataHandlerRegistry.FLOAT);
-    private static final TrackedData<Integer> FLY_STATE = DataTracker.registerData(EntityIMFlying.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> MOVE_STATE = DataTracker.registerData(EntityIMFlying.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> ANGLES = DataTracker.registerData(EntityIMFlying.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<Vector3fc> TARGET_POS = SynchedEntityData.defineId(EntityIMFlying.class, EntityDataSerializers.VECTOR3);
+    private static final EntityDataAccessor<Boolean> THRUSTING = SynchedEntityData.defineId(EntityIMFlying.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Float> THRUST_EFFORT = SynchedEntityData.defineId(EntityIMFlying.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Integer> FLY_STATE = SynchedEntityData.defineId(EntityIMFlying.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> MOVE_STATE = SynchedEntityData.defineId(EntityIMFlying.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> ANGLES = SynchedEntityData.defineId(EntityIMFlying.class, EntityDataSerializers.INT);
 
 	private float liftFactor = 0.4F;
 	private float maxPoweredFlightSpeed = 0.28F;
 	private float thrust = 0.08F;
 	private float thrustComponentRatioMin = 0;
 	private float thrustComponentRatioMax = 0.1F;
-	private float maxTurnForce = (float)(getGravity() * 3);
+	private float maxTurnForce = (float)(getDefaultGravity() * 3);
 
     private float rotationRoll;
     private float prevRotationRoll;
@@ -44,7 +44,7 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
 	private float optimalPitch = 52;
 	private float maxRunSpeed = 0.45F;
 
-	private Vec3d accelleration = Vec3d.ZERO;
+	private Vec3 accelleration = Vec3.ZERO;
 
 	private boolean flyPathfind = true;
 	private boolean debugFlying = true;
@@ -52,28 +52,28 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
     protected float airResistance = DEFAULT_AIR_RESISTANCE;
     protected float groundFriction = DEFAULT_GROUND_FRICTION;
 
-	public EntityIMFlying(EntityType<? extends EntityIMFlying> type, World world) {
+	public EntityIMFlying(EntityType<? extends EntityIMFlying> type, Level world) {
 		super(type, world);
 		moveControl = new FlyingMoveControl(this);
 		lookControl = new FlyingEntityLookControl(this);
 	}
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(TARGET_POS, new Vector3f());
-        builder.add(THRUSTING, false);
-        builder.add(THRUST_EFFORT, 1F);
-        builder.add(FLY_STATE, FlyState.GROUNDED.ordinal());
-        builder.add(MOVE_STATE, MoveState.STANDING.ordinal());
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TARGET_POS, new Vector3f());
+        builder.define(THRUSTING, false);
+        builder.define(THRUST_EFFORT, 1F);
+        builder.define(FLY_STATE, FlyState.GROUNDED.ordinal());
+        builder.define(MOVE_STATE, MoveState.STANDING.ordinal());
     }
 
-    public Vector3f getTargetPos() {
-        return dataTracker.get(TARGET_POS);
+    public Vector3fc getTargetPos() {
+        return entityData.get(TARGET_POS);
     }
 
-    public void setTargetPos(Vector3f target) {
-        dataTracker.set(TARGET_POS, target);
+    public void setTargetPos(Vector3fc target) {
+        entityData.set(TARGET_POS, target);
     }
 
 	@Override
@@ -82,20 +82,20 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
 	}
 
     @Override
-    protected BodyControl createBodyControl() {
-        return new BodyControl(this) {
+    protected BodyRotationControl createBodyControl() {
+        return new BodyRotationControl(this) {
             @Override
-            public void tick() {
+            public void clientTick() {
             }
         };
     }
 
 	public FlyState getFlyState() {
-		return FlyState.of(dataTracker.get(FLY_STATE));
+		return FlyState.of(entityData.get(FLY_STATE));
 	}
 
     public float getRoll(float tickDelta) {
-        return MathHelper.lerpAngleDegrees(tickDelta, prevRotationRoll, rotationRoll);
+        return Mth.rotLerp(tickDelta, prevRotationRoll, rotationRoll);
     }
 
     public void setRoll(float roll) {
@@ -107,24 +107,24 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
     }
 
 	public boolean isThrustOn() {
-		return dataTracker.get(THRUSTING);
+		return entityData.get(THRUSTING);
 	}
 
 	public float getThrustEffort() {
-		return dataTracker.get(THRUST_EFFORT);
+		return entityData.get(THRUST_EFFORT);
 	}
 
     public void setThrustEffort(float effortFactor) {
-        dataTracker.set(THRUST_EFFORT, effortFactor);
+        entityData.set(THRUST_EFFORT, effortFactor);
     }
 
 	@Deprecated
 	public Vector3f getFlyTarget() {
-		return getTargetPos();
+		return new Vector3f(getTargetPos());
 	}
 
     @Override
-    public boolean isClimbing() {
+    public boolean onClimbable() {
         return false;
     }
 
@@ -141,7 +141,7 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
     }
 
     public void setFlyState(FlyState flyState) {
-        dataTracker.set(FLY_STATE, flyState.ordinal());
+        entityData.set(FLY_STATE, flyState.ordinal());
     }
 
     public float getMaxPoweredFlightSpeed() {
@@ -181,19 +181,19 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
     }
 
     public float getLandingSpeedThreshold() {
-        return getMovementSpeed() * 1.2F;
+        return getSpeed() * 1.2F;
     }
 
     protected float getMaxRunSpeed() {
         return this.maxRunSpeed;
     }
 
-    public void setAcceleration(Vec3d accelleration) {
+    public void setAcceleration(Vec3 accelleration) {
        this.accelleration = accelleration;
     }
 
     public void setThrustOn(boolean flag) {
-        dataTracker.set(THRUSTING, flag);
+        entityData.set(THRUSTING, flag);
     }
 
     protected void setMaxPoweredFlightSpeed(float speed) {
@@ -223,12 +223,12 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
 
     @Override
     public MoveState getMoveState() {
-        return MoveState.of(dataTracker.get(MOVE_STATE));
+        return MoveState.of(entityData.get(MOVE_STATE));
     }
 
     @Override
     public void setMoveState(MoveState moveState) {
-        dataTracker.set(MOVE_STATE, moveState.ordinal());
+        entityData.set(MOVE_STATE, moveState.ordinal());
     }
 
 	@Override
@@ -242,36 +242,36 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
 	}
 
     @Override
-    public void tickMovement() {
-        super.tickMovement();
-        int packedAngles = MathUtil.packAnglesDeg(getBodyYaw(), getHeadYaw(), getPitch(), 0);
-        if (packedAngles != dataTracker.get(ANGLES)) {
-            dataTracker.set(ANGLES, packedAngles);
+    public void aiStep() {
+        super.aiStep();
+        int packedAngles = MathUtil.packAnglesDeg(getVisualRotationYInDegrees(), getYHeadRot(), getXRot(), 0);
+        if (packedAngles != entityData.get(ANGLES)) {
+            entityData.set(ANGLES, packedAngles);
         }
     }
 
     // based on FlyingEntity (originals in comments)
 	@Override
-	public void travel(Vec3d movementInput) {
-	    if (isLogicalSideForUpdatingMovement()) {
-    		if (isTouchingWater()) {
-    			updateVelocity(isAiDisabled() ? 0.02F : 0.04F /*0.02F*/, movementInput);
-    			move(MovementType.SELF, getVelocity());
-    			setVelocity(getVelocity().multiply(0.8F));
+	public void travel(Vec3 movementInput) {
+	    if (isEffectiveAi()) {
+    		if (isInWater()) {
+    			moveRelative(isNoAi() ? 0.02F : 0.04F /*0.02F*/, movementInput);
+    			move(MoverType.SELF, getDeltaMovement());
+    			setDeltaMovement(getDeltaMovement().scale(0.8F));
     		} else if (isInLava()) {
-                updateVelocity(isAiDisabled() ? 0.02F : 0.04F /*0.02F*/, movementInput);
-                move(MovementType.SELF, getVelocity());
-                setVelocity(getVelocity().multiply(0.5));
+                moveRelative(isNoAi() ? 0.02F : 0.04F /*0.02F*/, movementInput);
+                move(MoverType.SELF, getDeltaMovement());
+                setDeltaMovement(getDeltaMovement().scale(0.5));
     		} else {
     		    float groundFriction = 0.9995F;
-                if (isOnGround()) {
-                    groundFriction = getWorld().getBlockState(getVelocityAffectingPos()).getBlock().getSlipperiness() * 0.91F;
+                if (onGround()) {
+                    groundFriction = level().getBlockState(getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction() * 0.91F;
                 }
 
                 float landMoveSpeed = 0.16277137F / (groundFriction * groundFriction * groundFriction);
                 groundFriction = this.groundFriction;
-                if (isOnGround()) {
-                    groundFriction = getWorld().getBlockState(getVelocityAffectingPos()).getBlock().getSlipperiness() * 0.91F;
+                if (onGround()) {
+                    groundFriction = level().getBlockState(getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction() * 0.91F;
                 }
 
                 /** IM additions **/
@@ -279,31 +279,31 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
                 groundFriction *= airResistance;
 
                 // added accelleration
-                addVelocity(accelleration);
+                push(accelleration);
                 /** end IM additions **/
 
-    			updateVelocity(isOnGround() ? 0.1F * landMoveSpeed : 0.02F, movementInput);
-    			move(MovementType.SELF, getVelocity());
+    			moveRelative(onGround() ? 0.1F * landMoveSpeed : 0.02F, movementInput);
+    			move(MoverType.SELF, getDeltaMovement());
     			//setVelocity(getVelocity().multiply(groundFriction));
-    			setVelocity(getVelocity().multiply(groundFriction, airResistance, airResistance).add(-getGravity(), 0, 0));
+    			setDeltaMovement(getDeltaMovement().multiply(groundFriction, airResistance, airResistance).add(-getDefaultGravity(), 0, 0));
     		}
 	    }
 
-	    updateLimbs(false);
+	    calculateEntityAnimation(false);
 	}
 
 	@Override
-	protected void fall(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition) {
+	protected void checkFallDamage(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition) {
 	}
 
     @Override
-    public void onTrackedDataSet(TrackedData<?> data) {
-        super.onTrackedDataSet(data);
+    public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
+        super.onSyncedDataUpdated(data);
         if (data == ANGLES) {
-            int packedAngles = dataTracker.get(ANGLES);
-            setBodyYaw(MathUtil.unpackAnglesDeg_1(packedAngles));
-            setHeadYaw(MathUtil.unpackAnglesDeg_2(packedAngles));
-            setPitch(MathUtil.unpackAnglesDeg_3(packedAngles));
+            int packedAngles = entityData.get(ANGLES);
+            setYBodyRot(MathUtil.unpackAnglesDeg_1(packedAngles));
+            setYHeadRot(MathUtil.unpackAnglesDeg_2(packedAngles));
+            setXRot(MathUtil.unpackAnglesDeg_3(packedAngles));
         }
     }
 

@@ -1,50 +1,19 @@
 package com.invasion.item;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.Items;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.recipe.Ingredient;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.ToolMaterial;
 
-record CustomToolMaterial (
-        TagKey<Block> inverseTag,
-          int durability,
-          float miningSpeedMultiplier,
-          float attackDamage,
-          int enchantability,
-          Ingredient repairIngredient
-  ) implements ToolMaterial {
-    public static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(BlockTags.INCORRECT_FOR_GOLD_TOOL, 40, 12, 4, 22, Ingredient.ofItems(Items.GOLD_INGOT));
+final class CustomToolMaterial {
+    static final ToolMaterial INFUSED_GOLD = new ToolMaterial(
+            BlockTags.INCORRECT_FOR_GOLD_TOOL,
+            40,
+            12.0F,
+            4.0F,
+            22,
+            ItemTags.GOLD_TOOL_MATERIALS
+    );
 
-    @Override
-    public int getDurability() {
-        return durability;
+    private CustomToolMaterial() {
     }
-
-    @Override
-    public float getMiningSpeedMultiplier() {
-        return miningSpeedMultiplier;
-    }
-
-    @Override
-    public float getAttackDamage() {
-        return attackDamage;
-    }
-
-    @Override
-    public TagKey<Block> getInverseTag() {
-        return inverseTag;
-    }
-
-    @Override
-    public int getEnchantability() {
-        return enchantability;
-    }
-
-    @Override
-    public Ingredient getRepairIngredient() {
-        return repairIngredient;
-    }
-
-  }
+}

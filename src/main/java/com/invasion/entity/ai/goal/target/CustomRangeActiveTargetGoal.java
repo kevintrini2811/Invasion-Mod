@@ -1,29 +1,28 @@
 package com.invasion.entity.ai.goal.target;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.ActiveTargetGoal;
-import net.minecraft.entity.mob.MobEntity;
-
 import com.invasion.entity.NexusEntity;
 import com.invasion.util.FloatSupplier;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 
-public class CustomRangeActiveTargetGoal<T extends LivingEntity> extends ActiveTargetGoal<T> {
+public class CustomRangeActiveTargetGoal<T extends LivingEntity> extends NearestAttackableTargetGoal<T> {
 	private final FloatSupplier range;
 
-    public CustomRangeActiveTargetGoal(MobEntity entity, Class<T> targetType, float range) {
+    public CustomRangeActiveTargetGoal(Mob entity, Class<T> targetType, float range) {
         this(entity, targetType, range, true);
     }
 
-    public CustomRangeActiveTargetGoal(MobEntity entity, Class<T> targetType, float range, boolean checkVisibility) {
+    public CustomRangeActiveTargetGoal(Mob entity, Class<T> targetType, float range, boolean checkVisibility) {
         this(entity, targetType, () -> range, checkVisibility);
     }
 
-	public CustomRangeActiveTargetGoal(MobEntity entity, Class<T> targetType, FloatSupplier range) {
+	public CustomRangeActiveTargetGoal(Mob entity, Class<T> targetType, FloatSupplier range) {
 		this(entity, targetType, range, true);
 	}
 
-	public CustomRangeActiveTargetGoal(MobEntity entity, Class<T> targetType, FloatSupplier range, boolean checkVisibility) {
-	    super(entity, targetType, 10, checkVisibility, false, target -> {
+	public CustomRangeActiveTargetGoal(Mob entity, Class<T> targetType, FloatSupplier range, boolean checkVisibility) {
+	    super(entity, targetType, 10, checkVisibility, false, (target, serverLevel) -> {
             if (entity instanceof NexusEntity nexusEntity && nexusEntity.hasNexus()) {
                 return entity.distanceTo(target) < nexusEntity.findDistanceToNexus() * 0.5;
             }
@@ -32,18 +31,18 @@ public class CustomRangeActiveTargetGoal<T extends LivingEntity> extends ActiveT
 		this.range = range;
 	}
 
-	protected final MobEntity getEntity() {
+	protected final Mob getEntity() {
 		return  mob;
 	}
 
     @Override
-    protected double getFollowRange() {
+    protected double getFollowDistance() {
         return range == null ? 0 : range.getAsFloat();
     }
 
     @Override
-    protected void findClosestTarget() {
-        targetPredicate.setBaseMaxDistance(getFollowRange());
-        super.findClosestTarget();
+    protected void findTarget() {
+        targetConditions.range(getFollowDistance());
+        super.findTarget();
     }
 }

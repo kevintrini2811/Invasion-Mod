@@ -4,18 +4,22 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.NexusEntity;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
 
 public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
     @Nullable
     protected LivingEntity target;
 
-    protected Vec3d chargePos = Vec3d.ZERO;
+    protected Vec3 chargePos = Vec3.ZERO;
 
     protected float speed;
     protected int windup;
@@ -24,13 +28,13 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
     protected int chargeDelay = 100;
     protected int runTime = 15;
 
-    public <E extends PathAwareEntity & NexusEntity> ChargeMobGoal(E entity, Class<? extends T> targetClass, float f) {
+    public <E extends PathfinderMob & NexusEntity> ChargeMobGoal(E entity, Class<? extends T> targetClass, float f) {
         super(entity, targetClass);
         this.speed = f;
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
 
         if (chargeDelay > 0) {
             chargeDelay--;
@@ -38,10 +42,10 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
         }
 
         target = mob.getTarget();
-        if (target == null || target.isRemoved() || target.isDead() || !mob.isOnGround()) {
+        if (target == null || target.isRemoved() || target.isDeadOrDying() || !mob.onGround()) {
             return false;
         }
-        double distance = Math.sqrt(mob.squaredDistanceTo(target));
+        double distance = Math.sqrt(mob.distanceToSqr(target));
         if (distance < 5 || distance > 20) {
             return false;
         }
@@ -57,7 +61,7 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         if (windup == 0 && runTime > 0) {
             runTime--;
         }
@@ -66,21 +70,21 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
 
     @Override
     public void tick() {
-        mob.getLookControl().lookAt(chargePos.x, chargePos.y, chargePos.z, 10.0F, /* mob.getTurnRate()*/ 10);
+        mob.getLookControl().setLookAt(chargePos.x, chargePos.y, chargePos.z, 10.0F, /* mob.getTurnRate()*/ 10);
         if (windup > 0) {
             if (--windup == 0) {
-                mob.getNavigation().startMovingTo(chargePos.getX(), chargePos.getY(), chargePos.getZ(), speed);
+                mob.getNavigation().moveTo(chargePos.x(), chargePos.y(), chargePos.z(), speed);
             } else {
-                mob.limbAnimator.setSpeed(mob.limbAnimator.getSpeed() + 0.8F);
+                mob.walkAnimation.setSpeed(mob.walkAnimation.speed() + 0.8F);
                 if (mob instanceof EntityIMZombiePigman pig) {
                     pig.setCharging(true);
                 }
             }
         }
 
-        if (!hasAttacked && mob.squaredDistanceTo(chargePos) <= MathHelper.square(mob.getWidth() * 2.1F)) {
+        if (!hasAttacked && mob.distanceToSqr(chargePos) <= Mth.square(mob.getBbWidth() * 2.1F)) {
             hasAttacked = true;
-            mob.tryAttack(target);
+            mob.doHurtTarget((ServerLevel) mob.level(), target);
         }
     }
 
@@ -96,16 +100,16 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
         }
     }
 
-    protected Vec3d findChargePoint(Entity attacker, Entity target, double overshoot) {
-        Vec3d pos = mob.getPos();
-        Vec3d delta = target.getPos().subtract(pos).multiply(1, 0, 1);
-        float theta = (float) Math.atan2(delta.getX(), delta.getZ());
+    protected Vec3 findChargePoint(Entity attacker, Entity target, double overshoot) {
+        Vec3 pos = mob.position();
+        Vec3 delta = target.position().subtract(pos).multiply(1, 0, 1);
+        float theta = (float) Math.atan2(delta.x(), delta.z());
         double distance = delta.length() + overshoot;
         // Cylindrical to Cartesian
         return pos.add(
-                distance * MathHelper.cos(theta),
+                distance * Mth.cos(theta),
                 0,
-                distance * MathHelper.sin(theta)
+                distance * Mth.sin(theta)
         );
     }
 }

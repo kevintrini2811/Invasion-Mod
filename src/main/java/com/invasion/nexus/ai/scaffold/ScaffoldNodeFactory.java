@@ -4,13 +4,12 @@ import com.invasion.entity.pathfinding.DynamicPathNodeNavigator;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.nexus.ai.AttackerAI;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.entity.ai.pathing.PathNodeType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.CollisionView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.PathType;
 
 public class ScaffoldNodeFactory implements DynamicPathNodeNavigator.NodeFactory {
     private static final int MIN_SCAFFOLD_HEIGHT = 4;
@@ -24,11 +23,11 @@ public class ScaffoldNodeFactory implements DynamicPathNodeNavigator.NodeFactory
     }
 
     @Override
-    public float getDistancePenalty(PathNode previousNode, PathNode nextNode, CollisionView world) {
+    public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
         PathAction action = ActionablePathNode.getAction(nextNode);
         PathAction prevAction = ActionablePathNode.getAction(previousNode);
-        BlockState state = world.getBlockState(nextNode.getBlockPos());
-        float materialMultiplier = state.isSolidBlock(world, nextNode.getBlockPos()) ? 2.2F : 1.0F;
+        BlockState state = world.getBlockState(nextNode.asBlockPos());
+        float materialMultiplier = state.isRedstoneConductor(world, nextNode.asBlockPos()) ? 2.2F : 1.0F;
         if (action == PathAction.SCAFFOLD_UP) {
             if (prevAction != PathAction.SCAFFOLD_UP) {
                 materialMultiplier *= 3.4F;
@@ -49,39 +48,39 @@ public class ScaffoldNodeFactory implements DynamicPathNodeNavigator.NodeFactory
     }
 
     @Override
-    public int getSuccessors(int index, PathNode[] successors, PathNode node, CollisionView world, DynamicPathNodeNavigator.NodeCache nodeCache) {
-        BlockPos pos = node.getBlockPos();
-        BlockPos positionAbove = pos.up();
+    public int getSuccessors(int index, Node[] successors, Node node, CollisionGetter world, DynamicPathNodeNavigator.NodeCache nodeCache) {
+        BlockPos pos = node.asBlockPos();
+        BlockPos positionAbove = pos.above();
         BlockState stateAbove = world.getBlockState(positionAbove);
-        if (ActionablePathNode.getAction(node.previous) == PathAction.SCAFFOLD_UP && !nodeCache.avoidsBlock(world, positionAbove, stateAbove)) {
-            PathNode n = nodeCache.getNode(node.x, node.y + 1, node.z, PathAction.SCAFFOLD_UP);
-            if (!n.visited) {
-                n.type = PathNodeType.WALKABLE;
-                n.penalty = n.type.getDefaultPenalty();
+        if (ActionablePathNode.getAction(node.cameFrom) == PathAction.SCAFFOLD_UP && !nodeCache.avoidsBlock(world, positionAbove, stateAbove)) {
+            Node n = nodeCache.getNode(node.x, node.y + 1, node.z, PathAction.SCAFFOLD_UP);
+            if (!n.closed) {
+                n.type = PathType.WALKABLE;
+                n.costMalus = n.type.getMalus();
                 successors[index++] = n;
             }
             return index;
         }
 
         for (int sl = scaffolds.size() - 1; sl >= 0; sl--) {
-            if (scaffolds.get(sl).getNode().pos().isWithinDistance(pos, minDistance)) {
+            if (scaffolds.get(sl).getNode().pos().closerThan(pos, minDistance)) {
                 return index;
             }
         }
 
         if (stateAbove.isAir()) {
-            BlockPos.Mutable mutable = pos.mutableCopy();
-            if (world.getBlockState(mutable.move(Direction.DOWN, 2)).isSolidBlock(world, mutable)) {
+            BlockPos.MutableBlockPos mutable = pos.mutable();
+            if (world.getBlockState(mutable.move(Direction.DOWN, 2)).isRedstoneConductor(world, mutable)) {
                 for (int i = 1; i < MIN_SCAFFOLD_HEIGHT; i++) {
                     if (world.getBlockState(mutable.set(pos).move(Direction.UP, i)).isAir()) {
                         return index;
                     }
                 }
 
-                PathNode n = nodeCache.getNode(node.x, node.y + 1, node.z, PathAction.SCAFFOLD_UP);
-                if (!n.visited) {
-                    n.type = PathNodeType.WALKABLE;
-                    n.penalty = n.type.getDefaultPenalty();
+                Node n = nodeCache.getNode(node.x, node.y + 1, node.z, PathAction.SCAFFOLD_UP);
+                if (!n.closed) {
+                    n.type = PathType.WALKABLE;
+                    n.costMalus = n.type.getMalus();
                     successors[index++] = n;
                 }
             }

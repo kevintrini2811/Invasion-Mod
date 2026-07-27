@@ -20,11 +20,11 @@ public abstract class AbstractParametricNavigator extends IMNavigation {
             return;
         }
         if (nodeActionFinished) {
-            int pathIndex = path.getCurrentNodeIndex();
+            int pathIndex = path.getNextNodeIndex();
             pathFollow(timeParam + 1);
             doMovementTo(timeParam);
 
-            if (path.getCurrentNodeIndex() != pathIndex) {
+            if (path.getNextNodeIndex() != pathIndex) {
                 ticksStuck = 0;
                 if (getCurrentWorkingAction() != PathAction.NONE) {
                     nodeActionFinished = false;
@@ -32,7 +32,7 @@ public abstract class AbstractParametricNavigator extends IMNavigation {
             }
         }
         if (nodeActionFinished) {
-            if (!isPositionClear(activeNode.getBlockPos(), theEntity)) {
+            if (!isPositionClear(activeNode.asBlockPos(), theEntity)) {
                 if (theEntity.onPathBlocked(path, this)) {
                     setDoingTaskAndHold();
                 } else {
@@ -46,9 +46,9 @@ public abstract class AbstractParametricNavigator extends IMNavigation {
 
     protected void doMovementTo(int time) {
         PosRotate3D movePos = entityPositionAtParam(time);
-        theEntity.getMoveControl().moveTo(movePos.position().x, movePos.position().y, movePos.position().z, 1);
+        theEntity.getMoveControl().setWantedPosition(movePos.position().x, movePos.position().y, movePos.position().z, 1);
 
-        if (Math.abs(theEntity.squaredDistanceTo(movePos.position())) < minMoveToleranceSq) {
+        if (Math.abs(theEntity.distanceToSqr(movePos.position())) < minMoveToleranceSq) {
             timeParam = time;
             ticksStuck--;
         } else {
@@ -61,12 +61,12 @@ public abstract class AbstractParametricNavigator extends IMNavigation {
     protected abstract boolean isReadyForNextNode(int time);
 
     protected void pathFollow(int time) {
-        int nextIndex = path.getCurrentNodeIndex() + 1;
+        int nextIndex = path.getNextNodeIndex() + 1;
         if (isReadyForNextNode(time)) {
-            if (nextIndex < path.getLength()) {
+            if (nextIndex < path.getNodeCount()) {
                 timeParam = 0;
-                path.setCurrentNodeIndex(nextIndex);
-                activeNode = path.getNode(path.getCurrentNodeIndex());
+                path.setNextNodeIndex(nextIndex);
+                activeNode = path.getNode(path.getNextNodeIndex());
             }
         } else {
             timeParam = time;

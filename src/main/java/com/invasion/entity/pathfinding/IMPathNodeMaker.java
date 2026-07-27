@@ -1,16 +1,15 @@
 package com.invasion.entity.pathfinding;
 
 import com.invasion.entity.pathfinding.path.PathAction;
-
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.pathfinder.Node;
 
 @Deprecated
 public interface IMPathNodeMaker {
-    float getPathNodePenalty(PathNode startNode, PathNode endNode, BlockView world);
+    float getPathNodePenalty(Node startNode, Node endNode, BlockGetter world);
 
-    void getSuccessors(BlockView world, PathNode node, PathBuilder pathBuilder);
+    void getSuccessors(BlockGetter world, Node node, PathBuilder pathBuilder);
 
     interface PathBuilder {
         void addNode(BlockPos pos, PathAction action);

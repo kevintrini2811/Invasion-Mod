@@ -2,12 +2,12 @@ package com.invasion.nexus.ai.scaffold;
 
 import com.invasion.nexus.NexusAccess;
 import com.invasion.util.math.PosUtils;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.Level;
 
 public class Scaffold {
     private static final int MIN_SCAFFOLD_HEIGHT = 4;
@@ -27,11 +27,11 @@ public class Scaffold {
         this.platforms = createPlatforms(node);
     }
 
-    public Scaffold(NbtCompound compound, NexusAccess nexus) {
+    public Scaffold(CompoundTag compound, NexusAccess nexus) {
         this.nexus = nexus;
         node = new ScaffoldNode(compound);
-        initialCompletion = compound.getFloat("initialCompletion");
-        latestPercentCompleted = compound.getFloat("latestPercentCompleted");
+        initialCompletion = compound.getFloatOr("initialCompletion", 0.0F);
+        latestPercentCompleted = compound.getFloatOr("latestPercentCompleted", 0.0F);
         platforms = createPlatforms(node);
     }
 
@@ -74,18 +74,18 @@ public class Scaffold {
         int existingMainSectionBlocks = 0;
         int existingMainLadderBlocks = 0;
         int existingPlatformBlocks = 0;
-        World world = nexus.getWorld();
-        BlockPos.Mutable mutable = node.pos().mutableCopy();
+        Level world = nexus.getWorld();
+        BlockPos.MutableBlockPos mutable = node.pos().mutable();
         for (int i = 0; i < node.height(); i++) {
-            if (world.getBlockState(mutable.set(node.pos()).move(node.orientation()).move(Direction.UP, i)).isFullCube(world, mutable)) {
+            if (world.getBlockState(mutable.set(node.pos()).move(node.orientation()).move(Direction.UP, i)).isCollisionShapeFullBlock(world, mutable)) {
                 existingMainSectionBlocks++;
             }
-            if (world.getBlockState(mutable.set(node.pos()).move(Direction.UP)).isIn(BlockTags.CLIMBABLE)) {
+            if (world.getBlockState(mutable.set(node.pos()).move(Direction.UP)).is(BlockTags.CLIMBABLE)) {
                 existingMainLadderBlocks++;
             }
             if (isPlatformLayer(i)) {
                 for (Vec3i offset : PosUtils.OFFSET_RING) {
-                    if (world.getBlockState(mutable.set(node.pos()).move(Direction.UP, i).move(offset)).isFullCube(world, mutable)) {
+                    if (world.getBlockState(mutable.set(node.pos()).move(Direction.UP, i).move(offset)).isCollisionShapeFullBlock(world, mutable)) {
                         existingPlatformBlocks++;
                     }
                 }
@@ -98,7 +98,7 @@ public class Scaffold {
         return 0.7F * (0.7F * mainSectionPercent + 0.3F * ladderPercent) + 0.3F * (existingPlatformBlocks / (platforms.length + 1) * 8);
     }
 
-    public NbtCompound toNBT(NbtCompound compound) {
+    public CompoundTag toNBT(CompoundTag compound) {
         node.toNbt(compound);
         compound.putFloat("initialCompletion", initialCompletion);
         compound.putFloat("latestPercentCompleted", latestPercentCompleted);

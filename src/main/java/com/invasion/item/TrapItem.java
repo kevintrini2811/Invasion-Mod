@@ -1,45 +1,44 @@
 package com.invasion.item;
 
 import com.invasion.entity.TrapEntity;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import com.invasion.entity.InvEntities;
-
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.predicate.entity.EntityPredicates;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 public class TrapItem extends Item {
 
     private final TrapEntity.Type trapType;
 
-    public TrapItem(Settings settings, TrapEntity.Type trapType) {
-        super(settings.maxCount(64).maxDamage(0));
+    public TrapItem(Properties settings, TrapEntity.Type trapType) {
+        super(settings.stacksTo(64).durability(0));
         this.trapType = trapType;
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        if (context.getSide() == Direction.UP) {
-            World world = context.getWorld();
-            Vec3d pos = context.getBlockPos().offset(context.getSide()).toBottomCenterPos();
-            TrapEntity trap = new TrapEntity(InvEntities.TRAP, world, pos.getX(), pos.getY(), pos.getZ(), trapType);
+    public InteractionResult useOn(UseOnContext context) {
+        if (context.getClickedFace() == Direction.UP) {
+            Level world = context.getLevel();
+            Vec3 pos = com.invasion.util.math.PosUtils.bottomCenter(context.getClickedPos().relative(context.getClickedFace()));
+            TrapEntity trap = new TrapEntity(InvEntities.TRAP, world, pos.x(), pos.y(), pos.z(), trapType);
 
             if (trap.isValidPlacement()
-                    && world.getEntitiesByClass(TrapEntity.class, trap.getBoundingBox(),
-                    EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR).isEmpty()) {
-                if (!world.isClient) {
-                    world.spawnEntity(trap);
+                    && world.getEntitiesOfClass(TrapEntity.class, trap.getBoundingBox(),
+                    EntitySelector.NO_CREATIVE_OR_SPECTATOR).isEmpty()) {
+                if (!world.isClientSide()) {
+                    world.addFreshEntity(trap);
                 }
 
-                context.getStack().decrementUnlessCreative(1, context.getPlayer());
+                context.getItemInHand().consume(1, context.getPlayer());
 
-                return ActionResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
 
-        return ActionResult.FAIL;
+        return InteractionResult.FAIL;
     }
 }

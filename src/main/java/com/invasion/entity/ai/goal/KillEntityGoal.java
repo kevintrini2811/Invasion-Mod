@@ -1,10 +1,12 @@
 package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.NexusEntity;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.server.level.ServerLevel;
 
 @Deprecated
 public class KillEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
@@ -13,7 +15,7 @@ public class KillEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T> 
     private int attackDelay;
     private int nextAttack;
 
-    public <E extends PathAwareEntity & NexusEntity> KillEntityGoal(E entity, Class<? extends T> targetClass, int attackDelay) {
+    public <E extends PathfinderMob & NexusEntity> KillEntityGoal(E entity, Class<? extends T> targetClass, int attackDelay) {
         super(entity, targetClass);
         this.attackDelay = attackDelay;
     }
@@ -29,7 +31,7 @@ public class KillEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T> 
     }
 
     protected void attackEntity(Entity target) {
-        mob.tryAttack(getTarget());
+        mob.doHurtTarget((ServerLevel) mob.level(), getTarget());
         setAttackTime(getAttackDelay());
     }
 
@@ -38,8 +40,8 @@ public class KillEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T> 
             return false;
         }
 
-        double d = (mob.getWidth() + ATTACK_RANGE);
-        return mob.squaredDistanceTo(target) < d * d;
+        double d = (mob.getBbWidth() + ATTACK_RANGE);
+        return mob.distanceToSqr(target) < d * d;
     }
 
     protected int getAttackTime() {

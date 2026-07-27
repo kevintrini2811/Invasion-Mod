@@ -1,18 +1,17 @@
 package com.invasion;
 
 import com.invasion.block.container.NexusScreenHandler;
-
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.resource.featuretoggle.FeatureFlags;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 
 public interface InvScreenHandlers {
-    ScreenHandlerType<NexusScreenHandler> NEXUS = register("nexus", new ScreenHandlerType<>(NexusScreenHandler::new, FeatureFlags.VANILLA_FEATURES));
+    MenuType<NexusScreenHandler> NEXUS = register("nexus", new MenuType<>(NexusScreenHandler::new, FeatureFlags.VANILLA_SET));
 
-    static <T extends ScreenHandler> ScreenHandlerType<T> register(String name, ScreenHandlerType<T> type) {
-        return Registry.register(Registries.SCREEN_HANDLER, InvasionMod.id(name), type);
+    static <T extends AbstractContainerMenu> MenuType<T> register(String name, MenuType<T> type) {
+        return Registry.register(BuiltInRegistries.MENU, InvasionMod.id(name), type);
     }
 
     static void bootstrap() { }

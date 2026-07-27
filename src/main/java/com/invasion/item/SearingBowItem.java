@@ -1,16 +1,15 @@
 package com.invasion.item;
 
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.ItemStack;
 
 public class SearingBowItem extends BowItem {
     static final float SEARING_ACTIVATION_PULL_PERCENTAGE = 3.8F;
-    public SearingBowItem(Settings settings) {
+    public SearingBowItem(Properties settings) {
         super(settings);
     }
 
@@ -20,19 +19,19 @@ public class SearingBowItem extends BowItem {
     }
 
     @Override
-    protected void shoot(LivingEntity shooter, ProjectileEntity projectile, int index, float speed, float divergence, float yaw, @Nullable LivingEntity target) {
-        super.shoot(shooter, projectile, index, speed, divergence, yaw, target);
-        float pullProgress = getUncappedPullProgress(getMaxUseTime(getDefaultStack(), shooter) - shooter.getItemUseTimeLeft());
+    protected void shootProjectile(LivingEntity shooter, Projectile projectile, int index, float speed, float divergence, float yaw, @Nullable LivingEntity target) {
+        super.shootProjectile(shooter, projectile, index, speed, divergence, yaw, target);
+        float pullProgress = getUncappedPullProgress(getUseDuration(getDefaultInstance(), shooter) - shooter.getUseItemRemainingTicks());
         if (pullProgress > SEARING_ACTIVATION_PULL_PERCENTAGE) {
-            projectile.setFireTicks(100);
-            if (projectile instanceof PersistentProjectileEntity p) {
-                p.setDamage((p.getDamage() + 1) * 1.5F + 1);
+            projectile.setRemainingFireTicks(100);
+            if (projectile instanceof AbstractArrow p) {
+                p.setBaseDamage(4.0D);
             }
         }
     }
 
     @Override
-    protected int getWeaponStackDamage(ItemStack projectile) {
+    protected int getDurabilityUse(ItemStack projectile) {
         return 0;
     }
 }

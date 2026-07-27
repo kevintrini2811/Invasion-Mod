@@ -1,26 +1,26 @@
 package com.invasion.nexus.ai.scaffold;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
 
 public record ScaffoldNode(
         BlockPos pos,
         Direction orientation,
         int height
     ) {
-    public ScaffoldNode(NbtCompound compound) {
+    public ScaffoldNode(CompoundTag compound) {
         this(
-            NbtHelper.toBlockPos(compound, "pos").orElse(BlockPos.ORIGIN),
-            Direction.fromHorizontal(compound.getInt("orientation")),
-            compound.getInt("height")
+            compound.read("pos", BlockPos.CODEC).orElse(BlockPos.ZERO),
+            Direction.from2DDataValue(compound.getIntOr("orientation", 0)),
+            compound.getIntOr("height", 0)
         );
     }
 
-    public void toNbt(NbtCompound compound) {
-        compound.put("pos", NbtHelper.fromBlockPos(pos));
-        compound.putInt("orientation", orientation.getHorizontal());
+    public void toNbt(CompoundTag compound) {
+        compound.store("pos", BlockPos.CODEC, pos);
+        compound.putInt("orientation", orientation.get2DDataValue());
         compound.putInt("height", height);
     }
 

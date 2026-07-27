@@ -6,23 +6,13 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableSource;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
-
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +27,6 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.Identifier;
 
 
 
@@ -57,7 +46,7 @@ public class InvasionMod implements ModInitializer {
     }
 
     public static Identifier id(String name) {
-        return Identifier.of("invmod", name);
+        return Identifier.fromNamespaceAndPath("invmod", name);
     }
 
     @Override
@@ -66,7 +55,7 @@ public class InvasionMod implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {
             dispatcher.register(InvasionCommand.create(dispatcher, registries));
         });
-        ServerTickEvents.START_WORLD_TICK.register(world -> {
+        ServerTickEvents.START_LEVEL_TICK.register(world -> {
             BountyHunter.of(world).tick();
             WorldNexusStorage.of(world).tick();
         });
@@ -89,8 +78,8 @@ public class InvasionMod implements ModInitializer {
         // Keine Drops von Invasions-Mobs (inkl. Mutant Monsters & Giant)
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
             // Nur Serverwelt
-            if (!(entity.getWorld() instanceof ServerWorld world)) return;
-            if (!(entity instanceof MobEntity mob)) return;
+            if (!(entity.level() instanceof ServerLevel world)) return;
+            if (!(entity instanceof Mob mob)) return;
 
             boolean isInvasionMob = false;
 
@@ -100,7 +89,7 @@ public class InvasionMod implements ModInitializer {
             } else {
                 // 2) Eigene Invasion-Mobs: über Team "invasion_allies"
                 Scoreboard scoreboard = world.getScoreboard();
-                Team team = scoreboard.getScoreHolderTeam(mob.getNameForScoreboard());
+                PlayerTeam team = scoreboard.getPlayersTeam(mob.getScoreboardName());
                 if (team != null && "invasion_allies".equals(team.getName())) {
                     isInvasionMob = true;
                 }
@@ -109,8 +98,8 @@ public class InvasionMod implements ModInitializer {
             if (!isInvasionMob) return;
 
             // Alle Item-Entities in der Nähe des toten Mobs sofort entfernen
-            var box = mob.getBoundingBox().expand(3.0);
-            world.getEntitiesByClass(ItemEntity.class, box, item -> true)
+            var box = mob.getBoundingBox().inflate(3.0);
+            world.getEntitiesOfClass(ItemEntity.class, box, item -> true)
                     .forEach(ItemEntity::discard);
         });
 

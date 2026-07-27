@@ -1,21 +1,19 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
-
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult.Type;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.VultureEntity;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.ai.MoveState;
 import com.invasion.entity.pathfinding.FlyingNavigation;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult.Type;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 
 public class SwoopGoal extends Goal {
     private static final int INITIAL_LINEUP_TIME = 25;
@@ -40,25 +38,25 @@ public class SwoopGoal extends Goal {
 
     public SwoopGoal(VultureEntity entity) {
         theEntity = entity;
-        strikeDistance = entity.getWidth() + 1.5F;
-        setControls(EnumSet.of(Control.LOOK, Control.MOVE));
+        strikeDistance = entity.getBbWidth() + 1.5F;
+        setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         if (theEntity.hasGoal(HasAiGoals.Goal.FIND_ATTACK_OPPORTUNITY) && theEntity.getTarget() != null) {
             swoopTarget = theEntity.getTarget();
-            Vec3d delta = swoopTarget.getPos().subtract(theEntity.getPos());
-            double dXZ = delta.horizontalLength();
+            Vec3 delta = swoopTarget.position().subtract(theEntity.position());
+            double dXZ = delta.horizontalDistance();
             if (-delta.y < minHeight || dXZ < minXZDistance) {
                 return false;
             }
-            double pitchToTarget = Math.atan(delta.y / dXZ) * MathHelper.DEGREES_PER_RADIAN;
+            double pitchToTarget = Math.atan(delta.y / dXZ) * Mth.RAD_TO_DEG;
             if (pitchToTarget > maxSteepness) {
                 return false;
             }
-            finalRunLength = MathHelper.clamp((float) (dXZ * 0.42D), 4, 18);
-            diveAngle = (float) Math.atan((dXZ - finalRunLength) / delta.y) * MathHelper.DEGREES_PER_RADIAN;
+            finalRunLength = Mth.clamp((float) (dXZ * 0.42D), 4, 18);
+            diveAngle = (float) Math.atan((dXZ - finalRunLength) / delta.y) * Mth.RAD_TO_DEG;
             if (swoopTarget != null && isSwoopPathClear(swoopTarget, diveAngle)) {
                 diveHeight = (float) -delta.y;
                 return true;
@@ -68,7 +66,7 @@ public class SwoopGoal extends Goal {
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         return theEntity.getTarget() == swoopTarget && !endSwoop && theEntity.getMoveState() == MoveState.FLYING;
     }
 
@@ -77,7 +75,7 @@ public class SwoopGoal extends Goal {
         time = 0;
         theEntity.transitionAIGoal(HasAiGoals.Goal.SWOOP);
         ((FlyingNavigation)theEntity.getNavigatorNew()).setMovementType(FlyingNavigation.MoveType.PREFER_FLYING);
-        theEntity.getNavigation().startMovingTo(swoopTarget, theEntity.getMaxPoweredFlightSpeed());
+        theEntity.getNavigation().moveTo(swoopTarget, theEntity.getMaxPoweredFlightSpeed());
         theEntity.doScreech();
     }
 
@@ -122,8 +120,8 @@ public class SwoopGoal extends Goal {
             double yawToTarget = Math.atan2(
                     swoopTarget.getZ() - theEntity.getZ(),
                     swoopTarget.getX() - theEntity.getX()
-            ) * MathHelper.DEGREES_PER_RADIAN - 90;
-            if (Math.abs(MathHelper.subtractAngles((float) yawToTarget, theEntity.getYaw())) > 90) {
+            ) * Mth.RAD_TO_DEG - 90;
+            if (Math.abs(Mth.degreesDifference((float) yawToTarget, theEntity.getYRot())) > 90) {
                 theEntity.transitionAIGoal(HasAiGoals.Goal.NONE);
                 ((FlyingNavigation)theEntity.getNavigatorNew()).enableDirectTarget(false);
                 theEntity.setClawsForward(false);
@@ -138,11 +136,11 @@ public class SwoopGoal extends Goal {
         double lowestCollide = theEntity.getY();
         for (double y = theEntity.getY() - dRayY; y > target.getY(); y -= dRayY) {
             double dist = Math.tan(90 + diveAngle) * (theEntity.getY() - y);
-            BlockHitResult collide = theEntity.getWorld().raycast(new RaycastContext(new Vec3d(
-                    -Math.sin(theEntity.getYaw() * MathHelper.RADIANS_PER_DEGREE) * dist,
+            BlockHitResult collide = theEntity.level().clip(new ClipContext(new Vec3(
+                    -Math.sin(theEntity.getYRot() * Mth.DEG_TO_RAD) * dist,
                     y,
-                    Math.cos(theEntity.getYaw() * MathHelper.RADIANS_PER_DEGREE) * dist
-            ), target.getPos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, theEntity));
+                    Math.cos(theEntity.getYRot() * Mth.DEG_TO_RAD) * dist
+            ), target.position(), ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, theEntity));
             if (collide != null && collide.getType() != Type.MISS) {
                 if (hitCount == 0) {
                     lowestCollide = y;
@@ -155,14 +153,14 @@ public class SwoopGoal extends Goal {
     }
 
     private boolean isFinalRunLinedUp() {
-        Vec3d delta = swoopTarget.getPos().subtract(theEntity.getPos());
-        double dXZ = delta.horizontalLength();
-        double yawToTarget = Math.atan2(delta.x, delta.z) * MathHelper.DEGREES_PER_RADIAN - 90;
-        double dYaw = MathHelper.subtractAngles((float) yawToTarget, theEntity.getYaw());
+        Vec3 delta = swoopTarget.position().subtract(theEntity.position());
+        double dXZ = delta.horizontalDistance();
+        double yawToTarget = Math.atan2(delta.x, delta.z) * Mth.RAD_TO_DEG - 90;
+        double dYaw = Mth.degreesDifference((float) yawToTarget, theEntity.getYRot());
         if (dYaw < -finalRunArcLimit || dYaw > finalRunArcLimit) {
             return false;
         }
-        double dPitch = Math.atan(delta.x / dXZ) * MathHelper.DEGREES_PER_RADIAN - theEntity.getPitch();
+        double dPitch = Math.atan(delta.x / dXZ) * Mth.RAD_TO_DEG - theEntity.getXRot();
         return dPitch >= -finalRunArcLimit && dPitch <= finalRunArcLimit;
     }
 

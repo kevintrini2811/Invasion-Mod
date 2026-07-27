@@ -4,22 +4,37 @@ import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.ai.scaffold.ScaffoldView;
 import com.invasion.util.math.PosUtils;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.ai.pathing.PathNodeType;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.CollisionView;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.server.level.ServerLevel;
 
 public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implements Miner {
 
@@ -29,18 +44,18 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
         return entity.getTier() == 2 && entity.getFlavour() == 2;
     }
 
-    protected AbstractIMZombieEntity(EntityType<? extends AbstractIMZombieEntity> type, World world, float diggingSpeed) {
+    protected AbstractIMZombieEntity(EntityType<? extends AbstractIMZombieEntity> type, Level world, float diggingSpeed) {
         super(type, world);
     }
 
     @Override
-    protected EntityNavigation createNavigation(World world) {
+    protected PathNavigation createNavigation(Level world) {
         return new Navigation(this);
     }
 
     @Override
-    public boolean isFireImmune() {
-        return fireImmune || super.isFireImmune();
+    public boolean fireImmune() {
+        return fireImmune || super.fireImmune();
     }
 
     protected void setFireImmune(boolean fireImmune) {
@@ -72,34 +87,34 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
     }
 
     @Override
-    protected int getNextAirUnderwater(int air) {
+    protected int decreaseAirSupply(int air) {
         if (getTier() == 2 && getFlavour() == 2) {
-            return getNextAirOnLand(air);
+            return increaseAirSupply(air);
         }
-        return super.getNextAirUnderwater(air);
+        return super.decreaseAirSupply(air);
     }
 
     @Override
-    public boolean tryAttack(Entity entity) {
-        return getTier() == 3 && isSprinting() ? chargeAttack(entity) : super.tryAttack(entity);
+    public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
+        return getTier() == 3 && isSprinting() ? chargeAttack(entity) : super.doHurtTarget(serverLevel, entity);
     }
 
     protected boolean chargeAttack(Entity entity) {
         int knockback = 4;
-        entity.damage(getDamageSources().mobAttack(this), (float)getAttackStrength() + 3);
-        float yaw = getYaw() * MathHelper.RADIANS_PER_DEGREE;
+        entity.hurt(damageSources().mobAttack(this), (float)getAttackStrength() + 3);
+        float yaw = getYRot() * Mth.DEG_TO_RAD;
         if (entity instanceof LivingEntity l) {
-            l.takeKnockback(knockback, MathHelper.sin(yaw), MathHelper.cos(yaw));
+            l.knockback(knockback, Mth.sin(yaw), Mth.cos(yaw), damageSources().mobAttack(this), (float)getAttackStrength());
         }
         setSprinting(false);
-        playSound(SoundEvents.ENTITY_GENERIC_BIG_FALL, 1, 1);
+        playSound(SoundEvents.GENERIC_BIG_FALL, 1, 1);
         return true;
     }
 
     @Override
-    public void takeKnockback(double strength, double x, double z) {
+    public void knockback(double strength, double x, double z, DamageSource source, float damage, boolean force) {
         if (getTier() != 3) {
-            super.takeKnockback(strength, x, z);
+            super.knockback(strength, x, z, source, damage, force);
         }
     }
 
@@ -115,8 +130,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
     }
 
     @Override
-    public float getSoundPitch() {
-        return super.getSoundPitch() * (isBrute() ? 0.75F : 1);
+    public float getVoicePitch() {
+        return super.getVoicePitch() * (isBrute() ? 0.75F : 1);
     }
 
     public float scaleAmount() {
@@ -129,39 +144,39 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
     }
 
     @Override
-    protected Text getDefaultName() {
+    protected Component getTypeName() {
         if (isBrute()) {
-            return Text.translatable(getType().getUntranslatedName() + ".brute");
+            return Component.translatable(getType().toShortString() + ".brute");
         }
-        return super.getDefaultName();
+        return super.getTypeName();
     }
 
     protected static class Navigation extends IMMobNavigation {
-        public Navigation(MobEntity entity) {
+        public Navigation(Mob entity) {
             super(entity);
         }
 
         @Override
-        public PathNodeMaker createNodeMaker() {
+        public NodeEvaluator createNodeMaker() {
             var nodeMaker = new NodeMaker();
-            nodeMaker.setCanEnterOpenDoors(true);
+            nodeMaker.setCanPassDoors(true);
             nodeMaker.setCanOpenDoors(true);
-            nodeMaker.setCanSwim(true);
+            nodeMaker.setCanFloat(true);
             nodeMaker.setCanClimbLadders(true);
             return nodeMaker;
         }
 
         class NodeMaker extends IMLandPathNodeMaker {
             @Override
-            public float getDistancePenalty(PathNode previousNode, PathNode nextNode, CollisionView world) {
-                world = context.getWorld();
+            public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
+                world = currentContext.level();
 
-                if (this.entity instanceof AbstractIMZombieEntity entity
+                if (this.mob instanceof AbstractIMZombieEntity entity
                         && AbstractIMZombieEntity.isTar(entity)
-                        && nextNode.type == PathNodeType.WATER) {
-                    float multiplier = 1 + ScaffoldView.of(world).getMobDensity(nextNode.getBlockPos()) * 3;
+                        && nextNode.type == PathType.WATER) {
+                    float multiplier = 1 + ScaffoldView.of(world).getMobDensity(nextNode.asBlockPos()) * 3;
 
-                    if (nextNode.y > previousNode.y && canMineBlock(world, nextNode.getBlockPos(), context.getBlockState(nextNode.getBlockPos()))) {
+                    if (nextNode.y > previousNode.y && canMineBlock(world, nextNode.asBlockPos(), currentContext.getBlockState(nextNode.asBlockPos()))) {
                         multiplier += 2;
                     }
 
@@ -171,7 +186,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
             }
 
             @Override
-            public boolean canMineBlock(CollisionView world, BlockPos pos, BlockState state) {
+            public boolean canMineBlock(CollisionGetter world, BlockPos pos, BlockState state) {
                 return super.canMineBlock(world, pos, state)
                         && getTargetPos() != null
                         && PosUtils.getInclination(getTargetPos(), pos) <= 2.144D;

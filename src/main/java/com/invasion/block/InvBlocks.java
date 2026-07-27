@@ -1,22 +1,25 @@
 package com.invasion.block;
 
 import com.invasion.InvasionMod;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.AbstractBlock.Settings;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
 public interface InvBlocks {
-    NexusBlock NEXUS_CORE = register("nexus_core", new NexusBlock(Settings.create()
-            .resistance(6000000).hardness(3).sounds(BlockSoundGroup.GLASS).emissiveLighting(Blocks::always)
-            .luminance(state -> state.get(NexusBlock.LIT) ? 15 : 8)
-    ));
+    NexusBlock NEXUS_CORE = registerNexusCore();
 
-    private static <T extends Block> T register(String name, T block) {
-        return Registry.register(Registries.BLOCK, InvasionMod.id(name), block);
+    private static NexusBlock registerNexusCore() {
+        var id = InvasionMod.id("nexus_core");
+        var key = ResourceKey.create(Registries.BLOCK, id);
+        var block = new NexusBlock(Properties.of().setId(key)
+                .explosionResistance(6000000).destroyTime(3).sound(SoundType.GLASS).emissiveRendering(state -> true)
+                .lightLevel(state -> state.getValue(NexusBlock.LIT) ? 15 : 8));
+        return Registry.register(BuiltInRegistries.BLOCK, id, block);
     }
 
     static void bootstrap() {

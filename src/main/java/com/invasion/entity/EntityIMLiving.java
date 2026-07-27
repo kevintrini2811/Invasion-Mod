@@ -7,41 +7,42 @@ import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.particle.InvParticles;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 @Deprecated
-public abstract class EntityIMLiving extends HostileEntity implements NexusEntity, Stunnable {
-    private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::getWorld);
+public abstract class EntityIMLiving extends Monster implements NexusEntity, Stunnable {
+    private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
 
     private int stunTimer;
 
     protected int flammability = 2;
 
-    public EntityIMLiving(EntityType<? extends EntityIMLiving> type, World world) {
+    public EntityIMLiving(EntityType<? extends EntityIMLiving> type, Level world) {
         super(type, world);
         moveControl = new ClimbableMoveControl(this);
         resetHealth();
     }
 
     @Override
-    public PathAwareEntity asEntity() {
+    public PathfinderMob asEntity() {
         return this;
     }
 
     @Override
-    protected EntityNavigation createNavigation(World world) {
+    protected PathNavigation createNavigation(Level world) {
         return new IMMobNavigation(this, createIMNavigation().getActor());
     }
 
@@ -56,32 +57,35 @@ public abstract class EntityIMLiving extends HostileEntity implements NexusEntit
     }
 
     @Override
-    public void tickMovement() {
+    public void aiStep() {
         if (isStunned()) {
-            if (!getWorld().isClient && age % 10 == 0) {
-                ((ServerWorld)getWorld()).spawnParticles(InvParticles.DAZE, getX(), getEyeY(), getZ(), 1, 0, 0, 0, 0);
+            if (!level().isClientSide() && tickCount % 10 == 0) {
+                ((ServerLevel)level()).sendParticles(InvParticles.DAZE, getX(), getEyeY(), getZ(), 1, 0, 0, 0, 0);
             }
             stunTimer--;
         }
-        super.tickMovement();
-        if (getBurnsInDay() && isAffectedByDaylight()) {
+        super.aiStep();
+        if (getBurnsInDay()
+                && !isInWaterOrRain()
+                && level().isBrightOutside()
+                && level().canSeeSky(blockPosition())) {
             sunlightDamageTick();
         }
     }
 
     @Override
-    public boolean damage(DamageSource source, float damage) {
-        if (source.isIn(DamageTypeTags.IS_FIRE)) {
+    public boolean hurtServer(ServerLevel serverLevel, DamageSource source, float damage) {
+        if (source.is(DamageTypeTags.IS_FIRE)) {
             damage *= flammability;
         }
 
-        return super.damage(source, damage);
+        return super.hurtServer(serverLevel, source, damage);
     }
 
     @Override
     public boolean stun(int ticks) {
         stunTimer = Math.max(stunTimer, ticks);
-        setVelocity(getVelocity().multiply(0, 1, 0));
+        setDeltaMovement(getDeltaMovement().multiply(0, 1, 0));
         return true;
     }
 
@@ -91,46 +95,46 @@ public abstract class EntityIMLiving extends HostileEntity implements NexusEntit
     }
 
     @Override
-    public boolean canSee(Entity entity) {
+    public boolean hasLineOfSight(Entity entity) {
         float distance = distanceTo(entity);
-        return distance <= getSenseRange() || (super.canSee(entity) && distance <= getAggroRange());
+        return distance <= getSenseRange() || (super.hasLineOfSight(entity) && distance <= getAggroRange());
     }
 
     @Override
-    public boolean canSpawn(WorldView world) {
-        return super.canSpawn(world) && (hasNexus() || getLightLevelBelow8()) && getWorld().isTopSolid(getBlockPos().down(), this);
+    public boolean checkSpawnObstruction(LevelReader world) {
+        return super.checkSpawnObstruction(world) && (hasNexus() || getLightLevelBelow8()) && level().loadedAndEntityCanStandOn(blockPosition().below(), this);
     }
 
     @Override
-    public float getPathfindingFavor(BlockPos pos, WorldView world) {
-        return hasNexus() ? 0 : super.getPathfindingFavor(pos, world);
+    public float getWalkTargetValue(BlockPos pos, LevelReader world) {
+        return hasNexus() ? 0 : super.getWalkTargetValue(pos, world);
     }
 
     @Override
-    public final boolean canImmediatelyDespawn(double distanceSquared) {
+    public final boolean removeWhenFarAway(double distanceSquared) {
         return !hasNexus();
     }
 
     @Override
-    public final boolean cannotDespawn() {
-        return hasNexus() || super.cannotDespawn();
+    public final boolean requiresCustomPersistence() {
+        return hasNexus() || super.requiresCustomPersistence();
     }
 
     protected void sunlightDamageTick() {
-        setOnFireFor(8);
+        igniteForSeconds(8);
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound compound) {
-        super.writeCustomDataToNbt(compound);
+    public void addAdditionalSaveData(ValueOutput compound) {
+        super.addAdditionalSaveData(compound);
         compound.putInt("stunTimer", stunTimer);
         nexus.writeNbt(compound);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound compound) {
-        super.readCustomDataFromNbt(compound);
-        stunTimer = compound.getInt("stunTimer");
+    public void readAdditionalSaveData(ValueInput compound) {
+        super.readAdditionalSaveData(compound);
+        stunTimer = compound.getIntOr("stunTimer", 0);
         nexus.readNbt(compound);
     }
 }

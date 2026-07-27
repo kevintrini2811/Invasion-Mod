@@ -1,10 +1,9 @@
 package com.invasion.entity.ai.builder;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.concurrent.atomic.AtomicReference;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 public record ModifyBlockEntry(
         BlockPos pos,
@@ -14,7 +13,7 @@ public record ModifyBlockEntry(
     ) {
 
     public static ModifyBlockEntry ofDeletion(BlockPos pos, int cost) {
-        return new ModifyBlockEntry(pos, Blocks.AIR.getDefaultState(), cost);
+        return new ModifyBlockEntry(pos, Blocks.AIR.defaultBlockState(), cost);
     }
 
     public ModifyBlockEntry(BlockPos pos, BlockState state, int cost) {

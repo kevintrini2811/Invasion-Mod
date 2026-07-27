@@ -3,14 +3,12 @@ package com.invasion.nexus.wave;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
-
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 public interface EntityPatterns {
@@ -36,12 +34,14 @@ public interface EntityPatterns {
 
     @SuppressWarnings("unchecked")
     private static EntityPattern registerExternal(String name, String modid, String entityName, float spawnWeight) {
-        Identifier entityId = Identifier.of(modid, entityName);
+        Identifier entityId = Identifier.fromNamespaceAndPath(modid, entityName);
 
         // Versuchen, den Typ direkt zu holen
-        EntityType<?> type = Registries.ENTITY_TYPE.get(entityId);
+        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entityId)
+                .map(net.minecraft.core.Holder.Reference::value)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown entity type: " + entityId));
 
-        Identifier resolvedId = Registries.ENTITY_TYPE.getId(type);
+        Identifier resolvedId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         InvasionMod.LOGGER.info("[EntityPatterns] registerExternal {} -> resolvedId={}", entityId, resolvedId);
 
         // Wenn der Registry-Eintrag wirklich nicht existiert (d. h. wir kriegen NICHT unsere gewünschte ID zurück)
@@ -51,7 +51,7 @@ public interface EntityPatterns {
             return null;
         }
 
-        EntityType<? extends MobEntity> mobType = (EntityType<? extends MobEntity>) type;
+        EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
         InvasionMod.LOGGER.info("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
                 entityId, name, spawnWeight);
 
@@ -59,7 +59,7 @@ public interface EntityPatterns {
     }
 
     public static boolean isExternalInvasionMob(EntityType<?> type) {
-        Identifier id = Registries.ENTITY_TYPE.getId(type);
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         if (id == null) return false;
 
         // Mutant Monsters
@@ -192,16 +192,16 @@ public interface EntityPatterns {
 
         @SuppressWarnings("unchecked")
         private static @Nullable EntityPattern create(String name, String modid, String entityName, float spawnWeight) {
-            Identifier entityId = Identifier.of(modid, entityName);
+            Identifier entityId = Identifier.fromNamespaceAndPath(modid, entityName);
 
-            var opt = Registries.ENTITY_TYPE.getOrEmpty(entityId);
+            var opt = BuiltInRegistries.ENTITY_TYPE.getOptional(entityId);
             if (opt.isEmpty()) {
                 InvasionMod.LOGGER.warn("[EntityPatterns] Mod-Mob {} nicht gefunden, Pattern '{}' bleibt null.", entityId, name);
                 return null;
             }
 
             EntityType<?> type = opt.get();
-            EntityType<? extends MobEntity> mobType = (EntityType<? extends MobEntity>) type;
+            EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
 
             InvasionMod.LOGGER.info("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
                     entityId, name, spawnWeight);

@@ -6,43 +6,47 @@ import com.invasion.entity.IMWolfEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 class StrangeBoneItem extends Item {
-    public StrangeBoneItem(Settings settings) {
+    public StrangeBoneItem(Properties settings) {
         super(settings);
     }
 
     @Override
-    public ActionResult useOnEntity(ItemStack stack, PlayerEntity user, LivingEntity entity, Hand hand) {
-        if (entity.getWorld().isClient || !(entity instanceof WolfEntity wolf && wolf.isTamed()) || entity instanceof IMWolfEntity) {
-            return ActionResult.PASS;
+    public InteractionResult interactLivingEntity(ItemStack stack, Player user, LivingEntity entity, InteractionHand hand) {
+        if (entity.level().isClientSide() || !(entity instanceof Wolf wolf && wolf.isTame()) || entity instanceof IMWolfEntity) {
+            return InteractionResult.PASS;
         }
 
         @Nullable
-        NexusAccess nexus = IHasNexus.findNexus(entity.getWorld(), entity.getBlockPos());
+        NexusAccess nexus = IHasNexus.findNexus(entity.level(), entity.blockPosition());
 
         if (nexus == null) {
-            user.sendMessage(Text.translatable("invmod.message.bone.nonearbynexus1").formatted(Formatting.RED));
-            user.sendMessage(Text.translatable("invmod.message.bone.nonearbynexus2").formatted(Formatting.RED));
-            return ActionResult.FAIL;
+            user.sendSystemMessage(Component.translatable("invmod.message.bone.nonearbynexus1").withStyle(ChatFormatting.RED));
+            user.sendSystemMessage(Component.translatable("invmod.message.bone.nonearbynexus2").withStyle(ChatFormatting.RED));
+            return InteractionResult.FAIL;
         }
 
-        IMWolfEntity newWolf = wolf.convertTo(InvEntities.WOLF, true);
+        IMWolfEntity newWolf = InvEntities.WOLF.create(wolf.level(), EntitySpawnReason.CONVERSION);
+        if (newWolf == null) {
+            return InteractionResult.FAIL;
+        }
+        newWolf.restoreFrom(wolf);
         newWolf.setNexus(nexus);
 
-        wolf.getWorld().spawnEntity(newWolf);
+        wolf.level().addFreshEntity(newWolf);
         wolf.discard();
-        stack.decrement(1);
-        return ActionResult.SUCCESS;
+        stack.shrink(1);
+        return InteractionResult.SUCCESS;
     }
 }

@@ -1,33 +1,33 @@
 package com.invasion.nexus;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.BountyHunter;
 import com.invasion.InvasionMod;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.predicate.entity.EntityPredicates;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Box;
-
 public class Participants {
-    private static final Text POSSESSIVE_SUFFEX_A = Text.literal("'");
-    private static final Text POSSESSIVE_SUFFEX_B = Text.literal("'s");
+    private static final Component POSSESSIVE_SUFFEX_A = Component.literal("'");
+    private static final Component POSSESSIVE_SUFFEX_B = Component.literal("'s");
 
     private final Map<UUID, Entry> entries = new HashMap<>();
 
@@ -37,17 +37,17 @@ public class Participants {
         this.nexus = nexus;
     }
 
-    public void bindPlayers(Box arena) {
+    public void bindPlayers(AABB arena) {
         final long now = System.currentTimeMillis();
-        for (PlayerEntity player : nexus.getWorld().getEntitiesByClass(PlayerEntity.class, arena, EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR)) {
-            entries.compute(player.getUuid(), (id, oldEntry) -> {
+        for (Player player : nexus.getWorld().getEntitiesOfClass(Player.class, arena, EntitySelector.NO_CREATIVE_OR_SPECTATOR)) {
+            entries.compute(player.getUUID(), (id, oldEntry) -> {
                 if (oldEntry == null || now - oldEntry.time > NexusAccess.BIND_EXPIRE_TIME) {
-                    Text message = Text.translatable("invmod.message.nexus.lifenowbound", pluralize(player.getDisplayName())).formatted(Formatting.DARK_GREEN);
+                    Component message = Component.translatable("invmod.message.nexus.lifenowbound", pluralize(player.getDisplayName())).withStyle(ChatFormatting.DARK_GREEN);
                     sendMessage(message);
                     if (oldEntry == null) {
-                        player.sendMessage(message);
+                        player.sendSystemMessage(message);
                     }
-                    return new Entry(now, player.getUuid());
+                    return new Entry(now, player.getUUID());
                 }
                 return oldEntry;
             });
@@ -55,27 +55,44 @@ public class Participants {
     }
 
 
-    private Text pluralize(Text text) {
-        return text.copy().append(text.getString().toLowerCase(Locale.ROOT).endsWith("s") ? POSSESSIVE_SUFFEX_A : POSSESSIVE_SUFFEX_B).formatted(Formatting.GREEN);
+    private Component pluralize(Component text) {
+        return text.copy().append(text.getString().toLowerCase(Locale.ROOT).endsWith("s") ? POSSESSIVE_SUFFEX_A : POSSESSIVE_SUFFEX_B).withStyle(ChatFormatting.GREEN);
     }
 
     public void sendWarning(String translationKey, Object...params) {
-        sendMessage(Formatting.RED, translationKey, params);
+        sendMessage(ChatFormatting.RED, translationKey, params);
     }
 
     public void sendNotice(String translationKey, Object...params) {
-        sendMessage(Formatting.DARK_GREEN, translationKey, params);
+        sendMessage(ChatFormatting.DARK_GREEN, translationKey, params);
     }
 
-    public void sendMessage(Formatting color, String translationKey, Object...params) {
-        sendMessage(Text.translatable(translationKey, params).formatted(color));
+    public void sendMessage(ChatFormatting color, String translationKey, Object...params) {
+        sendMessage(Component.translatable(translationKey, params).withStyle(color));
     }
 
-    public void sendMessage(Text message) {
+    public void sendMessage(Component message) {
         for (Entry entry : entries.values()) {
-            PlayerEntity player = entry.getEntity();
+            Player player = entry.getEntity();
             if (player != null) {
-                player.sendMessage(message);
+                player.sendSystemMessage(message);
+            }
+        }
+    }
+
+    public void sendMessageIncludingNearby(Component message, AABB area) {
+        Set<UUID> notifiedPlayers = new HashSet<>();
+        for (Entry entry : entries.values()) {
+            Player player = entry.getEntity();
+            if (player != null) {
+                player.sendSystemMessage(message);
+                notifiedPlayers.add(player.getUUID());
+            }
+        }
+
+        for (Player player : nexus.getWorld().getEntitiesOfClass(Player.class, area)) {
+            if (notifiedPlayers.add(player.getUUID())) {
+                player.sendSystemMessage(message);
             }
         }
     }
@@ -87,9 +104,9 @@ public class Participants {
     public void playSoundForBoundPlayers(SoundEvent sound, float volume, float pitch) {
         for (Entry entry : entries.values()) {
             try {
-                PlayerEntity player = entry.getEntity();
+                Player player = entry.getEntity();
                 if (player != null) {
-                    player.getWorld().playSound(null, player.getBlockPos(), sound, SoundCategory.AMBIENT, volume, pitch);
+                    player.level().playSound(null, player.blockPosition(), sound, SoundSource.AMBIENT, volume, pitch);
                 }
             } catch (Exception e) {
                 InvasionMod.LOGGER.error("Problem while trying to play sound " + sound + " at player " + entry.id, e);
@@ -101,11 +118,11 @@ public class Participants {
         long time = System.currentTimeMillis();
         for (Entry entry : entries.values()) {
             if (time - entry.time < NexusAccess.BIND_EXPIRE_TIME) {
-                PlayerEntity player = entry.getEntity();
+                Player player = entry.getEntity();
                 if (player != null) {
-                    player.getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ENDER_DRAGON_DEATH, SoundCategory.AMBIENT, 4, 1);
-                    player.damage(player.getWorld().getDamageSources().magic(), 500);
-                } else if (nexus.getWorld() instanceof ServerWorld sw) {
+                    player.level().playSound(null, player.blockPosition(), SoundEvents.ENDER_DRAGON_DEATH, SoundSource.AMBIENT, 4, 1);
+                    player.hurt(player.level().damageSources().magic(), 500);
+                } else if (nexus.getWorld() instanceof ServerLevel sw) {
                     BountyHunter.of(sw).add(entry.id);
                 }
             }
@@ -114,63 +131,63 @@ public class Participants {
         entries.clear();
     }
 
-    public void readNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
+    public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         entries.clear();
-        compound.getList("entries", NbtElement.COMPOUND_TYPE).forEach(el -> {
-            Entry entry = new Entry((NbtCompound)el);
+        compound.getListOrEmpty("entries").forEach(el -> {
+            Entry entry = new Entry((CompoundTag)el);
             entries.put(entry.id, entry);
         });
     }
 
-    public NbtCompound writeNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-        NbtList entries = new NbtList();
+    public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
+        ListTag entries = new ListTag();
         for (Entry entry : this.entries.values()) {
-            entries.add(entry.writeNbt(new NbtCompound(), lookup));
+            entries.add(entry.writeNbt(new CompoundTag(), lookup));
         }
         compound.put("entries", entries);
         return compound;
     }
 
-    public Text getParticipantsList() {
+    public Component getParticipantsList() {
         boolean first = true;
-        MutableText result = Text.empty();
+        MutableComponent result = Component.empty();
         for (Entry entry : entries.values()) {
-            PlayerEntity player = entry.getEntity();
+            Player player = entry.getEntity();
             if (player != null) {
                 if (!first) {
-                    result = result.append(Text.literal(", ").formatted(Formatting.DARK_AQUA));
+                    result = result.append(Component.literal(", ").withStyle(ChatFormatting.DARK_AQUA));
                 }
-                result = result.append(player.getDisplayName().copy().formatted(Formatting.AQUA));
+                result = result.append(player.getDisplayName().copy().withStyle(ChatFormatting.AQUA));
                 first = false;
             }
         }
-        return Text.translatable("invmod.message.nexus.listboundplayers", result).formatted(Formatting.DARK_AQUA);
+        return Component.translatable("invmod.message.nexus.listboundplayers", result).withStyle(ChatFormatting.DARK_AQUA);
     }
 
     private class Entry {
         long time;
         private final UUID id;
         @Nullable
-        private PlayerEntity entity;
+        private Player entity;
 
         public Entry(long time, UUID playerId) {
             this.time = time;
             id = playerId;
         }
 
-        public Entry(NbtCompound compound) {
-            this(compound.getLong("time"), compound.getUuid("id"));
+        public Entry(CompoundTag compound) {
+            this(compound.getLongOr("time", 0L), compound.read("id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow());
         }
 
-        public PlayerEntity getEntity() {
+        public Player getEntity() {
             if (entity == null) {
-                entity = nexus.getWorld().getPlayerByUuid(id);
+                entity = nexus.getWorld().getPlayerByUUID(id);
             }
             return entity;
         }
 
-        public NbtCompound writeNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-            compound.putUuid("id", id);
+        public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
+            compound.store("id", net.minecraft.core.UUIDUtil.CODEC, id);
             compound.putLong("time", time);
             return compound;
         }

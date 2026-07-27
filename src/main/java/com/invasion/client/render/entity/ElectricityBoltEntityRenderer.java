@@ -4,39 +4,38 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import com.invasion.entity.ElectricityBoltEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.client.renderer.entity.NoopRenderer;
 
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EmptyEntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory.Context;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.RotationAxis;
-
-public class ElectricityBoltEntityRenderer extends EmptyEntityRenderer<ElectricityBoltEntity> {
+public class ElectricityBoltEntityRenderer extends NoopRenderer<ElectricityBoltEntity> {
     public ElectricityBoltEntityRenderer(Context context) {
         super(context);
     }
 
     @Override
-    public void render(ElectricityBoltEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+    public void render(ElectricityBoltEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
         Vector3f[] vertices = entity.getVertices();
         if (vertices != null) {
-            matrices.push();
+            matrices.pushPose();
             setupTransform(entity, matrices, tickDelta);
-            renderBranches(matrices, vertices, vertexConsumers.getBuffer(RenderLayer.getLightning()));
-            matrices.pop();
+            renderBranches(matrices, vertices, vertexConsumers.getBuffer(RenderType.lightning()));
+            matrices.popPose();
         }
     }
 
-    private void setupTransform(ElectricityBoltEntity entity, MatrixStack matrices, float tickDelta) {
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(entity.getYaw(tickDelta)));
-        matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(entity.getPitch(tickDelta)));
+    private void setupTransform(ElectricityBoltEntity entity, PoseStack matrices, float tickDelta) {
+        matrices.mulPose(Axis.YP.rotationDegrees(entity.getViewYRot(tickDelta)));
+        matrices.mulPose(Axis.ZP.rotationDegrees(entity.getViewXRot(tickDelta)));
         matrices.scale(0.0625F, 0.0625F, 0.0625F);
     }
 
-    private void renderBranches(MatrixStack matrices, Vector3f[] vertices, VertexConsumer buffer) {
-        Matrix4f matrix = matrices.peek().getPositionMatrix();
+    private void renderBranches(PoseStack matrices, Vector3f[] vertices, VertexConsumer buffer) {
+        Matrix4f matrix = matrices.last().pose();
         float drawWidth = -0.1F;
         for (int pass = 0; pass < 4; pass++) {
             drawWidth += 0.32F;
@@ -57,7 +56,7 @@ public class ElectricityBoltEntityRenderer extends EmptyEntityRenderer<Electrici
     }
 
     private static void drawBranchSegment(Matrix4f matrix, VertexConsumer buffer, Vector3f from, Vector3f to, float red, float green, float blue, float xOffset, float zOffset) {
-        buffer.vertex(matrix, from.x + xOffset, from.y * 16, from.z + zOffset).color(red, green, blue, 0.6F);
-        buffer.vertex(matrix, to.x + xOffset, to.y * 16, to.z + zOffset).color(red, green, blue, 0.6F);
+        buffer.addVertex(matrix, from.x + xOffset, from.y * 16, from.z + zOffset).setColor(red, green, blue, 0.6F);
+        buffer.addVertex(matrix, to.x + xOffset, to.y * 16, to.z + zOffset).setColor(red, green, blue, 0.6F);
     }
 }

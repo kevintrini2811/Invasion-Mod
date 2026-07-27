@@ -1,30 +1,29 @@
 package com.invasion.entity;
 
 import java.util.List;
-
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.LocalDifficulty;
-import net.minecraft.world.ServerWorldAccess;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.ServerLevelAccessor;
 
 public interface MountableEntity extends NexusEntity {
-    default void generateJockey(ServerWorldAccess world, int currentWave, LocalDifficulty difficulty, SpawnReason spawnReason) {
-        PathAwareEntity self = asEntity();
+    default void generateJockey(ServerLevelAccessor world, int currentWave, DifficultyInstance difficulty, EntitySpawnReason spawnReason) {
+        PathfinderMob self = asEntity();
         int jockyAttempsts = currentWave - 10;
         while (--jockyAttempsts > 0) {
-            Random random = world.getRandom();
+            RandomSource random = world.getRandom();
             if (random.nextInt(100) == 0) {
-                HostileEntity jockey = getJockeyType(world).create(self.getWorld());
+                Monster jockey = getJockeyType(world).create(self.level(), spawnReason);
                 if (jockey != null) {
                     if (jockey instanceof NexusSpiderEntity) {
                         jockey.setBaby(true);
                     }
-                    jockey.refreshPositionAndAngles(self.getX(), self.getY(), self.getZ(), self.getYaw(), 0.0F);
-                    jockey.initialize(world, difficulty, spawnReason, null);
+                    jockey.absSnapTo(self.getX(), self.getY(), self.getZ(), self.getYRot(), 0.0F);
+                    jockey.finalizeSpawn(world, difficulty, spawnReason, null);
                     if (jockey instanceof NexusEntity n) {
                         n.setNexus(getNexus());
                     }
@@ -36,7 +35,7 @@ public interface MountableEntity extends NexusEntity {
         }
     }
 
-    default EntityType<? extends HostileEntity> getJockeyType(ServerWorldAccess world) {
+    default EntityType<? extends Monster> getJockeyType(ServerLevelAccessor world) {
         return Util.getRandom(List.of(
                 InvEntities.SKELETON,
                 InvEntities.ZOMBIE,

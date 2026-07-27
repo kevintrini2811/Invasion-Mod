@@ -1,22 +1,20 @@
 package com.invasion.client.render.entity.model;
 
 import java.util.Map;
-
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.util.Mth;
 import com.invasion.client.render.animation.AnimationRegistry;
 import com.invasion.client.render.animation.WingBone;
 import com.invasion.client.render.animation.Animator;
 import com.invasion.entity.VultureEntity;
 
-import net.minecraft.client.model.ModelData;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelPartData;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.SinglePartEntityModel;
-import net.minecraft.util.math.MathHelper;
-
-public class ModelBird extends SinglePartEntityModel<VultureEntity> {
+public class ModelBird extends HierarchicalModel<VultureEntity> {
     private Animator<WingBone> animationWingFlap;
     private final ModelPart root;
 
@@ -52,43 +50,43 @@ public class ModelBird extends SinglePartEntityModel<VultureEntity> {
         ));
     }
 
-    public static TexturedModelData getTexturedModelData() {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        ModelPartData body = root.addChild("body", ModelPartBuilder.create().uv(24, 0).mirrored().cuboid(-3.5F, 0, -3.5F, 7, 12, 7), ModelTransform.pivot(3.5F, 7, 3.5F));
-        body.addChild("right_wing_1", ModelPartBuilder.create().uv(0, 22).cuboid(-7, -1, -1, 7, 9, 1), ModelTransform.pivot(-3.5F, 2, 3.5F))
-            .addChild("right_wing_2", ModelPartBuilder.create().uv(16, 24).cuboid(-14, -1, -0.5F, 14, 7, 1), ModelTransform.pivot(-7, 0, -0.5F));
-        body.addChild("left_wing_1", ModelPartBuilder.create().uv(0, 22).mirrored().cuboid(0, -1, -1, 7, 9, 1), ModelTransform.pivot(3.5F, 2, 3.5F))
-            .addChild("left_wing_2", ModelPartBuilder.create().uv(16, 24).mirrored().cuboid(0, -1, -0.5F, 14, 7, 1), ModelTransform.pivot(7, 0, -0.5F));
-        body.addChild("head", ModelPartBuilder.create().uv(2, 0).mirrored().cuboid(-2.5F, -5, -4, 5, 6, 6), ModelTransform.pivot(0, 0.5F, 1.5F))
-            .addChild("beak", ModelPartBuilder.create().uv(19, 0).mirrored().cuboid(-0.5F, 0, -2, 1, 2, 2), ModelTransform.pivot(0, -3, -4));
-        body.addChild("tail", ModelPartBuilder.create().uv(0, 12).cuboid(-3, 0, 0, 5, 9, 1), ModelTransform.of(0.5F, 12, 2.5F, 0.446143F, 0, 0));
+    public static LayerDefinition getTexturedModelData() {
+        MeshDefinition data = new MeshDefinition();
+        PartDefinition root = data.getRoot();
+        PartDefinition body = root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(24, 0).mirror().addBox(-3.5F, 0, -3.5F, 7, 12, 7), PartPose.offset(3.5F, 7, 3.5F));
+        body.addOrReplaceChild("right_wing_1", CubeListBuilder.create().texOffs(0, 22).addBox(-7, -1, -1, 7, 9, 1), PartPose.offset(-3.5F, 2, 3.5F))
+            .addOrReplaceChild("right_wing_2", CubeListBuilder.create().texOffs(16, 24).addBox(-14, -1, -0.5F, 14, 7, 1), PartPose.offset(-7, 0, -0.5F));
+        body.addOrReplaceChild("left_wing_1", CubeListBuilder.create().texOffs(0, 22).mirror().addBox(0, -1, -1, 7, 9, 1), PartPose.offset(3.5F, 2, 3.5F))
+            .addOrReplaceChild("left_wing_2", CubeListBuilder.create().texOffs(16, 24).mirror().addBox(0, -1, -0.5F, 14, 7, 1), PartPose.offset(7, 0, -0.5F));
+        body.addOrReplaceChild("head", CubeListBuilder.create().texOffs(2, 0).mirror().addBox(-2.5F, -5, -4, 5, 6, 6), PartPose.offset(0, 0.5F, 1.5F))
+            .addOrReplaceChild("beak", CubeListBuilder.create().texOffs(19, 0).mirror().addBox(-0.5F, 0, -2, 1, 2, 2), PartPose.offset(0, -3, -4));
+        body.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(0, 12).addBox(-3, 0, 0, 5, 9, 1), PartPose.offsetAndRotation(0.5F, 12, 2.5F, 0.446143F, 0, 0));
 
-        ModelPartData rightLeg = body
-                .addChild("right_thigh", ModelPartBuilder.create().uv(13, 18).cuboid(-1, 0, -1, 2, 2, 2), ModelTransform.pivot(-1.5F, 12, -1))
-                .addChild("leg", ModelPartBuilder.create().uv(13, 12).cuboid(-0.5F, 0, -0.5F, 1, 5, 1), ModelTransform.NONE);
-        rightLeg.addChild("left_toe", ModelPartBuilder.create().uv(0, 0).cuboid(0, 0, -2, 1, 1, 2), ModelTransform.of(0.2F, 4, 0, 0, -0.1396263F, 0));
-        rightLeg.addChild("back_toe", ModelPartBuilder.create().uv(0, 0).cuboid(-0.5F, 0, 0, 1, 1, 2), ModelTransform.of(0, 4, 0, -0.349066F, 0, 0));
-        rightLeg.addChild("right_toe", ModelPartBuilder.create().uv(0, 0).cuboid(-1, 0, -2, 1, 1, 2), ModelTransform.of(-0.2F, 4, 0, 0, 0.1396263F, 0));
+        PartDefinition rightLeg = body
+                .addOrReplaceChild("right_thigh", CubeListBuilder.create().texOffs(13, 18).addBox(-1, 0, -1, 2, 2, 2), PartPose.offset(-1.5F, 12, -1))
+                .addOrReplaceChild("leg", CubeListBuilder.create().texOffs(13, 12).addBox(-0.5F, 0, -0.5F, 1, 5, 1), PartPose.ZERO);
+        rightLeg.addOrReplaceChild("left_toe", CubeListBuilder.create().texOffs(0, 0).addBox(0, 0, -2, 1, 1, 2), PartPose.offsetAndRotation(0.2F, 4, 0, 0, -0.1396263F, 0));
+        rightLeg.addOrReplaceChild("back_toe", CubeListBuilder.create().texOffs(0, 0).addBox(-0.5F, 0, 0, 1, 1, 2), PartPose.offsetAndRotation(0, 4, 0, -0.349066F, 0, 0));
+        rightLeg.addOrReplaceChild("right_toe", CubeListBuilder.create().texOffs(0, 0).addBox(-1, 0, -2, 1, 1, 2), PartPose.offsetAndRotation(-0.2F, 4, 0, 0, 0.1396263F, 0));
 
-        ModelPartData leftLeg = body
-                .addChild("left_thigh", ModelPartBuilder.create().uv(13, 18).mirrored().cuboid(-1, 0, -1, 2, 2, 2), ModelTransform.pivot(1.5F, 12, -1))
-                .addChild("leg", ModelPartBuilder.create().uv(13, 12).mirrored().cuboid(-0.5F, 0, -0.5F, 1, 5, 1), ModelTransform.NONE);
-        leftLeg.addChild("left_toe", ModelPartBuilder.create().uv(0, 0).mirrored().cuboid(0, 0, -2, 1, 1, 2), ModelTransform.of(0.2F, 4, 0, 0, -0.1396263F, 0));
-        leftLeg.addChild("back_toe", ModelPartBuilder.create().uv(0, 0).mirrored().cuboid(-0.5F, 0, 0, 1, 1, 2), ModelTransform.of(0, 4, 0, -0.349066F, 0, 0));
-        leftLeg.addChild("right_toe", ModelPartBuilder.create().uv(0, 0).mirrored().cuboid(-1, 0, -2, 1, 1, 2), ModelTransform.of(-0.2F, 4, 0, 0, 0.1396263F, 0));
-        return TexturedModelData.of(data, 64, 32);
+        PartDefinition leftLeg = body
+                .addOrReplaceChild("left_thigh", CubeListBuilder.create().texOffs(13, 18).mirror().addBox(-1, 0, -1, 2, 2, 2), PartPose.offset(1.5F, 12, -1))
+                .addOrReplaceChild("leg", CubeListBuilder.create().texOffs(13, 12).mirror().addBox(-0.5F, 0, -0.5F, 1, 5, 1), PartPose.ZERO);
+        leftLeg.addOrReplaceChild("left_toe", CubeListBuilder.create().texOffs(0, 0).mirror().addBox(0, 0, -2, 1, 1, 2), PartPose.offsetAndRotation(0.2F, 4, 0, 0, -0.1396263F, 0));
+        leftLeg.addOrReplaceChild("back_toe", CubeListBuilder.create().texOffs(0, 0).mirror().addBox(-0.5F, 0, 0, 1, 1, 2), PartPose.offsetAndRotation(0, 4, 0, -0.349066F, 0, 0));
+        leftLeg.addOrReplaceChild("right_toe", CubeListBuilder.create().texOffs(0, 0).mirror().addBox(-1, 0, -2, 1, 1, 2), PartPose.offsetAndRotation(-0.2F, 4, 0, 0, 0.1396263F, 0));
+        return LayerDefinition.create(data, 64, 32);
     }
 
     @Override
-    public ModelPart getPart() {
+    public ModelPart root() {
         return root;
     }
 
     @Override
     public void setAngles(VultureEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
-        body.pitch = 1.570796F - headPitch * MathHelper.RADIANS_PER_DEGREE;
-        body.yaw = 0;
+        body.xRot = 1.570796F - headPitch * Mth.DEG_TO_RAD;
+        body.yRot = 0;
     }
 
     @Override
@@ -98,14 +96,14 @@ public class ModelBird extends SinglePartEntityModel<VultureEntity> {
         animationWingFlap.updateAnimation(flapProgress);
 
         for (ModelPart i : legParts) {
-            i.pitch = 0.08726647F * legSweepProgress;
+            i.xRot = 0.08726647F * legSweepProgress;
         }
 
-        body.roll = -entity.getRoll(tickDelta) * MathHelper.RADIANS_PER_DEGREE;
-        body.pivotY = (7 + MathHelper.cos(flapProgress * MathHelper.TAU) * 1.4F);
-        rightThigh.pitch += MathHelper.cos(flapProgress * MathHelper.TAU) * 0.08726646324990228D;
-        leftThigh.pitch += MathHelper.cos(flapProgress * MathHelper.TAU) * 0.08726646324990228D;
-        tail.pitch = ((float)(0.2617993956013792D + MathHelper.cos(flapProgress * MathHelper.TAU) * 0.03490658588512815D));
-        head.pitch = ((float)(-0.3141592700403172D - MathHelper.cos(flapProgress * MathHelper.TAU) * 0.03490658588512815D));
+        body.zRot = -entity.getRoll(tickDelta) * Mth.DEG_TO_RAD;
+        body.y = (7 + Mth.cos(flapProgress * Mth.TWO_PI) * 1.4F);
+        rightThigh.xRot += Mth.cos(flapProgress * Mth.TWO_PI) * 0.08726646324990228D;
+        leftThigh.xRot += Mth.cos(flapProgress * Mth.TWO_PI) * 0.08726646324990228D;
+        tail.xRot = ((float)(0.2617993956013792D + Mth.cos(flapProgress * Mth.TWO_PI) * 0.03490658588512815D));
+        head.xRot = ((float)(-0.3141592700403172D - Mth.cos(flapProgress * Mth.TWO_PI) * 0.03490658588512815D));
     }
 }

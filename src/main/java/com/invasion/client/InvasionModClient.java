@@ -6,8 +6,8 @@ import com.invasion.client.render.animation.AnimationLoader;
 import com.invasion.client.screen.NexusScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.server.packs.PackType;
 
 public class InvasionModClient implements ClientModInitializer {
 
@@ -15,9 +15,9 @@ public class InvasionModClient implements ClientModInitializer {
     public void onInitializeClient() {
         InvRenderers.bootstrap();
 
-        HandledScreens.register(InvScreenHandlers.NEXUS, NexusScreen::new);
+        MenuScreens.register(InvScreenHandlers.NEXUS, NexusScreen::new);
 
-        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(AnimationLoader.INSTANCE);
+        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(AnimationLoader.INSTANCE);
     }
 
 }

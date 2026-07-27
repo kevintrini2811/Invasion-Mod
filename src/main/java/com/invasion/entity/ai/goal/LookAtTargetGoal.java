@@ -1,25 +1,24 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
-
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class LookAtTargetGoal extends Goal {
-    private final MobEntity mob;
+    private final Mob mob;
 
-    public LookAtTargetGoal(MobEntity mob) {
+    public LookAtTargetGoal(Mob mob) {
         this.mob = mob;
-        setControls(EnumSet.of(Control.LOOK));
+        setFlags(EnumSet.of(Flag.LOOK));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return mob.getTarget() != null;
     }
 
     @Override
     public void tick() {
-        mob.getLookControl().lookAt(mob.getTarget(), 2, 2);
+        mob.getLookControl().setLookAt(mob.getTarget(), 2, 2);
     }
 }

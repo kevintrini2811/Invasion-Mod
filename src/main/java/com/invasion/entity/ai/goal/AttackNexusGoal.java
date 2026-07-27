@@ -3,12 +3,11 @@ package com.invasion.entity.ai.goal;
 import com.invasion.InvasionMod;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.Hand;
-
-public class AttackNexusGoal<E extends PathAwareEntity & NexusEntity> extends Goal {
+public class AttackNexusGoal<E extends PathfinderMob & NexusEntity> extends Goal {
     private E mob;
 
     private int cooldown;
@@ -18,17 +17,17 @@ public class AttackNexusGoal<E extends PathAwareEntity & NexusEntity> extends Go
     }
 
     @Override
-    public boolean shouldRunEveryTick() {
+    public boolean requiresUpdateEveryTick() {
         return true;
     }
 
     @Override
-    public boolean canStart() {
-        return shouldContinue();
+    public boolean canUse() {
+        return canContinueToUse();
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         return mob.hasGoal(HasAiGoals.Goal.BREAK_NEXUS) && mob.findDistanceToNexus() <= 4;
     }
 
@@ -41,17 +40,17 @@ public class AttackNexusGoal<E extends PathAwareEntity & NexusEntity> extends Go
     public void tick() {
         if (--cooldown <= 0) {
             if (mob.findDistanceToNexus() <= 4) {
-                mob.swingHand(Hand.MAIN_HAND);
-                mob.getNexus().damage(mob.getDamageSources().mobAttack(mob), 2);
+                mob.swing(InteractionHand.MAIN_HAND);
+                mob.getNexus().damage(mob.damageSources().mobAttack(mob), 2);
             }
             cooldown = 20;
-            mob.setAttacking(true);
+            mob.setAggressive(true);
         }
     }
 
     @Override
     public void stop() {
         InvasionMod.LOGGER.info("Break Nexus Goal Stop");
-        mob.setAttacking(false);
+        mob.setAggressive(false);
     }
 }

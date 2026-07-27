@@ -1,56 +1,55 @@
 package com.invasion.client.render.entity.model;
 
 import com.invasion.entity.ThrowerEntity;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartNames;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
-import net.minecraft.client.model.Dilation;
-import net.minecraft.client.model.ModelData;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelPartData;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.EntityModelPartNames;
-
-public class ThrowerEntityModel extends BipedEntityModel<ThrowerEntity> {
+public class ThrowerEntityModel extends HumanoidModel<ThrowerEntity> {
 
     public ThrowerEntityModel(ModelPart root) {
         super(root);
     }
 
-    public static ModelData getModelData(Dilation dilation, float pivotOffsetY) {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        root.addChild(EntityModelPartNames.HEAD, ModelPartBuilder.create().uv(16, 14).cuboid(-2, -2, -2, 4, 2, 4, dilation), ModelTransform.pivot(0, 16 + pivotOffsetY, 4));
-        root.addChild(EntityModelPartNames.HAT, ModelPartBuilder.create().uv(16, 14).cuboid(-2, -2, -2, 4, 2, 4, dilation.add(0.5F)), ModelTransform.pivot(0, 16 + pivotOffsetY, 4));
-        root.addChild(EntityModelPartNames.BODY, ModelPartBuilder.create()
-                .uv(1, 1).cuboid(-6, 2, -2, 12, 4, 9, dilation)
-                .uv(0, 23).cuboid(-6, 0, 0, 12, 2, 7, dilation), ModelTransform.pivot(-0.4F, 16 + pivotOffsetY, 3));
-        root.addChild(EntityModelPartNames.RIGHT_ARM, ModelPartBuilder.create()
-                .uv(39, 22).cuboid(-3, 0, -1.466667F, 3, 7, 3, dilation), ModelTransform.pivot(-6.5F, 16 + pivotOffsetY, 5));
-        root.addChild(EntityModelPartNames.LEFT_ARM, ModelPartBuilder.create()
-                .uv(40, 16).mirrored().cuboid(0, 0, 0, 2, 4, 2, dilation), ModelTransform.pivot(5, 16 + pivotOffsetY, 5));
-        root.addChild(EntityModelPartNames.RIGHT_LEG, ModelPartBuilder.create()
-                .uv(0, 14).cuboid(-2, 0, -2, 4, 2, 4, dilation), ModelTransform.pivot(-4.066667F, 22 + pivotOffsetY, 4));
-        root.addChild(EntityModelPartNames.LEFT_LEG, ModelPartBuilder.create()
-                .uv(0, 14).mirrored().cuboid(-2, 0, -2, 4, 2, 4, dilation), ModelTransform.pivot(3, 22 + pivotOffsetY, 4));
+    public static MeshDefinition createMesh(CubeDeformation dilation, float pivotOffsetY) {
+        MeshDefinition data = new MeshDefinition();
+        PartDefinition root = data.getRoot();
+        root.addOrReplaceChild(PartNames.HEAD, CubeListBuilder.create().texOffs(16, 14).addBox(-2, -2, -2, 4, 2, 4, dilation), PartPose.offset(0, 16 + pivotOffsetY, 4));
+        root.addOrReplaceChild(PartNames.HAT, CubeListBuilder.create().texOffs(16, 14).addBox(-2, -2, -2, 4, 2, 4, dilation.extend(0.5F)), PartPose.offset(0, 16 + pivotOffsetY, 4));
+        root.addOrReplaceChild(PartNames.BODY, CubeListBuilder.create()
+                .texOffs(1, 1).addBox(-6, 2, -2, 12, 4, 9, dilation)
+                .texOffs(0, 23).addBox(-6, 0, 0, 12, 2, 7, dilation), PartPose.offset(-0.4F, 16 + pivotOffsetY, 3));
+        root.addOrReplaceChild(PartNames.RIGHT_ARM, CubeListBuilder.create()
+                .texOffs(39, 22).addBox(-3, 0, -1.466667F, 3, 7, 3, dilation), PartPose.offset(-6.5F, 16 + pivotOffsetY, 5));
+        root.addOrReplaceChild(PartNames.LEFT_ARM, CubeListBuilder.create()
+                .texOffs(40, 16).mirror().addBox(0, 0, 0, 2, 4, 2, dilation), PartPose.offset(5, 16 + pivotOffsetY, 5));
+        root.addOrReplaceChild(PartNames.RIGHT_LEG, CubeListBuilder.create()
+                .texOffs(0, 14).addBox(-2, 0, -2, 4, 2, 4, dilation), PartPose.offset(-4.066667F, 22 + pivotOffsetY, 4));
+        root.addOrReplaceChild(PartNames.LEFT_LEG, CubeListBuilder.create()
+                .texOffs(0, 14).mirror().addBox(-2, 0, -2, 4, 2, 4, dilation), PartPose.offset(3, 22 + pivotOffsetY, 4));
         return data;
     }
 
-    public static TexturedModelData getTexturedModelData() {
-        return TexturedModelData.of(getModelData(Dilation.NONE, 0), 64, 32);
+    public static LayerDefinition getTexturedModelData() {
+        return LayerDefinition.create(createMesh(CubeDeformation.NONE, 0), 64, 32);
     }
 
     @Override
     public void setAngles(ThrowerEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
         this.hat.visible = false;
-        super.setAngles(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
-        head.setPivot(0, 16, 1);
-        hat.setPivot(0, 16, 1);
-        body.setPivot(0, 16, -3);
-        rightLeg.setPivot(-3, 22, 0);
-        leftLeg.setPivot(3, 22, 0);
-        leftArm.setPivot(6, 16, -1);
-        rightArm.setPivot(-6, 16, 0);
+        super.setupAnim(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
+        head.setPos(0, 16, 1);
+        hat.setPos(0, 16, 1);
+        body.setPos(0, 16, -3);
+        rightLeg.setPos(-3, 22, 0);
+        leftLeg.setPos(3, 22, 0);
+        leftArm.setPos(6, 16, -1);
+        rightArm.setPos(-6, 16, 0);
     }
 }

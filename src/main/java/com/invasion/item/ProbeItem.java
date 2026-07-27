@@ -6,67 +6,66 @@ import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
 import com.invasion.nexus.ControllableNexusAccess;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 
 class ProbeItem extends Item {
     private final boolean isProbe;
 
-    public ProbeItem(Settings settings, boolean isProbe) {
+    public ProbeItem(Properties settings, boolean isProbe) {
         super(settings);
         this.isProbe = isProbe;
     }
 
-    @Override
-    public int getEnchantability() {
+    public int getEnchantmentValue() {
         return 14;
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
-        World world = context.getWorld();
-        if (world.isClient) {
-            return ActionResult.PASS;
+    public InteractionResult useOn(UseOnContext context) {
+        Level world = context.getLevel();
+        if (world.isClientSide()) {
+            return InteractionResult.PASS;
         }
-        BlockPos pos = context.getBlockPos();
+        BlockPos pos = context.getClickedPos();
         BlockState state = world.getBlockState(pos);
         @Nullable
-        PlayerEntity player = context.getPlayer();
+        Player player = context.getPlayer();
         if (player == null) {
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
-        if (state.isOf(InvBlocks.NEXUS_CORE)) {
+        if (state.is(InvBlocks.NEXUS_CORE)) {
             if (((NexusBlockEntity) world.getBlockEntity(pos)).getNexus() instanceof ControllableNexusAccess nexus) {
                 int newRange = nexus.getSpawnRadius();
 
                 // check if the player wants to increase or decrease the range
-                newRange += player.isSneaking() ? -8 : 8;
+                newRange += player.isShiftKeyDown() ? -8 : 8;
                 // TODO: this check should be handled by the block entity, not here
-                newRange = MathHelper.clamp(newRange, 32, 128);
+                newRange = Mth.clamp(newRange, 32, 128);
 
                 if (nexus.setSpawnRadius(newRange)) {
-                    player.sendMessage(Text.translatable("invmod.message.probe.rangechanged", Text.literal(nexus.getSpawnRadius() + "").formatted(Formatting.GREEN)).formatted(Formatting.DARK_GREEN));
+                    player.sendSystemMessage(Component.translatable("invmod.message.probe.rangechanged", Component.literal(nexus.getSpawnRadius() + "").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.DARK_GREEN));
                 } else if (nexus.isActive()) {
-                    player.sendMessage(Text.translatable("invmod.message.probe.cannotchangerange", Text.literal(nexus.getSpawnRadius() + "")).formatted(Formatting.RED));
+                    player.sendSystemMessage(Component.translatable("invmod.message.probe.cannotchangerange", Component.literal(nexus.getSpawnRadius() + "")).withStyle(ChatFormatting.RED));
                 }
-                return ActionResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
 
         if (isProbe) {
             float blockStrength = BlockMetadata.getStrength(pos, state, world);
             int strengthRounded = (int) ((blockStrength + 0.005D) * 100.0D) / 100;
-            player.sendMessage(Text.translatable("invmod.message.probe.blockstrength", Text.literal(strengthRounded + "").formatted(Formatting.GREEN)).formatted(Formatting.DARK_GREEN));
-            return ActionResult.SUCCESS;
+            player.sendSystemMessage(Component.translatable("invmod.message.probe.blockstrength", Component.literal(strengthRounded + "").withStyle(ChatFormatting.GREEN)).withStyle(ChatFormatting.DARK_GREEN));
+            return InteractionResult.SUCCESS;
         }
-        return ActionResult.FAIL;
+        return InteractionResult.FAIL;
     }
 }

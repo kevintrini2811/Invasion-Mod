@@ -1,16 +1,15 @@
 package com.invasion.nexus;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
 public record EntityConstruct (
-        EntityType<? extends MobEntity> entityType,
+        EntityType<? extends Mob> entityType,
         int texture,
         int tier,
         int flavour,
@@ -19,24 +18,24 @@ public record EntityConstruct (
         int maxAngle
     ) {
 
-    public MobEntity createMob(NexusAccess nexus) {
+    public Mob createMob(NexusAccess nexus) {
         return createMob(nexus.getWorld(), nexus);
     }
 
-    public MobEntity createMob(World world, @Nullable NexusAccess nexus) {
-        MobEntity entity = entityType().create(world);
+    public Mob createMob(Level world, @Nullable NexusAccess nexus) {
+        Mob entity = entityType().create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
         if (entity instanceof BuildableMob b) {
             b.onSpawned(nexus, this);
         }
         return entity;
     }
 
-    public MobEntity createMob(ServerWorld world, @Nullable NexusAccess nexus, BlockPos position) {
+    public Mob createMob(ServerLevel world, @Nullable NexusAccess nexus, BlockPos position) {
         return entityType().create(world, entity -> {
             if (entity instanceof BuildableMob b) {
                 b.onSpawned(nexus, this);
             }
-        }, position, SpawnReason.NATURAL, true, false);
+        }, position, EntitySpawnReason.NATURAL, true, false);
     }
 
     public interface BuildableMob {

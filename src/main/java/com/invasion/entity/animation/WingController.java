@@ -35,7 +35,7 @@ public class WingController implements AnimationController {
         else {
             timeAttacking++;
         }
-        if (entity.age % 5 == 0) {
+        if (entity.tickCount % 5 == 0) {
             if (++sampleIndex >= flapEffortSamples.length) {
                 sampleIndex = 0;
             }

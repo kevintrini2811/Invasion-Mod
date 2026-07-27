@@ -6,15 +6,13 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
+import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.wave.EntityPattern;
 import com.invasion.util.math.PolarAngle;
-
-import net.minecraft.block.Block;
-import net.minecraft.predicate.NumberRange.IntRange;
-import net.minecraft.world.World;
 
 public class SpawnPointContainer {
     private final Map<SpawnType, List<SpawnPoint>> spawnPoints = new EnumMap<>(SpawnType.class);
@@ -48,7 +46,7 @@ public class SpawnPointContainer {
         return spawnList.isEmpty() ? null : spawnList.get(random.nextInt(spawnList.size()));
     }
 
-    public SpawnPoint getRandomSpawnPoint(SpawnType spawnType, IntRange angle) {
+    public SpawnPoint getRandomSpawnPoint(SpawnType spawnType, Ints angle) {
         int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
         int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
         List<SpawnPoint> spawnList = spawnPoints.get(spawnType);
@@ -86,7 +84,7 @@ public class SpawnPointContainer {
         return spawnPoints.getOrDefault(SpawnType.HUMANOID, List.of()).size();
     }
 
-    public int getNumberOfSpawnPoints(SpawnType spawnType, IntRange angle) {
+    public int getNumberOfSpawnPoints(SpawnType spawnType, Ints angle) {
         int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
         int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
         List<SpawnPoint> spawnList = spawnPoints.get(spawnType);
@@ -116,9 +114,9 @@ public class SpawnPointContainer {
         return 0;
     }
 
-    public void pointDisplayTest(Block block, World world) {
+    public void pointDisplayTest(Block block, Level world) {
         for (SpawnPoint point : spawnPoints.get(SpawnType.HUMANOID)) {
-            world.setBlockState(point.pos(), block.getDefaultState());
+            world.setBlockAndUpdate(point.pos(), block.defaultBlockState());
         }
     }
 }

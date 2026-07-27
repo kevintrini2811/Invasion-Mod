@@ -1,0 +1,50 @@
+package com.invasion.client.render;
+
+import com.invasion.entity.IMCreeperEntity;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.monster.creeper.CreeperModel;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.state.CreeperRenderState;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
+
+public final class GenericCreeperRenderer
+        extends MobRenderer<IMCreeperEntity, CreeperRenderState, CreeperModel> {
+    private static final Identifier TEXTURE =
+            Identifier.withDefaultNamespace("textures/entity/creeper/creeper.png");
+
+    public GenericCreeperRenderer(EntityRendererProvider.Context context) {
+        super(context, new CreeperModel(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);
+    }
+
+    @Override
+    public CreeperRenderState createRenderState() {
+        return new CreeperRenderState();
+    }
+
+    @Override
+    public void extractRenderState(IMCreeperEntity entity, CreeperRenderState state, float tickDelta) {
+        super.extractRenderState(entity, state, tickDelta);
+        state.swelling = entity.getClientFuseTime(tickDelta);
+        state.isPowered = entity.isPowered();
+    }
+
+    @Override
+    protected void scale(CreeperRenderState state, PoseStack poseStack) {
+        float swelling = state.swelling;
+        float pulse = 1.0F + Mth.sin(swelling * 100.0F) * swelling * 0.01F;
+        swelling = Mth.clamp(swelling, 0.0F, 1.0F);
+        swelling *= swelling;
+        swelling *= swelling;
+        float horizontal = (1.0F + swelling * 0.4F) * pulse;
+        float vertical = (1.0F + swelling * 0.1F) / pulse;
+        poseStack.scale(horizontal, vertical, horizontal);
+    }
+
+    @Override
+    public Identifier getTextureLocation(CreeperRenderState state) {
+        return TEXTURE;
+    }
+}

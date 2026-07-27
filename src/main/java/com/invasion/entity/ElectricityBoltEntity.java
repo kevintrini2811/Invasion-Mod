@@ -1,19 +1,22 @@
 package com.invasion.entity;
 
 import java.util.Arrays;
+import net.minecraft.util.Util;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.network.syncher.SynchedEntityData.Builder;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import com.invasion.InvSounds;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.DataTracker.Builder;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 public class ElectricityBoltEntity extends Entity {
     private static final int VERTEX_COUNT = 60;
@@ -25,22 +28,21 @@ public class ElectricityBoltEntity extends Entity {
 
     private double distance;
     private float widthVariance = 6;
-    private Vec3d ray;
+    private Vec3 ray;
     private boolean soundMade;
 
-    public ElectricityBoltEntity(EntityType<ElectricityBoltEntity> type, World world) {
+    public ElectricityBoltEntity(EntityType<ElectricityBoltEntity> type, Level world) {
         super(type, world);
-        ignoreCameraFrustum = true;
     }
 
-    public ElectricityBoltEntity(World world, double x, double y, double z) {
+    public ElectricityBoltEntity(Level world, double x, double y, double z) {
         this(InvEntities.BOLT, world);
-        setPosition(x, y, z);
+        setPos(x, y, z);
     }
 
-    public ElectricityBoltEntity(World world, Vec3d pos, Vec3d targetPos, int ticksToRender, boolean soundMade) {
+    public ElectricityBoltEntity(Level world, Vec3 pos, Vec3 targetPos, int ticksToRender, boolean soundMade) {
         this(InvEntities.BOLT, world);
-        setPosition(pos);
+        setPos(pos);
         ray = targetPos.subtract(pos);
         this.ticksToRender = ticksToRender;
         this.soundMade = soundMade;
@@ -49,21 +51,21 @@ public class ElectricityBoltEntity extends Entity {
     }
 
     @Override
-    protected void initDataTracker(Builder builder) {
+    protected void defineSynchedData(Builder builder) {
     }
 
     @Override
-    public boolean shouldSave() {
+    public boolean shouldBeSaved() {
         return false;
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (++age == 1 && soundMade) {
+        if (++tickCount == 1 && soundMade) {
             playSound(InvSounds.ENTITY_LIGHTNING_ZAP, 1, 1);
         }
-        if (age > ticksToRender) {
+        if (tickCount > ticksToRender) {
             discard();
         }
     }
@@ -84,28 +86,26 @@ public class ElectricityBoltEntity extends Entity {
     }
 
     @Override
-    public void handleStatus(byte status) {
+    public void handleEntityEvent(byte status) {
         if (status == 0) {
             playSound(InvSounds.ENTITY_LIGHTNING_ZAP, 1, 1);
         }
     }
 
     private void setHeading(float x, float y, float z) {
-        float xzSq = MathHelper.square(x) + MathHelper.square(z);
-        setYaw((float)MathHelper.atan2(x, z) * MathHelper.DEGREES_PER_RADIAN + 90);
-        setPitch((float)MathHelper.atan2(MathHelper.sqrt(xzSq), y) * MathHelper.DEGREES_PER_RADIAN);
-        distance = Math.sqrt(xzSq + MathHelper.square(y));
+        float xzSq = Mth.square(x) + Mth.square(z);
+        setYRot((float)Mth.atan2(x, z) * Mth.RAD_TO_DEG + 90);
+        setXRot((float)Mth.atan2(Mth.sqrt(xzSq), y) * Mth.RAD_TO_DEG);
+        distance = Math.sqrt(xzSq + Mth.square(y));
     }
 
     private void doVertexUpdate() {
-        getWorld().getProfiler().push("IMBolt");
         widthVariance = (10F / (float) Math.log10(distance + 1));
         for (int vertex = 0; vertex < vertices.length; vertex++) {
             vertices[vertex].y = (vertex * (float)distance / (vertices.length - 1));
         }
 
         createSegment(0, vertices.length - 1);
-        getWorld().getProfiler().pop();
     }
 
     private void createSegment(int begin, int end) {
@@ -136,10 +136,15 @@ public class ElectricityBoltEntity extends Entity {
     }
 
     @Override
-    protected void readCustomDataFromNbt(NbtCompound nbt) {
+    protected void readAdditionalSaveData(ValueInput nbt) {
     }
 
     @Override
-    protected void writeCustomDataToNbt(NbtCompound nbt) {
+    protected void addAdditionalSaveData(ValueOutput nbt) {
+    }
+
+    @Override
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+        return false;
     }
 }

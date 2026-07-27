@@ -2,13 +2,11 @@ package com.invasion.block;
 
 import java.util.Arrays;
 import java.util.List;
-
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import com.invasion.InvTags;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
 
 public enum BlockSpecial {
     CONSTRUCTION_BRICKS(InvTags.Blocks.BRITTLE_CONSTRUCTION_MATERIALS),
@@ -26,7 +24,7 @@ public enum BlockSpecial {
 
     public static BlockSpecial of(BlockState state) {
         for (BlockSpecial special : VALUES) {
-            if (state.isIn(special.tag)) {
+            if (state.is(special.tag)) {
                 return special;
             }
         }

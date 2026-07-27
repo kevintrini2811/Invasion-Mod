@@ -4,6 +4,12 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import com.mojang.datafixers.util.Pair;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
@@ -12,13 +18,6 @@ import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.nexus.ai.AttackerAI;
 import com.invasion.nexus.test.PathingDebugger;
-
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.util.Pair;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
 
 public class ScaffoldGenerator {
     private final ScaffoldNodeFactory nodeFactory;
@@ -29,7 +28,7 @@ public class ScaffoldGenerator {
 
     public List<ScaffoldNode> generateScaffolds(NexusEntity entity) {
         return DynamicPathNodeNavigator.createHeadlessNavigator(entity, 12, pathSource -> {
-            return findCheapestScaffolds(entity, pathSource, entity.getBlockPos());
+            return findCheapestScaffolds(entity, pathSource, entity.blockPosition());
         });
     }
 
@@ -55,12 +54,12 @@ public class ScaffoldGenerator {
 
     private Optional<List<ScaffoldNode>> findCheapestReachable(List<ScaffoldNode> nodes, DynamicPathNodeNavigator.PathSupplier pathSupplier, BlockPos nexusPos, BlockPos pos) {
         return nodes.stream()
-            .map(node -> new Pair<>(node, pathSupplier.findPathTo(nodeFactory, pos, nexusPos, 12, chunk -> {
+            .map(node -> Pair.of(node, pathSupplier.findPathTo(nodeFactory, pos, nexusPos, 12, chunk -> {
                 ScaffoldView.of(chunk).addScaffoldPosition(node.pos());
             })))
-            .filter(pair -> isTerminating(pair.getRight(), nexusPos))
-            .sorted(Comparator.comparing(pair -> pair.getRight().getEnd().penalizedPathLength))
-            .map(Pair::getLeft)
+            .filter(pair -> isTerminating(pair.getSecond(), nexusPos))
+            .sorted(Comparator.comparing(pair -> pair.getSecond().getEndNode().g))
+            .map(Pair::getFirst)
             .findFirst()
             .map(List::of);
     }
@@ -81,38 +80,38 @@ public class ScaffoldGenerator {
     }
 
     private boolean isTerminating(@Nullable Path path, BlockPos target) {
-        return path != null && path.getEnd() != null && path.getTarget().equals(target);
+        return path != null && path.getEndNode() != null && path.getTarget().equals(target);
     }
 
     private List<ScaffoldNode> getNodes(NexusEntity entity, Path path) {
         List<ScaffoldNode> scaffoldPositions = new ArrayList<>();
         int startHeight = 0;
-        for (int i = 0; i < path.getLength(); i++) {
-            PathNode node = path.getNode(i);
+        for (int i = 0; i < path.getNodeCount(); i++) {
+            Node node = path.getNode(i);
             if (i == 0) {
                 if (ActionablePathNode.getAction(node) == PathAction.SCAFFOLD_UP) {
                     startHeight = node.y - 1;
                 }
             } else if (ActionablePathNode.getAction(node) != PathAction.SCAFFOLD_UP) {
-                BlockPos pos = new BlockPos(node.previous.x, startHeight, node.previous.z);
-                scaffoldPositions.add(new ScaffoldNode(pos, calculateOrientation(entity.asEntity().getWorld(), pos), node.y - startHeight));
+                BlockPos pos = new BlockPos(node.cameFrom.x, startHeight, node.cameFrom.z);
+                scaffoldPositions.add(new ScaffoldNode(pos, calculateOrientation(entity.asEntity().level(), pos), node.y - startHeight));
             }
         }
 
         return scaffoldPositions;
     }
 
-    private Direction calculateOrientation(World world, BlockPos pos) {
+    private Direction calculateOrientation(Level world, BlockPos pos) {
         int mostBlocks = 0;
         Direction highestDirection = Direction.EAST;
-        BlockPos.Mutable mutable = pos.mutableCopy();
-        for (Direction offset : Direction.Type.HORIZONTAL) {
+        BlockPos.MutableBlockPos mutable = pos.mutable();
+        for (Direction offset : Direction.Plane.HORIZONTAL) {
             int blockCount = 0;
             for (int height = 0; height < pos.getY(); height++) {
-                if (world.getBlockState(mutable.set(pos).move(Direction.UP, height).move(offset)).isFullCube(world, mutable)) {
+                if (world.getBlockState(mutable.set(pos).move(Direction.UP, height).move(offset)).isCollisionShapeFullBlock(world, mutable)) {
                     blockCount++;
                 }
-                if (world.getBlockState(mutable.set(pos).move(Direction.UP, height).move(offset, 2)).isFullCube(world, mutable)) {
+                if (world.getBlockState(mutable.set(pos).move(Direction.UP, height).move(offset, 2)).isCollisionShapeFullBlock(world, mutable)) {
                     blockCount++;
                 }
             }

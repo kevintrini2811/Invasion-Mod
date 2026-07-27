@@ -1,16 +1,15 @@
 package com.invasion.client.render.entity.model;
 
 import com.invasion.entity.TrapEntity;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
-import net.minecraft.client.model.ModelData;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelPartData;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.SinglePartEntityModel;
-
-public class TrapEntityModel extends SinglePartEntityModel<TrapEntity> {
+public class TrapEntityModel extends HierarchicalModel<TrapEntity> {
     private final ModelPart root;
     private final ModelPart core;
     private final ModelPart flames;
@@ -21,32 +20,32 @@ public class TrapEntityModel extends SinglePartEntityModel<TrapEntity> {
         flames = root.getChild("flames");
     }
 
-    public static TexturedModelData getTexturedModelData() {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        root.addChild("base", ModelPartBuilder.create().uv(0, 23).mirrored().cuboid(0, 0, 0, 4, 1, 2), ModelTransform.pivot(-2, -1, -1));
-        root.addChild("base_s1", ModelPartBuilder.create().uv(0, 27).mirrored().cuboid(0, 0, 0, 2, 1, 1), ModelTransform.pivot(-1, -1,  1));
-        root.addChild("base_s2", ModelPartBuilder.create().uv(0, 27).mirrored().cuboid(0, 0, 0, 2, 1, 1), ModelTransform.pivot(-1, -1, -2));
+    public static LayerDefinition getTexturedModelData() {
+        MeshDefinition data = new MeshDefinition();
+        PartDefinition root = data.getRoot();
+        root.addOrReplaceChild("base", CubeListBuilder.create().texOffs(0, 23).mirror().addBox(0, 0, 0, 4, 1, 2), PartPose.offset(-2, -1, -1));
+        root.addOrReplaceChild("base_s1", CubeListBuilder.create().texOffs(0, 27).mirror().addBox(0, 0, 0, 2, 1, 1), PartPose.offset(-1, -1,  1));
+        root.addOrReplaceChild("base_s2", CubeListBuilder.create().texOffs(0, 27).mirror().addBox(0, 0, 0, 2, 1, 1), PartPose.offset(-1, -1, -2));
 
-        root.addChild("core", ModelPartBuilder.create().uv(0, 13).mirrored().cuboid(0, 0, 0, 4, 2, 4), ModelTransform.pivot(-2, -2, -2));
-        root.addChild("flames", ModelPartBuilder.create().uv(5, 7 ).mirrored().cuboid(0, 0, 0, 4, 2, 4), ModelTransform.pivot(-2, -2, -2));
+        root.addOrReplaceChild("core", CubeListBuilder.create().texOffs(0, 13).mirror().addBox(0, 0, 0, 4, 2, 4), PartPose.offset(-2, -2, -2));
+        root.addOrReplaceChild("flames", CubeListBuilder.create().texOffs(5, 7 ).mirror().addBox(0, 0, 0, 4, 2, 4), PartPose.offset(-2, -2, -2));
 
-        root.addChild("clasp_1a", ModelPartBuilder.create().uv(0, 0 ).mirrored().cuboid(0, 0, 0, 2, 2, 1), ModelTransform.pivot(-1, -2,  2));
-        root.addChild("clasp_2a", ModelPartBuilder.create().uv(0, 0 ).mirrored().cuboid(0, 0, 0, 2, 2, 1), ModelTransform.pivot(-1, -2, -3));
+        root.addOrReplaceChild("clasp_1a", CubeListBuilder.create().texOffs(0, 0 ).mirror().addBox(0, 0, 0, 2, 2, 1), PartPose.offset(-1, -2,  2));
+        root.addOrReplaceChild("clasp_2a", CubeListBuilder.create().texOffs(0, 0 ).mirror().addBox(0, 0, 0, 2, 2, 1), PartPose.offset(-1, -2, -3));
 
-        root.addChild("clasp_2b", ModelPartBuilder.create().uv(0, 7 ).mirrored().cuboid(0, 0, 0, 2, 1, 2), ModelTransform.pivot(-1, -1, -5));
-        root.addChild("clasp_1b", ModelPartBuilder.create().uv(0, 7 ).mirrored().cuboid(0, 0, 0, 2, 1, 2), ModelTransform.pivot(-1, -1,  3));
+        root.addOrReplaceChild("clasp_2b", CubeListBuilder.create().texOffs(0, 7 ).mirror().addBox(0, 0, 0, 2, 1, 2), PartPose.offset(-1, -1, -5));
+        root.addOrReplaceChild("clasp_1b", CubeListBuilder.create().texOffs(0, 7 ).mirror().addBox(0, 0, 0, 2, 1, 2), PartPose.offset(-1, -1,  3));
 
-        root.addChild("clasp_3a", ModelPartBuilder.create().uv(0, 3 ).mirrored().cuboid(0, 0, 0, 1, 2, 2), ModelTransform.pivot( 2, -2, -1));
-        root.addChild("clasp_4a", ModelPartBuilder.create().uv(0, 3 ).mirrored().cuboid(0, 0, 0, 1, 2, 2), ModelTransform.pivot(-3, -2, -1));
+        root.addOrReplaceChild("clasp_3a", CubeListBuilder.create().texOffs(0, 3 ).mirror().addBox(0, 0, 0, 1, 2, 2), PartPose.offset( 2, -2, -1));
+        root.addOrReplaceChild("clasp_4a", CubeListBuilder.create().texOffs(0, 3 ).mirror().addBox(0, 0, 0, 1, 2, 2), PartPose.offset(-3, -2, -1));
 
-        root.addChild("clasp_3b", ModelPartBuilder.create().uv(0, 19).mirrored().cuboid(0, 0, 0, 2, 1, 2), ModelTransform.pivot( 3, -1, -1));
-        root.addChild("clasp_4b", ModelPartBuilder.create().uv(0, 19).mirrored().cuboid(0, 0, 0, 2, 1, 2), ModelTransform.pivot(-5, -1, -1));
-        return TexturedModelData.of(data, 32, 32);
+        root.addOrReplaceChild("clasp_3b", CubeListBuilder.create().texOffs(0, 19).mirror().addBox(0, 0, 0, 2, 1, 2), PartPose.offset( 3, -1, -1));
+        root.addOrReplaceChild("clasp_4b", CubeListBuilder.create().texOffs(0, 19).mirror().addBox(0, 0, 0, 2, 1, 2), PartPose.offset(-5, -1, -1));
+        return LayerDefinition.create(data, 32, 32);
     }
 
     @Override
-    public ModelPart getPart() {
+    public ModelPart root() {
         return root;
     }
 

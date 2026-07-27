@@ -2,7 +2,16 @@ package com.invasion;
 
 import java.util.Map;
 import java.util.function.Consumer;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.RangeArgument;
+import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.Component;
 import com.invasion.entity.ElectricityBoltEntity;
 import com.invasion.nexus.ControllableNexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
@@ -13,146 +22,135 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.argument.BlockPosArgumentType;
-import net.minecraft.command.argument.NumberRangeArgumentType;
-import net.minecraft.predicate.NumberRange.IntRange;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-
 public class InvasionCommand {
-    public static LiteralArgumentBuilder<ServerCommandSource> create(CommandDispatcher<ServerCommandSource> dispatcher, CommandRegistryAccess registries) {
-        return addTestCommands(CommandManager.literal("invasion")
-                .then(CommandManager.literal("help").executes(context -> help(dispatcher, context.getSource())))
-                .then(CommandManager.literal("pause").executes(context -> pause(context.getSource())))
-                .then(CommandManager.literal("status").executes(context -> status(context.getSource())))
-                .then(CommandManager.literal("start").then(CommandManager.argument("wave", IntegerArgumentType.integer(1)).executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
-                .then(CommandManager.literal("stop").executes(context -> stop(context.getSource())))
-                .then(CommandManager.literal("radius")
-                        .then(CommandManager.literal("get").executes(context -> getRadius(context.getSource())))
-                        .then(CommandManager.literal("set").then(CommandManager.argument("radius", IntegerArgumentType.integer(32, 128)).executes(context -> setRadius(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
-                .then(CommandManager.literal("bolt").executes(context -> bolt(context.getSource(), Vec3i.ZERO))
-                    .then(CommandManager.argument("offset", BlockPosArgumentType.blockPos()).executes(context -> bolt(context.getSource(), BlockPosArgumentType.getBlockPos(context, "offset"))))
+    public static LiteralArgumentBuilder<CommandSourceStack> create(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registries) {
+        return addTestCommands(Commands.literal("invasion")
+                .then(Commands.literal("help").executes(context -> help(dispatcher, context.getSource())))
+                .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
+                .then(Commands.literal("status").executes(context -> status(context.getSource())))
+                .then(Commands.literal("start").then(Commands.argument("wave", IntegerArgumentType.integer(1)).executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
+                .then(Commands.literal("stop").executes(context -> stop(context.getSource())))
+                .then(Commands.literal("radius")
+                        .then(Commands.literal("get").executes(context -> getRadius(context.getSource())))
+                        .then(Commands.literal("set").then(Commands.argument("radius", IntegerArgumentType.integer(32, 128)).executes(context -> setRadius(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
+                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource(), Vec3i.ZERO))
+                    .then(Commands.argument("offset", BlockPosArgument.blockPos()).executes(context -> bolt(context.getSource(), BlockPosArgument.getBlockPos(context, "offset"))))
                 ));
     }
 
-    private static LiteralArgumentBuilder<ServerCommandSource> addTestCommands(LiteralArgumentBuilder<ServerCommandSource> builder) {
+    private static LiteralArgumentBuilder<CommandSourceStack> addTestCommands(LiteralArgumentBuilder<CommandSourceStack> builder) {
         if (!InvasionMod.getConfig().debugMode) {
             return builder;
         }
-        return builder.then(CommandManager.literal("test").requires(source -> InvasionMod.getConfig().debugMode)
-                .then(CommandManager.literal("status").executes(context -> printDebugStatus(context.getSource())))
-                .then(CommandManager.literal("spawner").executes(context -> testSpawner(context.getSource(), IntRange.between(1, 11)))
-                        .then(CommandManager.argument("waves", NumberRangeArgumentType.intRange()).executes(context -> testSpawner(context.getSource(), NumberRangeArgumentType.IntRangeArgumentType.getRangeArgument(context, "waves")))))
-                .then(CommandManager.literal("spawnPoints").executes(context -> testSpawnpoints(context.getSource())))
-                .then(CommandManager.literal("waveBuilder").executes(context -> testWaveBuilder(context.getSource(), 1, 1, 160))
-                        .then(CommandManager.argument("difficuly", FloatArgumentType.floatArg(0)).executes(context -> testWaveBuilder(context.getSource(),
+        return builder.then(Commands.literal("test").requires(source -> InvasionMod.getConfig().debugMode)
+                .then(Commands.literal("status").executes(context -> printDebugStatus(context.getSource())))
+                .then(Commands.literal("spawner").executes(context -> testSpawner(context.getSource(), Ints.between(1, 11)))
+                        .then(Commands.argument("waves", RangeArgument.intRange()).executes(context -> testSpawner(context.getSource(), RangeArgument.Ints.getRange(context, "waves")))))
+                .then(Commands.literal("spawnPoints").executes(context -> testSpawnpoints(context.getSource())))
+                .then(Commands.literal("waveBuilder").executes(context -> testWaveBuilder(context.getSource(), 1, 1, 160))
+                        .then(Commands.argument("difficuly", FloatArgumentType.floatArg(0)).executes(context -> testWaveBuilder(context.getSource(),
                                         FloatArgumentType.getFloat(context, "difficuly"), 1, 160))
-                                .then(CommandManager.argument("tier", FloatArgumentType.floatArg(1)).executes(context -> testWaveBuilder(context.getSource(),
+                                .then(Commands.argument("tier", FloatArgumentType.floatArg(1)).executes(context -> testWaveBuilder(context.getSource(),
                                             FloatArgumentType.getFloat(context, "difficuly"),
                                             FloatArgumentType.getFloat(context, "tier"), 160))
-                                        .then(CommandManager.argument("duration", IntegerArgumentType.integer(1, 1000)).executes(context -> testWaveBuilder(context.getSource(),
+                                        .then(Commands.argument("duration", IntegerArgumentType.integer(1, 1000)).executes(context -> testWaveBuilder(context.getSource(),
                                                 FloatArgumentType.getFloat(context, "difficuly"),
                                                 FloatArgumentType.getFloat(context, "tier"),
                                                 IntegerArgumentType.getInteger(context, "duration")))))))
         );
     }
 
-    private static void handleWithNexus(ServerCommandSource source, Consumer<ControllableNexusAccess> nexusConsumer) {
-        WorldNexusStorage.of(source.getWorld()).getNexus().ifPresentOrElse(nexusConsumer, () -> {
-            source.sendFeedback(() -> Text.literal("Right-click the Nexus first to set target for commands.").formatted(Formatting.GOLD), false);
+    private static void handleWithNexus(CommandSourceStack source, Consumer<ControllableNexusAccess> nexusConsumer) {
+        WorldNexusStorage.of(source.getLevel()).getNexus().ifPresentOrElse(nexusConsumer, () -> {
+            source.sendSuccess(() -> Component.literal("Right-click the Nexus first to set target for commands.").withStyle(ChatFormatting.GOLD), false);
         });
     }
 
-    private static int start(ServerCommandSource source, int startingWave) {
+    private static int start(CommandSourceStack source, int startingWave) {
         handleWithNexus(source, nexus -> {
             nexus.start(startingWave);
-            source.getServer().sendMessage(Text.literal(source.getName() + " has started the invasion!").formatted(Formatting.YELLOW));
+            source.getServer().sendSystemMessage(Component.literal(source.getTextName() + " has started the invasion!").withStyle(ChatFormatting.YELLOW));
         });
         return 0;
     }
 
-    private static int stop(ServerCommandSource source) {
+    private static int stop(CommandSourceStack source) {
         handleWithNexus(source, nexus -> {
             InvasionMod.LOGGER.info("Nexus manually stopped by command");
             nexus.stop(true);
-            source.getServer().sendMessage(Text.literal(source.getName() + " has ended the invasion!").formatted(Formatting.RED));
+            source.getServer().sendSystemMessage(Component.literal(source.getTextName() + " has ended the invasion!").withStyle(ChatFormatting.RED));
         });
         return 0;
     }
 
-    private static int getRadius(ServerCommandSource source) {
+    private static int getRadius(CommandSourceStack source) {
         handleWithNexus(source, nexus -> {
-            source.sendFeedback(() -> Text.literal("The nexus spawn radius is " + nexus.getSpawnRadius()).formatted(Formatting.GREEN), false);
+            source.sendSuccess(() -> Component.literal("The nexus spawn radius is " + nexus.getSpawnRadius()).withStyle(ChatFormatting.GREEN), false);
         });
         return 0;
     }
 
-    private static int setRadius(ServerCommandSource source, int radius) {
+    private static int setRadius(CommandSourceStack source, int radius) {
         handleWithNexus(source, nexus -> {
             if (nexus.setSpawnRadius(radius)) {
-                source.sendFeedback(() -> Text.literal("Set nexus range to " + radius).formatted(Formatting.GREEN), false);
+                source.sendSuccess(() -> Component.literal("Set nexus range to " + radius).withStyle(ChatFormatting.GREEN), false);
             } else {
-                source.sendFeedback(() -> Text.literal("Can't change range while Nexus is active.").formatted(Formatting.RED), false);
+                source.sendSuccess(() -> Component.literal("Can't change range while Nexus is active.").withStyle(ChatFormatting.RED), false);
             }
         });
         return 0;
     }
 
-    private static int testSpawner(ServerCommandSource source, IntRange waves) {
+    private static int testSpawner(CommandSourceStack source, Ints waves) {
         new Tester(message -> {
-            source.sendFeedback(() -> Text.literal(message), false);
+            source.sendSuccess(() -> Component.literal(message), false);
         }).doWaveSpawnerTest(waves.min().orElseThrow(), waves.max().orElseThrow());
         return 0;
     }
 
-    private static int testSpawnpoints(ServerCommandSource source) {
+    private static int testSpawnpoints(CommandSourceStack source) {
         new Tester(message -> {
-            source.sendFeedback(() -> Text.literal(message), false);
+            source.sendSuccess(() -> Component.literal(message), false);
         }).doSpawnPointSelectionTest();
         return 0;
     }
 
-    private static int testWaveBuilder(ServerCommandSource source, float difficulty, float tier, int duration) {
+    private static int testWaveBuilder(CommandSourceStack source, float difficulty, float tier, int duration) {
         new Tester(message -> {
-            source.sendFeedback(() -> Text.literal(message), false);
+            source.sendSuccess(() -> Component.literal(message), false);
         }).doWaveBuilderTest(difficulty, tier, duration);
         return 0;
     }
 
-    private static int printDebugStatus(ServerCommandSource source) {
+    private static int printDebugStatus(CommandSourceStack source) {
         handleWithNexus(source, nexus -> {
-            nexus.getStatus().forEach(line -> source.sendFeedback(() -> line, false));
+            nexus.getStatus().forEach(line -> source.sendSuccess(() -> line, false));
         });
         return 0;
     }
 
-	private static int bolt(ServerCommandSource source, Vec3i offset) {
+	private static int bolt(CommandSourceStack source, Vec3i offset) {
 	    handleWithNexus(source, nexus -> {
 	        BlockPos nexusPos = nexus.getOrigin();
-	        source.getWorld().spawnEntity(new ElectricityBoltEntity(source.getWorld(), nexusPos.toCenterPos(), nexusPos.add(offset).toCenterPos(), 40, true));
+	        source.getLevel().addFreshEntity(new ElectricityBoltEntity(source.getLevel(), com.invasion.util.math.PosUtils.center(nexusPos), com.invasion.util.math.PosUtils.center(nexusPos.offset(offset)), 40, true));
 	    });
         return 0;
     }
 
-	private static int status(ServerCommandSource source) {
+	private static int status(CommandSourceStack source) {
 	    handleWithNexus(source, nexus -> {
-	        source.sendFeedback(() -> Text.literal("Nexus status: ").formatted(Formatting.GREEN).append(Text.literal("" + nexus.isActive()).formatted(Formatting.DARK_GREEN)), false);
+	        source.sendSuccess(() -> Component.literal("Nexus status: ").withStyle(ChatFormatting.GREEN).append(Component.literal("" + nexus.isActive()).withStyle(ChatFormatting.DARK_GREEN)), false);
 	    });
 
 	    return 0;
 	}
-    private static int pause(ServerCommandSource source) {
+    private static int pause(CommandSourceStack source) {
         handleWithNexus(source, nexus -> {
             // Wenn weder aktiv noch pausiert → es gibt nichts zu tun
             if (!nexus.isActive() && !nexus.isPaused()) {
-                source.sendFeedback(
-                        () -> Text.literal("Es läuft gerade keine Invasion, die pausiert oder fortgesetzt werden könnte.")
-                                .formatted(Formatting.RED),
+                source.sendSuccess(
+                        () -> Component.literal("Es läuft gerade keine Invasion, die pausiert oder fortgesetzt werden könnte.")
+                                .withStyle(ChatFormatting.RED),
                         false
                 );
                 return;
@@ -162,15 +160,15 @@ public class InvasionCommand {
 
             if (nowPaused) {
                 // Jetzt PAUSIERT
-                source.getServer().sendMessage(
-                        Text.literal(source.getName() + " hat die Invasion pausiert. Alle Invasions-Mobs wurden entfernt.")
-                                .formatted(Formatting.GOLD)
+                source.getServer().sendSystemMessage(
+                        Component.literal(source.getTextName() + " hat die Invasion pausiert. Alle Invasions-Mobs wurden entfernt.")
+                                .withStyle(ChatFormatting.GOLD)
                 );
             } else {
                 // Jetzt wieder aktiv
-                source.getServer().sendMessage(
-                        Text.literal(source.getName() + " hat die Invasion fortgesetzt.")
-                                .formatted(Formatting.GREEN)
+                source.getServer().sendSystemMessage(
+                        Component.literal(source.getTextName() + " hat die Invasion fortgesetzt.")
+                                .withStyle(ChatFormatting.GREEN)
                 );
             }
         });
@@ -178,11 +176,11 @@ public class InvasionCommand {
     }
 
 
-    private static int help(CommandDispatcher<ServerCommandSource> dispatcher, ServerCommandSource source) {
-	    Map<CommandNode<ServerCommandSource>, String> map = dispatcher.getSmartUsage(dispatcher.getRoot().getChild("invasion"), source);
+    private static int help(CommandDispatcher<CommandSourceStack> dispatcher, CommandSourceStack source) {
+	    Map<CommandNode<CommandSourceStack>, String> map = dispatcher.getSmartUsage(dispatcher.getRoot().getChild("invasion"), source);
 
         for (String name : map.values()) {
-            source.sendFeedback(() -> Text.literal("/" + name), false);
+            source.sendSuccess(() -> Component.literal("/" + name), false);
         }
 
         return map.size();

@@ -5,15 +5,13 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.NexusAccess;
-
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 public class ScaffoldList implements Iterable<Scaffold> {
     private List<Scaffold> entries = new ArrayList<>();
@@ -30,7 +28,7 @@ public class ScaffoldList implements Iterable<Scaffold> {
     public Optional<BlockPos> getNearest(BlockPos pos) {
         return entries.stream()
                 .map(i -> i.getNode().pos())
-                .sorted(Comparator.comparing(pos::getSquaredDistance))
+                .sorted(Comparator.comparing(pos::distSqr))
                 .findFirst();
     }
 
@@ -42,9 +40,9 @@ public class ScaffoldList implements Iterable<Scaffold> {
                 .orElse(null);
     }
 
-    public void tick(World world) {
+    public void tick(Level world) {
         entries.removeIf(scaffold -> {
-            Vec3d pos = scaffold.getNode().pos().toCenterPos();
+            Vec3 pos = com.invasion.util.math.PosUtils.center(scaffold.getNode().pos());
             world.addParticle(ParticleTypes.HEART, pos.x, pos.y, pos.z, 0.5D, 0.5D, 0.5D);
 
             return scaffold.updateStatus();

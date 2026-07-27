@@ -1,15 +1,13 @@
 package com.invasion.nexus.wave;
 
-import net.minecraft.predicate.NumberRange.IntRange;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.random.Random;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.util.Util;
+import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
@@ -22,7 +20,7 @@ public class WaveEntry {
     static final int DEFAULT_NEXT_ALERT_TIME = Integer.MAX_VALUE;
     static final int MAX_ANGLE = 360;
     static final int MAX_VALID_ANGLE = 180;
-    static final IntRange FULL_RANGE = IntRange.between(-MAX_VALID_ANGLE, MAX_VALID_ANGLE);
+    static final Ints FULL_RANGE = Ints.between(-MAX_VALID_ANGLE, MAX_VALID_ANGLE);
 
     static int wrapAngle(int angle) {
         while (angle > MAX_VALID_ANGLE) {
@@ -38,8 +36,8 @@ public class WaveEntry {
         return angle == 0 ? MAX_ANGLE : angle;
     }
 
-    private final IntRange time;
-    private IntRange angle;
+    private final Ints time;
+    private Ints angle;
 
     private final int amount;
     private final int granularity;
@@ -56,7 +54,7 @@ public class WaveEntry {
 
     private final List<EntityConstruct> spawnList = new ArrayList<>();
 
-    private WaveEntry(IntRange time, IntRange angle, int amount, int granularity, Select<EntityPattern> mobPool, Map<Integer, String> alerts, int minPointsInRange) {
+    private WaveEntry(Ints time, Ints angle, int amount, int granularity, Select<EntityPattern> mobPool, Map<Integer, String> alerts, int minPointsInRange) {
         this.time = time;
         this.angle = angle;
         this.amount = amount;
@@ -128,7 +126,7 @@ public class WaveEntry {
         elapsed = millis;
     }
 
-    public IntRange getTime() {
+    public Ints getTime() {
         return time;
     }
 
@@ -140,7 +138,7 @@ public class WaveEntry {
         @Nullable
         String message = alerts.remove(nextAlert);
         if (message != null) {
-            spawner.sendSpawnAlert(message, Formatting.RED);
+            spawner.sendSpawnAlert(message, ChatFormatting.RED);
         }
         nextAlert = DEFAULT_NEXT_ALERT_TIME;
         if (alerts.size() > 0) {
@@ -158,7 +156,7 @@ public class WaveEntry {
         if (!validAngles.isEmpty()) {
             int min = Util.getRandom(validAngles, spawner.getRandom());
             int max = wrapAngle(min + angleRange);
-            angle = IntRange.between(min, max);
+            angle = Ints.between(min, max);
         }
 
         if (minPointsInRange > 1) {
@@ -177,7 +175,7 @@ public class WaveEntry {
         List<Integer> validAngles = new ArrayList<>();
         for (int angle = -MAX_VALID_ANGLE; angle < MAX_VALID_ANGLE; angle += angleRange) {
             int nextAngle = wrapAngle(angle + angleRange);
-            if (spawner.getNumberOfPointsInRange(IntRange.between(angle, nextAngle), SpawnType.HUMANOID) >= minPointsInRange) {
+            if (spawner.getNumberOfPointsInRange(Ints.between(angle, nextAngle), SpawnType.HUMANOID) >= minPointsInRange) {
                 validAngles.add(angle);
             }
         }
@@ -238,7 +236,7 @@ public class WaveEntry {
         }
 
         public Builder<K> angle(int range) {
-            this.minAngle = Random.create().nextInt(MAX_ANGLE) - MAX_VALID_ANGLE;
+            this.minAngle = RandomSource.create().nextInt(MAX_ANGLE) - MAX_VALID_ANGLE;
             this.maxAngle = wrapAngle(minAngle + range);
             return this;
         }
@@ -264,8 +262,8 @@ public class WaveEntry {
 
         public WaveEntry build() {
             return new WaveEntry(
-                    IntRange.between(timeBegin, timeEnd),
-                    IntRange.between(minAngle, maxAngle),
+                    Ints.between(timeBegin, timeEnd),
+                    Ints.between(minAngle, maxAngle),
                     amount, granularity,
                     mobPool.build(),
                     new HashMap<>(alerts), minPointsInRange);

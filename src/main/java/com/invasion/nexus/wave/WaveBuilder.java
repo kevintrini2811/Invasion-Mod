@@ -6,7 +6,6 @@ import java.util.Random;
 
 import com.invasion.InvasionMod;
 import com.invasion.util.ChatUtils;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.wave.pool.Select;

@@ -4,9 +4,8 @@ import com.invasion.entity.EntityIMFlying;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.ai.MoveState;
 import com.invasion.entity.pathfinding.FlyingNavigation;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class FlyingTackleGoal extends Goal {
     private final EntityIMFlying theEntity;
@@ -16,12 +15,12 @@ public class FlyingTackleGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return theEntity.hasGoal(HasAiGoals.Goal.TACKLE_TARGET);
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         LivingEntity target = theEntity.getTarget();
         if (target == null || !target.isAlive()) {
             theEntity.transitionAIGoal(HasAiGoals.Goal.NONE);

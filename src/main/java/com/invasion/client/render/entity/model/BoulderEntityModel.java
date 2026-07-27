@@ -1,38 +1,37 @@
 package com.invasion.client.render.entity.model;
 
 import com.invasion.entity.BoulderEntity;
+import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 
-import net.minecraft.client.model.ModelData;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelPartData;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.SinglePartEntityModel;
-
-public class BoulderEntityModel extends SinglePartEntityModel<BoulderEntity> {
+public class BoulderEntityModel extends HierarchicalModel<BoulderEntity> {
     private final ModelPart root;
 
     public BoulderEntityModel(ModelPart root) {
         this.root = root;
     }
 
-    public static TexturedModelData getTexturedModelData() {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        root.addChild("boulder", ModelPartBuilder.create().cuboid(-4, -4, -4, 8, 8, 8), ModelTransform.NONE);
-        return TexturedModelData.of(data, 64, 64);
+    public static LayerDefinition getTexturedModelData() {
+        MeshDefinition data = new MeshDefinition();
+        PartDefinition root = data.getRoot();
+        root.addOrReplaceChild("boulder", CubeListBuilder.create().addBox(-4, -4, -4, 8, 8, 8), PartPose.ZERO);
+        return LayerDefinition.create(data, 64, 64);
     }
 
     @Override
-    public ModelPart getPart() {
+    public ModelPart root() {
         return root;
     }
 
     @Override
     public void setAngles(BoulderEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
-        root.roll = animationProgress;
-        root.pitch = headPitch;
-        root.yaw = headYaw;
+        root.zRot = animationProgress;
+        root.xRot = headPitch;
+        root.yRot = headYaw;
     }
 }

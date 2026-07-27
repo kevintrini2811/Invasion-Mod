@@ -6,8 +6,7 @@ import com.invasion.client.render.animation.AnimationState;
 import com.invasion.entity.VultureEntity;
 import com.invasion.entity.ai.FlyState;
 import com.invasion.entity.ai.MoveState;
-
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Mth;
 
 public class LegController implements AnimationController {
     private final VultureEntity entity;
@@ -27,13 +26,13 @@ public class LegController implements AnimationController {
     public void update() {
         AnimationAction currAnimation = animationRun.getCurrentAction();
         if (entity.getMoveState() == MoveState.RUNNING) {
-            double dX = entity.getX() - entity.lastRenderX;
-            double dZ = entity.getZ() - entity.lastRenderZ;
+            double dX = entity.getX() - entity.xOld;
+            double dZ = entity.getZ() - entity.zOld;
             double dist = Math.sqrt(dX * dX + dZ * dZ);
             float speed = 0.2F + (float) dist * 1.3F;
 
             if (animationRun.getNextSetAction() != AnimationAction.RUN) {
-                if (dist >= MathHelper.EPSILON) {
+                if (dist >= Mth.EPSILON) {
                     if (currAnimation == AnimationAction.STAND) {
                         ensureAnimation(AnimationAction.STAND_TO_RUN, speed, false);
                     } else if (currAnimation == AnimationAction.STAND_TO_RUN) {
@@ -44,7 +43,7 @@ public class LegController implements AnimationController {
                 }
             } else {
                 animationRun.setAnimationSpeed(speed);
-                if (dist < MathHelper.EPSILON) {
+                if (dist < Mth.EPSILON) {
                     ensureAnimation(AnimationAction.STAND, 0.2F, true);
                 }
             }

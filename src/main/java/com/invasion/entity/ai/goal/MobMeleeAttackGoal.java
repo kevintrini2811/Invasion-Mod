@@ -1,12 +1,12 @@
 package com.invasion.entity.ai.goal;
 
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 
 public class MobMeleeAttackGoal extends MeleeAttackGoal {
     private int ticks;
 
-    public MobMeleeAttackGoal(PathAwareEntity mob, double speed, boolean pauseWhenMobIdle) {
+    public MobMeleeAttackGoal(PathfinderMob mob, double speed, boolean pauseWhenMobIdle) {
         super(mob, speed, pauseWhenMobIdle);
     }
 
@@ -19,12 +19,12 @@ public class MobMeleeAttackGoal extends MeleeAttackGoal {
     @Override
     public void stop() {
         super.stop();
-        mob.setAttacking(false);
+        mob.setAggressive(false);
     }
 
     @Override
     public void tick() {
         super.tick();
-        mob.setAttacking(++ticks >= 5 && getCooldown() < getMaxCooldown() / 2);
+        mob.setAggressive(++ticks >= 5 && getTicksUntilNextAttack() < getAttackInterval() / 2);
     }
 }

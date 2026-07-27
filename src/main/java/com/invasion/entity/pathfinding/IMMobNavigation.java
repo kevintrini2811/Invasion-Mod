@@ -9,19 +9,18 @@ import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.test.PathingDebugger;
+import net.minecraft.core.Direction;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraft.world.phys.Vec3;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.MobNavigation;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.ai.pathing.PathNodeNavigator;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-
-public class IMMobNavigation extends MobNavigation implements Navigation {
+public class IMMobNavigation extends GroundPathNavigation implements Navigation {
     static final int MAX_WAIT_TIME = 2000;
     private Goal currentGoal = Goal.NONE;
     private Goal prevGoal = Goal.NONE;
@@ -34,38 +33,38 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
     @Nullable
     private Entity followingEntity;
-    private Vec3d lastFollowingEntityPos = Vec3d.ZERO;
+    private Vec3 lastFollowingEntityPos = Vec3.ZERO;
 
     @Deprecated
     private final Actor<?> actor;
 
-    public IMMobNavigation(MobEntity entity) {
+    public IMMobNavigation(Mob entity) {
         this(entity, null);
     }
 
-	public IMMobNavigation(MobEntity entity, @SuppressWarnings("deprecation") @Nullable Actor<?> actor) {
-	    super(entity, entity.getWorld());
+	public IMMobNavigation(Mob entity, @SuppressWarnings("deprecation") @Nullable Actor<?> actor) {
+	    super(entity, entity.level());
 	    this.actor = actor;
 	}
 
-	public static void haltNavigation(PathAwareEntity entity, int ticks) {
+	public static void haltNavigation(PathfinderMob entity, int ticks) {
 	    if (entity.getNavigation() instanceof IMMobNavigation navigation) {
 	        navigation.haltForTick();
 	    }
 	}
 
     @Override
-    protected PathNodeNavigator createPathNodeNavigator(int range) {
-        this.nodeMaker = createNodeMaker();
-        return new DynamicPathNodeNavigator(nodeMaker, range);
+    protected PathFinder createPathFinder(int range) {
+        this.nodeEvaluator = createNodeMaker();
+        return new DynamicPathNodeNavigator(nodeEvaluator, range);
     }
 
     @Override
-    public PathNodeMaker createNodeMaker() {
+    public NodeEvaluator createNodeMaker() {
         var nodeMaker = new IMLandPathNodeMaker();
-        nodeMaker.setCanEnterOpenDoors(true);
+        nodeMaker.setCanPassDoors(true);
         nodeMaker.setCanOpenDoors(true);
-        nodeMaker.setCanSwim(true);
+        nodeMaker.setCanFloat(true);
         nodeMaker.setCanClimbLadders(true);
         return nodeMaker;
     }
@@ -100,7 +99,7 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
     @Override
     public PathAction getCurrentWorkingAction() {
-	    return isIdle() || !(currentPath.getCurrentNode() instanceof ActionablePathNode node) ? PathAction.NONE : node.getAction();
+	    return isDone() || !(path.getNextNode() instanceof ActionablePathNode node) ? PathAction.NONE : node.getAction();
 	}
 
     @Override
@@ -121,18 +120,18 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
     @Override
     public float getLastPathDistanceToTarget() {
-        if (isIdle()) {
-            if (currentPath != null && currentPath.getTarget() != null) {
-                return MathHelper.sqrt((float) entity.getBlockPos().getSquaredDistance(currentPath.getTarget()));
+        if (isDone()) {
+            if (path != null && path.getTarget() != null) {
+                return Mth.sqrt((float) mob.blockPosition().distSqr(path.getTarget()));
             }
             return 0;
         }
 
-        if (currentPath.getLastNode() == null) {
+        if (path.getPreviousNode() == null) {
             return 0;
         }
 
-        return currentPath.getLastNode().getDistance(currentPath.getTarget());
+        return path.getPreviousNode().distanceTo(path.getTarget());
     }
 
     @Override
@@ -142,7 +141,7 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
         stuckTime++;
 
-        if (entity instanceof Stunnable l && l.isStunned()) {
+        if (mob instanceof Stunnable l && l.isStunned()) {
             return;
         }
 
@@ -150,17 +149,17 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
             haltingTicks = Math.max(0, haltingTicks - 1);
             waitingForNotify = Math.max(0, (waitingForNotify / 2) - 1);
         } else {
-            if (entity instanceof NexusEntity e
+            if (mob instanceof NexusEntity e
                     && getCurrentWorkingAction() == PathAction.NONE) {
-                if (!isIdle()
-                        && !currentPath.isFinished()
-                        && currentPath.getCurrentNodeIndex() < currentPath.getLength() - 1
-                        && ActionablePathNode.getAction(currentPath.getNode(currentPath.getCurrentNodeIndex() + 1)) == PathAction.NONE
+                if (!isDone()
+                        && !path.isDone()
+                        && path.getNextNodeIndex() < path.getNodeCount() - 1
+                        && ActionablePathNode.getAction(path.getNode(path.getNextNodeIndex() + 1)) == PathAction.NONE
                 ) {
-                    Vec3d currentPos = currentPath.getCurrentNode().getPos();
-                    Vec3d nextPos = currentPath.getNodePosition(entity, currentPath.getCurrentNodeIndex() + 1);
-                    if (!doesNotCollide(entity, currentPos, nextPos, false)) {
-                        if (e.onPathBlocked(currentPath, this)) {
+                    Vec3 currentPos = path.getNextNode().asVec3();
+                    Vec3 nextPos = path.getEntityPosAtNode(mob, path.getNextNodeIndex() + 1);
+                    if (!isClearForMovementBetween(mob, currentPos, nextPos, false)) {
+                        if (e.onPathBlocked(path, this)) {
                             waitingForNotify = MAX_WAIT_TIME;
                         }
                     }
@@ -173,9 +172,9 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
     // TODO: Shouldn't this be a goal instead?
     protected void tickObjectives() {
-        if (entity.getTarget() != null) {
+        if (mob.getTarget() != null) {
             transitionAIGoal(Goal.TARGET_ENTITY);
-        } else if (entity instanceof IHasNexus i && i.hasNexus()) {
+        } else if (mob instanceof IHasNexus i && i.hasNexus()) {
             transitionAIGoal(Goal.BREAK_NEXUS);
         } else {
             transitionAIGoal(Goal.CHILL);
@@ -188,10 +187,10 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
             if (!followingEntity.isAlive()) {
                 followingEntity = null;
             } else {
-                if (isIdle() || (followingEntity.getPos().distanceTo(lastFollowingEntityPos) / (6 + entity.getPos().distanceTo(lastFollowingEntityPos)) > 0.1D)) {
-                    Path newPath = findPathTo(followingEntity, (int)entity.distanceTo(followingEntity) + 1);
-                    if (newPath != null && startMovingAlong(newPath, 1)) {
-                        lastFollowingEntityPos = followingEntity.getPos();
+                if (isDone() || (followingEntity.position().distanceTo(lastFollowingEntityPos) / (6 + mob.position().distanceTo(lastFollowingEntityPos)) > 0.1D)) {
+                    Path newPath = createPath(followingEntity, (int)mob.distanceTo(followingEntity) + 1);
+                    if (newPath != null && moveTo(newPath, 1)) {
+                        lastFollowingEntityPos = followingEntity.position();
                     }
                 }
             }
@@ -199,10 +198,10 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
     }
 
 	@Override
-    protected void continueFollowingPath() {
-	    super.continueFollowingPath();
-	    entity.setSneaking(false);
-	    if (entity instanceof NexusEntity e) {
+    protected void followThePath() {
+	    super.followThePath();
+	    mob.setShiftKeyDown(false);
+	    if (mob instanceof NexusEntity e) {
             e.setIsHoldingIntoLadder(false);
         }
 	    PathAction currentAction = getCurrentWorkingAction();
@@ -213,43 +212,43 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
 	protected void handlePathAction(PathAction action) {
         if (action.getType() == PathAction.Type.CLIMB) {
-            Vec3d targetPosition = entity.getBlockPos().offset(action.getOrientation()).toCenterPos();
-            entity.getMoveControl().moveTo(targetPosition.x, targetPosition.y, targetPosition.z, 1);
+            Vec3 targetPosition = com.invasion.util.math.PosUtils.center(mob.blockPosition().relative(action.getOrientation()));
+            mob.getMoveControl().setWantedPosition(targetPosition.x, targetPosition.y, targetPosition.z, 1);
             if (action.getOrientation() == Direction.UP) {
-                entity.getJumpControl().setActive();
+                mob.getJumpControl().jump();
             } else {
-                if (entity instanceof NexusEntity e) {
+                if (mob instanceof NexusEntity e) {
                     e.setIsHoldingIntoLadder(true);
                 }
-                entity.fallDistance = 0;
-                entity.setJumping(false);
+                mob.fallDistance = 0;
+                mob.setJumping(false);
             }
         } else if (action.getType() != PathAction.Type.DIG) {
             InvasionMod.LOGGER.info("Handling path action {}", action);
-            if (entity instanceof NexusEntity e && e.handlePathAction(getCurrentPath().getCurrentNodePos(), action, this)) {
+            if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 waitingForNotify = MAX_WAIT_TIME;
             }
         }
 	}
 
 	@Override
-    public Vec3d getPos() {
-	    return super.getPos();
+    public Vec3 getTempMobPos() {
+	    return super.getTempMobPos();
 	}
 
     @Override
-    public boolean startMovingAlong(Path path, double speed) {
-        @Nullable Path previousPath = getCurrentPath();
+    public boolean moveTo(Path path, double speed) {
+        @Nullable Path previousPath = getPath();
         try {
             stuckTime = 0;
-            return super.startMovingAlong(path, speed);
+            return super.moveTo(path, speed);
         } finally {
-            if (entity instanceof NexusEntity n) {
+            if (mob instanceof NexusEntity n) {
                 n.onPathSet();
             }
-            Path currentPath = getCurrentPath();
+            Path currentPath = getPath();
             if (currentPath != null && currentPath != previousPath) {
-                PathingDebugger.sendPathToClients(entity, currentPath, 0.5F);
+                PathingDebugger.sendPathToClients(mob, currentPath, 0.5F);
             }
         }
     }
@@ -271,16 +270,21 @@ public class IMMobNavigation extends MobNavigation implements Navigation {
 
     @Override
     public void setCanDestroyBlocks(boolean flag) {
-        ((IMLandPathNodeMaker)getNodeMaker()).setCanDestroyBlocks(flag);
+        ((IMLandPathNodeMaker)getNodeEvaluator()).setCanDestroyBlocks(flag);
     }
 
     @Override
     public void setCanDigDown(boolean flag) {
-        ((IMLandPathNodeMaker)getNodeMaker()).setCanDigDown(flag);
+        ((IMLandPathNodeMaker)getNodeEvaluator()).setCanDigDown(flag);
     }
 
     @Override
     public void setCanClimbLadders(boolean flag) {
-        ((IMLandPathNodeMaker)getNodeMaker()).setCanClimbLadders(flag);
+        ((IMLandPathNodeMaker)getNodeEvaluator()).setCanClimbLadders(flag);
+    }
+
+    @Override
+    public boolean isIdle() {
+        return isDone();
     }
 }

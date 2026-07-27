@@ -9,13 +9,14 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
 import com.mojang.datafixers.util.Pair;
-
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.GlobalPos;
-import net.minecraft.world.World;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
 public interface IHasNexus {
 
@@ -37,9 +38,9 @@ public interface IHasNexus {
     double findDistanceToNexus();
 
     @Nullable
-    static NexusAccess findNexus(World world, BlockPos center) {
-        for (BlockPos pos : BlockPos.iterateOutwards(center, 8, 5, 8)) {
-            if (world.getBlockState(pos).isOf(InvBlocks.NEXUS_CORE)) {
+    static NexusAccess findNexus(Level world, BlockPos center) {
+        for (BlockPos pos : BlockPos.withinManhattan(center, 8, 5, 8)) {
+            if (world.getBlockState(pos).is(InvBlocks.NEXUS_CORE)) {
                 if (world.getBlockEntity(pos) instanceof NexusBlockEntity nexus) {
                     return nexus.getNexus();
                 }
@@ -56,9 +57,9 @@ public interface IHasNexus {
         @Nullable
         private NexusAccess nexus;
 
-        private final Supplier<World> worldGetter;
+        private final Supplier<Level> worldGetter;
 
-        public Handle(Supplier<World> worldGetter) {
+        public Handle(Supplier<Level> worldGetter) {
             this.worldGetter = worldGetter;
         }
 
@@ -66,8 +67,8 @@ public interface IHasNexus {
             if (nexusId != null
                     && globalPos != null
                     && nexus == null
-                    && worldGetter.get() instanceof ServerWorld sw
-                    && sw.getServer().getWorld(globalPos.dimension()) instanceof ServerWorld world) {
+                    && worldGetter.get() instanceof ServerLevel sw
+                    && sw.getServer().getLevel(globalPos.dimension()) instanceof ServerLevel world) {
                 nexus = WorldNexusStorage.of(world).getNexus(nexusId);
                 if (nexus == null) {
                     set(null);
@@ -78,30 +79,27 @@ public interface IHasNexus {
 
         public void set(@Nullable NexusAccess nexus) {
             nexusId = nexus == null ? null : nexus.getUuid();
-            globalPos = nexus == null ? null : GlobalPos.create(nexus.getWorld().getRegistryKey(), nexus.getOrigin());
+            globalPos = nexus == null ? null : GlobalPos.of(nexus.getWorld().dimension(), nexus.getOrigin());
             this.nexus = nexus;
         }
 
-        public void readNbt(NbtCompound nbt) {
+        public void readNbt(ValueInput nbt) {
             nexus = null;
-            globalPos = nbt.contains("globalPos") ? GlobalPos.CODEC.decode(NbtOps.INSTANCE, nbt.get("globalPos")).result().map(Pair::getFirst).orElse(null) : null;
-            nexusId = nbt.containsUuid("nexusId") ? nbt.getUuid("nexusId") : null;
+            globalPos = nbt.read("globalPos", GlobalPos.CODEC).orElse(null);
+            nexusId = nbt.read("nexusId", net.minecraft.core.UUIDUtil.CODEC).orElse(null);
         }
 
         public Optional<GlobalPos> getPos() {
             return Optional.ofNullable(globalPos);
         }
 
-        public NbtCompound writeNbt(NbtCompound nbt) {
+        public void writeNbt(ValueOutput nbt) {
             if (nexusId != null) {
-                nbt.putUuid("nexusId", nexusId);
+                nbt.store("nexusId", net.minecraft.core.UUIDUtil.CODEC, nexusId);
             }
             if (globalPos != null) {
-                GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, globalPos).result().ifPresent(pos -> {
-                    nbt.put("globalPos", pos);
-                });
+                nbt.store("globalPos", GlobalPos.CODEC, globalPos);
             }
-            return nbt;
         }
     }
 }

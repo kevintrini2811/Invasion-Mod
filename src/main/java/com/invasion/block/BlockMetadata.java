@@ -9,16 +9,16 @@ import com.invasion.InvTags;
 import com.invasion.InvasionMod;
 
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.piston.PistonBehavior;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.CollisionView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 
 public class BlockMetadata {
     public static final float AIR_STRENGTH = 0.01F;
@@ -55,8 +55,6 @@ public class BlockMetadata {
         costs.put(BlockTags.LEAVES, SOFT_COST);
         costs.put(Blocks.IRON_DOOR, DOOR_COST);
         costs.put(Blocks.IRON_TRAPDOOR, DOOR_COST);
-        costs.put(Blocks.COPPER_DOOR, DOOR_COST);
-        costs.put(Blocks.COPPER_TRAPDOOR, DOOR_COST);
         costs.put(BlockTags.WOODEN_DOORS, SOFT_DOOR_COST);
         costs.put(BlockTags.WOODEN_TRAPDOORS, SOFT_DOOR_COST);
         costs.put(ConventionalBlockTags.SANDSTONE_BLOCKS, HARD_COST);
@@ -78,7 +76,6 @@ public class BlockMetadata {
         costs.put(Blocks.NETHER_BRICKS, HARD_COST);
         costs.put(Blocks.SOUL_SAND, SOFT_COST);
         costs.put(Blocks.GLOWSTONE, SOFT_COST);
-        costs.put(BlockTags.TALL_FLOWERS, AIR_COST);
         costs.put(BlockTags.SMALL_FLOWERS, AIR_COST);
         costs.put(BlockTags.FLOWERS, AIR_COST);
     });
@@ -103,8 +100,6 @@ public class BlockMetadata {
         strengths.put(BlockTags.CAVE_VINES, OVERGROWTH_STRENGTH);
         strengths.put(Blocks.IRON_DOOR, METAL_ENTRYWAY_STRENGTH);
         strengths.put(Blocks.IRON_TRAPDOOR, METAL_ENTRYWAY_STRENGTH);
-        strengths.put(Blocks.COPPER_DOOR, METAL_ENTRYWAY_STRENGTH);
-        strengths.put(Blocks.COPPER_TRAPDOOR, METAL_ENTRYWAY_STRENGTH);
         strengths.put(BlockTags.WOODEN_DOORS, HARD_STRENGTH);
         strengths.put(ConventionalBlockTags.SANDSTONE_BLOCKS, HARD_STRENGTH);
         strengths.put(ConventionalBlockTags.SANDSTONE_SLABS, HARD_STRENGTH);
@@ -123,7 +118,6 @@ public class BlockMetadata {
         strengths.put(Blocks.NETHER_BRICKS, HARD_STRENGTH);
         strengths.put(Blocks.SOUL_SAND, SOFT_STRENGTH);
         strengths.put(Blocks.GLOWSTONE, SOFT_STRENGTH);
-        strengths.put(BlockTags.TALL_FLOWERS, SHRUBBERY_STRENGTH);
         strengths.put(BlockTags.SMALL_FLOWERS, SHRUBBERY_STRENGTH);
         strengths.put(BlockTags.FLOWERS, SHRUBBERY_STRENGTH);
         strengths.put(Blocks.DRAGON_EGG, QUEST_REWARD_STRENGTH);
@@ -136,32 +130,32 @@ public class BlockMetadata {
     );
 
     public static boolean isIndestructible(BlockState state) {
-        return state.getBlock().getHardness() < 0
-                || state.getPistonBehavior() == PistonBehavior.BLOCK
+        return state.getBlock().defaultDestroyTime() < 0
+                || state.getPistonPushReaction() == PushReaction.BLOCK
                 || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock())
-                || state.isIn(ConventionalBlockTags.RELOCATION_NOT_SUPPORTED);
+                || state.is(ConventionalBlockTags.RELOCATION_NOT_SUPPORTED);
     }
 
     public static Optional<Float> getCost(BlockState state) {
         return InvasionMod.getConfig().getBlockCost(state.getBlock()).or(() -> BLOCK_COSTS.get(state));
     }
 
-    public static float getStrength(BlockPos pos, BlockState state, CollisionView world) {
+    public static float getStrength(BlockPos pos, BlockState state, CollisionGetter world) {
         int bonus = 0;
-        BlockPos.Mutable mutable = pos.mutableCopy();
+        BlockPos.MutableBlockPos mutable = pos.mutable();
         float strength = InvasionMod.getConfig().getBlockStrength(state.getBlock())
-                .orElseGet(() -> BLOCK_STRENGTHS.get(state).orElse(state.getHardness(world, pos)));
+                .orElseGet(() -> BLOCK_STRENGTHS.get(state).orElse(state.getDestroySpeed(world, pos)));
         switch (BlockSpecial.of(state)) {
             case CONSTRUCTION_BRICKS:
                 for (Direction direction : Direction.values()) {
-                    if (world.getBlockState(mutable.set(pos).move(direction)).isOf(state.getBlock())) {
+                    if (world.getBlockState(mutable.set(pos).move(direction)).is(state.getBlock())) {
                         bonus++;
                     }
                 }
                 break;
             case CONSTRUCTION_STONE:
                 for (Direction direction : Direction.values()) {
-                    if (world.getBlockState(mutable.set(pos).move(direction)).isIn(InvTags.Blocks.STONE_CONSTRUCTION_BONUS_MATERIALS)) {
+                    if (world.getBlockState(mutable.set(pos).move(direction)).is(InvTags.Blocks.STONE_CONSTRUCTION_BONUS_MATERIALS)) {
                         bonus++;
                     }
                 }
@@ -181,7 +175,7 @@ public class BlockMetadata {
 
         @SuppressWarnings("deprecation")
         public Lookup<T> put(TagKey<Block> tag, T value) {
-            entries.add(new Entry<>(b -> b.getRegistryEntry().isIn(tag), value));
+            entries.add(new Entry<>(b -> b.builtInRegistryHolder().is(tag), value));
             return this;
         }
 

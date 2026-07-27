@@ -2,7 +2,24 @@ package com.invasion.nexus;
 
 import java.util.List;
 import java.util.UUID;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity.RemovalReason;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import com.invasion.InvasionConfig;
 import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
@@ -18,25 +35,6 @@ import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
 
-import net.minecraft.entity.Entity.RemovalReason;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.world.World;
-
 public class Nexus implements ControllableNexusAccess {
     private static final int INITIAL_SPAWN_RADIUS = 52;
     private static final int MAX_POWER_LEVEL = 2200;
@@ -50,7 +48,6 @@ public class Nexus implements ControllableNexusAccess {
     private int nexusKills;
 
     private int hp = MAX_HEALTH;
-    private int lastHp = MAX_HEALTH;
 
     private Mode mode = Mode.STOPPED;
     private int powerLevel;
@@ -93,15 +90,15 @@ public class Nexus implements ControllableNexusAccess {
 
     private final InvasionConfig config = InvasionMod.getConfig();
 
-    private Box boundingBoxToRadius;
+    private AABB boundingBoxToRadius;
 
     private BlockPos pos;
     private UUID uuid;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final WorldNexusStorage storage;
 
-    private final PropertyDelegate properties = new PropertyDelegate() {
+    private final ContainerData properties = new ContainerData() {
         @Override
         public int get(int index) {
             return switch (index) {
@@ -143,19 +140,19 @@ public class Nexus implements ControllableNexusAccess {
         }
 
         @Override
-        public int size() {
+        public int getCount() {
             return 9;
         }
     };
 
-    Nexus(ServerWorld world, WorldNexusStorage storage, UUID id, BlockPos pos) {
+    Nexus(ServerLevel world, WorldNexusStorage storage, UUID id, BlockPos pos) {
         this.uuid = id;
         this.world = world;
         this.storage = storage;
         this.pos = pos;
         mobList = new Combatants(this);
         boundingBoxToRadius = computeSpawnArea();
-        nexusItemStacks.addListener(i -> storage.markDirty());
+        nexusItemStacks.setChangeListener(storage::setDirty);
     }
 
     @Override
@@ -172,11 +169,11 @@ public class Nexus implements ControllableNexusAccess {
         discarded = true;
     }
 
-    public Inventory getHeldItems() {
+    public Container getHeldItems() {
         return nexusItemStacks;
     }
 
-    public PropertyDelegate getProperties() {
+    public ContainerData getProperties() {
         return properties;
     }
 
@@ -185,12 +182,12 @@ public class Nexus implements ControllableNexusAccess {
         return boundPlayers;
     }
 
-    private Box computeSpawnArea() {
-        return new Box(pos).expand(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10);
+    private AABB computeSpawnArea() {
+        return new AABB(pos).inflate(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10);
     }
 
-    private Box getChunkBox(World world) {
-        return new Box(pos).expand(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10).withMinY(world.getBottomY()).withMaxY(world.getTopY());
+    private AABB getChunkBox(Level world) {
+        return new AABB(pos).inflate(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10).setMinY(world.getMinY()).setMaxY(world.getMaxY());
     }
 
     @Override
@@ -219,7 +216,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     @Override
-    public World getWorld() {
+    public Level getWorld() {
         return world;
     }
 
@@ -283,8 +280,8 @@ public class Nexus implements ControllableNexusAccess {
     public void stop(boolean killEnemies) {
         if (mode == Mode.WAITING) {
             setMode(Mode.CONTINUOUS);
-            int days = getWorld().getRandom().nextBetween(config.minContinuousModeDays, config.maxContinuousModeDays);
-            nextAttackTime = (int) ((getWorld().getTime() / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
+            int days = getWorld().getRandom().nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
+            nextAttackTime = (int) ((getWorld().getGameTime() / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
         } else {
             setMode(Mode.STOPPED);
         }
@@ -334,13 +331,13 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     @Override
-    public List<Text> getStatus() {
+    public List<Component> getStatus() {
         return List.of(
-                Text.literal("Current Time: " + getWorld().getTime()),
-                Text.literal("Time to next: " + nextAttackTime),
-                Text.literal("Days to attack: " + daysToAttack),
-                Text.literal("Mobs left: " + mobsLeftInWave),
-                Text.literal("Mode: " + mode)
+                Component.literal("Current Time: " + getWorld().getGameTime()),
+                Component.literal("Time to next: " + nextAttackTime),
+                Component.literal("Days to attack: " + daysToAttack),
+                Component.literal("Mobs left: " + mobsLeftInWave),
+                Component.literal("Mode: " + mode)
         );
     }
 
@@ -356,21 +353,25 @@ public class Nexus implements ControllableNexusAccess {
 
     @Override
     public void damage(DamageSource source, int amount) {
-        hp -= amount;
+        if (amount <= 0 || hp <= 0) {
+            return;
+        }
+
+        hp = Math.max(0, hp - amount);
+        int healthPercent = (int)Math.ceil(hp * 100.0D / MAX_HEALTH);
+        Component healthMessage = Component.translatable("invmod.message.nexus.hpat",
+                healthPercent + "%").withStyle(ChatFormatting.DARK_RED);
+        boundPlayers.sendMessageIncludingNearby(healthMessage,
+                boundingBoxToRadius != null ? boundingBoxToRadius : computeSpawnArea());
+        boundPlayers.playSoundForBoundPlayers(SoundEvents.BLAZE_HURT);
+
         if (hp <= 0) {
-            hp = 0;
             if (mode == Mode.STARTED) {
                 theEnd();
-                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld());
+                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
                 mob.setCustomName(InvBlocks.NEXUS_CORE.getName());
-                boundPlayers.sendMessage(source.getDeathMessage(mob));
-                boundPlayers.playSoundForBoundPlayers(SoundEvents.ENTITY_BLAZE_HURT);
+                boundPlayers.sendMessage(source.getLocalizedDeathMessage(mob));
             }
-        }
-        while (hp + 5 <= lastHp) {
-            boundPlayers.sendMessage(Formatting.DARK_RED, "invmod.message.nexus.hpat", (lastHp - 5));
-            lastHp -= 5;
-            boundPlayers.playSoundForBoundPlayers(SoundEvents.ENTITY_BLAZE_HURT);
         }
     }
 
@@ -379,21 +380,32 @@ public class Nexus implements ControllableNexusAccess {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
             mobsLeftInWave--;
+            if (mobsToKillInWave > 0) {
+                int defeated = Math.min(mobsToKillInWave,
+                        Math.max(0, mobsToKillInWave - mobsLeftInWave));
+                int progressPercent = defeated * 100 / mobsToKillInWave;
+                Component progressMessage = Component.translatable(
+                        "invmod.message.wave.progress",
+                        currentWave, defeated, mobsToKillInWave, progressPercent + "%")
+                        .withStyle(ChatFormatting.GREEN);
+                boundPlayers.sendMessageIncludingNearby(progressMessage,
+                        boundingBoxToRadius != null ? boundingBoxToRadius : computeSpawnArea());
+            }
             if (mobsLeftInWave <= 0) {
                 if (lastMobsLeftInWave > 0) {
-                    boundPlayers.sendMessage(Formatting.GREEN, "invmod.message.nexus.stableagain");
-                    boundPlayers.sendMessage(Formatting.GREEN, "invmod.message.nexus.unleashingenergy");
+                    boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.stableagain");
+                    boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.unleashingenergy");
                     lastMobsLeftInWave = mobsLeftInWave;
                 }
                 return;
             }
             while (mobsLeftInWave + mobsToKillInWave * 0.1F <= lastMobsLeftInWave) {
-                boundPlayers.sendMessage(Formatting.GREEN, "invmod.message.nexus.stabilizedto", "" + Formatting.DARK_GREEN + (100 - 100 * mobsLeftInWave / mobsToKillInWave) + "%");
+                boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.stabilizedto", "" + ChatFormatting.DARK_GREEN + (100 - 100 * mobsLeftInWave / mobsToKillInWave) + "%");
                 lastMobsLeftInWave = ((int) (lastMobsLeftInWave - mobsToKillInWave * 0.1F));
             }
         } else if (reason == RemovalReason.DISCARDED) {
-            if (combatant.asEntity().getType().create(getWorld()) instanceof Combatant<?> copy) {
-                copy.asEntity().copyFrom(combatant.asEntity());
+            if (combatant.asEntity().getType().create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT) instanceof Combatant<?> copy) {
+                copy.asEntity().restoreFrom(combatant.asEntity());
                 copy.setNexus(this);
                 waveSpawner.askForRespawn(copy);
             }
@@ -429,6 +441,7 @@ public class Nexus implements ControllableNexusAccess {
             boundingBoxToRadius = computeSpawnArea();
             currentWave = startWave;
             waveSpawner.beginNextWave(currentWave);
+            initializeWaveProgress();
             setMode(mode == Mode.STOPPED ? Mode.STARTED : Mode.WAITING);
             boundPlayers.bindPlayers(boundingBoxToRadius);
             regenerateHealth();
@@ -455,7 +468,7 @@ public class Nexus implements ControllableNexusAccess {
         setMode(Mode.CONTINUOUS);
         regenerateHealth();
         lastPowerLevel = powerLevel;
-        lastWorldTime = getWorld().getTime();
+        lastWorldTime = getWorld().getGameTime();
         nextAttackTime = (int) ((lastWorldTime / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME);
         if (lastWorldTime % TICKS_PER_DAY > SUNSET_TIME && lastWorldTime % TICKS_PER_DAY < NIGHT_TIME) {
             boundPlayers.sendWarning("invmod.message.nexus.nightlooming");
@@ -472,7 +485,7 @@ public class Nexus implements ControllableNexusAccess {
                 nexusItemStacks.generateFlux(1);
                 if (waveSpawner.isWaveComplete()) {
                     if (waveDelayTimer == -1L) {
-                        boundPlayers.sendMessage(Formatting.GREEN, "invmod.message.wave.complete", "" + Formatting.DARK_GREEN + currentWave);
+                        boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.wave.complete", "" + ChatFormatting.DARK_GREEN + currentWave);
                         boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_CHIME);
                         waveDelayTimer = 0L;
                         waveDelay = waveSpawner.getWaveRestTime();
@@ -481,8 +494,9 @@ public class Nexus implements ControllableNexusAccess {
                         waveDelayTimer += elapsed;
                         if (waveDelayTimer > waveDelay) {
                             currentWave += 1;
-                            boundPlayers.sendWarning("invmod.message.wave.begin", "" + Formatting.DARK_RED + currentWave);
+                            boundPlayers.sendWarning("invmod.message.wave.begin", "" + ChatFormatting.DARK_RED + currentWave);
                             waveSpawner.beginNextWave(currentWave);
+                            initializeWaveProgress();
                             waveDelayTimer = -1L;
                             boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
                             if (currentWave > nexusLevel) {
@@ -502,17 +516,17 @@ public class Nexus implements ControllableNexusAccess {
         if (powerLevelTimer > MAX_POWER_LEVEL) {
             powerLevelTimer -= MAX_POWER_LEVEL;
             nexusItemStacks.generateFlux(5 + (int) (5 * powerLevel / 1550F));
-            if (!nexusItemStacks.getStack(0).isOf(InvItems.DAMPING_AGENT)) {
+            if (!nexusItemStacks.getItem(0).is(InvItems.DAMPING_AGENT)) {
                 powerLevel++;
             }
         }
 
-        if (nexusItemStacks.getStack(0).isOf(InvItems.STRONG_DAMPING_AGENT) && powerLevel >= 0 && !continuousAttack && --powerLevel < 0) {
+        if (nexusItemStacks.getItem(0).is(InvItems.STRONG_DAMPING_AGENT) && powerLevel >= 0 && !continuousAttack && --powerLevel < 0) {
             stop(false);
         }
 
         if (!continuousAttack) {
-            long currentTime = getWorld().getTime();
+            long currentTime = getWorld().getGameTime();
             int timeOfDay = (int) (this.lastWorldTime % TICKS_PER_DAY);
             if (timeOfDay < SUNSET_TIME && currentTime % TICKS_PER_DAY >= SUNSET_TIME && currentTime + SUNSET_TIME > nextAttackTime) {
                 boundPlayers.sendWarning("invmod.message.nexus.nightlooming");
@@ -530,7 +544,7 @@ public class Nexus implements ControllableNexusAccess {
                     mobsLeftInWave = (lastMobsLeftInWave = mobsToKillInWave = (int) (wave.getTotalMobAmount() * 0.8F));
                     waveSpawner.beginNextWave(wave);
                     continuousAttack = true;
-                    int days = getWorld().getRandom().nextBetween(config.minContinuousModeDays, config.maxContinuousModeDays);
+                    int days = getWorld().getRandom().nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
                     nextAttackTime = (int) ((currentTime / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
                     regenerateHealth();
                     zapTimer = 0;
@@ -580,7 +594,6 @@ public class Nexus implements ControllableNexusAccess {
 
     private void regenerateHealth() {
         hp = MAX_HEALTH;
-        lastHp = MAX_HEALTH;
     }
 
     public void tickInventory() {
@@ -590,35 +603,35 @@ public class Nexus implements ControllableNexusAccess {
             return;
         }
 
-        ItemStack catalyst = nexusItemStacks.getStack(0);
+        ItemStack catalyst = nexusItemStacks.getItem(0);
 
         if (activationTimer >= MAX_ACTIVAION_TIME) {
             activationTimer = 0;
             if (!catalyst.isEmpty()) {
-                if (catalyst.isOf(InvItems.NEXUS_CATALYST)) {
-                    catalyst.decrement(1);
+                if (catalyst.is(InvItems.NEXUS_CATALYST)) {
+                    catalyst.shrink(1);
                     start(1);
-                } else if (catalyst.isOf(InvItems.STRONG_NEXUS_CATALYST)) {
-                    catalyst.decrement(1);
+                } else if (catalyst.is(InvItems.STRONG_NEXUS_CATALYST)) {
+                    catalyst.shrink(1);
                     start(10);
-                } else if (catalyst.isOf(InvItems.STABLE_NEXUS_CATALYST)) {
-                    catalyst.decrement(1);
+                } else if (catalyst.is(InvItems.STABLE_NEXUS_CATALYST)) {
+                    catalyst.shrink(1);
                     activated = true;
                     startContinuousPlay();
                 }
             }
         } else if (mode.isIdle()) {
             if (!catalyst.isEmpty()) {
-                if (catalyst.isOf(InvItems.NEXUS_CATALYST) || catalyst.isOf(InvItems.STRONG_NEXUS_CATALYST)) {
+                if (catalyst.is(InvItems.NEXUS_CATALYST) || catalyst.is(InvItems.STRONG_NEXUS_CATALYST)) {
                     activationTimer++;
                     if (activationTimer % 100 == world.getRandom().nextInt(100)) {
-                        world.playSound(null, pos, InvSounds.BLOCK_NEXUS_RUMBLE, SoundCategory.BLOCKS, 1, 1);
+                        world.playSound(null, pos, InvSounds.BLOCK_NEXUS_RUMBLE, SoundSource.BLOCKS, 1, 1);
                     }
                     setMode(Mode.STOPPED);
-                } else if (catalyst.isOf(InvItems.STABLE_NEXUS_CATALYST)) {
+                } else if (catalyst.is(InvItems.STABLE_NEXUS_CATALYST)) {
                     activationTimer++;
                     if (activationTimer % 100 == world.getRandom().nextInt(100)) {
-                        world.playSound(null, pos, InvSounds.BLOCK_NEXUS_RUMBLE, SoundCategory.BLOCKS, 1, 1);
+                        world.playSound(null, pos, InvSounds.BLOCK_NEXUS_RUMBLE, SoundSource.BLOCKS, 1, 1);
                     }
                     setMode(Mode.STABLE);
                 }
@@ -627,7 +640,7 @@ public class Nexus implements ControllableNexusAccess {
             }
         } else if (mode == Mode.CONTINUOUS) {
             if (!catalyst.isEmpty()) {
-                if (catalyst.isOf(InvItems.NEXUS_CATALYST) || catalyst.isOf(InvItems.STRONG_NEXUS_CATALYST)) {
+                if (catalyst.is(InvItems.NEXUS_CATALYST) || catalyst.is(InvItems.STRONG_NEXUS_CATALYST)) {
                     activationTimer++;
                 }
             } else {
@@ -642,9 +655,9 @@ public class Nexus implements ControllableNexusAccess {
         }
         InvasionMod.LOGGER.info("Nexus {} changing mode from {} to {}", this.getUuid(), this.mode, mode);
         this.mode = mode;
-        if (getWorld() instanceof ServerWorld sw) {
-            if (sw.getBlockState(pos).isOf(InvBlocks.NEXUS_CORE)) {
-                sw.setBlockState(pos, InvBlocks.NEXUS_CORE.getDefaultState().with(NexusBlock.LIT, mode != Mode.STOPPED));
+        if (getWorld() instanceof ServerLevel sw) {
+            if (sw.getBlockState(pos).is(InvBlocks.NEXUS_CORE)) {
+                sw.setBlockAndUpdate(pos, InvBlocks.NEXUS_CORE.defaultBlockState().setValue(NexusBlock.LIT, mode != Mode.STOPPED));
             } else {
                 discard();
             }
@@ -652,13 +665,20 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private int acquireEntities() {
-        List<PathAwareEntity> entities = getWorld().getEntitiesByClass(PathAwareEntity.class, boundingBoxToRadius.expand(10, 128, 10), Combatant.PREDICATE);
+        List<PathfinderMob> entities = getWorld().getEntitiesOfClass(PathfinderMob.class, boundingBoxToRadius.inflate(10, 128, 10), Combatant.PREDICATE);
         InvasionMod.log("Acquired " + entities.size() + " entities after state restore");
         return entities.size();
     }
 
+    private void initializeWaveProgress() {
+        mobsToKillInWave = Math.max(1,
+                (int)(waveSpawner.getTotalDefinedMobsThisWave() * 0.8F));
+        mobsLeftInWave = mobsToKillInWave;
+        lastMobsLeftInWave = mobsToKillInWave;
+    }
+
     private void theEnd() {
-        if (!getWorld().isClient) {
+        if (!getWorld().isClientSide()) {
             boundPlayers.sendWarning("invmod.message.nexus.destroyed");
             stop(false);
             boundPlayers.release();
@@ -668,7 +688,7 @@ public class Nexus implements ControllableNexusAccess {
 
     private void continuousNexusHurt() {
         boundPlayers.sendWarning("invmod.message.nexus.severelydamaged");
-        boundPlayers.playSoundForBoundPlayers(SoundEvents.ENTITY_ENDER_DRAGON_DEATH, 4, 1);
+        boundPlayers.playSoundForBoundPlayers(SoundEvents.ENDER_DRAGON_DEATH, 4, 1);
         killAllMobs();
         waveSpawner.stop();
         powerLevel = ((int) ((powerLevel - (powerLevel - lastPowerLevel)) * 0.7F));
@@ -680,10 +700,10 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void killAllMobs() {
-        DamageSource source = getWorld().getDamageSources().magic();
-        for (LivingEntity mob : getWorld().getEntitiesByClass(LivingEntity.class, boundingBoxToRadius, Combatant.PREDICATE)) {
-            mob.damage(source, mob.getMaxHealth());
-            mob.kill();
+        DamageSource source = getWorld().damageSources().magic();
+        for (LivingEntity mob : getWorld().getEntitiesOfClass(LivingEntity.class, boundingBoxToRadius, Combatant.PREDICATE)) {
+            mob.hurt(source, mob.getMaxHealth());
+            mob.kill((ServerLevel) mob.level());
         }
     }
 
@@ -692,8 +712,8 @@ public class Nexus implements ControllableNexusAccess {
         if (mob == null) {
             return false;
         }
-        mob.asEntity().damage(mob.asEntity().getDamageSources().magic(), 500);
-        getWorld().spawnEntity(new ElectricityBoltEntity(getWorld(), pos.toCenterPos(), mob.asEntity().getEyePos(), 15, sfx));
+        mob.asEntity().hurt(mob.asEntity().damageSources().magic(), 500);
+        getWorld().addFreshEntity(new ElectricityBoltEntity(getWorld(), com.invasion.util.math.PosUtils.center(pos), mob.asEntity().getEyePosition(), 15, sfx));
         return true;
     }
 
@@ -725,33 +745,35 @@ public class Nexus implements ControllableNexusAccess {
         }
     }
 
-    Nexus(ServerWorld world, WorldNexusStorage storage, NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-        this(world, storage, compound.getUuid("uuid"), NbtHelper.toBlockPos(compound, "pos").orElseThrow());
-        activationTimer = compound.getInt("activationTimer");
-        mode = Mode.forId(compound.getInt("mode"));
-        currentWave = compound.getInt("currentWave");
-        nexusLevel = compound.getInt("nexusLevel");
-        hp = compound.getInt("hp");
-        nexusKills = compound.getInt("nexusKills");
-        powerLevel = compound.getInt("powerLevel");
-        lastPowerLevel = compound.getInt("lastPowerLevel");
-        nextAttackTime = compound.getInt("nextAttackTime");
-        daysToAttack = compound.getInt("daysToAttack");
-        continuousAttack = compound.getBoolean("continuousAttack");
-        activated = compound.getBoolean("activated");
-        paused = compound.getBoolean("paused");
+    Nexus(ServerLevel world, WorldNexusStorage storage, CompoundTag compound, HolderLookup.Provider lookup) {
+        this(world, storage,
+                compound.read("uuid", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
+                compound.read("pos", BlockPos.CODEC).orElseThrow());
+        activationTimer = compound.getIntOr("activationTimer", 0);
+        mode = Mode.forId(compound.getIntOr("mode", 0));
+        currentWave = compound.getIntOr("currentWave", 0);
+        nexusLevel = compound.getIntOr("nexusLevel", 0);
+        hp = compound.getIntOr("hp", 0);
+        nexusKills = compound.getIntOr("nexusKills", 0);
+        powerLevel = compound.getIntOr("powerLevel", 0);
+        lastPowerLevel = compound.getIntOr("lastPowerLevel", 0);
+        nextAttackTime = compound.getIntOr("nextAttackTime", 0);
+        daysToAttack = compound.getIntOr("daysToAttack", 0);
+        continuousAttack = compound.getBooleanOr("continuousAttack", false);
+        activated = compound.getBooleanOr("activated", false);
+        paused = compound.getBooleanOr("paused", false);
 
-        nexusItemStacks.readNbt(compound.getCompound("inventory"), lookup);
-        boundPlayers.readNbt(compound.getCompound("boundPlayers"), lookup);
-        waveSpawner.readNbt(compound.getCompound("waveSpawner"), lookup);
-        attackerAI.readNbt(compound.getCompound("ai"), lookup);
+        nexusItemStacks.readNbt(compound.getCompoundOrEmpty("inventory"), lookup);
+        boundPlayers.readNbt(compound.getCompoundOrEmpty("boundPlayers"), lookup);
+        waveSpawner.readNbt(compound.getCompoundOrEmpty("waveSpawner"), lookup);
+        attackerAI.readNbt(compound.getCompoundOrEmpty("ai"), lookup);
 
         boundingBoxToRadius = computeSpawnArea();
     }
 
-    public NbtCompound writeNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-        compound.putUuid("uuid", uuid);
-        compound.put("pos", NbtHelper.fromBlockPos(pos));
+    public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
+        compound.store("uuid", net.minecraft.core.UUIDUtil.CODEC, uuid);
+        compound.store("pos", BlockPos.CODEC, pos);
         compound.putInt("activationTimer", activationTimer);
         compound.putInt("mode", getMode().ordinal());
         compound.putInt("currentWave", getCurrentWave());
@@ -767,10 +789,10 @@ public class Nexus implements ControllableNexusAccess {
         compound.putBoolean("paused", paused);
 
 
-        compound.put("inventory", nexusItemStacks.writeNbt(new NbtCompound(), lookup));
-        compound.put("boundPlayers", boundPlayers.writeNbt(new NbtCompound(), lookup));
-        compound.put("waveSpawner", waveSpawner.writeNbt(new NbtCompound(), lookup));
-        compound.put("ai", attackerAI.writeNbt(new NbtCompound(), lookup));
+        compound.put("inventory", nexusItemStacks.writeNbt(new CompoundTag(), lookup));
+        compound.put("boundPlayers", boundPlayers.writeNbt(new CompoundTag(), lookup));
+        compound.put("waveSpawner", waveSpawner.writeNbt(new CompoundTag(), lookup));
+        compound.put("ai", attackerAI.writeNbt(new CompoundTag(), lookup));
         return compound;
     }
 }

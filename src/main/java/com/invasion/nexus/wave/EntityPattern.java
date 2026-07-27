@@ -2,13 +2,13 @@ package com.invasion.nexus.wave;
 
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.wave.pool.Select;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.predicate.NumberRange.IntRange;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 
 public record EntityPattern(
-        Select<EntityType<? extends MobEntity>> typePool,
+        Select<EntityType<? extends Mob>> typePool,
         Select<Integer> tierPool,
         Select<Integer> texturePool,
         Select<Integer> flavourPool) {
@@ -20,12 +20,12 @@ public record EntityPattern(
     private static final int OPEN_TEXTURE = 0;
     private static final int OPEN_SCALING = 0;
 
-    public EntityConstruct generateEntityConstruct(Random random) {
-        return generateEntityConstruct(random, IntRange.ANY);
+    public EntityConstruct generateEntityConstruct(RandomSource random) {
+        return generateEntityConstruct(random, Ints.ANY);
     }
 
-    public EntityConstruct generateEntityConstruct(Random random, IntRange angle) {
-        EntityType<? extends MobEntity> type = typePool.selectNext(random);
+    public EntityConstruct generateEntityConstruct(RandomSource random, Ints angle) {
+        EntityType<? extends Mob> type = typePool.selectNext(random);
         Integer tier = tierPool.selectNext(random);
         Integer texture = texturePool.selectNext(random);
         Integer flavour = flavourPool.selectNext(random);
@@ -36,16 +36,16 @@ public record EntityPattern(
     }
 
     public static final class Builder {
-        private final Select.PoolBuilder<EntityType<? extends MobEntity>, Float> typePool = Select.random();
+        private final Select.PoolBuilder<EntityType<? extends Mob>, Float> typePool = Select.random();
         private final Select.PoolBuilder<Integer, Float> tierPool = Select.random();
         private final Select.PoolBuilder<Integer, Float> texturePool = Select.random();
         private final Select.PoolBuilder<Integer, Float> flavourPool = Select.random();
 
-        public Builder(EntityType<? extends MobEntity> entityType) {
+        public Builder(EntityType<? extends Mob> entityType) {
             addType(entityType, 1);
         }
 
-        public Builder addType(EntityType<? extends MobEntity> entityType, float weight) {
+        public Builder addType(EntityType<? extends Mob> entityType, float weight) {
             typePool.entry(entityType, weight);
             return this;
         }

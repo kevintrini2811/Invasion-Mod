@@ -2,13 +2,12 @@ package com.invasion.nexus.spawns;
 
 import com.invasion.InvasionMod;
 import com.invasion.util.math.PolarAngle;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.WorldView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.level.LevelReader;
 
 public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements PolarAngle, Comparable<PolarAngle> {
     @Override
@@ -17,22 +16,22 @@ public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements Pol
     }
 
     public void applyTo(Entity entity) {
-        entity.updatePositionAndAngles(pos().getX() + 0.5, pos().getY() + 0.5, pos().getZ() + 0.5, angle, 0);
+        entity.absSnapTo(pos().getX() + 0.5, pos().getY() + 0.5, pos().getZ() + 0.5, angle, 0);
     }
 
-    public boolean isValidFor(WorldView world, MobEntity entity) {
-        if (world.isOutOfHeightLimit(pos)) {
+    public boolean isValidFor(LevelReader world, Mob entity) {
+        if (world.isOutsideBuildHeight(pos)) {
             InvasionMod.LOGGER.info("[Spawn] Spawn point was outside of build limit {}", pos);
             return false;
         }
         applyTo(entity);
-        return entity.canSpawn(world) && world.isSpaceEmpty(entity);
+        return entity.checkSpawnObstruction(world) && world.noCollision(entity);
     }
 
-    public boolean trySpawnEntity(ServerWorld world, MobEntity entity) {
+    public boolean trySpawnEntity(ServerLevel world, Mob entity) {
         if (isValidFor(world, entity)) {
-            entity.initialize(world, world.getLocalDifficulty(entity.getBlockPos()), SpawnReason.STRUCTURE, null);
-            world.spawnEntityAndPassengers(entity);
+            entity.finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.STRUCTURE, null);
+            world.addFreshEntityWithPassengers(entity);
             return true;
         }
         return false;

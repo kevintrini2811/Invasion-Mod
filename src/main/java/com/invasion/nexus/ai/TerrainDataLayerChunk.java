@@ -4,21 +4,21 @@ import com.invasion.nexus.ai.scaffold.ScaffoldView;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.fluid.FluidState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FluidState;
 
-class TerrainDataLayerChunk implements ScaffoldView, BlockView {
+class TerrainDataLayerChunk implements ScaffoldView, BlockGetter {
     protected final Long2ObjectMap<Integer> data = new Long2ObjectOpenHashMap<>();
-    private final BlockView world;
+    private final BlockGetter world;
 
-    public TerrainDataLayerChunk(BlockView world) {
+    public TerrainDataLayerChunk(BlockGetter world) {
         this.world = world;
     }
 
-    public TerrainDataLayerChunk(BlockView world, Long2ObjectMap<Integer> dataLayer) {
+    public TerrainDataLayerChunk(BlockGetter world, Long2ObjectMap<Integer> dataLayer) {
         this.world = world;
         this.data.putAll(dataLayer);
     }
@@ -54,7 +54,7 @@ class TerrainDataLayerChunk implements ScaffoldView, BlockView {
     }
 
     @Override
-    public int getBottomY() {
-        return world.getBottomY();
+    public int getMinY() {
+        return world.getMinY();
     }
 }

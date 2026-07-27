@@ -2,30 +2,31 @@ package com.invasion.entity;
 
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.NexusAccess;
-
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 
 public abstract class TieredIMMobEntity extends IMMobEntity {
-    private static final TrackedData<Integer> TIER = DataTracker.registerData(TieredIMMobEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final TrackedData<Integer> FLAVOUR = DataTracker.registerData(TieredIMMobEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final EntityDataAccessor<Integer> TIER = SynchedEntityData.defineId(TieredIMMobEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> FLAVOUR = SynchedEntityData.defineId(TieredIMMobEntity.class, EntityDataSerializers.INT);
 
     private boolean updatingAttributes;
 
-    public TieredIMMobEntity(EntityType<? extends IMMobEntity> type, World world) {
+    public TieredIMMobEntity(EntityType<? extends IMMobEntity> type, Level world) {
         super(type, world);
         initTieredAttributes();
     }
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(TIER, 1);
-        builder.add(FLAVOUR, 0);
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TIER, 1);
+        builder.define(FLAVOUR, 0);
     }
 
     @Override
@@ -35,38 +36,38 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
     }
 
     public final int getTier() {
-        return dataTracker.get(TIER);
+        return entityData.get(TIER);
     }
 
     public final void setTier(int tier) {
         if (tier != getTier()) {
-            dataTracker.set(TIER, tier);
+            entityData.set(TIER, tier);
             onAttributesChanged();
         }
     }
 
     public final int getFlavour() {
-        return dataTracker.get(FLAVOUR);
+        return entityData.get(FLAVOUR);
     }
 
     public final void setFlavour(int flavour) {
         if (flavour != getFlavour()) {
-            dataTracker.set(FLAVOUR, flavour);
+            entityData.set(FLAVOUR, flavour);
             onAttributesChanged();
         }
     }
 
     private void setAppearance(int tier, int flavour) {
         if (tier != getTier() || flavour != getFlavour()) {
-            dataTracker.set(TIER, tier);
-            dataTracker.set(FLAVOUR, flavour);
+            entityData.set(TIER, tier);
+            entityData.set(FLAVOUR, flavour);
             onAttributesChanged();
         }
     }
 
     @Override
-    public void onTrackedDataSet(TrackedData<?> data) {
-        super.onTrackedDataSet(data);
+    public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
+        super.onSyncedDataUpdated(data);
         if (data == TIER || data == FLAVOUR) {
             onAttributesChanged();
         }
@@ -78,7 +79,7 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
         }
         updatingAttributes = true;
         try {
-            if (!getWorld().isClient) {
+            if (!level().isClientSide()) {
                 resetHealth();
             }
             initTieredAttributes();
@@ -90,16 +91,16 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
     protected abstract void initTieredAttributes();
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound compound) {
-        super.writeCustomDataToNbt(compound);
+    public void addAdditionalSaveData(ValueOutput compound) {
+        super.addAdditionalSaveData(compound);
         compound.putInt("tier", getTier());
         compound.putInt("flavour", getFlavour());
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound compound) {
-        super.readCustomDataFromNbt(compound);
-        setAppearance(compound.getInt("tier"), compound.getInt("flavour"));
+    public void readAdditionalSaveData(ValueInput compound) {
+        super.readAdditionalSaveData(compound);
+        setAppearance(compound.getIntOr("tier", 0), compound.getIntOr("flavour", 0));
     }
 
     @Override

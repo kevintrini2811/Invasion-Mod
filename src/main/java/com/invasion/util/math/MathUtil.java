@@ -1,8 +1,8 @@
 package com.invasion.util.math;
 
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
 
 public interface MathUtil {
     double MAX_DEGREES = 360;
@@ -11,10 +11,10 @@ public interface MathUtil {
     /**
      * Converts a vector to a polar angles (pitch, yaw)
      */
-    static Vec2f toPolar(Vec3d vector) {
-        return new Vec2f(
-                ((float) (Math.atan(vector.getY() / vector.horizontalLength()) * MathHelper.DEGREES_PER_RADIAN)),
-                ((float) (Math.atan2(vector.getZ(), vector.getX()) * MathHelper.DEGREES_PER_RADIAN - 90))
+    static Vec2 toPolar(Vec3 vector) {
+        return new Vec2(
+                ((float) (Math.atan(vector.y() / vector.horizontalDistance()) * Mth.RAD_TO_DEG)),
+                ((float) (Math.atan2(vector.z(), vector.x()) * Mth.RAD_TO_DEG - 90))
         );
     }
 
@@ -30,11 +30,11 @@ public interface MathUtil {
 
     @Deprecated
     static double boundAngle180Deg(double angle) {
-        return MathHelper.wrapDegrees(angle);
+        return Mth.wrapDegrees(angle);
     }
 
     static float interpRotationRad(float rot1, float rot2, float t) {
-        return interpWrapped(rot1, rot2, t, -MathHelper.PI, MathHelper.PI);
+        return interpWrapped(rot1, rot2, t, -Mth.PI, Mth.PI);
     }
 
     static float interpRotationDeg(float rot1, float rot2, float t) {

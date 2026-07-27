@@ -1,34 +1,33 @@
 package com.invasion.client.render.entity;
 
 import com.invasion.entity.IMSkeletonEntity;
-
-import net.minecraft.client.render.entity.BipedEntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
-import net.minecraft.client.render.entity.model.EntityModelLayer;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.SkeletonEntityModel;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.model.monster.skeleton.SkeletonModel;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
+import net.minecraft.resources.Identifier;
 
 /**
  * Copy of SkeletonEntityRenderer with the entity class changed
  *
- * @see net.minecraft.client.render.entity.SkeletonEntityRenderer
+ * @see net.minecraft.client.renderer.entity.SkeletonRenderer
  */
-public class IMSkeletonEntityRenderer extends BipedEntityRenderer<IMSkeletonEntity, SkeletonEntityModel<IMSkeletonEntity>> {
-    private static final Identifier TEXTURE = Identifier.ofVanilla("textures/entity/skeleton/skeleton.png");
+public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEntity, SkeletonModel<IMSkeletonEntity>> {
+    private static final Identifier TEXTURE = Identifier.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
 
-    public IMSkeletonEntityRenderer(EntityRendererFactory.Context context) {
-        this(context, EntityModelLayers.SKELETON, EntityModelLayers.SKELETON_INNER_ARMOR, EntityModelLayers.SKELETON_OUTER_ARMOR);
+    public IMSkeletonEntityRenderer(EntityRendererProvider.Context context) {
+        this(context, ModelLayers.SKELETON, ModelLayers.SKELETON_INNER_ARMOR, ModelLayers.SKELETON_OUTER_ARMOR);
     }
 
-    public IMSkeletonEntityRenderer(EntityRendererFactory.Context ctx, EntityModelLayer layer, EntityModelLayer legArmorLayer, EntityModelLayer bodyArmorLayer) {
-        this(ctx, legArmorLayer, bodyArmorLayer, new SkeletonEntityModel<>(ctx.getPart(layer)));
+    public IMSkeletonEntityRenderer(EntityRendererProvider.Context ctx, ModelLayerLocation layer, ModelLayerLocation legArmorLayer, ModelLayerLocation bodyArmorLayer) {
+        this(ctx, legArmorLayer, bodyArmorLayer, new SkeletonModel<>(ctx.bakeLayer(layer)));
     }
 
-    public IMSkeletonEntityRenderer(EntityRendererFactory.Context context, EntityModelLayer lagArmorLayer, EntityModelLayer bodyArmorLayer, SkeletonEntityModel<IMSkeletonEntity> model) {
+    public IMSkeletonEntityRenderer(EntityRendererProvider.Context context, ModelLayerLocation lagArmorLayer, ModelLayerLocation bodyArmorLayer, SkeletonModel<IMSkeletonEntity> model) {
         super(context, model, 0.5F);
-        addFeature(new ArmorFeatureRenderer<>(this, new SkeletonEntityModel<>(context.getPart(lagArmorLayer)), new SkeletonEntityModel<>(context.getPart(bodyArmorLayer)), context.getModelManager()));
+        addLayer(new HumanoidArmorLayer<>(this, new SkeletonModel<>(context.bakeLayer(lagArmorLayer)), new SkeletonModel<>(context.bakeLayer(bodyArmorLayer)), context.getModelManager()));
     }
 
     @Override

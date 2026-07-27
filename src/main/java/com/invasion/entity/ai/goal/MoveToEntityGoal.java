@@ -1,46 +1,44 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
-
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.pathfinding.Navigation;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.Vec3d;
-
 public class MoveToEntityGoal<T extends LivingEntity> extends Goal {
-	protected final PathAwareEntity mob;
+	protected final PathfinderMob mob;
 	protected final Navigation navigation;
 	private final Class<? extends T> targetClass;
 
 	private T target;
 	private boolean running;
-	private Vec3d lastTargetPos;
+	private Vec3 lastTargetPos;
 	private int cooldown;
 	private int pathFailedCount;
 
 	@SuppressWarnings("unchecked")
-    public <E extends PathAwareEntity & NexusEntity> MoveToEntityGoal(E entity) {
+    public <E extends PathfinderMob & NexusEntity> MoveToEntityGoal(E entity) {
 		this(entity, (Class<T>)LivingEntity.class);
 	}
 
-	public <E extends PathAwareEntity & NexusEntity> MoveToEntityGoal(E entity, Class<? extends T> target) {
+	public <E extends PathfinderMob & NexusEntity> MoveToEntityGoal(E entity, Class<? extends T> target) {
 		this.targetClass = target;
 		this.mob = entity;
 		navigation = entity.getNavigatorNew();
-		setControls(EnumSet.of(Control.MOVE, Control.LOOK));
+		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 
     @Override
-    public boolean shouldRunEveryTick() {
+    public boolean requiresUpdateEveryTick() {
         return true;
     }
 
 	@Override
     @SuppressWarnings("unchecked")
-    public boolean canStart() {
+    public boolean canUse() {
 		if (--cooldown <= 0) {
 		    LivingEntity target = mob.getTarget();
 			if (target != null && (targetClass.isAssignableFrom(mob.getTarget().getClass()))) {
@@ -52,7 +50,7 @@ public class MoveToEntityGoal<T extends LivingEntity> extends Goal {
 	}
 
 	@Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
 	    LivingEntity target = mob.getTarget();
 		return target != null && target == this.target;
 	}
@@ -70,11 +68,11 @@ public class MoveToEntityGoal<T extends LivingEntity> extends Goal {
 
 	@Override
     public void tick() {
-		if (--cooldown <= 0 && !navigation.isWaitingForTask() && running && target.squaredDistanceTo(lastTargetPos) > 1.8) {
+		if (--cooldown <= 0 && !navigation.isWaitingForTask() && running && target.distanceToSqr(lastTargetPos) > 1.8) {
 			setPath();
 		}
 		if (pathFailedCount > 3) {
-			mob.getMoveControl().moveTo(target.getX(), target.getY(), target.getZ(), 1);
+			mob.getMoveControl().setWantedPosition(target.getX(), target.getY(), target.getZ(), 1);
 		}
 	}
 
@@ -88,23 +86,23 @@ public class MoveToEntityGoal<T extends LivingEntity> extends Goal {
 	}
 
 	protected void setPath() {
-		if (mob.getNavigation().startMovingTo(target, 1)) {
+		if (mob.getNavigation().moveTo(target, 1)) {
 			if (navigation.getLastPathDistanceToTarget() > 3) {
-				cooldown = 30 + mob.getWorld().getRandom().nextInt(10);
-				if (mob.getNavigation().getCurrentPath().getLength() > 2) {
+				cooldown = 30 + mob.level().getRandom().nextInt(10);
+				if (mob.getNavigation().getPath().getNodeCount() > 2) {
 					pathFailedCount = 0;
 				} else {
 					pathFailedCount++;
 				}
 			} else {
-				cooldown = 10 + mob.getWorld().getRandom().nextInt(10);
+				cooldown = 10 + mob.level().getRandom().nextInt(10);
 				pathFailedCount = 0;
 			}
 		} else {
 			pathFailedCount++;
-			cooldown = 40 * pathFailedCount + mob.getWorld().getRandom().nextInt(10);
+			cooldown = 40 * pathFailedCount + mob.level().getRandom().nextInt(10);
 		}
 
-		lastTargetPos = target.getPos();
+		lastTargetPos = target.position();
 	}
 }

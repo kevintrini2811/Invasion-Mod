@@ -5,19 +5,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.Notifiable;
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
-
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 
 /**
  * AI component for building structures.
@@ -43,7 +41,7 @@ public final class TerrainModifier implements ITerrainModify {
 
     public TerrainModifier(LivingEntity entity, float defaultReach) {
         this.theEntity = entity;
-        this.reach = MathHelper.square(defaultReach);
+        this.reach = Mth.square(defaultReach);
     }
 
     @Override
@@ -118,34 +116,34 @@ public final class TerrainModifier implements ITerrainModify {
     }
 
     private Notifiable.Status changeBlock(ModifyBlockEntry entry) {
-        if (theEntity.getEyePos().squaredDistanceTo(entry.pos().toCenterPos()) > reach) {
+        if (theEntity.getEyePosition().distanceToSqr(com.invasion.util.math.PosUtils.center(entry.pos())) > reach) {
             return Notifiable.Status.OUT_OF_RANGE;
         }
 
-        BlockState oldBlock = theEntity.getWorld().getBlockState(entry.pos());
+        BlockState oldBlock = theEntity.level().getBlockState(entry.pos());
         entry.setOldBlock(oldBlock);
-        if (oldBlock.isOf(InvBlocks.NEXUS_CORE)) {
+        if (oldBlock.is(InvBlocks.NEXUS_CORE)) {
             return Notifiable.Status.UNMODIFIABLE;
         }
 
-        int flags = Block.NOTIFY_NEIGHBORS | Block.NOTIFY_LISTENERS;
+        int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS;
         if (!InvasionMod.getConfig().destructedBlocksDrop) {
-            flags |= Block.SKIP_DROPS;
+            flags |= Block.UPDATE_SUPPRESS_DROPS;
         }
 
         boolean succeeded = entry.newBlock().isAir()
-                ? theEntity.getWorld().breakBlock(entry.pos(), InvasionMod.getConfig().destructedBlocksDrop, theEntity)
-                : theEntity.getWorld().setBlockState(entry.pos(), entry.newBlock(), flags);
+                ? theEntity.level().destroyBlock(entry.pos(), InvasionMod.getConfig().destructedBlocksDrop, theEntity)
+                : theEntity.level().setBlock(entry.pos(), entry.newBlock(), flags);
         if (!succeeded) {
             return Notifiable.Status.UNMODIFIABLE;
         }
         if (!entry.newBlock().isAir()) {
-            theEntity.getWorld().playSound(null, entry.pos(), entry.newBlock().getSoundGroup().getPlaceSound(), SoundCategory.BLOCKS);
+            theEntity.level().playSound(null, entry.pos(), entry.newBlock().getSoundType().getPlaceSound(), SoundSource.BLOCKS);
         }
         return Notifiable.Status.SUCCESS;
     }
 
     private boolean isTerrainIdentical(ModifyBlockEntry entry) {
-        return theEntity.getWorld().getBlockState(entry.pos()) == entry.newBlock();
+        return theEntity.level().getBlockState(entry.pos()) == entry.newBlock();
     }
 }

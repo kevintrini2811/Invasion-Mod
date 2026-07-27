@@ -4,21 +4,20 @@ import org.joml.Vector3f;
 
 import com.invasion.entity.BurrowerEntity;
 import com.invasion.util.math.PosRotate3D;
-
-import net.minecraft.client.model.ModelData;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelPartData;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.world.phys.Vec3;
 
 public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     private static final double POSITION_SCALE = 7.269999980926514D;
-    private static final Vec3d POSITION_TRANSFORM = new Vec3d(-POSITION_SCALE, -POSITION_SCALE, POSITION_SCALE);
+    private static final Vec3 POSITION_TRANSFORM = new Vec3(-POSITION_SCALE, -POSITION_SCALE, POSITION_SCALE);
 
     private final ModelPart head;
     private final ModelPart evenSegment;
@@ -32,20 +31,20 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
         oddSegment = root.hasChild("odd_segment") ? root.getChild("odd_segment") : head;
     }
 
-    public static TexturedModelData getTexturedModelData() {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        root.addChild("segment", ModelPartBuilder.create().cuboid(-2, -2.5F, -2.5F, 4, 5, 5).mirrored(), ModelTransform.NONE);
-        return TexturedModelData.of(data, 64, 32);
+    public static LayerDefinition getTexturedModelData() {
+        MeshDefinition data = new MeshDefinition();
+        PartDefinition root = data.getRoot();
+        root.addOrReplaceChild("segment", CubeListBuilder.create().addBox(-2, -2.5F, -2.5F, 4, 5, 5).mirror(), PartPose.ZERO);
+        return LayerDefinition.create(data, 64, 32);
     }
 
-    public static TexturedModelData getTexturedModelData2() {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        root.addChild("head", ModelPartBuilder.create().cuboid(-1, -3, -3, 2, 6, 6).mirrored(), ModelTransform.NONE);
-        root.addChild("even_segment", ModelPartBuilder.create().cuboid(-0.5F, -3.5F, -3.5F, 2, 7, 7).mirrored(), ModelTransform.NONE);
-        root.addChild("odd_segment", ModelPartBuilder.create().cuboid(-0.5F, -2.5F, -2.5F, 2, 5, 5).mirrored(), ModelTransform.NONE);
-        return TexturedModelData.of(data, 64, 32);
+    public static LayerDefinition getTexturedModelData2() {
+        MeshDefinition data = new MeshDefinition();
+        PartDefinition root = data.getRoot();
+        root.addOrReplaceChild("head", CubeListBuilder.create().addBox(-1, -3, -3, 2, 6, 6).mirror(), PartPose.ZERO);
+        root.addOrReplaceChild("even_segment", CubeListBuilder.create().addBox(-0.5F, -3.5F, -3.5F, 2, 7, 7).mirror(), PartPose.ZERO);
+        root.addOrReplaceChild("odd_segment", CubeListBuilder.create().addBox(-0.5F, -2.5F, -2.5F, 2, 5, 5).mirror(), PartPose.ZERO);
+        return LayerDefinition.create(data, 64, 32);
     }
 
     @Override
@@ -53,7 +52,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
         segments = new PosRotate3D[17];
 
         segments[0] = new PosRotate3D(
-            entity.getPos().multiply(POSITION_TRANSFORM),
+            entity.position().multiply(POSITION_TRANSFORM),
             PosRotate3D.lerp(tickDelta, entity.getPrevRotation(), entity.getRotation(), new Vector3f())
         );
 
@@ -74,11 +73,11 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     }
 
     @Override
-    public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    public void renderToBuffer(PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         for (int i = 0; i < segments.length; i++) {
             ModelPart segment = getPart(i);
-            segment.setPivot((float) segments[i].position().x, (float) segments[i].position().y, (float) segments[i].position().z);
-            segment.setAngles(segments[i].rotation().x(), segments[i].rotation().y(), segments[i].rotation().z());
+            segment.setPos((float) segments[i].position().x, (float) segments[i].position().y, (float) segments[i].position().z);
+            segment.setRotation(segments[i].rotation().x(), segments[i].rotation().y(), segments[i].rotation().z());
             segment.render(matrices, vertices, light, overlay, color);
         }
     }

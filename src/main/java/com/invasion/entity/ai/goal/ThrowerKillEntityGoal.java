@@ -1,10 +1,9 @@
 package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.ThrowerEntity;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 
 public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoal<T> {
     private boolean melee;
@@ -31,7 +30,7 @@ public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoa
                 double y = (target.getY() - missDistance + 1) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
                 double z = (target.getZ() - missDistance) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
 
-                theEntity.throwProjectile(new Vec3d(x, y, z));
+                theEntity.throwProjectile(new Vec3(x, y, z));
             }
         }
     }
@@ -46,7 +45,7 @@ public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoa
             return false;
         }
 
-        double dXY = theEntity.getPos().subtract(target.getPos()).horizontalLength();
-        return getAttackTime() <= 0 && theEntity.getVisibilityCache().canSee(target) && theEntity.getThrowPower(dXY) <= 1;
+        double dXY = theEntity.position().subtract(target.position()).horizontalDistance();
+        return getAttackTime() <= 0 && theEntity.getSensing().hasLineOfSight(target) && theEntity.getThrowPower(dXY) <= 1;
     }
 }

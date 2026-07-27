@@ -1,23 +1,22 @@
 package com.invasion.entity;
 
 import com.invasion.entity.ai.goal.PounceGoal;
-
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.SpiderEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.level.Level;
 
 public class JumpingSpiderEntity extends NexusSpiderEntity {
-	public JumpingSpiderEntity(EntityType<JumpingSpiderEntity> type, World world) {
+	public JumpingSpiderEntity(EntityType<JumpingSpiderEntity> type, Level world) {
 		super(type, world);
 	}
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return SpiderEntity.createSpiderAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.5F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 4)
-                .add(EntityAttributes.GENERIC_GRAVITY, 0.08);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Spider.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.5F)
+                .add(Attributes.ATTACK_DAMAGE, 4)
+                .add(Attributes.GRAVITY, 0.08);
     }
 
     @Override
@@ -27,11 +26,11 @@ public class JumpingSpiderEntity extends NexusSpiderEntity {
 
     @Override
     protected void initExtraGoals() {
-        goalSelector.add(4, new PounceGoal(this, 0.2F, 1.55F, 18));
+        goalSelector.addGoal(4, new PounceGoal(this, 0.2F, 1.55F, 18));
     }
 
     @Override
-    public int getSafeFallDistance() {
+    public int getMaxFallDistance() {
         return 13;
     }
 }

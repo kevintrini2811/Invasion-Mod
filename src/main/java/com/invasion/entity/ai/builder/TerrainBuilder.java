@@ -1,7 +1,13 @@
 package com.invasion.entity.ai.builder;
 
 import java.util.stream.Stream;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
@@ -9,13 +15,6 @@ import com.invasion.entity.pathfinding.ClimberUtil;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.nexus.ai.scaffold.Scaffold;
 import com.invasion.util.math.PosUtils;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
 
 public class TerrainBuilder implements ITerrainBuild {
     private static final float LADDER_COST = 25;
@@ -49,24 +48,24 @@ public class TerrainBuilder implements ITerrainBuild {
 
         int height = pos.getY() - scaffold.getNode().bottom();
         Direction offset = scaffold.getNode().orientation();
-        BlockPos.Mutable mutable = pos.mutableCopy();
+        BlockPos.MutableBlockPos mutable = pos.mutable();
 
-        World world = mob.asEntity().getWorld();
+        Level world = mob.asEntity().level();
         BlockState block = world.getBlockState(mutable.set(pos).move(offset).move(Direction.DOWN));
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
 
         // NEU: Ladder-State mit richtigem Facing
-        BlockState ladderState = Blocks.LADDER.getDefaultState()
-                .with(LadderBlock.FACING, offset.getOpposite());
+        BlockState ladderState = Blocks.LADDER.defaultBlockState()
+                .setValue(LadderBlock.FACING, offset.getOpposite());
 
 
         // Unterste Ebene direkt über Boden / Einstieg
         if (height == 1) {
             // Block vor der Leiter (Boden) mit Planks auffüllen
-            if (!block.isFullCube(world, mutable)) {
+            if (!block.isCollisionShapeFullBlock(world, mutable)) {
                 builder.add(new ModifyBlockEntry(
-                        mutable.toImmutable(),
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        mutable.immutable(),
+                        Blocks.OAK_PLANKS.defaultBlockState(),
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -74,10 +73,10 @@ public class TerrainBuilder implements ITerrainBuild {
             // Leiter unterhalb der aktuellen Position setzen,
             // aber nur wenn da überhaupt eine Leiter dran halten kann
             mutable.set(pos).move(Direction.DOWN);
-            if (world.isAir(mutable)
+            if (world.isEmptyBlock(mutable)
                     && ClimberUtil.canPositionSupportLadder(world, mutable, offset)) {
                 builder.add(new ModifyBlockEntry(
-                        mutable.toImmutable(),
+                        mutable.immutable(),
                         ladderState,
                         (int) (LADDER_COST / buildRate)
                 ));
@@ -86,20 +85,20 @@ public class TerrainBuilder implements ITerrainBuild {
 
         // Block vor der Leiter (Scaffold-Wand) auf dieser Höhe schließen
         mutable.set(pos).move(offset);
-        if (!world.getBlockState(mutable).isFullCube(world, mutable)) {
+        if (!world.getBlockState(mutable).isCollisionShapeFullBlock(world, mutable)) {
             builder.add(new ModifyBlockEntry(
-                    mutable.toImmutable(),
-                    Blocks.OAK_PLANKS.getDefaultState(),
+                    mutable.immutable(),
+                    Blocks.OAK_PLANKS.defaultBlockState(),
                     (int) (PLANKS_COST / buildRate)
             ));
         }
 
         // Leiter auf der aktuellen Scaffold-Position
         mutable.set(pos);
-        if (!world.getBlockState(mutable).isOf(Blocks.LADDER)
+        if (!world.getBlockState(mutable).is(Blocks.LADDER)
                 && ClimberUtil.canPositionSupportLadder(world, mutable, offset)) {
             builder.add(new ModifyBlockEntry(
-                    mutable.toImmutable(),
+                    mutable.immutable(),
                     ladderState,
                     (int) (LADDER_COST / buildRate)
             ));
@@ -108,12 +107,12 @@ public class TerrainBuilder implements ITerrainBuild {
         // Plattform-Layer: Ring aus Planks um die Leiter herum
         if (scaffold.isPlatformLayer(height)) {
             for (Vec3i i : PosUtils.OFFSET_RING) {
-                if (!i.equals(offset.getVector())) {
+                if (!i.equals(offset.getUnitVec3i())) {
                     mutable.set(pos).move(i);
-                    if (!world.getBlockState(mutable).isFullCube(world, mutable)) {
+                    if (!world.getBlockState(mutable).isCollisionShapeFullBlock(world, mutable)) {
                         builder.add(new ModifyBlockEntry(
-                                mutable.toImmutable(),
-                                Blocks.OAK_PLANKS.getDefaultState(),
+                                mutable.immutable(),
+                                Blocks.OAK_PLANKS.defaultBlockState(),
                                 (int) (PLANKS_COST / buildRate)
                         ));
                     }
@@ -128,16 +127,16 @@ public class TerrainBuilder implements ITerrainBuild {
     @Override
     public Stream<ModifyBlockEntry> askBuildLadderTower(BlockPos basePos, Direction orientation, int layersToBuild) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        World world = mob.asEntity().getWorld();
+        Level world = mob.asEntity().level();
 
         if (!orientation.getAxis().isHorizontal()) {
-            orientation = mob.asEntity().getHorizontalFacing();
+            orientation = mob.asEntity().getDirection();
         }
 
-        BlockState ladderState = Blocks.LADDER.getDefaultState()
-                .with(LadderBlock.FACING, orientation.getOpposite());
+        BlockState ladderState = Blocks.LADDER.defaultBlockState()
+                .setValue(LadderBlock.FACING, orientation.getOpposite());
 
-        BlockPos.Mutable mutable = basePos.mutableCopy();
+        BlockPos.MutableBlockPos mutable = basePos.mutable();
 
         // Wenn layersToBuild zu klein ist (oder 0), bau wenigstens 6 hoch,
         // damit man den Effekt deutlich sieht.
@@ -146,15 +145,15 @@ public class TerrainBuilder implements ITerrainBuild {
         for (int i = 0; i < height; i++) {
             // Position der Leiter
             mutable.set(basePos).move(Direction.UP, i);
-            BlockPos ladderPos = mutable.toImmutable();
+            BlockPos ladderPos = mutable.immutable();
 
             // Support dahinter
-            BlockPos supportPos = ladderPos.offset(orientation);
+            BlockPos supportPos = ladderPos.relative(orientation);
 
-            if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
+            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        Blocks.OAK_PLANKS.defaultBlockState(),
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -173,17 +172,17 @@ public class TerrainBuilder implements ITerrainBuild {
 
     public Stream<ModifyBlockEntry> askBuildLadderShaftDown(BlockPos basePos, Direction orientation, int depth) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        World world = mob.asEntity().getWorld();
+        Level world = mob.asEntity().level();
 
         // Orientierung sicherstellen
         if (!orientation.getAxis().isHorizontal()) {
-            orientation = mob.asEntity().getHorizontalFacing();
+            orientation = mob.asEntity().getDirection();
         }
 
-        BlockState ladderState = Blocks.LADDER.getDefaultState()
-                .with(LadderBlock.FACING, orientation.getOpposite());
+        BlockState ladderState = Blocks.LADDER.defaultBlockState()
+                .setValue(LadderBlock.FACING, orientation.getOpposite());
 
-        BlockPos.Mutable mutable = basePos.mutableCopy();
+        BlockPos.MutableBlockPos mutable = basePos.mutable();
 
         // Tiefe begrenzen
         int depthClamped = Math.max(1, Math.min(depth, 32));
@@ -191,14 +190,14 @@ public class TerrainBuilder implements ITerrainBuild {
         for (int i = 1; i <= depthClamped; i++) {
             // Leiter-Position nach unten
             mutable.set(basePos).move(Direction.DOWN, i);
-            BlockPos ladderPos = mutable.toImmutable();
+            BlockPos ladderPos = mutable.immutable();
 
             // Support-Block hinter der Leiter
-            BlockPos supportPos = ladderPos.offset(orientation);
-            if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
+            BlockPos supportPos = ladderPos.relative(orientation);
+            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        Blocks.OAK_PLANKS.defaultBlockState(),
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -227,7 +226,7 @@ public class TerrainBuilder implements ITerrainBuild {
      * (kein Bedrock, kein Nexus, kein Wasser, etc.).
      */
     // Hilfsfunktion: darf dieser Block in Luft verwandelt werden?
-    private boolean canModifyBlock(World world, BlockPos pos) {
+    private boolean canModifyBlock(Level world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
 
         // Luft ignorieren
@@ -236,7 +235,7 @@ public class TerrainBuilder implements ITerrainBuild {
         }
 
         // Unzerstörbare Blöcke (Bedrock etc.) nicht anfassen
-        if (state.getHardness(world, pos) < 0.0F) {
+        if (state.getDestroySpeed(world, pos) < 0.0F) {
             return false;
         }
 
@@ -255,29 +254,29 @@ public class TerrainBuilder implements ITerrainBuild {
      */
     public Stream<ModifyBlockEntry> askDigShaftDown(BlockPos basePos, int depth) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        World world = mob.asEntity().getWorld();
+        Level world = mob.asEntity().level();
 
         // Sicherheitslimit
         int depthClamped = Math.max(1, Math.min(depth, 32));
 
         // *** WICHTIGER UNTERSCHIED ***
         // Wir nehmen NICHT basePos, sondern IMMER die echte Mob-Position
-        BlockPos entityPos = mob.asEntity().getBlockPos();
-        BlockPos.Mutable mutable = entityPos.mutableCopy();
+        BlockPos entityPos = mob.asEntity().blockPosition();
+        BlockPos.MutableBlockPos mutable = entityPos.mutable();
 
         for (int i = 1; i <= depthClamped; i++) {
             // Oberer Block dieses "Segments"
             mutable.set(entityPos).move(Direction.DOWN, i);
-            BlockPos pos0 = mutable.toImmutable();
+            BlockPos pos0 = mutable.immutable();
 
             // Block direkt darunter -> 2-Blöcke-Höhe
             mutable.move(Direction.DOWN);
-            BlockPos pos1 = mutable.toImmutable();
+            BlockPos pos1 = mutable.immutable();
 
             if (canModifyBlock(world, pos0)) {
                 builder.add(new ModifyBlockEntry(
                         pos0,
-                        Blocks.AIR.getDefaultState(),
+                        Blocks.AIR.defaultBlockState(),
                         (int) (DIG_COST / buildRate)
                 ));
             }
@@ -285,7 +284,7 @@ public class TerrainBuilder implements ITerrainBuild {
             if (canModifyBlock(world, pos1)) {
                 builder.add(new ModifyBlockEntry(
                         pos1,
-                        Blocks.AIR.getDefaultState(),
+                        Blocks.AIR.defaultBlockState(),
                         (int) (DIG_COST / buildRate)
                 ));
             }
@@ -305,37 +304,37 @@ public class TerrainBuilder implements ITerrainBuild {
      */
     public Stream<ModifyBlockEntry> askBuildRampUp(BlockPos basePos, Direction dir, int steps) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        World world = mob.asEntity().getWorld();
+        Level world = mob.asEntity().level();
 
         if (!dir.getAxis().isHorizontal()) {
-            dir = mob.asEntity().getHorizontalFacing();
+            dir = mob.asEntity().getDirection();
         }
 
         int clamped = Math.max(1, Math.min(steps, 16));
-        BlockPos entityPos = mob.asEntity().getBlockPos();
-        BlockPos.Mutable mut = entityPos.mutableCopy();
+        BlockPos entityPos = mob.asEntity().blockPosition();
+        BlockPos.MutableBlockPos mut = entityPos.mutable();
 
         for (int i = 1; i <= clamped; i++) {
             // „Stufe“, auf die er treten soll:
             mut.set(entityPos).move(dir, i).move(Direction.UP, i - 1);
-            BlockPos stepPos = mut.toImmutable();
+            BlockPos stepPos = mut.immutable();
 
             // Kopf-Freiraum: Block über der Stufe + noch einer drüber
-            BlockPos head1 = stepPos.up();
-            BlockPos head2 = stepPos.up(2);
+            BlockPos head1 = stepPos.above();
+            BlockPos head2 = stepPos.above(2);
 
             // Stufe platzieren, wenn leer
             if (world.getBlockState(stepPos).isAir()) {
                 builder.add(new ModifyBlockEntry(
                         stepPos,
-                        Blocks.COBBLESTONE.getDefaultState(),  // oder Slab/Stair
+                        Blocks.COBBLESTONE.defaultBlockState(),  // oder Slab/Stair
                         (int) (COBBLE_COST / buildRate)
                 ));
             } else if (canModifyBlock(world, stepPos)) {
                 // Wenn da schon irgendwas im Weg ist: weg damit und dann unsere Stufe drauf
                 builder.add(new ModifyBlockEntry(
                         stepPos,
-                        Blocks.COBBLESTONE.getDefaultState(),
+                        Blocks.COBBLESTONE.defaultBlockState(),
                         (int) (COBBLE_COST / buildRate)
                 ));
             }
@@ -344,14 +343,14 @@ public class TerrainBuilder implements ITerrainBuild {
             if (canModifyBlock(world, head1)) {
                 builder.add(new ModifyBlockEntry(
                         head1,
-                        Blocks.AIR.getDefaultState(),
+                        Blocks.AIR.defaultBlockState(),
                         (int) (DIG_COST / buildRate)
                 ));
             }
             if (canModifyBlock(world, head2)) {
                 builder.add(new ModifyBlockEntry(
                         head2,
-                        Blocks.AIR.getDefaultState(),
+                        Blocks.AIR.defaultBlockState(),
                         (int) (DIG_COST / buildRate)
                 ));
             }
@@ -365,12 +364,12 @@ public class TerrainBuilder implements ITerrainBuild {
     @Override
     public Stream<ModifyBlockEntry> askBuildLadder(BlockPos pos, Direction orientation) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        World world = mob.asEntity().getWorld();
-        BlockPos.Mutable mutable = pos.mutableCopy();
+        Level world = mob.asEntity().level();
+        BlockPos.MutableBlockPos mutable = pos.mutable();
 
         // Leiter nach vorn ausgerichtet
-        BlockState ladderState = Blocks.LADDER.getDefaultState()
-                .with(LadderBlock.FACING, orientation.getOpposite());
+        BlockState ladderState = Blocks.LADDER.defaultBlockState()
+                .setValue(LadderBlock.FACING, orientation.getOpposite());
 
         // Wir bauen pauschal 4 Blöcke hoch (kannst du später erhöhen)
         int height = 4;
@@ -378,16 +377,16 @@ public class TerrainBuilder implements ITerrainBuild {
         for (int i = 0; i < height; i++) {
             // Position der Leiter
             mutable.set(pos).move(Direction.UP, i);
-            BlockPos ladderPos = mutable.toImmutable();
+            BlockPos ladderPos = mutable.immutable();
 
             // Block HINTER der Leiter (Support)
-            BlockPos supportPos = ladderPos.offset(orientation);
+            BlockPos supportPos = ladderPos.relative(orientation);
 
             // Support immer aus Planks setzen, wenn nicht voll
-            if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
+            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        Blocks.OAK_PLANKS.defaultBlockState(),
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -408,12 +407,12 @@ public class TerrainBuilder implements ITerrainBuild {
     public Stream<ModifyBlockEntry> askBuildBridge(BlockPos pos) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
 
-        BlockPos.Mutable mutable = pos.mutableCopy();
-        BlockPos posBelow = pos.down();
-        World world = mob.asEntity().getWorld();
+        BlockPos.MutableBlockPos mutable = pos.mutable();
+        BlockPos posBelow = pos.below();
+        Level world = mob.asEntity().level();
 
-        boolean isFluid = world.getBlockState(pos).isLiquid();
-        boolean isAirBelow = world.isAir(posBelow);
+        boolean isFluid = world.getBlockState(pos).liquid();
+        boolean isAirBelow = world.isEmptyBlock(posBelow);
 
         if (isAirBelow || isFluid) {
             if (isFluid) {
@@ -422,7 +421,7 @@ public class TerrainBuilder implements ITerrainBuild {
             boolean needsSupport = IMLandPathNodeMaker.avoidsBlock(mob.asEntity(), mutable.set(pos).move(Direction.DOWN, 2))
                                 || IMLandPathNodeMaker.avoidsBlock(mob.asEntity(), mutable.set(pos).move(Direction.DOWN, 3));
             builder.add(new ModifyBlockEntry(posBelow,
-                    (needsSupport ? Blocks.COBBLESTONE : Blocks.OAK_PLANKS).getDefaultState(),
+                    (needsSupport ? Blocks.COBBLESTONE : Blocks.OAK_PLANKS).defaultBlockState(),
                     (int) ((needsSupport ? COBBLE_COST : PLANKS_COST) / buildRate))
             );
         }

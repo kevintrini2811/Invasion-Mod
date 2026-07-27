@@ -7,7 +7,12 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.CollisionGetter;
 import com.invasion.entity.NexusEntity;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.Nexus;
@@ -15,13 +20,6 @@ import com.invasion.nexus.ai.scaffold.Scaffold;
 import com.invasion.nexus.ai.scaffold.ScaffoldGenerator;
 import com.invasion.nexus.ai.scaffold.ScaffoldList;
 import com.invasion.nexus.ai.scaffold.ScaffoldView;
-
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.CollisionView;
 
 public class AttackerAI {
     private static final ExecutorService SCAFFOLD_EXECUTOR = Executors.newSingleThreadExecutor();
@@ -55,18 +53,18 @@ public class AttackerAI {
             nextEntityDensityUpdate = 20;
             entityDensityData.clear();
             for (Combatant<?> mob : nexus.getCombatants()) {
-                entityDensityData.compute(mob.asEntity().getBlockPos().asLong(), (key, old) -> (old == null ? 1 : old + 1) & ScaffoldView.MOB_DENSITY_FLAG);
+                entityDensityData.compute(mob.asEntity().blockPosition().asLong(), (key, old) -> (old == null ? 1 : old + 1) & ScaffoldView.MOB_DENSITY_FLAG);
             }
         }
     }
 
-    public CollisionView wrapEntityData(CollisionView terrainMap) {
+    public CollisionGetter wrapEntityData(CollisionGetter terrainMap) {
         return new TerrainDataLayer(terrainMap, entityDensityData);
     }
 
-    public CollisionView addScaffoldDataTo(CollisionView view) {
+    public CollisionGetter addScaffoldDataTo(CollisionGetter view) {
         ScaffoldView terrainMap = ScaffoldView.of(view);
-        BlockPos.Mutable mutable = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
         for (Scaffold scaffold : scaffolds) {
             BlockPos pos = scaffold.getNode().pos();
             for (int y = scaffold.getNode().bottom(); y < scaffold.getNode().top(); y++) {
@@ -83,7 +81,7 @@ public class AttackerAI {
             nextScaffoldCalcTimer = 200;
             boolean success = scaffolds.addAll(nexus, new ScaffoldGenerator(this).generateScaffolds(entity));
             if (success) {
-                callback.accept(scaffolds.getNearest(entity.asEntity().getBlockPos()));
+                callback.accept(scaffolds.getNearest(entity.asEntity().blockPosition()));
             } else {
                 callback.accept(Optional.empty());
             }
@@ -98,18 +96,18 @@ public class AttackerAI {
         return 90 / (nexus.getCurrentWave() + 10);
     }
 
-    public void readNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-        scaffolds.load(compound.getList("scaffolds", NbtElement.COMPOUND_TYPE)
+    public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
+        scaffolds.load(compound.getListOrEmpty("scaffolds")
                 .stream()
-                .map(element -> new Scaffold((NbtCompound) element, nexus))
+                .map(element -> new Scaffold((CompoundTag) element, nexus))
                 .toList()
         );
     }
 
-    public NbtCompound writeNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-        NbtList nbttaglist = new NbtList();
+    public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
+        ListTag nbttaglist = new ListTag();
         for (Scaffold scaffold : scaffolds) {
-            nbttaglist.add(scaffold.toNBT(new NbtCompound()));
+            nbttaglist.add(scaffold.toNBT(new CompoundTag()));
         }
         compound.put("scaffolds", nbttaglist);
         return compound;

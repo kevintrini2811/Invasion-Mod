@@ -4,9 +4,8 @@ import com.invasion.entity.EntityIMFlying;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.ai.MoveState;
 import com.invasion.entity.pathfinding.FlyingNavigation;
-
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class BirdOfPreyGoal extends Goal {
     private static final int PATIENCE = 600;
@@ -23,7 +22,7 @@ public class BirdOfPreyGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return true;
     }
 

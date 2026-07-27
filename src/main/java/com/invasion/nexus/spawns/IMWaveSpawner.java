@@ -4,21 +4,20 @@ import com.invasion.entity.ai.goal.ExternalAttackNexusGoal;
 import com.invasion.mixin.MobEntityAccessor;
 import com.invasion.nexus.wave.*;
 import com.invasion.util.ChatUtils;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.predicate.NumberRange.IntRange;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.math.Box;
-
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
@@ -59,7 +58,7 @@ public class IMWaveSpawner implements Spawner {
 	}
 
     @Override
-    public Random getRandom() {
+    public RandomSource getRandom() {
         return nexus.getWorld().getRandom();
     }
 
@@ -152,25 +151,25 @@ public class IMWaveSpawner implements Spawner {
      * wenn die Invasion endet oder der Nexus zerstört wurde.
      */
     private void killExternalInvasionMobs() {
-        if (!(nexus.getWorld() instanceof ServerWorld world)) {
+        if (!(nexus.getWorld() instanceof ServerLevel world)) {
             return;
         }
 
         // Bereich um den Nexus, in dem wir nach Zusatzmobs suchen
         BlockPos origin = nexus.getOrigin();
         double radius = this.spawnRadius + 32; // etwas größer als Spawnradius
-        Box searchBox = new Box(
+        AABB searchBox = new AABB(
                 origin.getX() - radius, origin.getY() - radius, origin.getZ() - radius,
                 origin.getX() + radius, origin.getY() + radius, origin.getZ() + radius
         );
 
-        List<MobEntity> mobs = world.getEntitiesByClass(
-                MobEntity.class,
+        List<Mob> mobs = world.getEntitiesOfClass(
+                Mob.class,
                 searchBox,
                 mob -> EntityPatterns.isExternalInvasionMob(mob.getType())
         );
 
-        for (MobEntity mob : mobs) {
+        for (Mob mob : mobs) {
             // "sterben" lassen – entweder kill() oder discard()
             //mob.kill();        // versucht normalen Tod (Death-Events etc.)
             mob.discard();  // Alternative: einfach verschwinden lassen
@@ -215,13 +214,13 @@ public class IMWaveSpawner implements Spawner {
 			    final byte statusAddDeathParticles = (byte)60;
 			    spawnPoint.applyTo(entity.asEntity());
 			    entity.resetHealth();
-			    entity.asEntity().getWorld().sendEntityStatus(entity.asEntity(), statusAddDeathParticles);
+			    entity.asEntity().level().broadcastEntityEvent(entity.asEntity(), statusAddDeathParticles);
 			}
 		}
 	}
 
 	@Override
-    public void sendSpawnAlert(String message, Formatting color) {
+    public void sendSpawnAlert(String message, ChatFormatting color) {
 		if (debugMode) {
 		    InvasionMod.log(message);
 		}
@@ -237,7 +236,7 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	@Override
-    public int getNumberOfPointsInRange(IntRange angle, SpawnType type) {
+    public int getNumberOfPointsInRange(Ints angle, SpawnType type) {
 		return spawnPointContainer.getNumberOfSpawnPoints(type, angle);
 	}
 
@@ -250,12 +249,12 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	@Override
-	public boolean attemptSpawn(EntityConstruct mobConstruct, IntRange angle) {
+	public boolean attemptSpawn(EntityConstruct mobConstruct, Ints angle) {
 		if (!permitSpawns) {
 			return false;
 		}
 
-		MobEntity mob = mobConstruct.createMob(nexus);
+		Mob mob = mobConstruct.createMob(nexus);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (int j = 0; j < spawnTries; j++) {
@@ -276,20 +275,20 @@ public class IMWaveSpawner implements Spawner {
 				return true;
 			}
 
-            if (spawnPoint.trySpawnEntity((ServerWorld) nexus.getWorld(), mob)) {
+            if (spawnPoint.trySpawnEntity((ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
 
                 // ➜ HIER: nach erfolgreichem Spawn ins Team packen
                 if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
                     MobEntityAccessor accessor = (MobEntityAccessor)(Object)mob;
-                    accessor.getGoalSelector().add(2, new ExternalAttackNexusGoal(mob, nexus));
-                    mob.setPersistent();
+                    accessor.getGoalSelector().addGoal(2, new ExternalAttackNexusGoal(mob, nexus));
+                    mob.setPersistenceRequired();
 
                 }
 
                 markAsInvasionAlly(mob);
                 if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
-                    ChatUtils.broadcastGlobal("Ein Mutant ist gespawnt: " + mob.getName().getString(), Formatting.DARK_RED);
+                    ChatUtils.broadcastGlobal("Ein Mutant ist gespawnt: " + mob.getName().getString(), ChatFormatting.DARK_RED);
                 }
                 if (debugMode) {
                     InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave()
@@ -306,14 +305,14 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void generateSpawnPoints() {
-		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld());
+		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
 		zombie.setNexus(nexus);
 		List<SpawnPoint> spawnPoints = new ArrayList<>();
 		BlockPos origin = nexus.getOrigin();
-		BlockPos.Mutable mutable = origin.mutableCopy();
+		BlockPos.MutableBlockPos mutable = origin.mutable();
 
 		for (int vertical = 0;
-		         Math.abs(vertical) < spawnRadius && !nexus.getWorld().isOutOfHeightLimit(origin.getY() + vertical);
+		         Math.abs(vertical) < spawnRadius && !nexus.getWorld().isOutsideBuildHeight(origin.getY() + vertical);
 		         vertical = vertical > 0 ? vertical * -1 : vertical * -1 + 1) {
 			for (int i = 0; i <= spawnRadius * 0.7D + 1; i++) {
 				int j = (int) Math.round(spawnRadius * Math.cos(Math.asin(i / spawnRadius)));
@@ -354,50 +353,50 @@ public class IMWaveSpawner implements Spawner {
 		InvasionMod.LOGGER.info("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
 	}
 
-	private void addValidSpawn(MobEntity entity, List<SpawnPoint> spawnPoints, BlockPos pos) {
-	    if (nexus.getWorld().isOutOfHeightLimit(pos)) {
+	private void addValidSpawn(Mob entity, List<SpawnPoint> spawnPoints, BlockPos pos) {
+	    if (nexus.getWorld().isOutsideBuildHeight(pos)) {
 	        InvasionMod.LOGGER.info("[Spawn] Spawn point was outside of build limit {}", pos);
 	        return;
 	    }
-		entity.updatePositionAndAngles(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
-		if (entity.canSpawn(nexus.getWorld()) && nexus.getWorld().isSpaceEmpty(entity)) {
-			int angle = (int) (Math.atan2(nexus.getOrigin().getZ() - pos.getZ(), nexus.getOrigin().getX() - pos.getX()) * MathHelper.DEGREES_PER_RADIAN);
-			spawnPoints.add(new SpawnPoint(pos.toImmutable(), angle, SpawnType.HUMANOID));
+		entity.absSnapTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
+		if (entity.checkSpawnObstruction(nexus.getWorld()) && nexus.getWorld().noCollision(entity)) {
+			int angle = (int) (Math.atan2(nexus.getOrigin().getZ() - pos.getZ(), nexus.getOrigin().getX() - pos.getX()) * Mth.RAD_TO_DEG);
+			spawnPoints.add(new SpawnPoint(pos.immutable(), angle, SpawnType.HUMANOID));
 		}
 	}
 
 
 
-    public void readNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
-        setRadius(compound.getInt("spawnRadius"));
-        elapsed = compound.getLong("elapsed");
+    public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
+        setRadius(compound.getIntOr("spawnRadius", 0));
+        elapsed = compound.getLongOr("elapsed", 0L);
     }
 
-    public NbtCompound writeNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
+    public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         compound.putInt("spawnRadius", spawnRadius);
         compound.putLong("elapsed", elapsed);
         return compound;
     }
-    private void markAsInvasionAlly(MobEntity mob) {
-        ServerWorld world = (ServerWorld) mob.getWorld();
+    private void markAsInvasionAlly(Mob mob) {
+        ServerLevel world = (ServerLevel) mob.level();
         Scoreboard scoreboard = world.getScoreboard();
 
         // Team holen oder erstellen
-        Team team = scoreboard.getTeam("invasion_allies");
+        PlayerTeam team = scoreboard.getPlayerTeam("invasion_allies");
         if (team == null) {
-            team = scoreboard.addTeam("invasion_allies");
-            team.setFriendlyFireAllowed(false);              // kein Damage untereinander
-            team.setCollisionRule(Team.CollisionRule.NEVER); // optional: keine Kollision
+            team = scoreboard.addPlayerTeam("invasion_allies");
+            team.setAllowFriendlyFire(false);              // kein Damage untereinander
+            team.setCollisionRule(PlayerTeam.CollisionRule.NEVER); // optional: keine Kollision
         }
 
         // WICHTIG: eindeutigen ScoreHolder-Namen benutzen
-        String holderName = mob.getNameForScoreboard();
-        scoreboard.addScoreHolderToTeam(holderName, team);
+        String holderName = mob.getScoreboardName();
+        scoreboard.addPlayerToTeam(holderName, team);
 
         // existende Aggro resetten
         mob.setTarget(null);
-        mob.setAttacking(null);
-        mob.setAttacker(null);
+        mob.setLastHurtByPlayer((java.util.UUID) null, 0);
+        mob.setLastHurtByMob(null);
     }
 
 

@@ -2,18 +2,17 @@ package com.invasion.client.render.entity;
 
 import com.invasion.InvasionMod;
 import com.invasion.entity.PigmanEngineerEntity;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
+import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.resources.Identifier;
 
-import net.minecraft.client.render.entity.BipedEntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory.Context;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.util.Identifier;
-
-public class PigmanEngineerEntityRenderer extends BipedEntityRenderer<PigmanEngineerEntity, BipedEntityModel<PigmanEngineerEntity>> {
+public class PigmanEngineerEntityRenderer extends HumanoidMobRenderer<PigmanEngineerEntity, HumanoidModel<PigmanEngineerEntity>> {
     private static final Identifier TEXTURE = InvasionMod.id("textures/entity/pigman_engineer.png");
 
     public PigmanEngineerEntityRenderer(Context ctx) {
-        super(ctx, new BipedEntityModel<>(ctx.getPart(EntityModelLayers.ZOMBIE)), 0.5F);
+        super(ctx, new HumanoidModel<>(ctx.bakeLayer(ModelLayers.ZOMBIE)), 0.5F);
     }
 
     @Override

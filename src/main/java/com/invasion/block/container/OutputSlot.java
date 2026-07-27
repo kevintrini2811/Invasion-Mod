@@ -1,11 +1,11 @@
 package com.invasion.block.container;
 
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 public class OutputSlot extends Slot {
-    public OutputSlot(Inventory iinventory, int i, int j, int k) {
+    public OutputSlot(Container iinventory, int i, int j, int k) {
         super(iinventory, i, j, k);
     }
 

@@ -1,7 +1,51 @@
 package com.invasion.entity;
 
 import java.util.List;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.Notifiable;
@@ -14,29 +58,6 @@ import com.invasion.entity.ai.goal.ThrowBoulderGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.ThrowerKillEntityGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
-
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 public class ThrowerEntity extends TieredIMMobEntity {
     private int throwTime;
@@ -53,46 +74,46 @@ public class ThrowerEntity extends TieredIMMobEntity {
     @Nullable
     protected Entity j;
 
-    public ThrowerEntity(EntityType<ThrowerEntity> type, World world) {
+    public ThrowerEntity(EntityType<ThrowerEntity> type, Level world) {
         super(type, world);
-        experiencePoints = 20;
+        xpReward = 20;
         getNavigatorNew().setCanDestroyBlocks(true);
     }
 
-    public static DefaultAttributeContainer.Builder createT1V0Attributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.13F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
+    public static AttributeSupplier.Builder createT1V0Attributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.13F)
+                .add(Attributes.ATTACK_DAMAGE, 10);
     }
 
-    public static DefaultAttributeContainer.Builder createT2V0Attributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.23F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 15);
-    }
-
-    @Override
-    protected void initGoals() {
-        goalSelector.add(0, new SwimGoal(this));
-        goalSelector.add(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, PlayerEntity.class, 55, 60.0F, 1.0F), () -> getTier() == 1));
-        goalSelector.add(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, PlayerEntity.class, 60, 90.0F, 1.5F), () -> getTier() == 1));
-        goalSelector.add(2, new AttackNexusGoal<>(this));
-        goalSelector.add(3, new ThrowBoulderGoal(this, 3));
-        goalSelector.add(4, new GoToNexusGoal(this));
-        goalSelector.add(7, new WanderAroundFarGoal(this, 1));
-        goalSelector.add(8, new LookAtEntityGoal(this, PlayerEntity.class, 8));
-        goalSelector.add(9, new LookAtEntityGoal(this, IMCreeperEntity.class, 12));
-        goalSelector.add(10, new LookAtEntityGoal(this, PlayerEntity.class, 16));
-        goalSelector.add(10, new LookAroundGoal(this));
-
-        targetSelector.add(1, new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getSenseRange, false));
-        targetSelector.add(2, new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getAggroRange, true));
-        targetSelector.add(3, new RevengeGoal(this));
+    public static AttributeSupplier.Builder createT2V0Attributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.23F)
+                .add(Attributes.ATTACK_DAMAGE, 15);
     }
 
     @Override
-    public void mobTick() {
-        super.mobTick();
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 55, 60.0F, 1.0F), () -> getTier() == 1));
+        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 60, 90.0F, 1.5F), () -> getTier() == 1));
+        goalSelector.addGoal(2, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(3, new ThrowBoulderGoal(this, 3));
+        goalSelector.addGoal(4, new GoToNexusGoal(this));
+        goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8));
+        goalSelector.addGoal(9, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12));
+        goalSelector.addGoal(10, new LookAtPlayerGoal(this, Player.class, 16));
+        goalSelector.addGoal(10, new RandomLookAroundGoal(this));
+
+        targetSelector.addGoal(1, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
+        targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
+        targetSelector.addGoal(3, new HurtByTargetGoal(this));
+    }
+
+    @Override
+    public void customServerAiStep(ServerLevel serverLevel) {
+        super.customServerAiStep(serverLevel);
         throwTime--;
         if (pointToClear != null && clearPoint()) {
             pointToClear = null;
@@ -104,11 +125,11 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     @Override
-    public boolean damage(DamageSource source, float damage) {
-        if (super.damage(source, damage)) {
+    public boolean hurtServer(ServerLevel serverLevel, DamageSource source, float damage) {
+        if (super.hurtServer(serverLevel, source, damage)) {
             @Nullable
-            Entity attacker = source.getAttacker();
-            if (attacker != null && attacker != this && isConnectedThroughVehicle(attacker)) {
+            Entity attacker = source.getEntity();
+            if (attacker != null && attacker != this && isPassengerOfSameVehicle(attacker)) {
                 j = attacker;
             }
             return true;
@@ -118,9 +139,9 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     @Override
-    public void takeKnockback(double strength, double x, double z) {
+    public void knockback(double strength, double x, double z, DamageSource source, float damage, boolean force) {
         if (getTier() != 2) {
-            super.takeKnockback(strength, x, z);
+            super.knockback(strength, x, z, source, damage, force);
         }
     }
 
@@ -130,20 +151,20 @@ public class ThrowerEntity extends TieredIMMobEntity {
 
     @Override
     public boolean onPathBlocked(Path path, Notifiable notifee) {
-        if (!path.isFinished()) {
+        if (!path.isDone()) {
             clearPointNotifee = notifee;
-            pointToClear = path.getCurrentNodePos();
+            pointToClear = path.getNextNodePos();
             return true;
         }
         return false;
     }
 
     @Override
-    protected Text getDefaultName() {
+    protected Component getTypeName() {
         if (isBig()) {
-            return Text.translatable(getType().getUntranslatedName() + ".big");
+            return Component.translatable(getType().toShortString() + ".big");
         }
-        return super.getDefaultName();
+        return super.getTypeName();
     }
 
     public boolean isBig() {
@@ -156,40 +177,39 @@ public class ThrowerEntity extends TieredIMMobEntity {
         if (isBig()) {
             setBaseMovementSpeed(0.23F);
             setAttackStrength(15);
-            experiencePoints = 25;
+            xpReward = 25;
         } else {
             setBaseMovementSpeed(0.13F);
             setAttackStrength(10);
-            experiencePoints = 20;
+            xpReward = 20;
         }
     }
 
     @Override
-    public float getScaleFactor() {
+    public float getAgeScale() {
         if (isBig()) {
             return 1.1F;
         }
-        return super.getScaleFactor();
+        return super.getAgeScale();
     }
 
-    @Override
-    public float getScale() {
-        return super.getScale() * getScaleFactor();
+    public float scaleAmount() {
+        return super.getScale() * getAgeScale();
     }
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.ENTITY_ZOMBIE_AMBIENT;
+        return SoundEvents.ZOMBIE_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.ENTITY_ZOMBIE_HURT;
+        return SoundEvents.ZOMBIE_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_ZOMBIE_DEATH;
+        return SoundEvents.ZOMBIE_DEATH;
     }
 
     protected boolean clearPoint() {
@@ -199,7 +219,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
             int axisX = 0;
             int axisZ = 0;
 
-            float facing = MathHelper.wrapDegrees(getYaw());
+            float facing = Mth.wrapDegrees(getYRot());
 
             if (facing >= 45 && facing < 135) {
                 zOffsetR = -1;
@@ -215,20 +235,20 @@ public class ThrowerEntity extends TieredIMMobEntity {
                 axisZ = 1;
             }
             // this is a cheat, I should fix it where it get's the point to clear
-            BlockPos targetPos = pointToClear.down();
+            BlockPos targetPos = pointToClear.below();
             List<BlockPos> wideArea = List.of(
                     targetPos,
                     pointToClear,
-                    targetPos.add(xOffsetR, 0, zOffsetR),
-                    pointToClear.add(xOffsetR, 0, zOffsetR)
+                    targetPos.offset(xOffsetR, 0, zOffsetR),
+                    pointToClear.offset(xOffsetR, 0, zOffsetR)
             );
             List<BlockPos> narrowArea = List.of(
-                    pointToClear.add(-axisX, 0, -axisZ),
-                    pointToClear.add(-axisX, 0, -axisZ).add(xOffsetR, 0, zOffsetR)
+                    pointToClear.offset(-axisX, 0, -axisZ),
+                    pointToClear.offset(-axisX, 0, -axisZ).offset(xOffsetR, 0, zOffsetR)
             );
             List<BlockPos> singleTarget = List.of(
-                    pointToClear.add(-2 * axisX, 0, -2 * axisZ),
-                    pointToClear.add(-2 * axisX, 0, -2 * axisZ).add(xOffsetR, 0, zOffsetR)
+                    pointToClear.offset(-2 * axisX, 0, -2 * axisZ),
+                    pointToClear.offset(-2 * axisX, 0, -2 * axisZ).offset(xOffsetR, 0, zOffsetR)
             );
 
             if (tryDestroyArea(wideArea) || tryDestroyArea(narrowArea) || tryDestroyArea(singleTarget)) {
@@ -241,7 +261,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     protected final boolean tryDestroyArea(List<BlockPos> positions) {
-        if (positions.stream().anyMatch(pos -> getWorld().getBlockState(pos).isSolidBlock(getWorld(), pos))) {
+        if (positions.stream().anyMatch(pos -> level().getBlockState(pos).isRedstoneConductor(level(), pos))) {
             positions.forEach(this::tryDestroyBlock);
             return true;
         }
@@ -249,14 +269,14 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     protected void tryDestroyBlock(BlockPos pos) {
-        BlockState block = getWorld().getBlockState(pos);
+        BlockState block = level().getBlockState(pos);
         if (this.j != null) {
-            if (block.isOf(InvBlocks.NEXUS_CORE)) {
+            if (block.is(InvBlocks.NEXUS_CORE)) {
                 if (hasNexus() && canAttack() && pos.equals(getNexus().getOrigin())) {
-                    getNexus().damage(getDamageSources().mobAttack(this), 5);
+                    getNexus().damage(damageSources().mobAttack(this), 5);
                 }
             } else {
-                getWorld().breakBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
+                level().destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
                 if (blockBreakSoundCooldown == 0) {
                     playSound(InvSounds.ENTITY_THROWER_RAGE, 1, 0.4F);
                     blockBreakSoundCooldown = 5;
@@ -266,47 +286,47 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     public boolean canAttack() {
-        return getLastAttackTime() < (age - 60);
+        return getLastHurtMobTimestamp() < (tickCount - 60);
     }
 
     @Override
-    public boolean tryAttack(Entity entity) {
+    public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
         float distance = entity.distanceTo(this);
         if (throwTime <= 0 && distance > 4) {
             throwTime = 120;
             if (distance < 50) {
                 if (canAttack()) {
-                    throwProjectile(entity.getEyePos(), createProjectile(0));
+                    throwProjectile(entity.getEyePosition(), createProjectile(0));
                 }
                 throwTime = 120;
                 return true;
             }
         }
-        return super.tryAttack(entity);
+        return super.doHurtTarget(serverLevel, entity);
     }
 
     public float getLaunchSpeed() {
         return launchSpeed;
     }
 
-    public PersistentProjectileEntity createProjectile(int tier) {
-        return tier == 1 ? InvEntities.TNT.create(getWorld()) : InvEntities.BOULDER.create(getWorld());
+    public AbstractArrow createProjectile(int tier) {
+        return tier == 1 ? InvEntities.TNT.create(level(), EntitySpawnReason.EVENT) : InvEntities.BOULDER.create(level(), EntitySpawnReason.EVENT);
     }
 
-    public void throwProjectile(Vec3d targetPosition) {
+    public void throwProjectile(Vec3 targetPosition) {
         throwProjectile(targetPosition, createProjectile(getTier()));
     }
 
-    public void throwProjectile(Vec3d targetPosition, PersistentProjectileEntity projectile) {
+    public void throwProjectile(Vec3 targetPosition, AbstractArrow projectile) {
         this.throwTime = 40;
-        Vec3d eyePos = getEyePos();
-        Vec3d delta = targetPosition.subtract(eyePos);
-        double dXZ = delta.horizontalLength();
+        Vec3 eyePos = getEyePosition();
+        Vec3 delta = targetPosition.subtract(eyePos);
+        double dXZ = delta.horizontalDistance();
 
         projectile.setOwner(this);
-        projectile.setPosition(eyePos);
-        projectile.setVelocity(delta.x, delta.y + (dXZ * Math.tan(getThrowAngle(dXZ))), delta.z, getLaunchSpeed(), 0.05F);
-        getWorld().spawnEntity(projectile);
+        projectile.setPos(eyePos);
+        projectile.shoot(delta.x, delta.y + (dXZ * Math.tan(getThrowAngle(dXZ))), delta.z, getLaunchSpeed(), 0.05F);
+        level().addFreshEntity(projectile);
     }
 
     private double getThrowAngle(double horDifference) {
@@ -315,6 +335,6 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     public double getThrowPower(double horDifference) {
-        return 0.025D * horDifference / MathHelper.square(getLaunchSpeed());
+        return 0.025D * horDifference / Mth.square(getLaunchSpeed());
     }
 }

@@ -2,6 +2,48 @@ package com.invasion.entity;
 
 import java.util.Comparator;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
@@ -10,46 +52,26 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.Mode;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityStatuses;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.ActiveTargetGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+public class IMWolfEntity extends Wolf implements IHasNexus {
+    private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
 
-public class IMWolfEntity extends WolfEntity implements IHasNexus {
-    private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::getWorld);
-
-    public IMWolfEntity(EntityType<IMWolfEntity> type, World world) {
+    public IMWolfEntity(EntityType<IMWolfEntity> type, Level world) {
         this(type, world, null);
     }
 
-    public IMWolfEntity(EntityType<IMWolfEntity> type, World world, @Nullable NexusAccess nexus) {
+    public IMWolfEntity(EntityType<IMWolfEntity> type, Level world, @Nullable NexusAccess nexus) {
         super(type, world);
         setNexus(nexus);
     }
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return WolfEntity.createWolfAttributes();
+    public static AttributeSupplier.Builder createAttributes() {
+        return Wolf.createAttributes();
     }
 
     @Override
-    protected void initGoals() {
-        super.initGoals();
-        targetSelector.add(5, new ActiveTargetGoal<>(this, HostileEntity.class, true));
+    protected void registerGoals() {
+        super.registerGoals();
+        targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, true));
     }
 
     @Override
@@ -60,13 +82,13 @@ public class IMWolfEntity extends WolfEntity implements IHasNexus {
     @Override
     public double findDistanceToNexus() {
         return nexus.getPos().map(pos -> {
-            return Math.sqrt(pos.pos().toCenterPos().squaredDistanceTo(getX(), getBodyY(0.5), getZ()));
+            return Math.sqrt(com.invasion.util.math.PosUtils.center(pos.pos()).distanceToSqr(getX(), getY(0.5), getZ()));
         }).orElse(Double.MAX_VALUE);
     }
 
     @Override
-    public boolean tryAttack(Entity target) {
-        boolean success = super.tryAttack(target);
+    public boolean doHurtTarget(ServerLevel serverLevel, Entity target) {
+        boolean success = super.doHurtTarget(serverLevel, target);
         if (success) {
             heal(4);
         }
@@ -74,21 +96,21 @@ public class IMWolfEntity extends WolfEntity implements IHasNexus {
     }
 
     @Override
-    protected void updateAttributesForTamed() {
-        getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(0.3);
-        super.updateAttributesForTamed();
+    protected void applyTamingSideEffects() {
+        getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3);
+        super.applyTamingSideEffects();
     }
 
     @Override
-    protected void updatePostDeath() {
+    protected void tickDeath() {
         if (++deathTime >= 120) {
-            getWorld().sendEntityStatus(this, EntityStatuses.ADD_DEATH_PARTICLES);
+            level().broadcastEntityEvent(this, EntityEvent.POOF);
             remove(Entity.RemovalReason.KILLED);
             for (int j = 0; j < 20; j++) {
-                getWorld().addParticle(ParticleTypes.EXPLOSION,
-                        getParticleX(2),
-                        getRandomBodyY(),
-                        getParticleZ(2),
+                level().addParticle(ParticleTypes.EXPLOSION,
+                        getRandomX(2),
+                        getRandomY(),
+                        getRandomZ(2),
                         getRandom().nextGaussian() * 0.02D,
                         getRandom().nextGaussian() * 0.02D,
                         getRandom().nextGaussian() * 0.02D
@@ -98,36 +120,36 @@ public class IMWolfEntity extends WolfEntity implements IHasNexus {
     }
 
     @Override
-    public void onDeath(DamageSource source) {
+    public void die(DamageSource source) {
         if (!respawnAtNexus()) {
-            super.onDeath(source);
+            super.die(source);
         }
     }
 
     public boolean respawnAtNexus() {
-        if (getWorld().isClient || !hasNexus() || getNexus().getMode() == Mode.STOPPED) {
+        if (level().isClientSide() || !hasNexus() || getNexus().getMode() == Mode.STOPPED) {
             return false;
         }
 
         return nexus.getPos().filter(center -> {
-            IMWolfEntity wolf = InvEntities.WOLF.create(getWorld());
-            Optional<Vec3d> respawnPoint = BlockPos.streamOutwards(center.pos(), 5, 3, 5).map(BlockPos::toBottomCenterPos)
+            IMWolfEntity wolf = InvEntities.WOLF.create(level(), EntitySpawnReason.EVENT);
+            Optional<Vec3> respawnPoint = BlockPos.withinManhattanStream(center.pos(), 5, 3, 5).map(Vec3::atBottomCenterOf)
                     .filter(pos -> {
-                        wolf.setPosition(pos);
-                        return wolf.canSpawn(getWorld(), SpawnReason.MOB_SUMMONED);
-                    }).sorted(Comparator.comparingDouble(pos -> center.pos().getSquaredDistance(pos.x, pos.y, pos.z)))
+                        wolf.setPos(pos);
+                        return wolf.checkSpawnRules(level(), EntitySpawnReason.MOB_SUMMONED);
+                    }).sorted(Comparator.comparingDouble(pos -> center.pos().distToLowCornerSqr(pos.x, pos.y, pos.z)))
                     .findAny();
 
             if (respawnPoint.isPresent()) {
-                wolf.copyFrom(this);
+                wolf.restoreFrom(this);
                 wolf.setNexus(getNexus());
-                wolf.setPosition(respawnPoint.get());
-                wolf.setRotation(0, 0);
+                wolf.setPos(respawnPoint.get());
+                wolf.setRot(0, 0);
                 wolf.heal(60.0F);
                 if (!isRemoved()) {
                     discard();
                 }
-                getWorld().spawnEntity(wolf);
+                level().addFreshEntity(wolf);
                 return true;
             }
             InvasionMod.LOGGER.warn("No respawn spot for wolf");
@@ -136,31 +158,31 @@ public class IMWolfEntity extends WolfEntity implements IHasNexus {
     }
 
     @Override
-    public ActionResult interactMob(PlayerEntity player, Hand hand) {
-        ItemStack stack = player.getStackInHand(hand);
-        if (stack.isOf(InvItems.STRANGE_BONE) && isOwner(player)) {
-            if (!getWorld().isClient) {
-                NexusAccess newNexus = IHasNexus.findNexus(getWorld(), getBlockPos());
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (stack.is(InvItems.STRANGE_BONE) && isOwnedBy(player)) {
+            if (!level().isClientSide()) {
+                NexusAccess newNexus = IHasNexus.findNexus(level(), blockPosition());
                 if (newNexus != null && newNexus != getNexus()) {
                     setNexus(newNexus);
-                    stack.decrementUnlessCreative(1, player);
+                    stack.consume(1, player);
                     setHealth(25);
                 }
             }
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        return super.interactMob(player, hand);
+        return super.mobInteract(player, hand);
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound compound) {
-        super.writeCustomDataToNbt(compound);
+    public void addAdditionalSaveData(ValueOutput compound) {
+        super.addAdditionalSaveData(compound);
         nexus.writeNbt(compound);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound compound) {
-        super.readCustomDataFromNbt(compound);
+    public void readAdditionalSaveData(ValueInput compound) {
+        super.readAdditionalSaveData(compound);
         nexus.readNbt(compound);
     }
 }

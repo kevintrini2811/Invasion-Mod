@@ -1,11 +1,11 @@
 package com.invasion.util.math;
 
 import java.util.List;
-
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 public interface PosUtils {
     @Deprecated
@@ -43,6 +43,14 @@ public interface PosUtils {
         if (delta.getY() <= 0) {
             return 0;
         }
-        return (delta.getY() + 8) / (Math.sqrt(MathHelper.square(delta.getX()) + MathHelper.square(delta.getZ())) + MathHelper.EPSILON);
+        return (delta.getY() + 8) / (Math.sqrt(Mth.square(delta.getX()) + Mth.square(delta.getZ())) + Mth.EPSILON);
+    }
+
+    static Vec3 center(BlockPos pos) {
+        return Vec3.atLowerCornerOf(pos).add(0.5, 0.5, 0.5);
+    }
+
+    static Vec3 bottomCenter(BlockPos pos) {
+        return Vec3.atLowerCornerOf(pos).add(0.5, 0.0, 0.5);
     }
 }

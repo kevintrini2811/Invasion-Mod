@@ -4,65 +4,87 @@ import com.invasion.InvSounds;
 import com.invasion.block.BlockSpecial;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
-import net.minecraft.world.World.ExplosionSourceType;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level.ExplosionInteraction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.server.level.ServerLevel;
 
-public class BoulderEntity extends PersistentProjectileEntity {
+public class BoulderEntity extends AbstractArrow {
 
     private boolean exploded;
 
-    public BoulderEntity(EntityType<? extends BoulderEntity> type, World world) {
+    public BoulderEntity(EntityType<? extends BoulderEntity> type, Level world) {
         super(type, world);
-        setStack(getDefaultItemStack());
+        setPickupItemStack(getDefaultPickupItem());
     }
 
     @Override
-    protected ItemStack getDefaultItemStack() {
-        return Items.STONE.getDefaultStack();
+    protected ItemStack getDefaultPickupItem() {
+        return Items.STONE.getDefaultInstance();
     }
 
     @Override
-    protected boolean tryPickup(PlayerEntity player) {
-        return !getItemStack().isEmpty() && super.tryPickup(player);
+    protected boolean tryPickup(Player player) {
+        return !getPickupItemStackOrigin().isEmpty() && super.tryPickup(player);
     }
 
     @Override
-    protected void onEntityHit(EntityHitResult hit) {
+    protected void onHitEntity(EntityHitResult hit) {
         playSound(InvSounds.ENTITY_BOULDER_LAND, 1, 0.9F / (getRandom().nextFloat() * 0.2F + 0.9F));
-        getWorld().emitGameEvent(this, GameEvent.HIT_GROUND, getBlockPos());
+        level().gameEvent(this, GameEvent.HIT_GROUND, blockPosition());
     }
 
     @Override
-    protected void onBlockHit(BlockHitResult hit) {
-        super.onBlockHit(hit);
-        BlockState state = getWorld().getBlockState(hit.getBlockPos());
+    protected void onHitBlock(BlockHitResult hit) {
+        super.onHitBlock(hit);
+        if (!(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+
+        BlockState state = level().getBlockState(hit.getBlockPos());
         if (!exploded) {
             exploded = true;
-            if (state.isOf(InvBlocks.NEXUS_CORE) && getWorld().getBlockEntity(hit.getBlockPos()) instanceof NexusBlockEntity nexus) {
+            if (state.is(InvBlocks.NEXUS_CORE) && level().getBlockEntity(hit.getBlockPos()) instanceof NexusBlockEntity nexus) {
                 // TODO: Boulder damage source type
-                nexus.getNexus().damage(getDamageSources().arrow(this, getOwner()), 2);
-            } else if (state.getHardness(getWorld(), hit.getBlockPos()) >= 0) {
+                nexus.getNexus().damage(damageSources().arrow(this, getOwner()), 2);
+            } else if (state.getDestroySpeed(level(), hit.getBlockPos()) >= 0) {
 
-                if (!state.isIn(BlockTags.WITHER_IMMUNE) && !state.isIn(BlockTags.DRAGON_IMMUNE)) {
-                    getWorld().emitGameEvent(this, GameEvent.HIT_GROUND, hit.getBlockPos());
+                if (!state.is(BlockTags.WITHER_IMMUNE) && !state.is(BlockTags.DRAGON_IMMUNE)) {
+                    level().gameEvent(this, GameEvent.HIT_GROUND, hit.getBlockPos());
                     if (BlockSpecial.of(state) == BlockSpecial.DEFLECTION && getRandom().nextInt(2) == 0) {
                         discard();
                         return;
                     }
-                    if (getWorld().getGameRules().getBoolean(GameRules.DO_MOB_GRIEFING)) {
-                        getWorld().createExplosion(this, getX(), getY(), getZ(), 2, ExplosionSourceType.BLOCK);
+                    if (serverLevel.getGameRules().get(GameRules.MOB_GRIEFING)) {
+                        level().explode(this, getX(), getY(), getZ(), 2, ExplosionInteraction.BLOCK);
                     }
                 }
             }
@@ -70,14 +92,14 @@ public class BoulderEntity extends PersistentProjectileEntity {
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        exploded = nbt.getBoolean("exploded");
+    public void readAdditionalSaveData(ValueInput nbt) {
+        super.readAdditionalSaveData(nbt);
+        exploded = nbt.getBooleanOr("exploded", false);
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
+    public void addAdditionalSaveData(ValueOutput nbt) {
+        super.addAdditionalSaveData(nbt);
         nbt.putBoolean("exploded", exploded);
     }
 }

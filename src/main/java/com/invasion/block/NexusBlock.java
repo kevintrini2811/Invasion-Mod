@@ -2,66 +2,65 @@ package com.invasion.block;
 
 import com.invasion.nexus.Nexus;
 import com.invasion.nexus.WorldNexusStorage;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.item.InvItems;
 import com.mojang.serialization.MapCodec;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.BlockHitResult;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
+public class NexusBlock extends BaseEntityBlock {
+    private static final MapCodec<NexusBlock> CODEC = Block.simpleCodec(NexusBlock::new);
+    public static final BooleanProperty LIT = BooleanProperty.create("lit");
 
-public class NexusBlock extends BlockWithEntity {
-    private static final MapCodec<NexusBlock> CODEC = Block.createCodec(NexusBlock::new);
-    public static final BooleanProperty LIT = BooleanProperty.of("lit");
-
-    public NexusBlock(Settings settings) {
+    public NexusBlock(Properties settings) {
         super(settings);
-        setDefaultState(getDefaultState().with(LIT, false));
+        registerDefaultState(defaultBlockState().setValue(LIT, false));
     }
 
     @Override
-    protected BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
 
     @Override
-    protected MapCodec<? extends BlockWithEntity> getCodec() {
+    protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(LIT);
     }
 
     @Override
-    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world,
-                                             BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level world,
+                                             BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 
         // SERVER: Nexus für die Commands merken
-        if (!world.isClient) {
-            ServerWorld sw = (ServerWorld) world;
+        if (!world.isClientSide()) {
+            ServerLevel sw = (ServerLevel) world;
 
             world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(be -> {
                 NexusBlockEntity nexusBe = (NexusBlockEntity) be;
@@ -71,16 +70,14 @@ public class NexusBlock extends BlockWithEntity {
                 if (access instanceof Nexus nexus) {
                     WorldNexusStorage storage = WorldNexusStorage.of(sw);
                     if (storage.setActiveNexus(nexus)) {
-                        player.sendMessage(
-                                Text.literal("Nexus für /invasion-Befehle ausgewählt.")
-                                        .formatted(Formatting.GREEN),
-                                false
+                        player.sendSystemMessage(
+                                Component.literal("Nexus für /invasion-Befehle ausgewählt.")
+                                        .withStyle(ChatFormatting.GREEN)
                         );
                     } else {
-                        player.sendMessage(
-                                Text.literal("Ein anderer Nexus ist bereits aktiv.")
-                                        .formatted(Formatting.RED),
-                                false
+                        player.sendSystemMessage(
+                                Component.literal("Ein anderer Nexus ist bereits aktiv.")
+                                        .withStyle(ChatFormatting.RED)
                         );
                     }
                 }
@@ -88,25 +85,25 @@ public class NexusBlock extends BlockWithEntity {
         }
 
         // Vorhandenes Verhalten (GUI öffnen) beibehalten
-        if (!stack.isOf(InvItems.MATERIAL_PROBE)
-                && !stack.isOf(InvItems.NEXUS_ADJUSTER)
-                && !stack.getRegistryEntry().matchesKey(InvItems.DEBUG_WAND)) {
+        if (!stack.is(InvItems.MATERIAL_PROBE)
+                && !stack.is(InvItems.NEXUS_ADJUSTER)
+                && !stack.is(InvItems.DEBUG_WAND)) {
 
-            NamedScreenHandlerFactory factory = createScreenHandlerFactory(state, world, pos);
+            MenuProvider factory = getMenuProvider(state, world, pos);
             if (factory != null) {
-                player.openHandledScreen(factory);
+                player.openMenu(factory);
             }
-            return ItemActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.PASS;
     }
 
 
     @Override
-    public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {
+    public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
 
-        if (!state.get(LIT)) {
+        if (!state.getValue(LIT)) {
             return;
         }
 
@@ -137,26 +134,24 @@ public class NexusBlock extends BlockWithEntity {
     }
 
     @Override
-    public NexusBlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public NexusBlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new NexusBlockEntity(pos, state);
     }
 
     @Override
-    protected void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
-            world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(NexusBlockEntity::discard);
-        }
-        super.onStateReplaced(state, world, pos, newState, moved);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean moved) {
+        world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(NexusBlockEntity::discard);
+        super.affectNeighborsAfterRemoval(state, world, pos, moved);
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return world.isClient ? null : validateTicker(type, InvBlockEntities.NEXUS, (w, pos, s, entity) -> entity.tick((ServerWorld)w, pos, s));
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
+        return world.isClientSide() ? null : createTickerHelper(type, InvBlockEntities.NEXUS, (w, pos, s, entity) -> entity.tick((ServerLevel)w, pos, s));
     }
 
     @Override
-    protected float calcBlockBreakingDelta(BlockState state, PlayerEntity player, BlockView world, BlockPos pos) {
-        return state.get(LIT) ? -1 : super.calcBlockBreakingDelta(state, player, world, pos);
+    protected float getDestroyProgress(BlockState state, Player player, BlockGetter world, BlockPos pos) {
+        return state.getValue(LIT) ? -1 : super.getDestroyProgress(state, player, world, pos);
     }
 }

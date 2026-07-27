@@ -3,16 +3,15 @@ package com.invasion.client.render.entity;
 import com.invasion.InvasionMod;
 import com.invasion.client.render.entity.model.ModelBird;
 import com.invasion.entity.VultureEntity;
-
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.LivingEntityRenderer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.resources.Identifier;
 
 public class VultureEntityRenderer extends LivingEntityRenderer<VultureEntity, ModelBird> {
 	private static final Identifier TEXTURE = InvasionMod.id("textures/bird_tx1.png");
 
-	public VultureEntityRenderer(EntityRendererFactory.Context ctx) {
-		super(ctx, new ModelBird(ModelBird.getTexturedModelData().createModel()), 0.4F);
+	public VultureEntityRenderer(EntityRendererProvider.Context ctx) {
+		super(ctx, new ModelBird(ModelBird.getTexturedModelData().bakeRoot()), 0.4F);
 	}
 
     @Override

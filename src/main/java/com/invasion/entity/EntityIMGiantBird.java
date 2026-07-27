@@ -13,19 +13,19 @@ import com.invasion.entity.ai.goal.PickUpEntityGoal;
 import com.invasion.entity.ai.goal.StabiliseFlightGoal;
 import com.invasion.entity.ai.goal.SwoopGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import com.invasion.entity.ai.goal.LookAtTargetGoal;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.ZombieEntity;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 public class EntityIMGiantBird extends VultureEntity {
     private static final Vector3f PICKUP_OFFSET = new Vector3f(0, 0.2F, -0.92F);
@@ -34,71 +34,71 @@ public class EntityIMGiantBird extends VultureEntity {
     private static final byte TRIGGER_SCREECH = 11;
     private static final byte TRIGGER_DEATHSOUND = 12;
 
-    public EntityIMGiantBird(EntityType<EntityIMGiantBird> type, World world) {
+    public EntityIMGiantBird(EntityType<EntityIMGiantBird> type, Level world) {
         super(type, world);
         setThrust(0.028F);
         setMaxPoweredFlightSpeed(0.9F);
         setLiftFactor(0.35F);
         setThrustComponentRatioMin(0.0F);
         setThrustComponentRatioMax(0.5F);
-        setMaxTurnForce((float)getGravity() * 8.0F);
+        setMaxTurnForce((float)getDefaultGravity() * 8.0F);
     }
 
-    public static DefaultAttributeContainer.Builder createVultureAttributes() {
+    public static AttributeSupplier.Builder createVultureAttributes() {
         return createBirdAttributes()
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5)
-                .add(EntityAttributes.GENERIC_GRAVITY, 0.03F)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.4F);
+                .add(Attributes.ATTACK_DAMAGE, 5)
+                .add(Attributes.GRAVITY, 0.03F)
+                .add(Attributes.MOVEMENT_SPEED, 0.4F);
     }
 
     @Override
-    protected void initGoals() {
-        goalSelector.add(0, new SwoopGoal(this));
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new SwoopGoal(this));
 
-        goalSelector.add(3, new BirdOfPreyGoal(this));
-        goalSelector.add(4, new FlyingStrikeGoal(this));
-        goalSelector.add(4, new FlyingTackleGoal(this));
-        goalSelector.add(4, new PickUpEntityGoal(this, PICKUP_OFFSET, 1.5F, 1.5F, 20, 45, 45));
-        goalSelector.add(4, new StabiliseFlightGoal(this, 35));
-        goalSelector.add(4, new FlyingCircleTargetGoal(this, 300, 16.0F, 45.0F));
-        goalSelector.add(4, new EntityAIBirdFight<>(this, ZombieEntity.class, 25, 0.4F));
-        goalSelector.add(4, new LookAtTargetGoal(this));
+        goalSelector.addGoal(3, new BirdOfPreyGoal(this));
+        goalSelector.addGoal(4, new FlyingStrikeGoal(this));
+        goalSelector.addGoal(4, new FlyingTackleGoal(this));
+        goalSelector.addGoal(4, new PickUpEntityGoal(this, PICKUP_OFFSET, 1.5F, 1.5F, 20, 45, 45));
+        goalSelector.addGoal(4, new StabiliseFlightGoal(this, 35));
+        goalSelector.addGoal(4, new FlyingCircleTargetGoal(this, 300, 16.0F, 45.0F));
+        goalSelector.addGoal(4, new EntityAIBirdFight<>(this, Zombie.class, 25, 0.4F));
+        goalSelector.addGoal(4, new LookAtTargetGoal(this));
 
-        targetSelector.add(2, new CustomRangeActiveTargetGoal<>(this, ZombieEntity.class, 58.0F, true));
+        targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Zombie.class, 58.0F, true));
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (InvasionMod.getConfig().debugMode && !getWorld().isClient) {
-            setCustomName(Text.literal(getAIGoal() + "\n" + getNavigatorNew()));
+        if (InvasionMod.getConfig().debugMode && !level().isClientSide()) {
+            setCustomName(Component.literal(getAIGoal() + "\n" + getNavigatorNew()));
         }
     }
 
     @Override
-    protected void updatePassengerPosition(Entity passenger, Entity.PositionUpdater positionUpdater) {
-        super.updatePassengerPosition(passenger, positionUpdater);
-        passenger.setYaw(getCarriedEntityYawOffset() + getYaw());
+    protected void positionRider(Entity passenger, Entity.MoveFunction positionUpdater) {
+        super.positionRider(passenger, positionUpdater);
+        passenger.setYRot(getCarriedEntityYawOffset() + getYRot());
     }
 
     @Override
-    protected Vec3d getPassengerAttachmentPos(Entity passenger, EntityDimensions dimensions, float scaleFactor) {
+    protected Vec3 getPassengerAttachmentPoint(Entity passenger, EntityDimensions dimensions, float scaleFactor) {
         double x = PICKUP_OFFSET.x;
         double y = -MODEL_ROTATION_OFFSET_Y;
         double z = -PICKUP_OFFSET.z;
 
-        double dAngle = getPitch() * MathHelper.RADIANS_PER_DEGREE;
+        double dAngle = getXRot() * Mth.DEG_TO_RAD;
         double sinF = Math.sin(dAngle);
         double cosF = Math.cos(dAngle);
         double tmp = z * cosF - y * sinF;
         y = y * cosF + z * sinF;
         z = tmp;
 
-        dAngle = getYaw() * MathHelper.RADIANS_PER_DEGREE;
+        dAngle = getYRot() * Mth.DEG_TO_RAD;
         sinF = Math.sin(dAngle);
         cosF = Math.cos(dAngle);
 
-        return new Vec3d(
+        return new Vec3(
                 x * cosF - z * sinF,
                 y + MODEL_ROTATION_OFFSET_Y,
                 z * cosF + x * sinF
@@ -107,9 +107,9 @@ public class EntityIMGiantBird extends VultureEntity {
 
     @Override
     public void doScreech() {
-        if (!getWorld().isClient) {
+        if (!level().isClientSide()) {
             playSound(InvSounds.ENTITY_VULTURE_SCREECH, 6, 1 + (getRandom().nextFloat() * 0.2F - 0.1F));
-            getWorld().sendEntityStatus(this, TRIGGER_SCREECH);
+            level().broadcastEntityEvent(this, TRIGGER_SCREECH);
         } else {
             setBeakState(35);
         }
@@ -137,16 +137,16 @@ public class EntityIMGiantBird extends VultureEntity {
 
     @Override
     protected void doDeathSound() {
-        if (!getWorld().isClient) {
-            getWorld().sendEntityStatus(this, TRIGGER_DEATHSOUND);
+        if (!level().isClientSide()) {
+            level().broadcastEntityEvent(this, TRIGGER_DEATHSOUND);
         } else {
             setBeakState(25);
         }
     }
 
     @Override
-    public void handleStatus(byte status) {
-        super.handleStatus(status);
+    public void handleEntityEvent(byte status) {
+        super.handleEntityEvent(status);
         if (status == TRIGGER_SQUAWK) {
             doSquawk();
         } else if (status == TRIGGER_SCREECH) {
@@ -157,9 +157,9 @@ public class EntityIMGiantBird extends VultureEntity {
     }
 
     private void doSquawk() {
-        if (!getWorld().isClient) {
+        if (!level().isClientSide()) {
             playSound(InvSounds.ENTITY_VULTURE_SQUAWK, 1.9F, 1.0F + getRandom().nextFloat() * 0.2F - 0.1F);
-            getWorld().sendEntityStatus(this, TRIGGER_SQUAWK);
+            level().broadcastEntityEvent(this, TRIGGER_SQUAWK);
         } else {
             setBeakState(10);
         }

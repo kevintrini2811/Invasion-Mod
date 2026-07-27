@@ -1,39 +1,37 @@
-buildscript {
-    dependencies {
-        classpath 'com.github.dexman545:Outlet:1.6.1'
-    }
-}
 plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
     id 'maven-publish'
-    id 'com.modrinth.minotaur' version '2.+'
-    id 'org.ajoberstar.reckon' version '0.13.1'
 }
-apply plugin: 'io.github.dexman545.outlet'
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
     withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
-
-outlet.allowSnapshotsForProject = false
-outlet.mcVersionRange = ">=${project.minecraft_version}"
 
 group = project.group
 description = project.displayname
-archivesBaseName = project.name
+version = project.mod_version
+
+base {
+    archivesName = project.name
+}
+
+sourceSets {
+    main {
+        java {
+            // Kept in the repository while the pre-26.2 immediate-mode renderer is
+            // replaced with the new render-state submission API.
+            exclude 'com/invasion/client/render/entity/**'
+            exclude 'com/invasion/client/particle/**'
+            exclude 'com/invasion/mixin/client/**'
+        }
+    }
+}
 
 
 loom {
-    mixin.defaultRefmapName = 'invasion.mixin.refmap.json'
-   // accessWidenerPath = file('src/main/resources/invasion.aw')
-}
-
-reckon {
-    scopeFromProp()
-    stageFromProp('beta', 'rc', 'final')
+    // Minecraft 26.2 is unobfuscated; no Yarn mappings or remapping step is needed.
 }
 
 repositories {
@@ -43,9 +41,8 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modApi "net.fabricmc:fabric-loader:${project.loader_version}"
-    modApi "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     /*
     compile "mcp.mobius.waila:Waila:${waila_version}_${mc_version}"
@@ -55,7 +52,6 @@ dependencies {
     compile fileTree(dir: 'libs', include: '*.jar')
     */
 
-    modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 }
 
 processResources {
@@ -74,30 +70,6 @@ processResources {
 
 tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
+    options.release = 25
+    options.compilerArgs += ['-Xmaxerrs', '5000']
 }
-
-
-tasks.modrinth {
-    onlyIf {
-      def stage = version.version.stage.value
-      stage == null || stage.name != 'beta'
-    }
-}
-
-modrinth {
-    token = System.env.MODRINTH_KEY
-    projectId = project.modrinth_project_id
-    //featured = true
-    versionNumber = version.toString()
-    versionName = archivesBaseName + '-' + version
-    changelog = "[Changelog](https://github.com/MineLittlePony/MineLittlePony/releases/tag/${version.toString()})"
-    loaders = ['fabric', 'quilt']
-    uploadFile = remapJar
-    outlet.mcVersions().each{ver ->
-      gameVersions.add ver
-    }
-    dependencies {
-       required.project 'P7dR8mSH' // Fabric API
-    }
-}
-

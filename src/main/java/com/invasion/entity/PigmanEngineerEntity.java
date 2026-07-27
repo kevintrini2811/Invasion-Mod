@@ -14,35 +14,61 @@ import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.Nexus;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
 import com.invasion.nexus.NexusAccess;
-
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.world.LocalDifficulty;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.RandomSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.DifficultyInstance;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Item;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.server.level.ServerLevel;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
@@ -62,9 +88,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             return;
         }
 
-        World world = getWorld();
+        Level world = level();
         BlockPos nexusPos = nexus.getOrigin();
-        BlockPos mobPos = this.getBlockPos();
+        BlockPos mobPos = this.blockPosition();
 
         // Vertikaler Abstand zum Nexus
         int dy = nexusPos.getY() - mobPos.getY();
@@ -84,21 +110,21 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
 
         // Richtung zum Nexus (nur horizontal)
-        Direction orientation = Direction.getFacing(dx, 0.0D, dz);
+        Direction orientation = Direction.getApproximateNearest(dx, 0.0D, dz);
         if (!orientation.getAxis().isHorizontal()) {
-            orientation = this.getHorizontalFacing();
+            orientation = this.getDirection();
         }
 
         // Basis-Position: Block auf dem wir stehen / vor uns
         BlockPos basePos = mobPos;
         BlockState baseState = world.getBlockState(basePos);
         if (!PathingUtil.isAirOrReplaceable(baseState)) {
-            basePos = basePos.offset(orientation);
+            basePos = basePos.relative(orientation);
         }
 
         // Nexus über uns -> Turm nach oben
         if (dy > 0) {
-            BlockPos above = basePos.up();
+            BlockPos above = basePos.above();
             if (world.getBlockState(above).isAir()) {
                 // Über uns ist Luft -> noch nicht direkt unter der Decke
                 return;
@@ -115,7 +141,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             );
         } else {
             // Nexus unter uns -> Schacht nach unten
-            BlockPos below = basePos.down();
+            BlockPos below = basePos.below();
             if (world.getBlockState(below).isAir()) {
                 // Unter uns ist Luft -> kein solider Boden zum Reinarbeiten
                 return;
@@ -137,52 +163,52 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
 
 
-    public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, World world) {
+    public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, Level world) {
         super(type, world);
     }
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.GENERIC_FOLLOW_RANGE, 35.0)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.23F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 2)
-                .add(EntityAttributes.GENERIC_ARMOR, 2.0)
-                .add(EntityAttributes.ZOMBIE_SPAWN_REINFORCEMENTS)
-                .add(EntityAttributes.GENERIC_STEP_HEIGHT, 1);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.FOLLOW_RANGE, 35.0)
+                .add(Attributes.MOVEMENT_SPEED, 0.23F)
+                .add(Attributes.ATTACK_DAMAGE, 2)
+                .add(Attributes.ARMOR, 2.0)
+                .add(Attributes.SPAWN_REINFORCEMENTS_CHANCE)
+                .add(Attributes.STEP_HEIGHT, 1);
     }
 
     @Override
-    protected EntityNavigation createNavigation(World world) {
+    protected PathNavigation createNavigation(Level world) {
         return new BuilderIMMobNavigation(this);
     }
 
     @Override
-    protected void initGoals() {
-        goalSelector.add(0, new SwimGoal(this));
-        goalSelector.add(0, new MineBlockGoal(this));
-        goalSelector.add(1, new AttackNexusGoal<>(this));
-        goalSelector.add(2, new GoToNexusGoal(this));
-        goalSelector.add(3, new MobMeleeAttackGoal(this, 1, false));
-        goalSelector.add(7, new WanderAroundFarGoal(this, 1));
-        goalSelector.add(8, new LookAtEntityGoal(this, PlayerEntity.class, 7));
-        goalSelector.add(9, new LookAtEntityGoal(this, IMCreeperEntity.class, 12));
-        goalSelector.add(9, new LookAroundGoal(this));
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new MineBlockGoal(this));
+        goalSelector.addGoal(1, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(2, new GoToNexusGoal(this));
+        goalSelector.addGoal(3, new MobMeleeAttackGoal(this, 1, false));
+        goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 7));
+        goalSelector.addGoal(9, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12));
+        goalSelector.addGoal(9, new RandomLookAroundGoal(this));
 
-        targetSelector.add(1, new CustomRangeActiveTargetGoal<>(this, VillagerEntity.class, 3, true));
-        targetSelector.add(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, 3, true), this::hasNexus));
-        targetSelector.add(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getSenseRange, false), () -> !hasNexus()));
-        targetSelector.add(2, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getAggroRange, true), () -> !hasNexus()));
-        targetSelector.add(3, new RevengeGoal(this));
+        targetSelector.addGoal(1, new CustomRangeActiveTargetGoal<>(this, Villager.class, 3, true));
+        targetSelector.addGoal(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, Player.class, 3, true), this::hasNexus));
+        targetSelector.addGoal(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false), () -> !hasNexus()));
+        targetSelector.addGoal(2, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true), () -> !hasNexus()));
+        targetSelector.addGoal(3, new HurtByTargetGoal(this));
     }
 
     @Override
-    protected void initEquipment(Random random, LocalDifficulty localDifficulty) {
+    protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance localDifficulty) {
         Item heldItem = switch (getRandom().nextInt(3)) {
             case 0 -> Items.LADDER;
             case 1 -> Items.IRON_PICKAXE;
             default -> InvItems.ENGY_HAMMER;
         };
-        equipStack(EquipmentSlot.MAINHAND, heldItem.getDefaultStack());
+        setItemSlot(EquipmentSlot.MAINHAND, heldItem.getDefaultInstance());
     }
 
     @Override
@@ -196,11 +222,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     @Override
-    public void mobTick() {
-        super.mobTick();
+    public void customServerAiStep(ServerLevel serverLevel) {
+        super.customServerAiStep(serverLevel);
         terrainModifier.onUpdate();
 
-        if (!getWorld().isClient) {
+        if (!level().isClientSide()) {
             // Wenn gerade kein anderer Baujob läuft:
             if (!terrainModifier.isBusy()) {
                 // Notfall-Turm direkt unter dem Nexus ausprobieren
@@ -219,27 +245,27 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
 
     @Override
-    public void tickMovement() {
-        super.tickMovement();
+    public void aiStep() {
+        super.aiStep();
         terrainBuilder.setBuildRate(1 + supportThisTick * 0.33F);
         supportThisTick = 0;
     }
 
 
     @Override
-    public void travel(Vec3d movementInput) {
-        if (!this.getWorld().isClient && terrainModifier.isBusy() && currentBuildTarget != null) {
+    public void travel(Vec3 movementInput) {
+        if (!this.level().isClientSide() && terrainModifier.isBusy() && currentBuildTarget != null) {
 
             double maxReach = 4.5D;           // wie im TerrainModifier
             double maxReachSq = maxReach * maxReach;
 
-            double distSq = this.getEyePos().squaredDistanceTo(
-                    Vec3d.ofCenter(currentBuildTarget)
+            double distSq = this.getEyePosition().distanceToSqr(
+                    Vec3.atCenterOf(currentBuildTarget)
             );
 
             // Erst wenn er WIRKLICH in Reichweite ist, einfrieren
             if (distSq <= maxReachSq) {
-                super.travel(Vec3d.ZERO);
+                super.travel(Vec3.ZERO);
                 return;
             }
         }
@@ -257,13 +283,13 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     protected void updateAnimation() {
-        if (!getWorld().isClient && terrainModifier.isBusy()) {
-            swingHand(Hand.MAIN_HAND);
+        if (!level().isClientSide() && terrainModifier.isBusy()) {
+            swing(InteractionHand.MAIN_HAND);
             PathAction currentAction = getNavigatorNew().getCurrentWorkingAction();
             if (currentAction == PathAction.NONE) {
-                equipStack(EquipmentSlot.MAINHAND, Items.IRON_PICKAXE.getDefaultStack());
+                setItemSlot(EquipmentSlot.MAINHAND, Items.IRON_PICKAXE.getDefaultInstance());
             } else {
-                equipStack(EquipmentSlot.MAINHAND, InvItems.ENGY_HAMMER.getDefaultStack());
+                setItemSlot(EquipmentSlot.MAINHAND, InvItems.ENGY_HAMMER.getDefaultInstance());
             }
         }
     }
@@ -285,7 +311,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         if (action.getType() == PathAction.Type.TOWER) {
             Direction dir = action.getOrientation();
             if (dir == null || !dir.getAxis().isHorizontal()) {
-                dir = getHorizontalFacing();
+                dir = getDirection();
             }
 
             int startY = pos.getY();
@@ -329,7 +355,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             return terrainModifier.submitJob(pos, asker, p -> {
                 Direction direction = action.getOrientation();
                 if (direction == null) {
-                    direction = getHorizontalFacing();
+                    direction = getDirection();
                 }
 
                 // NEU:
@@ -353,20 +379,20 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_AMBIENT;
+        return SoundEvents.ZOMBIFIED_PIGLIN_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT;
+        return SoundEvents.ZOMBIFIED_PIGLIN_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_DEATH;
+        return SoundEvents.ZOMBIFIED_PIGLIN_DEATH;
     }
 
-    public void supportForTick(MobEntity entity, float amount) {
+    public void supportForTick(Mob entity, float amount) {
         supportThisTick += amount;
     }
 

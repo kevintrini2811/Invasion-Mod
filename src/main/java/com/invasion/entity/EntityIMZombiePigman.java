@@ -15,118 +15,143 @@ import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
-
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.ZombieEntity;
-import net.minecraft.entity.passive.IronGolemEntity;
-import net.minecraft.entity.passive.MerchantEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 public class EntityIMZombiePigman extends AbstractIMZombieEntity {
-    private static final TrackedData<Boolean> CHARGING = DataTracker.registerData(EntityIMZombiePigman.class, TrackedDataHandlerRegistry.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> CHARGING = SynchedEntityData.defineId(EntityIMZombiePigman.class, EntityDataSerializers.BOOLEAN);
 
-    public EntityIMZombiePigman(EntityType<EntityIMZombiePigman> type, World world) {
+    public EntityIMZombiePigman(EntityType<EntityIMZombiePigman> type, Level world) {
         super(type, world, 0.75F);
         setFireImmune(true);
         getNavigatorNew().setCanDestroyBlocks(true);
     }
 
-    public static DefaultAttributeContainer.Builder createT1Attributes() {
-        return ZombieEntity.createZombieAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.25F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 8);
+    public static AttributeSupplier.Builder createT1Attributes() {
+        return Zombie.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.25F)
+                .add(Attributes.ATTACK_DAMAGE, 8);
     }
 
-    public static DefaultAttributeContainer.Builder createT2Attributes() {
-        return ZombieEntity.createZombieAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.35F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 12);
+    public static AttributeSupplier.Builder createT2Attributes() {
+        return Zombie.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.35F)
+                .add(Attributes.ATTACK_DAMAGE, 12);
     }
 
-    public static DefaultAttributeContainer.Builder createT3Attributes() {
-        return ZombieEntity.createZombieAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.2F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 18);
-    }
-
-    @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(CHARGING, false);
+    public static AttributeSupplier.Builder createT3Attributes() {
+        return Zombie.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.2F)
+                .add(Attributes.ATTACK_DAMAGE, 18);
     }
 
     @Override
-    protected void initGoals() {
-        goalSelector.add(0, new SwimGoal(this));
-        goalSelector.add(0, new MineBlockGoal(this));
-        goalSelector.add(1, new PredicatedGoal(new ChargeMobGoal<>(this, PlayerEntity.class, 0.75F), () -> getTier() == 3));
-        goalSelector.add(2, new AttackNexusGoal<>(this));
-        goalSelector.add(4, new ProvideSupportGoal(this, 4, true));
-        goalSelector.add(6, new GoToNexusGoal(this));
-        goalSelector.add(7, new MobMeleeAttackGoal(this, 1.4F, false));
-        goalSelector.add(7, new WanderAroundFarGoal(this, 1));
-        goalSelector.add(8, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
-        goalSelector.add(9, new LookAtEntityGoal(this, IMCreeperEntity.class, 12.0F));
-        goalSelector.add(9, new LookAroundGoal(this));
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(CHARGING, false);
+    }
 
-        targetSelector.add(0, new RetaliateGoal(this));
-        targetSelector.add(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getAggroRange, false), () -> getTier() != 3));
-        targetSelector.add(2, new CustomRangeActiveTargetGoal<>(this, PlayerEntity.class, this::getAggroRange, true));
-        targetSelector.add(3, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F), () -> getTier() != 3 && NoNexusPathGoal.isLostPathToNexus(this)));
-        targetSelector.add(4, new CustomRangeActiveTargetGoal<>(this, MerchantEntity.class, this::getAggroRange, true));
-        targetSelector.add(4, new CustomRangeActiveTargetGoal<>(this, IronGolemEntity.class, this::getAggroRange, true));
-        targetSelector.add(5, new RevengeGoal(this));
+    @Override
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new MineBlockGoal(this));
+        goalSelector.addGoal(1, new PredicatedGoal(new ChargeMobGoal<>(this, Player.class, 0.75F), () -> getTier() == 3));
+        goalSelector.addGoal(2, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(4, new ProvideSupportGoal(this, 4, true));
+        goalSelector.addGoal(6, new GoToNexusGoal(this));
+        goalSelector.addGoal(7, new MobMeleeAttackGoal(this, 1.4F, false));
+        goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        goalSelector.addGoal(9, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12.0F));
+        goalSelector.addGoal(9, new RandomLookAroundGoal(this));
+
+        targetSelector.addGoal(0, new RetaliateGoal(this));
+        targetSelector.addGoal(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, false), () -> getTier() != 3));
+        targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
+        targetSelector.addGoal(3, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F), () -> getTier() != 3 && NoNexusPathGoal.isLostPathToNexus(this)));
+        targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, AbstractVillager.class, this::getAggroRange, true));
+        targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, IronGolem.class, this::getAggroRange, true));
+        targetSelector.addGoal(5, new HurtByTargetGoal(this));
     }
 
     public boolean isCharging() {
-        return dataTracker.get(CHARGING);
+        return entityData.get(CHARGING);
     }
 
     public void setCharging(boolean charging) {
-        dataTracker.set(CHARGING, charging);
+        entityData.set(CHARGING, charging);
     }
 
     @Override
-    public void tickMovement() {
-        super.tickMovement();
+    public void aiStep() {
+        super.aiStep();
         if (isCharging()) {
-            boolean mobgriefing = !getWorld().isClient || getWorld().getGameRules().getBoolean(GameRules.DO_MOB_GRIEFING);
+            boolean mobgriefing = level() instanceof ServerLevel serverLevel
+                    && serverLevel.getGameRules().get(GameRules.MOB_GRIEFING);
             boolean sound = false;
 
-            BlockPos center = BlockPos.ofFloored(getCameraPosVec(1).add(getRotationVec(1).normalize()));
+            BlockPos center = BlockPos.containing(getEyePosition(1).add(getViewVector(1).normalize()));
 
-            for (BlockPos pos : BlockPos.iterate(center.add(-1, -1, -1), center.add(1, 1, 1))) {
+            for (BlockPos pos : BlockPos.betweenClosed(center.offset(-1, -1, -1), center.offset(1, 1, 1))) {
                 if (IMLandPathNodeMaker.canMineBlock(this, pos)) {
                     sound = true;
                     if (mobgriefing) {
-                        getWorld().breakBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
+                        level().destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
                     }
 
                     for (int i = 0; i < 10; i++) {
-                        double x = getRandom().nextTriangular(pos.getX() + 0.5, 0.5);
-                        double y = getRandom().nextTriangular(pos.getY() + 0.5, 0.5);
-                        double z = getRandom().nextTriangular(pos.getZ() + 0.5, 0.5);
-                        getWorld().addParticle(ParticleTypes.CLOUD,
+                        double x = getRandom().triangle(pos.getX() + 0.5, 0.5);
+                        double y = getRandom().triangle(pos.getY() + 0.5, 0.5);
+                        double z = getRandom().triangle(pos.getZ() + 0.5, 0.5);
+                        level().addParticle(ParticleTypes.CLOUD,
                                 x, y, z,
                                 pos.getX() + 0.5 - x,
                                 pos.getY() + 0.5 - y,
@@ -136,7 +161,7 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
                 }
             }
             if (sound) {
-                playSound(SoundEvents.ENTITY_GENERIC_EXPLODE.value(), 0.2F, 0.5F);
+                playSound(SoundEvents.GENERIC_EXPLODE.value(), 0.2F, 0.5F);
             }
         }
     }
@@ -153,22 +178,22 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
             return getRandom().nextInt(3) == 0 ? InvSounds.ENTITY_BIG_ZOMBIE_AMBIENT : null;
         }
 
-        return SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_AMBIENT;
+        return SoundEvents.ZOMBIFIED_PIGLIN_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_HURT;
+        return SoundEvents.ZOMBIFIED_PIGLIN_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_ZOMBIFIED_PIGLIN_DEATH;
+        return SoundEvents.ZOMBIFIED_PIGLIN_DEATH;
     }
 
     @Override
     public int getTextureId() {
-        return MathHelper.clamp(getTier() - 1, 0, 2);
+        return Mth.clamp(getTier() - 1, 0, 2);
     }
 
     @Override
@@ -176,26 +201,26 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
         if (getTier() == 1) {
             setBaseMovementSpeed(0.25F);
             setAttackStrength(8);
-            equipStack(EquipmentSlot.MAINHAND, Items.GOLDEN_SWORD.getDefaultStack());
-            setEquipmentDropChance(EquipmentSlot.MAINHAND, 0.2F);
+            setItemSlot(EquipmentSlot.MAINHAND, Items.GOLDEN_SWORD.getDefaultInstance());
+            setDropChance(EquipmentSlot.MAINHAND, 0.2F);
         } else if (getTier() == 2) {
             setBaseMovementSpeed(0.35F);
             setAttackStrength(12);
 
             if (getRandom().nextInt(5) == 1) {
-                equipStack(EquipmentSlot.HEAD, Items.GOLDEN_HELMET.getDefaultStack());
+                setItemSlot(EquipmentSlot.HEAD, Items.GOLDEN_HELMET.getDefaultInstance());
             }
 
             if (getRandom().nextInt(5) == 1) {
-                equipStack(EquipmentSlot.CHEST, Items.GOLDEN_CHESTPLATE.getDefaultStack());
+                setItemSlot(EquipmentSlot.CHEST, Items.GOLDEN_CHESTPLATE.getDefaultInstance());
             }
 
             if (getRandom().nextInt(5) == 1) {
-                equipStack(EquipmentSlot.LEGS, Items.GOLDEN_LEGGINGS.getDefaultStack());
+                setItemSlot(EquipmentSlot.LEGS, Items.GOLDEN_LEGGINGS.getDefaultInstance());
             }
 
             if (getRandom().nextInt(5) == 1) {
-                equipStack(EquipmentSlot.FEET, Items.GOLDEN_BOOTS.getDefaultStack());
+                setItemSlot(EquipmentSlot.FEET, Items.GOLDEN_BOOTS.getDefaultInstance());
             }
         } else if (isBrute()) {
             setBaseMovementSpeed(0.20F);

@@ -2,7 +2,13 @@ package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
 import java.util.Optional;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
@@ -10,36 +16,28 @@ import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.nexus.NexusAccess;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.pathing.NavigationType;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
 public class GoToNexusGoal extends Goal {
-    private PathAwareEntity mob;
+    private PathfinderMob mob;
     private final NexusEntity nexusEntity;
     private Optional<BlockPos> lastPathRequestPos = Optional.empty();
     private final Navigation navigation;
     private int pathRequestTimer;
     private int pathFailedCount;
 
-    public <E extends PathAwareEntity & NexusEntity> GoToNexusGoal(E entity) {
+    public <E extends PathfinderMob & NexusEntity> GoToNexusGoal(E entity) {
         this.mob = entity;
         this.nexusEntity = entity;
         this.navigation = entity.getNavigatorNew();
-        setControls(EnumSet.of(Control.MOVE, Control.LOOK));
+        setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     @Override
-    public boolean shouldRunEveryTick() {
+    public boolean requiresUpdateEveryTick() {
         return true;
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return nexusEntity.hasGoal(HasAiGoals.Goal.BREAK_NEXUS) && nexusEntity.hasNexus();
     }
 
@@ -53,24 +51,23 @@ public class GoToNexusGoal extends Goal {
                 NexusAccess nexus = nexusEntity.getNexus();
                 BlockPos target = nexus.getOrigin();
 
-                for (Direction i : Direction.Type.HORIZONTAL) {
-                    if (mob.getWorld().getBlockState(nexus.getOrigin().offset(i)).canPathfindThrough(NavigationType.LAND)) {
-                        target = target.add(i.getOffsetX(), 0, i.getOffsetZ());
+                for (Direction i : Direction.Plane.HORIZONTAL) {
+                    if (mob.level().getBlockState(nexus.getOrigin().relative(i)).isPathfindable(PathComputationType.LAND)) {
+                        target = target.offset(i.getStepX(), 0, i.getStepZ());
                     }
                 }
 
                 @Nullable
-                Path path = mob.getNavigation().findPathTo(target, (int)distance);
+                Path path = mob.getNavigation().createPath(target, (int)distance);
                 if (path != null) {
                     mob.setTarget(null);
-                    mob.getNavigation().startMovingAlong(path, distance > 2000 ? 2 : 1);
+                    mob.getNavigation().moveTo(path, distance > 2000 ? 2 : 1);
                     pathSet = true;
                 }
 
-                mob.setPositionTarget(nexus.getOrigin(), (int)distance);
             }
 
-            if (!pathSet || (navigation.getLastPathDistanceToTarget() > 3 && lastPathRequestPos.isPresent() && mob.getBlockPos().isWithinDistance(lastPathRequestPos.get(), 3.5))) {
+            if (!pathSet || (navigation.getLastPathDistanceToTarget() > 3 && lastPathRequestPos.isPresent() && mob.blockPosition().closerThan(lastPathRequestPos.get(), 3.5))) {
                 pathFailedCount++;
                 pathRequestTimer = 40 * pathFailedCount + mob.getRandom().nextInt(10);
             } else {
@@ -79,7 +76,7 @@ public class GoToNexusGoal extends Goal {
             }
 
 
-            lastPathRequestPos = Optional.of(mob.getBlockPos());
+            lastPathRequestPos = Optional.of(mob.blockPosition());
         }
     }
 
@@ -89,13 +86,12 @@ public class GoToNexusGoal extends Goal {
             @Nullable
             NexusAccess nexus = nexusEntity.getNexus();
             if (nexus != null) {
-                Vec3d target = nexus.getOrigin().toCenterPos();
-                mob.getMoveControl().moveTo(target.x, target.y, target.z, 1);
-                mob.setPositionTarget(nexus.getOrigin(), (int)nexusEntity.findDistanceToNexus());
+                Vec3 target = com.invasion.util.math.PosUtils.center(nexus.getOrigin());
+                mob.getMoveControl().setWantedPosition(target.x, target.y, target.z, 1);
                 mob.setTarget(null);
             }
         }
-        if (mob.getNavigation().isIdle() || nexusEntity.getNavigatorNew().getStuckTime() > 40) {
+        if (mob.getNavigation().isDone() || nexusEntity.getNavigatorNew().getStuckTime() > 40) {
             start();
         }
     }

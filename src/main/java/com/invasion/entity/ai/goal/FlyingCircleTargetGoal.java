@@ -3,9 +3,8 @@ package com.invasion.entity.ai.goal;
 import com.invasion.entity.EntityIMFlying;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.pathfinding.FlyingNavigation;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class FlyingCircleTargetGoal extends Goal {
     private static final int ATTACK_SEARCH_TIME = 400;
@@ -24,12 +23,12 @@ public class FlyingCircleTargetGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return mob.hasGoal(HasAiGoals.Goal.STAY_AT_RANGE) && hasValidTarget();
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         return mob.hasOrIsBetweenGoals(HasAiGoals.Goal.STAY_AT_RANGE, HasAiGoals.Goal.FIND_ATTACK_OPPORTUNITY) && hasValidTarget();
     }
 

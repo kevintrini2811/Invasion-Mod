@@ -2,14 +2,13 @@ package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
-
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class NoNexusPathGoal extends PredicatedGoal {
 	private static final float PATH_DISTANCE_TRIGGER = 4;
 
-	public <E extends MobEntity & NexusEntity> NoNexusPathGoal(E entity, Goal goal) {
+	public <E extends Mob & NexusEntity> NoNexusPathGoal(E entity, Goal goal) {
 		super(goal, () -> isLostPathToNexus(entity));
 	}
 

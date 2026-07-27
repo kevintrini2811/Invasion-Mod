@@ -11,24 +11,23 @@ import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.EntityConstruct.BuildableMob;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.level.entity.EntityAccess;
+import net.minecraft.world.level.pathfinder.Path;
 
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.LightType;
-import net.minecraft.world.entity.EntityLike;
-
-public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, EntityLike, Combatant<PathAwareEntity> {
+public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, EntityAccess, Combatant<PathfinderMob> {
     @Deprecated
-    static NbtComponent createVariant(int flavour, int tier) {
-        NbtCompound nbt = new NbtCompound();
+    static CustomData createVariant(int flavour, int tier) {
+        CompoundTag nbt = new CompoundTag();
         nbt.putInt("flavour", flavour);
         nbt.putInt("tier", tier);
-        return NbtComponent.of(nbt);
+        return CustomData.of(nbt);
     }
     float DEFAULT_AIR_RESISTANCE = 0.9995F;
     float DEFAULT_GROUND_FRICTION = 0.546F;
@@ -62,7 +61,7 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
     }
 
     default void setIsHoldingIntoLadder(boolean flag) {
-        asEntity().setSneaking(flag);
+        asEntity().setShiftKeyDown(flag);
     }
 
     @Override
@@ -86,25 +85,25 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
 
     @Deprecated
     default void setGravity(float acceleration) {
-        asEntity().getAttributeInstance(EntityAttributes.GENERIC_GRAVITY).setBaseValue(acceleration);
+        asEntity().getAttribute(Attributes.GRAVITY).setBaseValue(acceleration);
     }
 
     default void setAttackStrength(double attackStrength) {
-        asEntity().getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE).setBaseValue(attackStrength);
+        asEntity().getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(attackStrength);
     }
 
     default void setBaseMovementSpeed(double speed) {
-        asEntity().getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).setBaseValue(speed);
+        asEntity().getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(speed);
     }
 
     default double getAttackStrength() {
-        return asEntity().getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        return asEntity().getAttributeValue(Attributes.ATTACK_DAMAGE);
     }
 
     default boolean getLightLevelBelow8() {
-        BlockPos pos = asEntity().getBlockPos();
-        return asEntity().getWorld().getLightLevel(LightType.SKY, pos) <= asEntity().getRandom().nextInt(32)
-            && asEntity().getWorld().getLightLevel(LightType.BLOCK, pos) <= asEntity().getRandom().nextInt(8);
+        BlockPos pos = asEntity().blockPosition();
+        return asEntity().level().getBrightness(LightLayer.SKY, pos) <= asEntity().getRandom().nextInt(32)
+            && asEntity().level().getBrightness(LightLayer.BLOCK, pos) <= asEntity().getRandom().nextInt(8);
     }
 
     @Override

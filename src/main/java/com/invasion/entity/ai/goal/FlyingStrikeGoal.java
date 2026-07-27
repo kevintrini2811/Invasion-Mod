@@ -1,9 +1,11 @@
 package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.VultureEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.server.level.ServerLevel;
 import com.invasion.entity.HasAiGoals;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
 
 public class FlyingStrikeGoal extends Goal {
     private final VultureEntity theEntity;
@@ -13,13 +15,13 @@ public class FlyingStrikeGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return theEntity.hasAnyGoal(HasAiGoals.Goal.FLYING_STRIKE, HasAiGoals.Goal.SWOOP);
     }
 
     @Override
-    public boolean shouldContinue() {
-        return canStart();
+    public boolean canContinueToUse() {
+        return canUse();
     }
 
     @Override
@@ -60,6 +62,6 @@ public class FlyingStrikeGoal extends Goal {
     }
 
     private void doFlyByAttack(LivingEntity entity) {
-        this.theEntity.tryAttack(entity);
+        this.theEntity.doHurtTarget((ServerLevel) theEntity.level(), entity);
     }
 }
