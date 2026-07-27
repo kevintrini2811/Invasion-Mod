@@ -26,7 +26,7 @@ public class TrapItem extends Item {
             Vec3 pos = com.invasion.util.math.PosUtils.bottomCenter(context.getClickedPos().relative(context.getClickedFace()));
             TrapEntity trap = new TrapEntity(InvEntities.TRAP, world, pos.x(), pos.y(), pos.z(), trapType);
 
-            if (trap.isValidPlacement()
+            if (trap.isValidPlacement() && world.isUnobstructed(trap)
                     && world.getEntitiesOfClass(TrapEntity.class, trap.getBoundingBox(),
                     EntitySelector.NO_CREATIVE_OR_SPECTATOR).isEmpty()) {
                 if (!world.isClientSide()) {

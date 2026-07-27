@@ -182,7 +182,7 @@ public class TrapEntity extends Entity {
     public boolean isValidPlacement() {
         BlockPos below = blockPosition().below();
         BlockState supportingState = level().getBlockState(below);
-        return supportingState.entityCanStandOn(level(), below, this) && level().isUnobstructed(this);
+        return supportingState.entityCanStandOn(level(), below, this);
     }
 
     public boolean canBeCollidedWith() {
