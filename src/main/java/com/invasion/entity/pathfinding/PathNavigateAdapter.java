@@ -5,6 +5,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.pathfinder.PathFinder;
 import net.minecraft.world.phys.Vec3;
 
@@ -54,6 +56,26 @@ public class PathNavigateAdapter extends PathNavigation {
     @Override
     public boolean moveTo(Entity entity, double movespeed) {
         return ((IMNavigation)navigator).startMovingTo(entity, (float) movespeed);
+    }
+
+    @Override
+    public Path createPath(BlockPos target, int distance) {
+        return ((IMNavigation)navigator).getPathToXYZ(Vec3.atCenterOf(target), distance);
+    }
+
+    @Override
+    public Path createPath(Entity target, int distance) {
+        return ((IMNavigation)navigator).findPathTo(target, distance);
+    }
+
+    @Override
+    public boolean moveTo(Path path, double speed) {
+        return ((IMNavigation)navigator).startMovingAlong(path, speed);
+    }
+
+    @Override
+    public Path getPath() {
+        return ((IMNavigation)navigator).getCurrentPath();
     }
 
     @Override
