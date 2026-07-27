@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "invmod:nexus_catalyst",
+    "invmod:phase_crystal"
+  ],
+  "result": {
+    "id": "invmod:strong_nexus_catalyst"
+  }
+}
