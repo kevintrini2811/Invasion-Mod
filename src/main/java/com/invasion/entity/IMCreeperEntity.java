@@ -4,7 +4,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.Notifiable;
 import com.invasion.block.InvBlocks;
-import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.IMCreeperIgniteGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
@@ -91,7 +90,6 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         goalSelector.addGoal(1, new IMCreeperIgniteGoal(this));
         goalSelector.addGoal(2, new AvoidEntityGoal<>(this, Cat.class, 6.0F, 0.25D, 0.300000011920929D));
         goalSelector.addGoal(3, new MobMeleeAttackGoal(this, 1.0, false));
-        goalSelector.addGoal(4, new AttackNexusGoal<>(this));
         goalSelector.addGoal(5, new ProvideSupportGoal(this, 4.0F, true));
         goalSelector.addGoal(7, new GoToNexusGoal(this));
         goalSelector.addGoal(8, new WaterAvoidingRandomStrollGoal(this, 1));
@@ -138,6 +136,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         if (explosionDeath) {
             explode();
         } else if (isAlive()) {
+            tickNexusFuse();
             tickStationaryFuse();
             this.lastFuseTime = currentFuseTime;
             int speed = getFuseSpeed();
@@ -162,6 +161,20 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         }
 
         super.tick();
+    }
+
+    private void tickNexusFuse() {
+        if (level().isClientSide()
+                || commitToExplode
+                || !hasNexus()
+                || !hasGoal(HasAiGoals.Goal.BREAK_NEXUS)) {
+            return;
+        }
+        if (findDistanceToNexus() <= NEXUS_IGNITION_RANGE) {
+            getNavigation().stop();
+            setTarget(null);
+            commitToExplosion(getNexus().getOrigin());
+        }
     }
 
     private void tickStationaryFuse() {
@@ -233,6 +246,11 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         if (!level().isClientSide) {
             // IN - Added explosion power based on tier
             float explosionPower = 2.1F * Math.max(getTier(), 1);
+            if (hasNexus()
+                    && findDistanceToNexus() <= explosionPower * 2.0F) {
+                getNexus().damage(damageSources().explosion(this, this),
+                        NEXUS_EXPLOSION_DAMAGE_PER_TIER * Math.max(getTier(), 1));
+            }
             level().explode(this, getX(), getY(), getZ(), explosionPower, false, ExplosionInteraction.MOB);
             discard();
         }
