@@ -57,6 +57,9 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.Vec3;
 
 public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
+    private static final int MAX_STATIONARY_TICKS = 20 * 10;
+    private static final double STATIONARY_TOLERANCE_SQR = 0.2 * 0.2;
+
     private static final EntityDataAccessor<Integer> FUSE_SPEED = SynchedEntityData.defineId(IMCreeperEntity.class, EntityDataSerializers.INT);
 
     private int currentFuseTime;
@@ -67,6 +70,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     private boolean commitToExplode;
 
     private Direction explodeDirection = Direction.UP;
+    @Nullable
+    private Vec3 stationaryAnchor;
+    private int stationaryTicks;
 
     public IMCreeperEntity(EntityType<IMCreeperEntity> type, Level world) {
         super(type, world);
@@ -135,6 +141,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         if (explosionDeath) {
             explode();
         } else if (isAlive()) {
+            tickStationaryFuse();
             this.lastFuseTime = currentFuseTime;
             int speed = getFuseSpeed();
 
@@ -158,6 +165,25 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         }
 
         super.tick();
+    }
+
+    private void tickStationaryFuse() {
+        if (level().isClientSide() || commitToExplode) {
+            return;
+        }
+        if (stationaryAnchor == null) {
+            stationaryAnchor = position();
+            return;
+        }
+        if (position().distanceToSqr(stationaryAnchor) > STATIONARY_TOLERANCE_SQR) {
+            stationaryAnchor = position();
+            stationaryTicks = 0;
+            return;
+        }
+        if (++stationaryTicks >= MAX_STATIONARY_TICKS) {
+            BlockPos explosionTarget = hasNexus() ? getNexus().getOrigin() : blockPosition();
+            commitToExplosion(explosionTarget);
+        }
     }
 
     @Override
@@ -226,12 +252,14 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     public void addAdditionalSaveData(ValueOutput nbt) {
         super.addAdditionalSaveData(nbt);
         nbt.putShort("Fuse", (short)fuseTime);
+        nbt.putInt("stationaryTicks", stationaryTicks);
     }
 
     @Override
     public void readAdditionalSaveData(ValueInput nbt) {
         super.readAdditionalSaveData(nbt);
         fuseTime = nbt.getShortOr("Fuse", (short) fuseTime);
+        stationaryTicks = nbt.getIntOr("stationaryTicks", 0);
     }
 
     @Override
