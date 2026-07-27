@@ -8,11 +8,15 @@ import net.minecraft.world.phys.Vec3;
 public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoal<T> {
     private boolean melee;
     private final ThrowerEntity theEntity;
+    private final float throwRangeSq;
+    private final float launchSpeed;
     private int maxBoulderAmount = 3;
 
     public ThrowerKillEntityGoal(ThrowerEntity entity, Class<? extends T> targetClass, int attackDelay, float throwRange, float launchSpeed) {
         super(entity, targetClass, attackDelay);
         this.theEntity = entity;
+        this.throwRangeSq = throwRange * throwRange;
+        this.launchSpeed = launchSpeed;
     }
 
     @Override
@@ -30,7 +34,8 @@ public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoa
                 double y = (target.getY() - missDistance + 1) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
                 double z = (target.getZ() - missDistance) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
 
-                theEntity.throwProjectile(new Vec3(x, y, z));
+                theEntity.throwProjectile(new Vec3(x, y, z),
+                        theEntity.createProjectile(theEntity.getTier()), launchSpeed);
             }
         }
     }
@@ -46,6 +51,9 @@ public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoa
         }
 
         double dXY = theEntity.position().subtract(target.position()).horizontalDistance();
-        return getAttackTime() <= 0 && theEntity.getSensing().hasLineOfSight(target) && theEntity.getThrowPower(dXY) <= 1;
+        return getAttackTime() <= 0
+                && theEntity.distanceToSqr(target) <= throwRangeSq
+                && theEntity.getSensing().hasLineOfSight(target)
+                && theEntity.getThrowPower(dXY, launchSpeed) <= 1;
     }
 }

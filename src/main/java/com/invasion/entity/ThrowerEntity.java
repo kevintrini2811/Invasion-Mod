@@ -48,15 +48,13 @@ public class ThrowerEntity extends TieredIMMobEntity {
     private int punchTimer;
 
     private int blockBreakSoundCooldown;
+    private int nexusPunchCooldown;
 
     private BlockPos pointToClear;
 
     private Notifiable clearPointNotifee;
 
     private float launchSpeed = 1;
-
-    @Nullable
-    protected Entity j;
 
     public ThrowerEntity(EntityType<ThrowerEntity> type, Level world) {
         super(type, world);
@@ -80,7 +78,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 55, 60.0F, 1.0F), () -> getTier() == 1));
-        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 60, 90.0F, 1.5F), () -> getTier() == 1));
+        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 60, 90.0F, 1.5F), () -> getTier() == 2));
         goalSelector.addGoal(2, new AttackNexusGoal<>(this));
         goalSelector.addGoal(3, new ThrowBoulderGoal(this, 3));
         goalSelector.addGoal(4, new GoToNexusGoal(this));
@@ -99,6 +97,12 @@ public class ThrowerEntity extends TieredIMMobEntity {
     public void customServerAiStep() {
         super.customServerAiStep();
         throwTime--;
+        if (blockBreakSoundCooldown > 0) {
+            blockBreakSoundCooldown--;
+        }
+        if (nexusPunchCooldown > 0) {
+            nexusPunchCooldown--;
+        }
         if (pointToClear != null && clearPoint()) {
             pointToClear = null;
             if (clearPointNotifee != null) {
@@ -255,23 +259,25 @@ public class ThrowerEntity extends TieredIMMobEntity {
 
     protected void tryDestroyBlock(BlockPos pos) {
         BlockState block = level().getBlockState(pos);
-        if (this.j != null) {
-            if (block.is(InvBlocks.NEXUS_CORE)) {
-                if (hasNexus() && canAttack() && pos.equals(getNexus().getOrigin())) {
-                    getNexus().damage(damageSources().mobAttack(this), 5);
-                }
-            } else {
-                level().destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
-                if (blockBreakSoundCooldown == 0) {
-                    playSound(InvSounds.ENTITY_THROWER_RAGE, 1, 0.4F);
-                    blockBreakSoundCooldown = 5;
-                }
+        if (block.isAir()) {
+            return;
+        }
+        if (block.is(InvBlocks.NEXUS_CORE)) {
+            if (hasNexus() && canAttack() && pos.equals(getNexus().getOrigin())) {
+                getNexus().damage(damageSources().mobAttack(this), 5);
+                nexusPunchCooldown = 60;
+            }
+        } else {
+            level().destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
+            if (blockBreakSoundCooldown == 0) {
+                playSound(InvSounds.ENTITY_THROWER_RAGE, 1, 0.4F);
+                blockBreakSoundCooldown = 5;
             }
         }
     }
 
     public boolean canAttack() {
-        return getLastHurtMobTimestamp() < (tickCount - 60);
+        return nexusPunchCooldown <= 0;
     }
 
     @Override
@@ -303,6 +309,10 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     public void throwProjectile(Vec3 targetPosition, AbstractArrow projectile) {
+        throwProjectile(targetPosition, projectile, getLaunchSpeed());
+    }
+
+    public void throwProjectile(Vec3 targetPosition, AbstractArrow projectile, float speed) {
         this.throwTime = 40;
         Vec3 eyePos = getEyePosition();
         Vec3 delta = targetPosition.subtract(eyePos);
@@ -310,16 +320,24 @@ public class ThrowerEntity extends TieredIMMobEntity {
 
         projectile.setOwner(this);
         projectile.setPos(eyePos);
-        projectile.shoot(delta.x, delta.y + (dXZ * Math.tan(getThrowAngle(dXZ))), delta.z, getLaunchSpeed(), 0.05F);
+        projectile.shoot(delta.x, delta.y + (dXZ * Math.tan(getThrowAngle(dXZ, speed))), delta.z, speed, 0.05F);
         level().addFreshEntity(projectile);
     }
 
     private double getThrowAngle(double horDifference) {
-        double p = getThrowPower(horDifference);
+        return getThrowAngle(horDifference, getLaunchSpeed());
+    }
+
+    private double getThrowAngle(double horDifference, float speed) {
+        double p = getThrowPower(horDifference, speed);
         return p <= 1 ? 0.5D * Math.asin(p) : 0.7853981633974483D;
     }
 
     public double getThrowPower(double horDifference) {
-        return 0.025D * horDifference / Mth.square(getLaunchSpeed());
+        return getThrowPower(horDifference, getLaunchSpeed());
+    }
+
+    public double getThrowPower(double horDifference, float speed) {
+        return 0.025D * horDifference / Mth.square(speed);
     }
 }
