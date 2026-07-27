@@ -14,14 +14,14 @@ public class JumpingSpiderEntity extends NexusSpiderEntity {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Spider.createAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.5F)
-                .add(Attributes.ATTACK_DAMAGE, 4)
-                .add(Attributes.GRAVITY, 0.08);
+                .add(Attributes.MOVEMENT_SPEED, 0.3F)
+                .add(Attributes.ATTACK_DAMAGE, 5)
+                .add(Attributes.GRAVITY, 0.043);
     }
 
     @Override
     protected float getGlobalScaleMultiplier() {
-        return super.getGlobalScaleMultiplier() + 0.1F;
+        return super.getGlobalScaleMultiplier();
     }
 
     @Override

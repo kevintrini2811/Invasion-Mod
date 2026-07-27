@@ -1,13 +1,13 @@
 package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.SpiderEggEntity;
+import com.invasion.entity.NexusEntity;
 
 import java.util.List;
 import java.util.function.Supplier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import com.invasion.entity.HasAiGoals;
 
 public class LayEggGoal extends Goal {
     private static final int EGG_LAY_TIME = 45;
@@ -34,10 +34,10 @@ public class LayEggGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return (!(theEntity instanceof HasAiGoals g) || g.getAIGoal() == HasAiGoals.Goal.TARGET_ENTITY)
-            && eggCount > 0
-            && theEntity.getTarget() != null
+        boolean visibleTarget = theEntity.getTarget() != null
             && theEntity.getSensing().hasLineOfSight(theEntity.getTarget());
+        boolean attackingNexus = theEntity instanceof NexusEntity nexus && nexus.hasNexus();
+        return eggCount > 0 && (visibleTarget || attackingNexus);
     }
 
     @Override

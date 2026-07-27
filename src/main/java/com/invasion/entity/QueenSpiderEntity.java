@@ -2,7 +2,6 @@ package com.invasion.entity;
 
 import java.util.ArrayList;
 import java.util.List;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -10,7 +9,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.level.Level;
-import com.invasion.InvTags;
 import com.invasion.entity.ai.goal.LayEggGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 
@@ -21,14 +19,14 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Spider.createAttributes()
-                .add(Attributes.MOVEMENT_SPEED, 0.59F)
-                .add(Attributes.ATTACK_DAMAGE, 5)
-                .add(Attributes.GRAVITY, 0.18);
+                .add(Attributes.MOVEMENT_SPEED, 0.22F)
+                .add(Attributes.ATTACK_DAMAGE, 4)
+                .add(Attributes.GRAVITY, 0.08);
     }
 
     @Override
     protected float getGlobalScaleMultiplier() {
-        return super.getGlobalScaleMultiplier() + 1F;
+        return isBaby() ? super.getGlobalScaleMultiplier() : 1.3F;
     }
 
     @Override
