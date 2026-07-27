@@ -97,5 +97,8 @@
     "invmod.message.wave.grouplarge": "Eine große Gruppe Monster hat sich versammelt...",
 
     "invmod.message.bone.nonearbynexus1": "Der Wolf mag diesen Seltsamen Knochen nicht.",
-    "invmod.message.bone.nonearbynexus2": "Vielleicht fehlt ein bestimmter Block..."
+    "invmod.message.bone.nonearbynexus2": "Vielleicht fehlt ein bestimmter Block...",
+    "invmod.message.bone.debugactivated": "Nexus im Debug-Modus aktiviert. Es werden keine Wellen erzeugt.",
+    "invmod.message.bone.debugdisabled": "Debug-Modus des Nexus beendet.",
+    "invmod.message.bone.debugfailed": "Der Nexus konnte nicht im Debug-Modus aktiviert werden."
 }

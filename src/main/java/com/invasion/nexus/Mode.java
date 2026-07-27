@@ -5,12 +5,13 @@ public enum Mode {
     STARTED,
     CONTINUOUS,
     WAITING,
-    STABLE;
+    STABLE,
+    DEBUG;
 
     static final Mode[] VALUES = values();
 
     public boolean isActive() {
-        return this == STARTED || this == CONTINUOUS || this == WAITING;
+        return this == STARTED || this == CONTINUOUS || this == WAITING || this == DEBUG;
     }
 
     public boolean isIdle() {

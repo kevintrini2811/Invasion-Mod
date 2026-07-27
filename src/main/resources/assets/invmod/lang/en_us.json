@@ -99,6 +99,9 @@
 
     "invmod.message.bone.nonearbynexus1": "The wolf doesn't like this Strange Bone.",
     "invmod.message.bone.nonearbynexus2": "Maybe a certain block is missing...",
+    "invmod.message.bone.debugactivated": "Nexus activated in debug mode. No waves will be spawned.",
+    "invmod.message.bone.debugdisabled": "Nexus debug mode disabled.",
+    "invmod.message.bone.debugfailed": "The Nexus could not be activated in debug mode.",
 
     "invmod.subtitle.nexus_chimes": "Nexus Chimes",
     "invmod.subtitle.nexus_rumbles": "Nexus Rumbles",

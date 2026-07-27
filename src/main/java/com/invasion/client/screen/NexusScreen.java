@@ -24,9 +24,10 @@ public class NexusScreen extends AbstractContainerScreen<NexusScreenHandler> {
         context.text(font, menu.getKills() + " mobs killed", 96, 60, 0x404040, false);
         context.text(font, "R: " + menu.getSpawnRadius(), 142, 72, 0x404040, false);
 
-        if (menu.getMode() == Mode.STARTED || menu.getMode() == Mode.WAITING) {
+        if (menu.getMode() == Mode.STARTED || menu.getMode() == Mode.WAITING || menu.getMode() == Mode.DEBUG) {
             context.text(font, "Activated!", 13, 62, 4210752, false);
-            context.text(font, "Wave " + menu.getCurrentWave(), 55, 37, 0x404040, false);
+            context.text(font, menu.getMode() == Mode.DEBUG ? "Debug mode" : "Wave " + menu.getCurrentWave(),
+                    55, 37, 0x404040, false);
         } else if (menu.getMode() == Mode.CONTINUOUS) {
             context.text(font, "Power:", 56, 31, 4210752, false);
             context.text(font, "" + menu.getPowerLevel(), 61, 44, 0x404040, false);
@@ -57,7 +58,7 @@ public class NexusScreen extends AbstractContainerScreen<NexusScreenHandler> {
                 j + 31, k + 51,
                 204.0F, 0.0F, progress, 2, 256, 256);
 
-        if (menu.getMode() == Mode.STARTED || menu.getMode() == Mode.WAITING) {
+        if (menu.getMode() == Mode.STARTED || menu.getMode() == Mode.WAITING || menu.getMode() == Mode.DEBUG) {
             context.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND,
                     j + 19, k + 29,
                     176.0F, 0.0F, 9, 31, 256, 256);
