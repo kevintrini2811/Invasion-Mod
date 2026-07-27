@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "invmod:rift_flux",
+    "invmod:rift_flux",
+    "invmod:rift_flux"
+  ],
+  "result": {
+    "id": "minecraft:gunpowder",
+    "count": 16
+  }
+}

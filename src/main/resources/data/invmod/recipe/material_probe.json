@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:blaze_rod",
+    "invmod:nexus_adjuster",
+    "invmod:phase_crystal"
+  ],
+  "result": {
+    "id": "invmod:material_probe"
+  }
+}

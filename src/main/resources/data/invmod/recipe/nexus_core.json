@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "X": "invmod:phase_crystal",
+    "#": "minecraft:redstone",
+    "D": "minecraft:obsidian"
+  },
+  "pattern": [
+    " X ",
+    "#D#",
+    " # "
+  ],
+  "result": {
+    "id": "invmod:nexus_core"
+  }
+}

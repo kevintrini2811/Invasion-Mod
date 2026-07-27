@@ -2,10 +2,11 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    { "item": "invmod:rift_flux" }
+    "invmod:rift_flux",
+    "invmod:rift_flux",
+    "minecraft:bone"
   ],
   "result": {
-    "item": "minecraft:iron_ingot",
-    "count": 4
+    "id": "invmod:strange_bone"
   }
 }

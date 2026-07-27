@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 20,
+  "experience": 3.0,
+  "ingredient": "invmod:stable_catalyst_mixture",
+  "result": {
+    "id": "invmod:stable_nexus_catalyst"
+  }
+}

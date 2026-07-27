@@ -2,14 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": { "item": "invmod:rift_flux" }
+    "X": "invmod:small_remnants"
   },
   "pattern": [
-    " X ",
-    "X X",
-    " X "
+    "XXX",
+    "XXX",
+    "XXX"
   ],
   "result": {
-    "item": "minecraft:diamond"
+    "id": "invmod:rift_flux"
   }
 }
