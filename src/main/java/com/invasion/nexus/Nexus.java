@@ -280,7 +280,7 @@ public class Nexus implements ControllableNexusAccess {
             if (resumeSpawnerContinuous()) {
                 mobsLeftInWave = (lastMobsLeftInWave += acquireEntities());
             }
-        } else {
+        } else if (mode != Mode.DEBUG) {
             resumeSpawnerInvasion();
         }
     }
@@ -460,6 +460,27 @@ public class Nexus implements ControllableNexusAccess {
             boundPlayers.sendNotice(e.getMessage());
             return false;
         }
+    }
+
+    public boolean startDebugMode() {
+        if (mode != Mode.STOPPED || !storage.setActiveNexus(this)) {
+            return false;
+        }
+
+        waveSpawner.stop();
+        paused = false;
+        activationTimer = 0;
+        currentWave = 0;
+        mobsToKillInWave = 0;
+        mobsLeftInWave = 0;
+        lastMobsLeftInWave = 0;
+        boundingBoxToRadius = computeSpawnArea();
+        boundPlayers.bindPlayers(boundingBoxToRadius);
+        regenerateHealth();
+        activated = true;
+        setMode(Mode.DEBUG);
+        boundPlayers.sendMessage(boundPlayers.getParticipantsList());
+        return true;
     }
 
     private void startContinuousPlay() {
