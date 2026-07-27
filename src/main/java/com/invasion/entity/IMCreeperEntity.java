@@ -66,6 +66,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
     private boolean commitToExplode;
 
     private Direction explodeDirection = Direction.UP;
+    @Nullable
+    private Vec3 stationaryAnchor;
+    private int stationaryTicks;
 
     public IMCreeperEntity(EntityType<IMCreeperEntity> type, Level world) {
         super(type, world);
@@ -134,6 +137,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         if (explosionDeath) {
             explode();
         } else if (isAlive()) {
+            tickStationaryFuse();
             this.lastFuseTime = currentFuseTime;
             int speed = getFuseSpeed();
 
@@ -157,6 +161,25 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         }
 
         super.tick();
+    }
+
+    private void tickStationaryFuse() {
+        if (level().isClientSide() || commitToExplode) {
+            return;
+        }
+        if (stationaryAnchor == null) {
+            stationaryAnchor = position();
+            return;
+        }
+        if (position().distanceToSqr(stationaryAnchor) > STATIONARY_TOLERANCE_SQR) {
+            stationaryAnchor = position();
+            stationaryTicks = 0;
+            return;
+        }
+        if (++stationaryTicks >= MAX_STATIONARY_TICKS) {
+            BlockPos explosionTarget = hasNexus() ? getNexus().getOrigin() : blockPosition();
+            commitToExplosion(explosionTarget);
+        }
     }
 
     @Override
@@ -227,6 +250,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
     public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
         nbt.putShort("Fuse", (short)fuseTime);
+        nbt.putInt("stationaryTicks", stationaryTicks);
     }
 
     @Override
