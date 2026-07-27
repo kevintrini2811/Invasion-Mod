@@ -57,7 +57,7 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
     }
 
     default boolean getBurnsInDay() {
-        return !hasNexus() && InvasionMod.getConfig().nightMobsBurnInDay;
+        return false;
     }
 
     default void setIsHoldingIntoLadder(boolean flag) {

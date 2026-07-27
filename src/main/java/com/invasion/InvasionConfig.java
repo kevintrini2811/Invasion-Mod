@@ -60,7 +60,7 @@ public class InvasionConfig extends Config {
     private static final int DEFAULT_NIGHT_MOB_MAX_GROUP_SIZE = 3;
     private static final int DEFAULT_NIGHT_MOB_LIMIT_OVERRIDE = 70;
     private static final float DEFAULT_NIGHT_MOB_STATS_SCALING = 1.0F;
-    private static final boolean DEFAULT_NIGHT_MOBS_BURN = true;
+    private static final boolean DEFAULT_NIGHT_MOBS_BURN = false;
 
     private final Map<Identifier, Float> strengthOverrides = new HashMap<>();
 
@@ -182,7 +182,7 @@ public class InvasionConfig extends Config {
         nightMobSpawnChance = getPropertyValueInt("night-mob-spawn-chance", 30);
         nightMobMaxGroupSize = getPropertyValueInt("night-mob-max-group-size", 3);
         maxNightMobs = getPropertyValueInt("mob-limit-override", 70);
-        nightMobsBurnInDay = getPropertyValueBoolean("night-mobs-burn-in-day", true);
+        nightMobsBurnInDay = getPropertyValueBoolean("night-mobs-burn-in-day", false);
         spawnPool = loadSpawnPool();
         saveConfig(file);
     }
