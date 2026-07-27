@@ -35,6 +35,7 @@
     "entity.invmod.spider_egg": "IM Spinnenei",
     "entity.invmod.trap": "Falle",
     "entity.invmod.imp": "IM Kobold",
+    "entity.invmod.enderman": "IM Enderman",
 
     "invmod.message.probe.rangechanged": "Nexus-Reichweite geändert auf: %s",
     "invmod.message.probe.cannotchangerange": "Nexus ist bereits aktiv! Reichweite: %s",

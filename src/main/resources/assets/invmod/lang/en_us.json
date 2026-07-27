@@ -43,6 +43,7 @@
     "entity.invmod.spider_egg": "IM Spider Egg",
     "entity.invmod.trap": "Trap",
     "entity.invmod.imp": "IM Imp",
+    "entity.invmod.enderman": "IM Enderman",
 
     "invmod.message.probe.rangechanged": "Nexus range changed to: %s",
     "invmod.message.probe.cannotchangerange": "Nexus is currently active! Range: %s",
