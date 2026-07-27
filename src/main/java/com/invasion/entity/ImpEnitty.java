@@ -4,33 +4,22 @@ import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.KillEntityGoal;
 import com.invasion.entity.ai.goal.NoNexusPathGoal;
+import com.invasion.entity.ai.goal.ProvideSupportGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.server.level.ServerLevel;
-import com.invasion.entity.ai.goal.ProvideSupportGoal;
 
 public class ImpEnitty extends IMMobEntity {
     public ImpEnitty(EntityType<ImpEnitty> type, Level world) {
@@ -68,7 +57,7 @@ public class ImpEnitty extends IMMobEntity {
     @Override
     public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
         if (super.doHurtTarget(serverLevel, entity)) {
-            entity.setRemainingFireTicks(3);
+            entity.igniteForSeconds(3);
             return true;
         }
         return false;
