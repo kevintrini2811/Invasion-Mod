@@ -128,7 +128,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         BlockPos bridgeFloor = nextPos.below();
         boolean standingAtLedge = world.getBlockState(currentFloor)
                 .isCollisionShapeFullBlock(world, currentFloor);
-        boolean spaceIsClear = PathingUtil.isAirOrReplaceable(world.getBlockState(nextPos))
+        BlockState stateAtNextPos = world.getBlockState(nextPos);
+        boolean spaceIsClear = (PathingUtil.isAirOrReplaceable(stateAtNextPos)
+                || !stateAtNextPos.getFluidState().isEmpty())
                 && PathingUtil.isAirOrReplaceable(world.getBlockState(nextPos.above()));
         boolean floorIsMissing = !world.getBlockState(bridgeFloor)
                 .isCollisionShapeFullBlock(world, bridgeFloor);

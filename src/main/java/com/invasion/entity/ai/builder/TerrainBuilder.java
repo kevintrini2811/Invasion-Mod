@@ -411,16 +411,21 @@ public class TerrainBuilder implements ITerrainBuild {
         BlockPos posBelow = pos.below();
         Level world = mob.asEntity().level();
 
-        boolean isFluid = world.getBlockState(pos).liquid();
-        boolean isAirBelow = world.isEmptyBlock(posBelow);
+        BlockState stateAtFeet = world.getBlockState(pos);
+        BlockState stateBelow = world.getBlockState(posBelow);
+        boolean fluidAtFeet = !stateAtFeet.getFluidState().isEmpty();
+        boolean fluidBelow = !stateBelow.getFluidState().isEmpty();
+        boolean isAirBelow = stateBelow.isAir();
 
-        if (isAirBelow || isFluid) {
-            if (isFluid) {
-                posBelow = pos;
-            }
-            boolean needsSupport = IMLandPathNodeMaker.avoidsBlock(mob.asEntity(), mutable.set(pos).move(Direction.DOWN, 2))
-                                || IMLandPathNodeMaker.avoidsBlock(mob.asEntity(), mutable.set(pos).move(Direction.DOWN, 3));
-            builder.add(new ModifyBlockEntry(posBelow,
+        if (isAirBelow || fluidAtFeet || fluidBelow) {
+            // In deep water the feet themselves occupy a fluid block. At a
+            // normal river edge the feet are in air and the fluid is below.
+            BlockPos placementPos = fluidAtFeet ? pos : posBelow;
+            boolean needsSupport = IMLandPathNodeMaker.avoidsBlock(mob.asEntity(),
+                    mutable.set(placementPos).move(Direction.DOWN))
+                    || IMLandPathNodeMaker.avoidsBlock(mob.asEntity(),
+                    mutable.set(placementPos).move(Direction.DOWN, 2));
+            builder.add(new ModifyBlockEntry(placementPos,
                     (needsSupport ? Blocks.COBBLESTONE : Blocks.OAK_PLANKS).defaultBlockState(),
                     (int) ((needsSupport ? COBBLE_COST : PLANKS_COST) / buildRate))
             );
