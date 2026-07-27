@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.invasion.block.InvBlocks;
+import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.WorldNexusStorage;
@@ -83,6 +84,7 @@ public class InvasionMod implements ModInitializer {
             // Nur Serverwelt
             if (!(entity.level() instanceof ServerLevel world)) return;
             if (!(entity instanceof Mob mob)) return;
+            if (mob instanceof IMEndermanEntity) return;
 
             boolean isInvasionMob = false;
 
