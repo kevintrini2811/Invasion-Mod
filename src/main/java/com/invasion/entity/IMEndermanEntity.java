@@ -11,6 +11,7 @@ import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -18,7 +19,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -35,6 +40,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.phys.Vec3;
 
 public final class IMEndermanEntity extends IMMobEntity {
     private static final EntityDataAccessor<Optional<BlockState>> CARRIED_BLOCK =
@@ -44,6 +52,8 @@ public final class IMEndermanEntity extends IMMobEntity {
         super(type, level);
         flammability = 1;
         getNavigatorNew().setCanDestroyBlocks(true);
+        setPathfindingMalus(PathType.WATER, -1);
+        setPathfindingMalus(PathType.WATER_BORDER, -1);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -127,6 +137,83 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected SoundEvent getDeathSound() {
         return SoundEvents.ENDERMAN_DEATH;
+    }
+
+    @Override
+    public boolean isSensitiveToWater() {
+        return true;
+    }
+
+    @Override
+    protected void customServerAiStep(ServerLevel level) {
+        super.customServerAiStep(level);
+        LivingEntity target = getTarget();
+        if (target != null && distanceToSqr(target) > 256 && tickCount % 10 == 0) {
+            teleportTowards(target);
+        }
+    }
+
+    @Override
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+        if (source.is(DamageTypeTags.IS_PROJECTILE)) {
+            for (int attempt = 0; attempt < 64; attempt++) {
+                if (teleportRandomly()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        boolean damaged = super.hurtServer(level, source, amount);
+        if (damaged && source.getEntity() == null && getRandom().nextInt(10) != 0) {
+            teleportRandomly();
+        }
+        return damaged;
+    }
+
+    private boolean teleportRandomly() {
+        return teleportSafely(
+                getX() + (getRandom().nextDouble() - 0.5) * 64,
+                getY() + getRandom().nextInt(64) - 32,
+                getZ() + (getRandom().nextDouble() - 0.5) * 64);
+    }
+
+    private boolean teleportTowards(Entity target) {
+        Vec3 away = new Vec3(
+                getX() - target.getX(),
+                getY(0.5) - target.getEyeY(),
+                getZ() - target.getZ()).normalize();
+        return teleportSafely(
+                getX() + (getRandom().nextDouble() - 0.5) * 8 - away.x * 16,
+                getY() + getRandom().nextInt(16) - 8 - away.y * 16,
+                getZ() + (getRandom().nextDouble() - 0.5) * 8 - away.z * 16);
+    }
+
+    private boolean teleportSafely(double x, double y, double z) {
+        if (level().isClientSide() || !isAlive()) {
+            return false;
+        }
+
+        BlockPos.MutableBlockPos ground = new BlockPos.MutableBlockPos(x, y, z);
+        while (ground.getY() > level().getMinY()
+                && !level().getBlockState(ground).blocksMotion()) {
+            ground.move(Direction.DOWN);
+        }
+        BlockState groundState = level().getBlockState(ground);
+        if (!groundState.blocksMotion() || groundState.getFluidState().is(FluidTags.WATER)) {
+            return false;
+        }
+
+        Vec3 oldPosition = position();
+        if (!randomTeleport(x, y, z, true)) {
+            return false;
+        }
+        level().gameEvent(GameEvent.TELEPORT, oldPosition, GameEvent.Context.of(this));
+        if (!isSilent()) {
+            level().playSound(null, xo, yo, zo, SoundEvents.ENDERMAN_TELEPORT, getSoundSource(), 1, 1);
+            playSound(SoundEvents.ENDERMAN_TELEPORT, 1, 1);
+        }
+        return true;
     }
 
     @Override
