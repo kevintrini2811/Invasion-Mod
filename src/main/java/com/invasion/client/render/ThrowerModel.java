@@ -1,5 +1,6 @@
 package com.invasion.client.render;
 
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartNames;
@@ -49,5 +50,11 @@ public final class ThrowerModel extends HumanoidModel<ThrowerRenderState> {
         leftLeg.setPos(3, 22, 0);
         leftArm.setPos(6, 16, -1);
         rightArm.setPos(-6, 16, 0);
+        if (state.throwing) {
+            leftArm.xRot = -Mth.PI;
+            rightArm.xRot = -Mth.PI;
+            leftArm.zRot = -0.12F;
+            rightArm.zRot = 0.12F;
+        }
     }
 }

@@ -4,6 +4,9 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -60,6 +63,10 @@ import com.invasion.entity.ai.goal.ThrowerKillEntityGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 
 public class ThrowerEntity extends TieredIMMobEntity {
+    private static final EntityDataAccessor<Integer> THROW_ANIMATION_TICKS =
+            SynchedEntityData.defineId(ThrowerEntity.class, EntityDataSerializers.INT);
+    private static final int THROW_ANIMATION_DURATION = 12;
+
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
@@ -82,6 +89,12 @@ public class ThrowerEntity extends TieredIMMobEntity {
         super(type, world);
         xpReward = 20;
         getNavigatorNew().setCanDestroyBlocks(true);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(THROW_ANIMATION_TICKS, 0);
     }
 
     public static AttributeSupplier.Builder createT1V0Attributes() {
@@ -119,6 +132,13 @@ public class ThrowerEntity extends TieredIMMobEntity {
     public void customServerAiStep(ServerLevel serverLevel) {
         super.customServerAiStep(serverLevel);
         throwTime--;
+        int animationTicks = getThrowAnimationTicks();
+        if (animationTicks > 0) {
+            entityData.set(THROW_ANIMATION_TICKS, animationTicks - 1);
+            getNavigation().stop();
+            Vec3 movement = getDeltaMovement();
+            setDeltaMovement(0.0D, movement.y, 0.0D);
+        }
         if (blockBreakSoundCooldown > 0) {
             blockBreakSoundCooldown--;
         }
@@ -143,6 +163,14 @@ public class ThrowerEntity extends TieredIMMobEntity {
 
     public boolean canThrow() {
         return throwTime <= 0;
+    }
+
+    public int getThrowAnimationTicks() {
+        return entityData.get(THROW_ANIMATION_TICKS);
+    }
+
+    public boolean isThrowing() {
+        return getThrowAnimationTicks() > 0;
     }
 
     @Override
@@ -321,6 +349,10 @@ public class ThrowerEntity extends TieredIMMobEntity {
 
     public void throwProjectile(Vec3 targetPosition, AbstractArrow projectile, float speed) {
         this.throwTime = 40;
+        entityData.set(THROW_ANIMATION_TICKS, THROW_ANIMATION_DURATION);
+        getNavigation().stop();
+        Vec3 movement = getDeltaMovement();
+        setDeltaMovement(0.0D, movement.y, 0.0D);
         Vec3 eyePos = getEyePosition();
         Vec3 delta = targetPosition.subtract(eyePos);
         double dXZ = delta.horizontalDistance();

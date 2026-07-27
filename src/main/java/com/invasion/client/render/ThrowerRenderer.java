@@ -27,6 +27,7 @@ public final class ThrowerRenderer
     public void extractRenderState(ThrowerEntity entity, ThrowerRenderState state, float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         state.tier = entity.getTier();
+        state.throwing = entity.isThrowing();
     }
 
     @Override
