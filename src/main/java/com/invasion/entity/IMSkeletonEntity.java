@@ -7,6 +7,7 @@ import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -33,6 +34,18 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
 public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
+        int arrows = getRandom().nextInt(3);
+        for (int i = 0; i < arrows; i++) {
+            spawnAtLocation(level, Items.ARROW);
+        }
+        if (getRandom().nextInt(3) == 2) {
+            spawnAtLocation(level, Items.BONE);
+        }
+    }
+
     public IMSkeletonEntity(EntityType<IMSkeletonEntity> type, Level world) {
         super(type, world);
     }

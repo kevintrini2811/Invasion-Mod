@@ -44,6 +44,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
+    @Override
+    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
+        if (getRandom().nextBoolean()) {
+            spawnAtLocation(level, Items.LEATHER);
+        } else {
+            spawnAtLocation(level, isOnFire() ? Items.COOKED_PORKCHOP : Items.PORKCHOP);
+        }
+    }
+
     private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
 

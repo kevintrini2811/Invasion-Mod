@@ -45,6 +45,7 @@ import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.Level.ExplosionInteraction;
@@ -206,7 +207,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel world, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(world, source, causedByPlayer);
+        spawnAtLocation(world, Items.GUNPOWDER);
         Entity entity = source.getEntity();
         if (entity != this && entity instanceof Creeper creeperEntity && creeperEntity.canDropMobsSkull()) {
             creeperEntity.increaseDroppedSkulls();

@@ -7,6 +7,7 @@ import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.particle.InvParticles;
+import com.invasion.item.InvItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
