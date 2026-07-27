@@ -8,9 +8,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 
 public final class CarryBlockingBlockGoal extends Goal {
     private final IMEndermanEntity mob;
@@ -25,11 +28,14 @@ public final class CarryBlockingBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (mob.isCarryingBlock() || mob.tickCount % 5 != 0 || mob.getNavigation().isDone()
+        if (mob.isCarryingBlock() || mob.tickCount % 5 != 0
                 || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
             return false;
         }
-        BlockPos next = mob.getNavigation().getPath().getNextNodePos();
+        BlockPos next = findNextProbePosition();
+        if (next == null) {
+            return false;
+        }
         Optional<BlockPos> obstacle = BlockPos.betweenClosedStream(
                 mob.getDimensions(mob.getPose()).makeBoundingBox(
                                 com.invasion.util.math.PosUtils.bottomCenter(next)))
@@ -43,6 +49,34 @@ public final class CarryBlockingBlockGoal extends Goal {
         target = obstacle.get();
         expectedState = mob.level().getBlockState(target);
         return !expectedState.isAir();
+    }
+
+    private BlockPos findNextProbePosition() {
+        Path path = mob.getNavigation().getPath();
+        if (path != null && !path.isDone()) {
+            return path.getNextNodePos();
+        }
+
+        Vec3 objective = null;
+        LivingEntity attackTarget = mob.getTarget();
+        if (attackTarget != null) {
+            objective = attackTarget.position();
+        } else if (mob.hasNexus()) {
+            objective = com.invasion.util.math.PosUtils.center(mob.getNexus().getOrigin());
+        }
+        if (objective == null) {
+            return null;
+        }
+
+        Vec3 direction = objective.subtract(mob.position());
+        double horizontalLength = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+        if (horizontalLength < 0.01) {
+            return null;
+        }
+        return BlockPos.containing(
+                mob.getX() + direction.x / horizontalLength,
+                mob.getY(),
+                mob.getZ() + direction.z / horizontalLength);
     }
 
     @Override
