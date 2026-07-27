@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
@@ -240,6 +241,13 @@ public class Nexus implements ControllableNexusAccess {
         return currentWave;
     }
 
+    public void onPlayerJoined(ServerPlayer player) {
+        if (!mode.isActive() || !boundPlayers.reconnect(player)) {
+            return;
+        }
+        player.sendSystemMessage(createWaveProgressMessage());
+    }
+
     public void tick() {
         if (!mode.isActive() || paused) {
             return;
@@ -400,6 +408,16 @@ public class Nexus implements ControllableNexusAccess {
 
     // TODO: Generate warning when a mob is nearby
     public void registerMobClose() {
+    }
+
+    private Component createWaveProgressMessage() {
+        int total = Math.max(1, mobsToKillInWave);
+        int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
+        int progressPercent = defeated * 100 / total;
+        return Component.translatable(
+                "invmod.message.wave.progress",
+                currentWave, defeated, total, progressPercent + "%")
+                .withStyle(ChatFormatting.GREEN);
     }
 
     @Override
