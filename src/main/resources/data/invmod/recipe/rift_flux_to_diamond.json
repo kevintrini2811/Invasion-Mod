@@ -2,14 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": { "item": "minecraft:iron_ingot" }
+    "X": "invmod:rift_flux"
   },
   "pattern": [
-    " X",
-    "XX",
-    "XX"
+    " X ",
+    "X X",
+    " X "
   ],
   "result": {
-    "item": "invmod:nexus_adjuster"
+    "id": "minecraft:diamond"
   }
 }

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "X": [
+      "minecraft:lapis_lazuli",
+      "minecraft:blue_dye"
+    ],
+    "#": "minecraft:redstone",
+    "D": "minecraft:diamond"
+  },
+  "pattern": [
+    " X ",
+    "#D#",
+    " X "
+  ],
+  "result": {
+    "id": "invmod:phase_crystal"
+  }
+}

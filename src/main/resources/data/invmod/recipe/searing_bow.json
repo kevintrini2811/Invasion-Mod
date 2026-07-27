@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "invmod:rift_flux",
+    "invmod:rift_flux",
+    "invmod:rift_flux",
+    "invmod:rift_flux",
+    "invmod:rift_flux",
+    "minecraft:bow"
+  ],
+  "result": {
+    "id": "invmod:searing_bow"
+  }
+}

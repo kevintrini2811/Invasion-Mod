@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "invmod:damping_agent",
+    "invmod:damping_agent",
+    "invmod:damping_agent"
+  ],
+  "result": {
+    "id": "invmod:strong_damping_agent"
+  }
+}

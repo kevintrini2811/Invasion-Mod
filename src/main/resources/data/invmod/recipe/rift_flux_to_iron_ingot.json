@@ -2,10 +2,10 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    { "item": "invmod:empty_trap" },
-    { "item": "minecraft:lava_bucket" }
+    "invmod:rift_flux"
   ],
   "result": {
-    "item": "invmod:fire_trap"
+    "id": "minecraft:iron_ingot",
+    "count": 4
   }
 }

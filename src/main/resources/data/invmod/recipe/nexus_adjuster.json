@@ -2,14 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": { "item": "invmod:small_remnants" }
+    "X": "minecraft:iron_ingot"
   },
   "pattern": [
-    "XXX",
-    "XXX",
-    "XXX"
+    " X",
+    "XX",
+    "XX"
   ],
   "result": {
-    "item": "invmod:rift_flux"
+    "id": "invmod:nexus_adjuster"
   }
 }

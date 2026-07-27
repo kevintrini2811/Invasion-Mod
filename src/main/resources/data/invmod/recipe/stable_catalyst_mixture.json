@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "minecraft:bowl",
+    "minecraft:coal",
+    "minecraft:bone",
+    "minecraft:bone"
+  ],
+  "result": {
+    "id": "invmod:stable_catalyst_mixture"
+  }
+}
