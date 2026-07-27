@@ -12,6 +12,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -115,6 +116,10 @@ public class WorldNexusStorage extends SavedData {
 
     public synchronized Optional<? extends ControllableNexusAccess> getNexus() {
         return activeNexus.map(instances::get);
+    }
+
+    public synchronized void onPlayerJoined(ServerPlayer player) {
+        instances.values().forEach(nexus -> nexus.onPlayerJoined(player));
     }
 
     public synchronized boolean canActivate(Nexus nexus) {

@@ -4,6 +4,7 @@ import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.util.ChatUtils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableSource;
 import net.minecraft.resources.Identifier;
@@ -69,6 +70,8 @@ public class InvasionMod implements ModInitializer {
             LOGGER.info("ChatUtils: Server gelöscht.");
         });
         ServerLifecycleEvents.SERVER_STARTING.register(server -> SERVER = server);
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+                WorldNexusStorage.of((ServerLevel)handler.player.level()).onPlayerJoined(handler.player));
         InvBlocks.bootstrap();
         InvItems.bootstrap();
         InvSounds.boostrap();

@@ -14,6 +14,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -78,6 +79,15 @@ public class Participants {
                 player.sendSystemMessage(message);
             }
         }
+    }
+
+    public boolean reconnect(ServerPlayer player) {
+        Entry entry = entries.get(player.getUUID());
+        if (entry == null) {
+            return false;
+        }
+        entry.entity = player;
+        return true;
     }
 
     public void sendMessageIncludingNearby(Component message, AABB area) {
@@ -180,9 +190,8 @@ public class Participants {
         }
 
         public Player getEntity() {
-            if (entity == null) {
-                entity = nexus.getWorld().getPlayerByUUID(id);
-            }
+            Player currentPlayer = nexus.getWorld().getPlayerByUUID(id);
+            entity = currentPlayer;
             return entity;
         }
 
