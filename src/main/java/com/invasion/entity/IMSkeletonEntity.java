@@ -3,6 +3,7 @@ package com.invasion.entity;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.ai.goal.AttackNexusGoal;
+import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.sounds.SoundEvent;
@@ -20,7 +21,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.RangedBowAttackGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
@@ -48,6 +48,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
 
     public IMSkeletonEntity(EntityType<IMSkeletonEntity> type, Level world) {
         super(type, world);
+        setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
     }
 
     public static AttributeSupplier.Builder createIMSkeletonAttributes() {
@@ -58,7 +59,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
-        goalSelector.addGoal(1, new RangedBowAttackGoal<>(this, 1 /*160*/, 15, 16F)); //TODO: Faster variant of skeletons
+        goalSelector.addGoal(1, new EntityAIKillWithArrow<>(this, Player.class, 65, 16F));
         // goalSelector.add(1, new EntityAIRallyBehindEntity(this, EntityIMCreeper.class, 4.0F));
         goalSelector.addGoal(3, new AttackNexusGoal<>(this));
         goalSelector.addGoal(4, new GoToNexusGoal(this));
@@ -102,7 +103,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
         double dY = target.getY(0.3333333333333333) - projectile.getY();
         double dZ = target.getZ() - getZ();
         double horLength = Math.sqrt(dX * dX + dZ * dZ);
-        projectile.shoot(dX, dY + horLength * 0.2F, dZ, 1.6F, 14 - level().getDifficulty().getId() * 4);
+        projectile.shoot(dX, dY + horLength * 0.2F, dZ, 1.1F, 12);
         playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(projectile);
     }
