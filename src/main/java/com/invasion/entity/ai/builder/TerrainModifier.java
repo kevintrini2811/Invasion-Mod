@@ -10,12 +10,14 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.Notifiable;
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
+import com.invasion.entity.pathfinding.PathingUtil;
 
 /**
  * AI component for building structures.
@@ -123,6 +125,11 @@ public final class TerrainModifier implements ITerrainModify {
         BlockState oldBlock = theEntity.level().getBlockState(entry.pos());
         entry.setOldBlock(oldBlock);
         if (oldBlock.is(InvBlocks.NEXUS_CORE)) {
+            return Notifiable.Status.UNMODIFIABLE;
+        }
+        if (entry.newBlock().is(Blocks.LADDER)
+                && !oldBlock.is(Blocks.LADDER)
+                && !PathingUtil.isAirOrReplaceable(oldBlock)) {
             return Notifiable.Status.UNMODIFIABLE;
         }
 
