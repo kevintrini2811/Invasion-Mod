@@ -30,8 +30,8 @@ public record EntityPattern(
         Integer texture = texturePool.selectNext(random);
         Integer flavour = flavourPool.selectNext(random);
         return new EntityConstruct(type,
-                tier == null ? DEFAULT_TIER : tier,
                 texture == null ? OPEN_TEXTURE : texture,
+                tier == null ? DEFAULT_TIER : tier,
                 flavour == null ? DEFAULT_FLAVOUR : flavour, OPEN_SCALING, angle.min().orElse(-MAX_VALID_ANGLE), angle.max().orElse(MAX_VALID_ANGLE));
     }
 
