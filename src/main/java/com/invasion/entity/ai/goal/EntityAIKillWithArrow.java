@@ -23,6 +23,18 @@ public class EntityAIKillWithArrow<T extends LivingEntity> extends KillEntityGoa
 	}
 
 	@Override
+	public void start() {
+		super.start();
+		mob.setAggressive(true);
+	}
+
+	@Override
+	public void stop() {
+		super.stop();
+		mob.setAggressive(false);
+	}
+
+	@Override
     public void tick() {
 		super.tick();
 		LivingEntity target = getTarget();

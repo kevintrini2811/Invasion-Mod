@@ -47,6 +47,12 @@ public class SkeletonAttackNexusGoal extends Goal {
     public void start() {
         attackTime = 0;
         skeleton.getNavigation().stop();
+        skeleton.setAggressive(true);
+    }
+
+    @Override
+    public void stop() {
+        skeleton.setAggressive(false);
     }
 
     @Override

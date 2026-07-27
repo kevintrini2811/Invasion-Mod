@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.Items;
 
 public final class InvSkeletonRenderer extends
         HumanoidMobRenderer<IMSkeletonEntity, SkeletonRenderState, SkeletonModel<SkeletonRenderState>> {
@@ -31,6 +32,7 @@ public final class InvSkeletonRenderer extends
     public void extractRenderState(IMSkeletonEntity entity, SkeletonRenderState state, float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         state.isAggressive = entity.isAggressive();
+        state.isHoldingBow = entity.getMainHandItem().is(Items.BOW);
     }
 
     @Override
