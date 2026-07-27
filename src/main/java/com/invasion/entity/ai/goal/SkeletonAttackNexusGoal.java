@@ -1,0 +1,78 @@
+package com.invasion.entity.ai.goal;
+
+import java.util.EnumSet;
+
+import com.invasion.entity.HasAiGoals;
+import com.invasion.entity.IMSkeletonEntity;
+import com.invasion.util.math.PosUtils;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+
+public class SkeletonAttackNexusGoal extends Goal {
+    private static final double MIN_RANGE_SQUARED = 16;
+    private static final double MAX_RANGE_SQUARED = 16 * 16;
+    private static final int ATTACK_DELAY = 65;
+
+    private final IMSkeletonEntity skeleton;
+    private int attackTime;
+
+    public SkeletonAttackNexusGoal(IMSkeletonEntity skeleton) {
+        this.skeleton = skeleton;
+        setFlags(EnumSet.of(Flag.LOOK));
+    }
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
+
+    @Override
+    public boolean canUse() {
+        return canContinueToUse();
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+        if (!skeleton.hasNexus() || !skeleton.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)) {
+            return false;
+        }
+        double distance = skeleton.distanceToSqr(nexusTarget());
+        return distance > MIN_RANGE_SQUARED && distance <= MAX_RANGE_SQUARED && hasClearShot();
+    }
+
+    @Override
+    public void start() {
+        attackTime = 0;
+        skeleton.getNavigation().stop();
+    }
+
+    @Override
+    public void tick() {
+        Vec3 target = nexusTarget();
+        skeleton.getLookControl().setLookAt(target.x, target.y, target.z);
+        skeleton.getNavigatorNew().haltForTick();
+        if (--attackTime <= 0) {
+            skeleton.performRangedNexusAttack(target);
+            attackTime = ATTACK_DELAY;
+        }
+    }
+
+    private boolean hasClearShot() {
+        Vec3 target = nexusTarget();
+        BlockHitResult hit = skeleton.level().clip(new ClipContext(
+                skeleton.getEyePosition(),
+                target,
+                ClipContext.Block.COLLIDER,
+                ClipContext.Fluid.NONE,
+                skeleton));
+        return hit.getType() == HitResult.Type.BLOCK
+                && hit.getBlockPos().equals(skeleton.getNexus().getOrigin());
+    }
+
+    private Vec3 nexusTarget() {
+        return PosUtils.center(skeleton.getNexus().getOrigin());
+    }
+}

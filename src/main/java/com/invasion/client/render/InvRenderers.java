@@ -37,6 +37,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.BURROWER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/burrower.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.BOULDER, NoopRenderer::new);
+        EntityRendererRegistry.register(InvEntities.SKELETON_ARROW, SkeletonArrowRenderer::new);
         EntityRendererRegistry.register(InvEntities.TNT, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.WOLF, WolfRenderer::new);
         EntityRendererRegistry.register(InvEntities.TRAP, TrapRenderer::new);

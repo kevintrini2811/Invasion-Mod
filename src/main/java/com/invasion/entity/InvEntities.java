@@ -64,6 +64,9 @@ public interface InvEntities {
             .sized(0.5F, 0.5F).clientTrackingRange(8).noSummon().noSave());
     EntityType<BoulderEntity> BOULDER = register("boulder", EntityType.Builder.<BoulderEntity>of(BoulderEntity::new, MobCategory.MISC)
             .sized(0.5F, 0.5F).clientTrackingRange(8));
+    EntityType<SkeletonArrowEntity> SKELETON_ARROW = register("skeleton_arrow",
+            EntityType.Builder.<SkeletonArrowEntity>of(SkeletonArrowEntity::new, MobCategory.MISC)
+                    .sized(0.5F, 0.5F).clientTrackingRange(4).updateInterval(20));
     EntityType<EntityIMPrimedTNT> TNT = register("tnt", EntityType.Builder.<EntityIMPrimedTNT>of(EntityIMPrimedTNT::new, MobCategory.MISC)
             .fireImmune().sized(0.98F, 0.98F).eyeHeight(0.15F).clientTrackingRange(10).updateInterval(10));
 
