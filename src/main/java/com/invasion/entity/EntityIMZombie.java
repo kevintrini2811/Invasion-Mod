@@ -218,6 +218,21 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         return false;
     }
 
+    @Override
+    protected boolean canDestroyBlocksByDefault() {
+        return canDigDown();
+    }
+
+    @Override
+    public float getSelfDamage() {
+        return selfDamage;
+    }
+
+    @Override
+    public float getMaxSelfDamage() {
+        return maxSelfDamage;
+    }
+
     /**
      * Versucht, eine schräge Rampe nach oben in Richtung Nexus zu buddeln.
      * Kein Leitern-Bau – nur Blöcke zu AIR machen.
@@ -487,15 +502,16 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
     private void doFireball() {
         for (BlockPos pos : BlockPos.withinManhattan(blockPosition(), 2, 2, 2)) {
-            if (level().isEmptyBlock(pos) && level().getBlockState(pos.below()).ignitedByLava()) {
+            var state = level().getBlockState(pos);
+            if (state.isAir() || state.ignitedByLava()) {
                 level().setBlockAndUpdate(pos, Blocks.FIRE.defaultBlockState());
             }
         }
 
         List<Entity> entities = level().getEntities(this, getBoundingBox().inflate(1.5, 1.5, 1.5));
         for (int el = entities.size() - 1; el >= 0; el--) {
-            entities.get(el).setRemainingFireTicks(8);
+            entities.get(el).igniteForSeconds(8);
         }
-        hurt(damageSources().explosion(this, this), 500);
+        hurt(damageSources().inFire(), 500);
     }
 }

@@ -103,7 +103,7 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
     protected Vec3 findChargePoint(Entity attacker, Entity target, double overshoot) {
         Vec3 pos = mob.position();
         Vec3 delta = target.position().subtract(pos).multiply(1, 0, 1);
-        float theta = (float) Math.atan2(delta.x(), delta.z());
+        float theta = (float) Math.atan2(delta.z(), delta.x());
         double distance = delta.length() + overshoot;
         // Cylindrical to Cartesian
         return pos.add(
