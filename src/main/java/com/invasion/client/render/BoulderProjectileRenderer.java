@@ -3,6 +3,7 @@ package com.invasion.client.render;
 import com.invasion.InvasionMod;
 import com.invasion.entity.BoulderEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -15,7 +16,7 @@ public final class BoulderProjectileRenderer
     private static final Identifier TEXTURE =
             InvasionMod.id("textures/entity/boulder.png");
     private final ProjectileCubeModel model =
-            new ProjectileCubeModel(ProjectileCubeModel.createLayer(64, 64).bakeRoot());
+            new ProjectileCubeModel(ProjectileCubeModel.createLayer(64, 32).bakeRoot());
 
     public BoulderProjectileRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -32,6 +33,8 @@ public final class BoulderProjectileRenderer
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         poseStack.pushPose();
         poseStack.translate(0.0F, 0.25F, 0.0F);
+        poseStack.mulPose(Axis.XP.rotationDegrees(state.ageInTicks * 12.0F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(state.ageInTicks * 7.0F));
         collector.submitModel(model, state, poseStack, TEXTURE, state.lightCoords,
                 0, -1, null);
         poseStack.popPose();
