@@ -46,6 +46,23 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     protected <T extends Entity> Actor<T> createActor(T entity) {
         return new Actor<>(entity) {
             @Override
+            public void getSuccessors(BlockGetter worldMap, Node currentNode, PathBuilder pathBuilder) {
+                super.getSuccessors(worldMap, currentNode, pathBuilder);
+
+                BlockPos above = currentNode.asBlockPos().above();
+                if (getNodeDestructability(worldMap, above) > com.invasion.block.DestructableType.UNBREAKABLE
+                        && isAdjacentSolidBlock(worldMap, above)) {
+                    pathBuilder.addNode(above, PathAction.NONE);
+                }
+
+                BlockPos below = currentNode.asBlockPos().below();
+                if (getNodeDestructability(worldMap, below) > com.invasion.block.DestructableType.UNBREAKABLE
+                        && isAdjacentSolidBlock(worldMap, below)) {
+                    pathBuilder.addNode(below, PathAction.NONE);
+                }
+            }
+
+            @Override
             public float getPathNodePenalty(Node prevNode, Node node, BlockGetter worldMap) {
                 BlockState block = worldMap.getBlockState(node.asBlockPos());
 
