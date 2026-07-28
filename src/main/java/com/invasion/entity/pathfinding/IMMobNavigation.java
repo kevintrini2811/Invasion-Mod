@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.Stunnable;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
@@ -30,6 +31,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int activeTaskNodeIndex = -1;
     private int completedTaskNodeIndex = -1;
     private Status lastActionResult = Status.SUCCESS;
+    private boolean continuingEngineerBridge;
 
     private int haltingTicks;
     private int stuckTime;
@@ -102,8 +104,31 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public PathAction getCurrentWorkingAction() {
-	    return isDone() || !(path.getNextNode() instanceof ActionablePathNode node) ? PathAction.NONE : node.getAction();
+        if (isDone()) {
+            return PathAction.NONE;
+        }
+
+        PathAction action = path.getNextNode() instanceof ActionablePathNode node
+                ? node.getAction()
+                : PathAction.NONE;
+        if (action == PathAction.NONE
+                && continuingEngineerBridge
+                && mob instanceof PigmanEngineerEntity
+                && requiresBridgeAt(path.getNextNodePos())) {
+            return PathAction.BRIDGE;
+        }
+        return action;
 	}
+
+    private boolean requiresBridgeAt(BlockPos feetPos) {
+        var feetState = mob.level().getBlockState(feetPos);
+        if (!feetState.getFluidState().isEmpty()) {
+            return true;
+        }
+
+        var belowState = mob.level().getBlockState(feetPos.below());
+        return belowState.isAir() || !belowState.getFluidState().isEmpty();
+    }
 
     @Override
     public boolean isWaitingForTask() {
@@ -395,6 +420,10 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             int nodeIndex = getPath().getNextNodeIndex();
             if (completedTaskNodeIndex == nodeIndex) {
                 return;
+            }
+            if (action.getType() == PathAction.Type.BRIDGE
+                    && mob instanceof PigmanEngineerEntity) {
+                continuingEngineerBridge = true;
             }
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
