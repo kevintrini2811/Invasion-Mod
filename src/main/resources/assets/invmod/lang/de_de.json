@@ -104,5 +104,21 @@
     "invmod.message.bone.nonearbynexus2": "Vielleicht fehlt ein bestimmter Block...",
     "invmod.message.bone.debugactivated": "Nexus im Debug-Modus aktiviert. Es werden keine Wellen erzeugt.",
     "invmod.message.bone.debugdisabled": "Debug-Modus des Nexus beendet.",
-    "invmod.message.bone.debugfailed": "Der Nexus konnte nicht im Debug-Modus aktiviert werden."
+    "invmod.message.bone.debugfailed": "Der Nexus konnte nicht im Debug-Modus aktiviert werden.",
+
+    "invmod.subtitle.nexus_chimes": "Nexus erklingt",
+    "invmod.subtitle.nexus_rumbles": "Nexus rumort",
+    "invmod.subtitle.enemy_explodes": "Gegner explodiert",
+    "invmod.subtitle.enemy_crashes": "Gegner schlägt auf",
+    "invmod.subtitle.wall_scrapes": "Kratzen an der Wand",
+    "invmod.subtitle.big_zombie_ambient": "Großer Zombie stöhnt",
+    "invmod.subtitle.thrower_rages": "Werfer wütet",
+    "invmod.subtitle.boulder_lands": "Felsbrocken schlägt auf",
+    "invmod.subtitle.spider_egg_hatches": "Spinnenei schlüpft",
+    "invmod.subtitle.vulture_death": "Geier stirbt",
+    "invmod.subtitle.vulture_hiss": "Geier faucht",
+    "invmod.subtitle.vulture_long_screech": "Geier ruft",
+    "invmod.subtitle.vulture_screech": "Geier kreischt",
+    "invmod.subtitle.vulture_squawk": "Geier krächzt",
+    "invmod.subtitle.lightning_zaps": "Blitz knistert"
 }
