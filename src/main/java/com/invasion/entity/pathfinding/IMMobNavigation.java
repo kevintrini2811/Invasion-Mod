@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.InvasionMod;
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.Stunnable;
+import com.invasion.entity.ai.ClimbableMoveControl;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.nexus.IHasNexus;
@@ -34,8 +35,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private BlockPos towerCycleBase;
     @Nullable
     private BlockPos towerCycleTop;
-    @Nullable
-    private Direction towerCycleOrientation;
     private boolean towerPlatformRequested;
     private boolean towerPlatformComplete;
 
@@ -344,7 +343,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 BlockPos base = getPath().getNextNodePos();
                 towerCycleBase = base;
                 towerCycleTop = base.above(3);
-                towerCycleOrientation = action.getOrientation();
                 towerPlatformRequested = false;
                 towerPlatformComplete = false;
             }
@@ -364,8 +362,12 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         double targetZ = towerCycleBase.getZ() + 0.5D;
         double horizontalDistanceSqr = Mth.square(mob.getX() - targetX)
                 + Mth.square(mob.getZ() - targetZ);
-        return horizontalDistanceSqr < 0.25D
+        boolean reached = horizontalDistanceSqr < 0.25D
                 && mob.getY() >= towerCycleTop.getY() - 0.15D;
+        if (reached) {
+            endGuidedClimb();
+        }
+        return reached;
     }
 
     private void moveThroughTowerCycle() {
@@ -377,28 +379,33 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         mob.fallDistance = 0;
         if (horizontalDistanceSqr >= 0.20D) {
             // First line the engineer up with the ladder column.
+            endGuidedClimb();
             mob.getMoveControl().setWantedPosition(centerX, mob.getY(), centerZ, speedModifier);
             return;
         }
 
-        // Then press slightly into the support wall while moving straight up.
-        // This keeps contact with the ladder for the complete three-block run.
-        double climbX = centerX;
-        double climbZ = centerZ;
-        if (towerCycleOrientation != null) {
-            Direction intoSupport = towerCycleOrientation.getOpposite();
-            climbX += intoSupport.getStepX() * 0.2D;
-            climbZ += intoSupport.getStepZ() * 0.2D;
+        // Lock both horizontal axes to the ladder column. The climb controller
+        // supplies the vertical movement without allowing vanilla steering to
+        // walk sideways off the ladder.
+        if (mob.getMoveControl() instanceof ClimbableMoveControl moveControl) {
+            moveControl.beginGuidedClimb(centerX, centerZ);
         }
         mob.getMoveControl().setWantedPosition(
-                climbX,
+                centerX,
                 towerCycleTop.getY(),
-                climbZ,
+                centerZ,
                 speedModifier
         );
     }
 
+    private void endGuidedClimb() {
+        if (mob.getMoveControl() instanceof ClimbableMoveControl moveControl) {
+            moveControl.endGuidedClimb();
+        }
+    }
+
     private void advancePastTowerCycle() {
+        endGuidedClimb();
         int nextIndex = getPath().getNextNodeIndex() + 1;
         while (nextIndex < getPath().getNodeCount()) {
             BlockPos pos = getPath().getNode(nextIndex).asBlockPos();
@@ -414,7 +421,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         completedTaskNodeIndex = -1;
         towerCycleBase = null;
         towerCycleTop = null;
-        towerCycleOrientation = null;
         towerPlatformRequested = false;
         towerPlatformComplete = false;
         stuckTime = 0;
@@ -437,11 +443,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             }
             Path currentPath = getPath();
             if (currentPath != null && currentPath != previousPath) {
+                endGuidedClimb();
                 activeTaskNodeIndex = -1;
                 completedTaskNodeIndex = -1;
                 towerCycleBase = null;
                 towerCycleTop = null;
-                towerCycleOrientation = null;
                 towerPlatformRequested = false;
                 towerPlatformComplete = false;
                 PathingDebugger.sendPathToClients(mob, currentPath, 0.5F);
