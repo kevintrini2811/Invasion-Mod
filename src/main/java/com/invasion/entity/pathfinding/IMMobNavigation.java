@@ -9,6 +9,7 @@ import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.test.PathingDebugger;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -237,6 +238,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             return;
         }
 
+        // Finishing the terrain job does not mean that the engineer has
+        // reached its path node. This matters especially for ladder towers:
+        // vanilla's generous waypoint tolerance can advance the path while
+        // the engineer is still standing below the newly placed ladder.
+        if (currentAction != PathAction.NONE
+                && completedTaskNodeIndex == nodeIndex
+                && !hasReachedCompletedActionNode(currentAction, getPath().getNextNodePos())) {
+            moveToCompletedActionNode(getPath().getNextNodePos());
+            return;
+        }
+
 	    super.followThePath();
 
         currentAction = getCurrentWorkingAction();
@@ -244,6 +256,32 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             handlePathAction(currentAction);
 	    }
 	}
+
+    private boolean hasReachedCompletedActionNode(PathAction action, BlockPos nodePos) {
+        double targetX = nodePos.getX() + 0.5D;
+        double targetZ = nodePos.getZ() + 0.5D;
+        double horizontalDistanceSqr = Mth.square(mob.getX() - targetX)
+                + Mth.square(mob.getZ() - targetZ);
+
+        if (action.getType() == PathAction.Type.TOWER
+                || action.getType() == PathAction.Type.LADDER) {
+            return horizontalDistanceSqr < 0.36D
+                    && mob.getY() >= nodePos.getY() - 0.1D;
+        }
+
+        return horizontalDistanceSqr < 0.36D
+                && Math.abs(mob.getY() - nodePos.getY()) < 1.0D;
+    }
+
+    private void moveToCompletedActionNode(BlockPos nodePos) {
+        mob.fallDistance = 0;
+        mob.getMoveControl().setWantedPosition(
+                nodePos.getX() + 0.5D,
+                nodePos.getY(),
+                nodePos.getZ() + 0.5D,
+                speedModifier
+        );
+    }
 
 	protected void handlePathAction(PathAction action) {
         if (action.getType() == PathAction.Type.CLIMB) {
