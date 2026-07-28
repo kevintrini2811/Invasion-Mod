@@ -37,6 +37,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.server.level.ServerLevel;
@@ -61,6 +62,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
@@ -232,6 +234,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, Level world) {
         super(type, world);
         getNavigatorNew().setCanDestroyBlocks(true);
+        setCanPickUpLoot(true);
     }
 
     @Override
@@ -301,6 +304,17 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         super.customServerAiStep(serverLevel);
         terrainModifier.onUpdate();
 
+        if (tickCount % 5 == 0) {
+            for (ItemEntity item : serverLevel.getEntitiesOfClass(
+                    ItemEntity.class,
+                    getBoundingBox().inflate(1.25D),
+                    candidate -> !candidate.hasPickUpDelay()
+                            && wantsToPickUp(
+                                    serverLevel, candidate.getItem()))) {
+                pickUpItem(serverLevel, item);
+            }
+        }
+
         if (!level().isClientSide()) {
             // Wenn gerade kein anderer Baujob läuft:
             if (!terrainModifier.isBusy()) {
@@ -317,6 +331,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 currentBuildTarget = null;
             }
         }
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot.isArmor()
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
 
