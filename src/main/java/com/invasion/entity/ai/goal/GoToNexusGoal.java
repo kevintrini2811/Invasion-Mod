@@ -91,7 +91,11 @@ public class GoToNexusGoal extends Goal {
                 mob.setTarget(null);
             }
         }
-        if (mob.getNavigation().isDone() || nexusEntity.getNavigatorNew().getStuckTime() > 40) {
+        // Engineers intentionally stop while their terrain modifier builds a
+        // path node. Repathing here used to cancel that job and discard the
+        // ladder-tower path before the engineer could climb it.
+        if (!navigation.isWaitingForTask()
+                && (mob.getNavigation().isDone() || navigation.getStuckTime() > 40)) {
             start();
         }
     }

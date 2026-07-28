@@ -116,6 +116,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         lastActionResult = result;
         completedTaskNodeIndex = activeTaskNodeIndex;
         activeTaskNodeIndex = -1;
+        // Time spent deliberately standing still for a terrain job must not
+        // trigger the goal's stuck-path recovery immediately afterwards.
+        stuckTime = 0;
 	}
 
     @Override
