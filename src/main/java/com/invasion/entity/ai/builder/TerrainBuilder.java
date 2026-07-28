@@ -135,7 +135,7 @@ public class TerrainBuilder implements ITerrainBuild {
         }
 
         BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation.getOpposite());
+                .setValue(LadderBlock.FACING, orientation);
 
         BlockPos.MutableBlockPos mutable = basePos.mutable();
         int height = Math.max(1, Math.min(layersToBuild, 32));
@@ -144,7 +144,7 @@ public class TerrainBuilder implements ITerrainBuild {
         // the legacy engineer and prevents it from slipping through a gap while
         // it builds the next layer.
         BlockPos lowerLadderPos = basePos.below();
-        BlockPos lowerSupportPos = lowerLadderPos.relative(orientation);
+        BlockPos lowerSupportPos = lowerLadderPos.relative(orientation.getOpposite());
         if (!world.getBlockState(lowerSupportPos)
                 .isCollisionShapeFullBlock(world, mutable.set(lowerSupportPos))) {
             builder.add(new ModifyBlockEntry(
@@ -167,7 +167,7 @@ public class TerrainBuilder implements ITerrainBuild {
             BlockPos ladderPos = mutable.immutable();
 
             // Support dahinter
-            BlockPos supportPos = ladderPos.relative(orientation);
+            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
 
             if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
@@ -202,7 +202,7 @@ public class TerrainBuilder implements ITerrainBuild {
         }
 
         BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation.getOpposite());
+                .setValue(LadderBlock.FACING, orientation);
 
         BlockPos.MutableBlockPos mutable = basePos.mutable();
 
@@ -215,7 +215,7 @@ public class TerrainBuilder implements ITerrainBuild {
             BlockPos ladderPos = mutable.immutable();
 
             // Support-Block hinter der Leiter
-            BlockPos supportPos = ladderPos.relative(orientation);
+            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
             if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
@@ -392,7 +392,7 @@ public class TerrainBuilder implements ITerrainBuild {
 
         // Leiter nach vorn ausgerichtet
         BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation.getOpposite());
+                .setValue(LadderBlock.FACING, orientation);
 
         // Wir bauen pauschal 4 Blöcke hoch (kannst du später erhöhen)
         int height = 4;
@@ -403,7 +403,7 @@ public class TerrainBuilder implements ITerrainBuild {
             BlockPos ladderPos = mutable.immutable();
 
             // Block HINTER der Leiter (Support)
-            BlockPos supportPos = ladderPos.relative(orientation);
+            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
 
             // Support immer aus Planks setzen, wenn nicht voll
             if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
