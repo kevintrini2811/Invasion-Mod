@@ -29,11 +29,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     private final int segmentCount;
     private final float[] stableSegmentYaw;
+    private float stableBodyYaw;
     private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
     private static final double SEGMENT_SPACING = 0.20D;
-    private static final double SLITHER_AMPLITUDE = 0.075D;
-    private static final float SLITHER_SEGMENT_PHASE = 0.58F;
-    private static final float SLITHER_SPEED = 0.11F;
     private static final int MAX_HISTORY_SIZE = 512;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
@@ -215,7 +213,14 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
             sampledSegments[i] =
                     sampleHistoryAtDistance(history, (i + 1) * SEGMENT_SPACING);
         }
-        applySlitherWave(headPosition, sampledSegments);
+
+        Vec3 headTangent = headPosition.position().subtract(sampledSegments[1].position());
+        double headHorizontal =
+                Math.sqrt(headTangent.x * headTangent.x + headTangent.z * headTangent.z);
+        if (headHorizontal > Math.max(0.02D, Math.abs(headTangent.y) * 0.2D)) {
+            stableBodyYaw = Mth.rotLerpRad(0.35F, stableBodyYaw,
+                    (float) -Math.atan2(headTangent.z, headTangent.x));
+        }
 
         for (int i = 0; i < segmentCount; i++) {
             Vec3 pointAhead = i == 0
@@ -230,48 +235,22 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         }
     }
 
-    private void applySlitherWave(PosRotate3D headPosition, PosRotate3D[] segments) {
-        for (int i = 0; i < segments.length; i++) {
-            Vec3 pointAhead = i == 0
-                    ? headPosition.position()
-                    : segments[i - 1].position();
-            Vec3 pointBehind = i + 1 < segments.length
-                    ? segments[i + 1].position()
-                    : segments[i].position();
-            Vec3 tangent = pointAhead.subtract(pointBehind);
-            double horizontalLength =
-                    Math.sqrt(tangent.x * tangent.x + tangent.z * tangent.z);
-
-            Vec3 lateral;
-            if (horizontalLength > 1.0E-4D) {
-                lateral = new Vec3(-tangent.z / horizontalLength, 0.0D,
-                        tangent.x / horizontalLength);
-            } else {
-                float yaw = stableSegmentYaw[Math.min(i, segmentCount - 1)];
-                lateral = new Vec3(Math.sin(yaw), 0.0D, Math.cos(yaw));
-            }
-
-            float phase = theEntity.tickCount * SLITHER_SPEED
-                    - i * SLITHER_SEGMENT_PHASE;
-            double headTaper = Math.min(1.0D, (i + 1) / 3.0D);
-            Vec3 wavedPosition = segments[i].position().add(
-                    lateral.scale(Mth.sin(phase) * SLITHER_AMPLITUDE * headTaper));
-            segments[i] = new PosRotate3D(wavedPosition, segments[i].rotation());
-        }
-    }
-
     private Vector3f rotationAlong(Vec3 direction, int segmentIndex) {
         double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
         double vertical = Math.abs(direction.y);
-        if (horizontal > Math.max(0.02D, vertical * 0.2D)) {
+        boolean isVertical = horizontal <= Math.max(0.02D, vertical * 0.2D);
+        if (!isVertical) {
             float targetYaw = (float) -Math.atan2(direction.z, direction.x);
             stableSegmentYaw[segmentIndex] =
                     Mth.rotLerpRad(0.35F, stableSegmentYaw[segmentIndex], targetYaw);
+            stableBodyYaw = Mth.rotLerpRad(0.35F, stableBodyYaw, targetYaw);
         }
         return new Vector3f(
                 0,
-                stableSegmentYaw[segmentIndex],
-                (float) Math.atan2(direction.y, horizontal)
+                isVertical ? stableBodyYaw : stableSegmentYaw[segmentIndex],
+                isVertical
+                        ? Math.copySign(Mth.HALF_PI, (float) direction.y)
+                        : (float) Math.atan2(direction.y, horizontal)
         );
     }
 
