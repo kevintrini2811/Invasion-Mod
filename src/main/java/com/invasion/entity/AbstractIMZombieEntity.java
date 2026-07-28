@@ -5,6 +5,7 @@ import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.ai.scaffold.ScaffoldView;
 import com.invasion.util.math.PosUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -20,6 +21,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.server.level.ServerLevel;
@@ -34,6 +36,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 
 public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implements Miner {
@@ -46,6 +49,14 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
 
     protected AbstractIMZombieEntity(EntityType<? extends AbstractIMZombieEntity> type, Level world, float diggingSpeed) {
         super(type, world);
+        setCanPickUpLoot(true);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
+        return stack.is(ItemTags.MELEE_WEAPON_ENCHANTABLE)
+                && !heldItem.is(ItemTags.MELEE_WEAPON_ENCHANTABLE);
     }
 
     @Override
