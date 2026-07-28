@@ -150,8 +150,17 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     @Override
     protected void doMovementTo(int time) {
         PosRotate3D movePos = entityPositionAtParam(time);
+        Vec3 requestedPosition = movePos.position();
         theEntity.move(MoverType.SELF, movePos.position().subtract(theEntity.position()));
         ((BurrowerEntity) theEntity).setHeadRotation(movePos);
+
+        if (!waitingForNotify && theEntity.position().distanceToSqr(requestedPosition) > 0.01D) {
+            BlockPos obstruction = BlockPos.containing(requestedPosition);
+            if (((BurrowerEntity) theEntity).tryClearPosition(obstruction, this)) {
+                setDoingTaskAndHold();
+                return;
+            }
+        }
 
         if (nodeChanged) {
             ((BurrowerEntity) theEntity).setHeadRotation(movePos);

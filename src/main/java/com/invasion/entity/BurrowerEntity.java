@@ -20,6 +20,7 @@ import com.invasion.util.math.PosRotate3D;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -122,7 +123,11 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     @Override
     public boolean onPathBlocked(Path path, Notifiable notifee) {
-        return terrainDigger.askClearPosition(path.getNextNodePos(), notifee, 1);
+        return tryClearPosition(path.getNextNodePos(), notifee);
+    }
+
+    public boolean tryClearPosition(BlockPos pos, Notifiable notifee) {
+        return terrainDigger.askClearPosition(pos, notifee, 1);
     }
 
     public Vector3f getRotation() {
