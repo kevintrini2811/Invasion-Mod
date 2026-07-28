@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import com.invasion.item.InvItems;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.ai.scaffold.ScaffoldView;
@@ -22,6 +23,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.server.level.ServerLevel;
@@ -37,6 +39,7 @@ import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
 
 public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implements Miner {
@@ -55,8 +58,37 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
     @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
         ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
-        return stack.is(ItemTags.MELEE_WEAPON_ENCHANTABLE)
-                && !heldItem.is(ItemTags.MELEE_WEAPON_ENCHANTABLE);
+        return isUsableMeleeWeapon(stack)
+                && !isUsableMeleeWeapon(heldItem);
+    }
+
+    private static boolean isUsableMeleeWeapon(ItemStack stack) {
+        return stack.is(ItemTags.SWORDS)
+                || stack.is(ItemTags.AXES)
+                || stack.is(Items.TRIDENT)
+                || stack.is(Items.MACE)
+                || stack.is(InvItems.INFUSED_SWORD);
+    }
+
+    @Override
+    public void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
+
+        if (tickCount % 5 != 0
+                || isUsableMeleeWeapon(getItemBySlot(EquipmentSlot.MAINHAND))) {
+            return;
+        }
+
+        for (ItemEntity item : world.getEntitiesOfClass(
+                ItemEntity.class,
+                getBoundingBox().inflate(1.25D),
+                candidate -> !candidate.hasPickUpDelay()
+                        && wantsToPickUp(world, candidate.getItem()))) {
+            pickUpItem(world, item);
+            if (isUsableMeleeWeapon(getItemBySlot(EquipmentSlot.MAINHAND))) {
+                break;
+            }
+        }
     }
 
     @Override

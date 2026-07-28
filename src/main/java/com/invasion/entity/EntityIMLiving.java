@@ -123,6 +123,11 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
                 || super.requiresCustomPersistence();
     }
 
+    @Override
+    public final boolean isPersistenceRequired() {
+        return !countsTowardMobCap && super.isPersistenceRequired();
+    }
+
     public final void setCountsTowardMobCap(boolean countsTowardMobCap) {
         this.countsTowardMobCap = countsTowardMobCap;
     }
