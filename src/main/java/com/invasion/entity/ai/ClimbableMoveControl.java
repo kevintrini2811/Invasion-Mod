@@ -15,6 +15,9 @@ import com.invasion.entity.Animatable;
 
 public class ClimbableMoveControl extends MoveControl {
     private float turnRate = 90;
+    private boolean guidedClimb;
+    private double guidedClimbX;
+    private double guidedClimbZ;
 
     public ClimbableMoveControl(Mob entity) {
         super(entity);
@@ -26,6 +29,16 @@ public class ClimbableMoveControl extends MoveControl {
 
     public void setTurnRate(float rate) {
         turnRate = rate;
+    }
+
+    public void beginGuidedClimb(double centerX, double centerZ) {
+        guidedClimb = true;
+        guidedClimbX = centerX;
+        guidedClimbZ = centerZ;
+    }
+
+    public void endGuidedClimb() {
+        guidedClimb = false;
     }
 
     @Override
@@ -73,6 +86,18 @@ public class ClimbableMoveControl extends MoveControl {
                 }
             } else if (mob instanceof Animatable ae) {
                 ae.setMoveState(MoveState.RUNNING);
+            }
+
+            if (guidedClimb && ladderPos.isPresent()) {
+                // Remove all tangential drift introduced by regular ground
+                // steering. Only a small correction towards the centre of the
+                // ladder column remains while vertical ladder motion continues.
+                var velocity = mob.getDeltaMovement();
+                double correctionX = Mth.clamp((guidedClimbX - mob.getX()) * 0.35D, -0.08D, 0.08D);
+                double correctionZ = Mth.clamp((guidedClimbZ - mob.getZ()) * 0.35D, -0.08D, 0.08D);
+                mob.setXxa(0);
+                mob.setZza(0);
+                mob.setDeltaMovement(correctionX, velocity.y, correctionZ);
             }
         }
     }
