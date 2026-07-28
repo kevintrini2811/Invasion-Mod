@@ -508,6 +508,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public boolean moveTo(Path path, double speed) {
+        if (mob instanceof PigmanEngineerEntity && isWaitingForTask()) {
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] rejected path replacement during build: entity={}, currentPath={}, requestedPath={}, node={}, pos={}",
+                    mob.getId(),
+                    getPath() == null ? 0 : System.identityHashCode(getPath()),
+                    System.identityHashCode(path),
+                    getPath() == null ? -1 : getPath().getNextNodeIndex(),
+                    mob.blockPosition()
+            );
+            return false;
+        }
         if (continuingEngineerBridge
                 && mob instanceof NexusEntity nexusMob
                 && nexusMob.hasNexus()
