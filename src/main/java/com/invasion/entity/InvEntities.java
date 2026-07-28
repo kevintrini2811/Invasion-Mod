@@ -42,6 +42,9 @@ public interface InvEntities {
             .sized(1.8F, 1.95F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<BurrowerEntity> BURROWER = register("burrower", EntityType.Builder.<BurrowerEntity>of(BurrowerEntity::new, MobCategory.MONSTER)
             .sized(0.5F, 0.5F).eyeHeight(0.25F).clientTrackingRange(10));
+    EntityType<BurrowerTailEntity> BURROWER_TAIL = register("burrower_tail",
+            EntityType.Builder.<BurrowerTailEntity>of(BurrowerTailEntity::new, MobCategory.MISC)
+                    .sized(0.7F, 0.7F).clientTrackingRange(10).updateInterval(2).noSummon().noSave());
     EntityType<ImpEnitty> IMP = register("imp", EntityType.Builder.<ImpEnitty>of(ImpEnitty::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMEndermanEntity> ENDERMAN = register("enderman", EntityType.Builder.<IMEndermanEntity>of(IMEndermanEntity::new, MobCategory.MONSTER)

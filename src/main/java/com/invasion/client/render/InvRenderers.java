@@ -35,6 +35,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.ENDERMAN, IMEndermanRenderer::new);
         EntityRendererRegistry.register(InvEntities.THROWER, ThrowerRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER, BurrowerRenderer::new);
+        EntityRendererRegistry.register(InvEntities.BURROWER_TAIL, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOULDER, BoulderProjectileRenderer::new);
         EntityRendererRegistry.register(InvEntities.SKELETON_ARROW, SkeletonArrowRenderer::new);
         EntityRendererRegistry.register(InvEntities.TNT, TntProjectileRenderer::new);

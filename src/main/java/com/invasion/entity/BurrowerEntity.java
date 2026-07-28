@@ -1,6 +1,8 @@
 package com.invasion.entity;
 
 import java.util.Arrays;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
@@ -42,17 +44,13 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     private static final EntityDataAccessor<Vector3fc> HEAD_ROTATION =
             SynchedEntityData.defineId(BurrowerEntity.class, EntityDataSerializers.VECTOR3);
-    private static final EntityDataAccessor<Vector3fc>[] SEGMENT_POSITIONS =
-            createTrackedVectors();
-    private static final EntityDataAccessor<Vector3fc>[] SEGMENT_ROTATIONS =
-            createTrackedVectors();
-
     private TerrainModifier terrainModifier = new TerrainModifier(this, 2);
     private TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1);
 
     private final PosRotate3D[] segments3D = new PosRotate3D[NUMBER_OF_SEGMENTS];
     private final PosRotate3D[] segments3DLastTick = new PosRotate3D[NUMBER_OF_SEGMENTS];
-    private final PosRotate3D[] segmentTargets = new PosRotate3D[NUMBER_OF_SEGMENTS];
+    private final Deque<Vec3> clientMovementHistory = new ArrayDeque<>();
+    private BurrowerTailEntity tailHitbox;
 
     protected final Vector3f rot = new Vector3f();
     protected final Vector3f prevRot = new Vector3f();
@@ -61,28 +59,13 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         super(type, world);
         Arrays.fill(segments3D, PosRotate3D.ZERO);
         Arrays.fill(segments3DLastTick, PosRotate3D.ZERO);
-        Arrays.fill(segmentTargets, PosRotate3D.ZERO);
         getNavigatorNew().setCanDestroyBlocks(true);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static EntityDataAccessor<Vector3fc>[] createTrackedVectors() {
-        EntityDataAccessor<Vector3fc>[] accessors = new EntityDataAccessor[NUMBER_OF_SEGMENTS];
-        for (int i = 0; i < accessors.length; i++) {
-            accessors[i] =
-                    SynchedEntityData.defineId(BurrowerEntity.class, EntityDataSerializers.VECTOR3);
-        }
-        return accessors;
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(HEAD_ROTATION, new Vector3f());
-        for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
-            builder.define(SEGMENT_POSITIONS[i], new Vector3f());
-            builder.define(SEGMENT_ROTATIONS[i], new Vector3f());
-        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -158,9 +141,9 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         if (index < segments3D.length) {
             segments3DLastTick[index] = segments3D[index];
             segments3D[index] = pos;
-            entityData.set(SEGMENT_POSITIONS[index],
-                    new Vector3f((float) pos.position().x, (float) pos.position().y, (float) pos.position().z));
-            entityData.set(SEGMENT_ROTATIONS[index], new Vector3f(pos.rotation()), true);
+            if (!level().isClientSide() && index == NUMBER_OF_SEGMENTS - 1) {
+                updateTailHitbox(pos.position());
+            }
         }
     }
 
@@ -183,32 +166,63 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
             return;
         }
 
-        for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
-            // Rotation accessors are defined after all position accessors, so a
-            // normal dirty-data packet has applied both values by this point.
-            if (SEGMENT_ROTATIONS[i].equals(data)) {
-                Vector3fc position = entityData.get(SEGMENT_POSITIONS[i]);
-                PosRotate3D target = new PosRotate3D(
-                        new Vec3(position.x(), position.y(), position.z()),
-                        new Vector3f(entityData.get(SEGMENT_ROTATIONS[i])));
-                segmentTargets[i] = target;
-                if (segments3D[i].position().lengthSqr() < 1.0E-6D) {
-                    segments3D[i] = target;
-                    segments3DLastTick[i] = target;
-                }
-                return;
-            }
-        }
     }
 
     @Override
     public void tick() {
         super.tick();
         if (level().isClientSide()) {
-            for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
-                segments3DLastTick[i] = segments3D[i];
-                segments3D[i] = segments3D[i].lerp(0.5F, segmentTargets[i]);
+            updateClientSegments();
+        }
+    }
+
+    private void updateClientSegments() {
+        clientMovementHistory.addLast(position());
+        while (clientMovementHistory.size() > 256) {
+            clientMovementHistory.removeFirst();
+        }
+        Vec3[] history = clientMovementHistory.toArray(Vec3[]::new);
+        for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
+            segments3DLastTick[i] = segments3D[i];
+            Vec3 point = sampleClientHistory(history, (i + 1) * 0.20D);
+            Vec3 ahead = i == 0 ? position() : segments3D[i - 1].position();
+            Vec3 direction = ahead.subtract(point);
+            double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+            Vector3f rotation = new Vector3f(0.0F,
+                    horizontal > 1.0E-4D
+                            ? (float) -Math.atan2(direction.z, direction.x)
+                            : segments3D[i].rotation().y(),
+                    (float) Math.atan2(direction.y, horizontal));
+            segments3D[i] = new PosRotate3D(point, rotation);
+        }
+    }
+
+    private Vec3 sampleClientHistory(Vec3[] history, double targetDistance) {
+        double distance = 0.0D;
+        for (int i = history.length - 1; i > 0; i--) {
+            double step = history[i].distanceTo(history[i - 1]);
+            if (step < 1.0E-6D) {
+                continue;
             }
+            if (distance + step >= targetDistance) {
+                return history[i].lerp(history[i - 1],
+                        (targetDistance - distance) / step);
+            }
+            distance += step;
+        }
+        return history.length == 0 ? position() : history[0];
+    }
+
+    private void updateTailHitbox(Vec3 position) {
+        if (tailHitbox == null || tailHitbox.isRemoved()) {
+            tailHitbox = new BurrowerTailEntity(InvEntities.BURROWER_TAIL, level());
+            tailHitbox.setParent(this);
+            tailHitbox.setPos(position);
+            if (level() instanceof ServerLevel serverLevel) {
+                serverLevel.addFreshEntity(tailHitbox);
+            }
+        } else {
+            tailHitbox.setPos(position);
         }
     }
 
