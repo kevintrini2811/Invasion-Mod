@@ -91,6 +91,15 @@ public class MineBlockGoal extends Goal {
             breakProgress += speed;
             if (breakProgress >= 10) {
                 mob.level().destroyBlockProgress(mob.getId(), pos, -1);
+                if (breakingState.is(InvBlocks.NEXUS_CORE)) {
+                    mob.level()
+                            .getBlockEntity(pos, InvBlockEntities.NEXUS)
+                            .map(NexusBlockEntity::getNexus)
+                            .ifPresent(nexus -> nexus.damage(
+                                    mob.damageSources().mobAttack(mob), 1));
+                    breakProgress = 0;
+                    return true;
+                }
                 boolean removed = mob.level().destroyBlock(pos,
                         InvasionMod.getConfig().destructedBlocksDrop);
                 if (removed && mob instanceof Miner miner) {
