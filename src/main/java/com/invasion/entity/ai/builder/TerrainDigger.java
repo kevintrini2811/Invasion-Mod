@@ -1,7 +1,7 @@
 package com.invasion.entity.ai.builder;
 
-import java.util.Arrays;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import com.invasion.Notifiable;
@@ -29,14 +29,21 @@ public class TerrainDigger implements ITerrainDig, Notifiable {
     @SuppressWarnings("deprecation")
     @Override
     public boolean askClearPosition(BlockPos pos, Notifiable onFinished, float costMultiplier) {
-        return this.modifier.requestTask(onFinished, this, Arrays.stream(digger.getBlockRemovalOrder(pos)).map(removal -> {
+        List<ModifyBlockEntry> removals = new ArrayList<>();
+        for (BlockPos removal : digger.getBlockRemovalOrder(pos)) {
             BlockState state = digger.getTerrain().getBlockState(removal);
-            if (!state.isAir() && !state.blocksMotion() && digger.canClearBlock(removal)) {
-                return ModifyBlockEntry.ofDeletion(removal, (int) (costMultiplier * digger.getBlockRemovalCost(removal) / digRate));
+            if (!state.isAir() && state.blocksMotion()) {
+                if (!digger.canClearBlock(removal)) {
+                    return false;
+                }
+                removals.add(ModifyBlockEntry.ofDeletion(
+                        removal,
+                        (int) (costMultiplier * digger.getBlockRemovalCost(removal) / digRate)
+                ));
             }
+        }
 
-            return null;
-        }).filter(Objects::nonNull));
+        return !removals.isEmpty() && modifier.requestTask(removals, onFinished, this);
     }
 
     @Override
