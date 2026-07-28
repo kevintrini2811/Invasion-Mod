@@ -167,6 +167,14 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     @Override
+    public com.invasion.entity.pathfinding.Navigation getNavigatorNew() {
+        if (!(navigation instanceof com.invasion.entity.pathfinding.Navigation)) {
+            navigation = createNavigation(level());
+        }
+        return (com.invasion.entity.pathfinding.Navigation) navigation;
+    }
+
+    @Override
     public boolean fireImmune() {
         return fireImmune || super.fireImmune();
     }
