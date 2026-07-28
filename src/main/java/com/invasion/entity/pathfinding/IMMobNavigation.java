@@ -247,8 +247,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         // the engineer is still standing below the newly placed ladder.
         if (currentAction != PathAction.NONE
                 && completedTaskNodeIndex == nodeIndex
-                && !hasReachedCompletedActionNode(currentAction, getPath().getNextNodePos())) {
-            moveToCompletedActionNode(getPath().getNextNodePos());
+                && !hasReachedCompletedActionNode(
+                        currentAction,
+                        getCompletedActionMoveTarget(currentAction, getPath().getNextNodePos()))) {
+            moveToCompletedActionNode(
+                    getCompletedActionMoveTarget(currentAction, getPath().getNextNodePos()));
             return;
         }
 
@@ -274,6 +277,18 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
         return horizontalDistanceSqr < 0.36D
                 && Math.abs(mob.getY() - nodePos.getY()) < 1.0D;
+    }
+
+    private BlockPos getCompletedActionMoveTarget(PathAction action, BlockPos nodePos) {
+        // In water or lava the path node itself is replaced by the plank, so
+        // the engineer must move onto the block above it. Across air, the
+        // plank sits below the path node and the original target is correct.
+        if (action.getType() == PathAction.Type.BRIDGE
+                && mob.level().getBlockState(nodePos)
+                        .isCollisionShapeFullBlock(mob.level(), nodePos)) {
+            return nodePos.above();
+        }
+        return nodePos;
     }
 
     private void moveToCompletedActionNode(BlockPos nodePos) {
