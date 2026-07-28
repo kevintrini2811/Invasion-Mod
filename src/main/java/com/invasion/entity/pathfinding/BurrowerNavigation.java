@@ -28,15 +28,15 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     protected Node prevNode;
 
     private final int segmentCount;
-    private final int segmentDelay;
     private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
+    private static final double SEGMENT_SPACING = 0.22D;
+    private static final int MAX_HISTORY_SIZE = 512;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
 
     public BurrowerNavigation(BurrowerEntity entity, PathSource pathSource, int segments, int offset) {
         super(entity, pathSource);
         segmentCount = segments;
-        segmentDelay = Math.max(1, Math.abs(offset));
 
         actor.setCanDestroyBlocks(true);
         actor.setCanClimb(true);
@@ -200,16 +200,35 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     private void updateSegments(PosRotate3D headPosition) {
         movementHistory.addLast(headPosition);
-        int historyLimit = segmentCount * segmentDelay + 1;
-        while (movementHistory.size() > historyLimit) {
+        while (movementHistory.size() > MAX_HISTORY_SIZE) {
             movementHistory.removeFirst();
         }
 
         PosRotate3D[] history = movementHistory.toArray(PosRotate3D[]::new);
         for (int i = 0; i < segmentCount; i++) {
-            int historyIndex = Math.max(0, history.length - 1 - (i + 1) * segmentDelay);
-            ((BurrowerEntity) theEntity).setSegment(i, history[historyIndex]);
+            ((BurrowerEntity) theEntity).setSegment(
+                    i,
+                    sampleHistoryAtDistance(history, (i + 1) * SEGMENT_SPACING)
+            );
         }
+    }
+
+    private PosRotate3D sampleHistoryAtDistance(PosRotate3D[] history, double targetDistance) {
+        double distance = 0;
+        for (int newerIndex = history.length - 1; newerIndex > 0; newerIndex--) {
+            PosRotate3D newer = history[newerIndex];
+            PosRotate3D older = history[newerIndex - 1];
+            double stepDistance = newer.position().distanceTo(older.position());
+            if (stepDistance < 1.0E-6D) {
+                continue;
+            }
+            if (distance + stepDistance >= targetDistance) {
+                float progress = (float) ((targetDistance - distance) / stepDistance);
+                return newer.lerp(progress, older);
+            }
+            distance += stepDistance;
+        }
+        return history[0];
     }
 
     @Override
