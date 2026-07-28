@@ -253,9 +253,10 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
 
     protected final boolean isAdjacentSolidBlock(BlockGetter terrainMap, BlockPos pos) {
         BlockPos.MutableBlockPos mutable = pos.mutable();
+        int collisionWidth = Mth.floor(entity.getBbWidth() + 1.0F);
         for (Vec3i offset
-                : entity.getBbWidth() == 1 ? PosUtils.OFFSET_ADJACENT
-                : entity.getBbWidth() == 2 ? PosUtils.OFFSET_ADJACENT_2
+                : collisionWidth == 1 ? PosUtils.OFFSET_ADJACENT
+                : collisionWidth == 2 ? PosUtils.OFFSET_ADJACENT_2
                 : PosUtils.ZERO) {
             BlockState state = terrainMap.getBlockState(mutable.set(pos).offset(offset));
             if (!state.isAir() && !state.isPathfindable(PathComputationType.LAND)) {
