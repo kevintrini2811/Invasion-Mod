@@ -1,8 +1,9 @@
 package com.invasion.entity.pathfinding;
 
-import org.joml.Vector3d;
-import org.joml.Vector3dc;
 import org.joml.Vector3f;
+
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import com.invasion.block.BlockMetadata;
 import com.invasion.entity.BurrowerEntity;
@@ -11,7 +12,6 @@ import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.util.math.PosRotate3D;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
@@ -27,29 +27,16 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     protected Node nextNode;
     protected Node prevNode;
 
-    protected Node[] prevSegmentNodes;
-    protected Node[] activeSegmentNodes;
-    protected Node[] nextSegmentNodes;
-
-    protected int[] segmentPathIndices;
-    protected int[] segmentTime;
-    protected int[] segmentOffsets;
+    private final int segmentCount;
+    private final int segmentDelay;
+    private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
     protected float timePerTick = 0.05F;
-    protected Path lastPath;
     protected boolean nodeChanged;
 
     public BurrowerNavigation(BurrowerEntity entity, PathSource pathSource, int segments, int offset) {
         super(entity, pathSource);
-        prevSegmentNodes = new Node[segments];
-        activeSegmentNodes = new Node[segments];
-        nextSegmentNodes = new Node[segments];
-        segmentPathIndices = new int[segments];
-        segmentTime = new int[segments];
-        segmentOffsets = new int[segments];
-
-        for (int i = 0; i < segmentOffsets.length; i++) {
-            segmentOffsets[i] = ((i + 1) * offset);
-        }
+        segmentCount = segments;
+        segmentDelay = Math.max(1, Math.abs(offset));
 
         actor.setCanDestroyBlocks(true);
         actor.setCanClimb(true);
@@ -93,7 +80,12 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     @Override
     protected PosRotate3D entityPositionAtParam(int time) {
-        return calcAbsolutePositionAndRotation(time * timePerTick, prevNode, activeNode, nextNode);
+        float progress = Mth.clamp(time * timePerTick, 0, 1);
+        int activeIndex = path.getNextNodeIndex();
+        Node followingNode = activeIndex + 2 < path.getNodeCount()
+                ? path.getNode(activeIndex + 2)
+                : nextNode;
+        return interpolatePathEdge(progress, prevNode, activeNode, nextNode, followingNode);
     }
 
     @Override
@@ -103,14 +95,16 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     @Override
     protected void pathFollow(int time) {
-        int nextFrontIndex = path.getNextNodeIndex() + 2;
         if (isReadyForNextNode(time)) {
-            if (nextFrontIndex < path.getNodeCount()) {
+            int nextIndex = path.getNextNodeIndex() + 1;
+            if (nextIndex < path.getNodeCount()) {
                 timeParam = 0;
-                path.setNextNodeIndex(nextFrontIndex - 1);
+                path.setNextNodeIndex(nextIndex);
                 prevNode = activeNode;
                 activeNode = nextNode;
-                nextNode = path.getNode(nextFrontIndex);
+                nextNode = nextIndex + 1 < path.getNodeCount()
+                        ? path.getNode(nextIndex + 1)
+                        : activeNode;
                 nodeChanged = true;
             }
         } else {
@@ -118,49 +112,11 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         }
     }
 
-    protected void doSegmentFollowTo(int ticks, int segmentIndex) {
-        ticks += segmentOffsets[segmentIndex];
-        // TODO: Tick rate can be changed
-        while (ticks <= 0) {
-            ticks += 20;
-        }
-
-        int nextFrontIndex = segmentPathIndices[segmentIndex] + 2;
-        if (isReadyForNextNode(ticks)) {
-            if (nextFrontIndex < path.getNodeCount()) {
-                segmentPathIndices[segmentIndex] = (nextFrontIndex - 1);
-                prevSegmentNodes[segmentIndex] = activeSegmentNodes[segmentIndex];
-                activeSegmentNodes[segmentIndex] = nextSegmentNodes[segmentIndex];
-                nextSegmentNodes[segmentIndex] = path.getNode(segmentPathIndices[segmentIndex] >= 0 ? nextFrontIndex : 0);
-                segmentTime[segmentIndex] = 0;
-            }
-        } else {
-            segmentTime[segmentIndex] = ticks;
-        }
-
-        if (segmentPathIndices[segmentIndex] >= 0) {
-            PosRotate3D pos = positionAtTime(segmentTime[segmentIndex], prevSegmentNodes[segmentIndex], activeSegmentNodes[segmentIndex], nextSegmentNodes[segmentIndex]);
-            ((BurrowerEntity) theEntity).setSegment(segmentIndex, pos);
-            if (segmentTime[segmentIndex] == 0) {
-                ((BurrowerEntity) theEntity).setSegment(segmentIndex, pos);
-            }
-        }
-    }
-
     @Override
     protected void doMovementTo(int time) {
         PosRotate3D movePos = entityPositionAtParam(time);
-        Vec3 requestedPosition = movePos.position();
         theEntity.move(MoverType.SELF, movePos.position().subtract(theEntity.position()));
         ((BurrowerEntity) theEntity).setHeadRotation(movePos);
-
-        if (!waitingForNotify && theEntity.position().distanceToSqr(requestedPosition) > 0.01D) {
-            BlockPos obstruction = BlockPos.containing(requestedPosition);
-            if (((BurrowerEntity) theEntity).tryClearPosition(obstruction, this)) {
-                setDoingTaskAndHold();
-                return;
-            }
-        }
 
         if (nodeChanged) {
             ((BurrowerEntity) theEntity).setHeadRotation(movePos);
@@ -168,9 +124,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         }
 
         if (theEntity.distanceToSqr(movePos.position()) < minMoveToleranceSq) {
-            for (int segmentIndex = 0; segmentIndex < segmentPathIndices.length; segmentIndex++) {
-                doSegmentFollowTo(time, segmentIndex);
-            }
+            updateSegments(movePos);
             timeParam = time;
             ticksStuck--;
         } else {
@@ -178,9 +132,23 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         }
     }
 
+    private void updateSegments(PosRotate3D headPosition) {
+        movementHistory.addLast(headPosition);
+        int historyLimit = segmentCount * segmentDelay + 1;
+        while (movementHistory.size() > historyLimit) {
+            movementHistory.removeFirst();
+        }
+
+        PosRotate3D[] history = movementHistory.toArray(PosRotate3D[]::new);
+        for (int i = 0; i < segmentCount; i++) {
+            int historyIndex = Math.max(0, history.length - 1 - (i + 1) * segmentDelay);
+            ((BurrowerEntity) theEntity).setSegment(i, history[historyIndex]);
+        }
+    }
+
     @Override
     public boolean isIdle() {
-        return path == null || path.getNextNodeIndex() >= path.getNodeCount() - 2;
+        return path == null || path.getNextNodeIndex() >= path.getNodeCount() - 1;
     }
 
     @Override
@@ -190,79 +158,13 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
             return false;
         }
 
-        if (path == null) {
-            path = newPath;
-            activeNode = path.getNode(0);
-            prevNode = activeNode;
-            nextNode = path.getNode(1);
-            if (ActionablePathNode.getAction(activeNode) != PathAction.NONE) {
-                nodeActionFinished = false;
-            }
-            for (int i = 0; i < segmentPathIndices.length; i++) {
-                if (activeSegmentNodes[i] == null) {
-                    activeSegmentNodes[i] = activeNode;
-                    nextSegmentNodes[i] = activeNode;
-                    segmentPathIndices[i] = 0;
-                    segmentTime[i] = segmentOffsets[i];
-                    while (segmentTime[i] < 0) {
-                        // TODO: tick rate can change now
-                        segmentTime[i] += 20;
-                        segmentPathIndices[i]--;
-                    }
-                }
-            }
-        }
-
-        int mainIndex = path.getNextNodeIndex();
-        if (newPath.getNode(0).equals(activeNode)) {
-            if (segmentPathIndices.length > 0) {
-                int lowestIndex = Mth.clamp(
-                        segmentPathIndices[segmentPathIndices.length - 1],
-                        0,
-                        mainIndex
-                );
-                path = extendPath(path, newPath, lowestIndex, mainIndex);
-                mainIndex -= lowestIndex;
-                path.setNextNodeIndex(mainIndex);
-                nextNode = path.getNode(mainIndex + 1);
-                for (int i = 0; i < segmentPathIndices.length; i++) {
-                    segmentPathIndices[i] = Mth.clamp(
-                            segmentPathIndices[i] - lowestIndex,
-                            -1,
-                            mainIndex
-                    );
-                    if (segmentPathIndices[i] == mainIndex) {
-                        nextSegmentNodes[i] = nextNode;
-                    }
-                }
-            } else {
-                path = newPath;
-                path.setNextNodeIndex(0);
-                nextNode = path.getNode(1);
-            }
-        } else {
-            path = newPath;
-            activeNode = path.getNode(0);
-            prevNode = activeNode;
-            nextNode = path.getNode(1);
-            if (ActionablePathNode.getAction(activeNode) != PathAction.NONE) {
-                nodeActionFinished = false;
-            }
-            for (int i = 0; i < segmentPathIndices.length; i++) {
-                if (activeSegmentNodes[i] == null) {
-                    activeSegmentNodes[i] = activeNode;
-                    nextSegmentNodes[i] = activeNode;
-                    segmentPathIndices[i] = 0;
-                    segmentTime[i] = segmentOffsets[i];
-                    while (segmentTime[i] < 0) {
-                        // TODO: tick rate can change now
-                        segmentTime[i] += 20;
-                        segmentPathIndices[i]--;
-                    }
-                }
-            }
-        }
-
+        path = newPath;
+        path.setNextNodeIndex(0);
+        activeNode = path.getNode(0);
+        prevNode = activeNode;
+        nextNode = path.getNode(1);
+        timeParam = 0;
+        nodeActionFinished = ActionablePathNode.getAction(activeNode) == PathAction.NONE;
         ticksStuck = 0;
 
         if (noSunPathfind) {
@@ -272,79 +174,40 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         return true;
     }
 
-    protected PosRotate3D positionAtTime(int tick, Node start, Node middle, Node end) {
-        return calcAbsolutePositionAndRotation(tick * timePerTick, start, middle, end);
-    }
+    private PosRotate3D interpolatePathEdge(
+            float progress,
+            Node previous,
+            Node start,
+            Node end,
+            Node following
+    ) {
+        Vec3 p0 = Vec3.atCenterOf(start.asBlockPos());
+        Vec3 p1 = Vec3.atCenterOf(end.asBlockPos());
+        Vec3 tangent0 = Vec3.atCenterOf(end.asBlockPos())
+                .subtract(Vec3.atCenterOf(previous.asBlockPos()))
+                .scale(0.5D);
+        Vec3 tangent1 = Vec3.atCenterOf(following.asBlockPos())
+                .subtract(Vec3.atCenterOf(start.asBlockPos()))
+                .scale(0.5D);
 
-    private PosRotate3D calcAbsolutePositionAndRotation(float time, Node start, Node middle, Node end) {
-        PosRotate3D pos = calcPositionAndRotation(time, start, middle, end);
-        return new PosRotate3D(pos.position().add(Vec3.atLowerCornerOf(middle.asBlockPos())), pos.rotation());
-    }
+        double t = progress;
+        double t2 = t * t;
+        double t3 = t2 * t;
+        Vec3 position = p0.scale(2 * t3 - 3 * t2 + 1)
+                .add(tangent0.scale(t3 - 2 * t2 + t))
+                .add(p1.scale(-2 * t3 + 3 * t2))
+                .add(tangent1.scale(t3 - t2));
 
-    private PosRotate3D calcPositionAndRotation(float time, Node start, Node middle, Node end) {
-        Vec3i v = end.asBlockPos().subtract(start.asBlockPos());
-        Vector3dc vd = new Vector3d(v.getX(), v.getY(), v.getZ());
-        Vector3dc h = new Vector3d(
-                middle.x != start.x ? 1 : -1,
-                middle.y != start.y ? 1 : -1,
-                middle.z != start.z ? 1 : -1
+        Vec3 direction = p0.scale(6 * t2 - 6 * t)
+                .add(tangent0.scale(3 * t2 - 4 * t + 1))
+                .add(p1.scale(-6 * t2 + 6 * t))
+                .add(tangent1.scale(3 * t2 - 2 * t));
+        double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+        Vector3f rotation = new Vector3f(
+                0,
+                (float) -Math.atan2(direction.z, direction.x),
+                (float) Math.atan2(direction.y, horizontal)
         );
-        Vector3dc g = new Vector3d(
-                middle.x != end.x ? 1 : -1,
-                middle.y != end.y ? 1 : -1,
-                middle.z != end.z ? 1 : -1
-        );
-        Vector3dc offset = vd.mul(-0.5D, new Vector3d()).mul(h);
-
-        if (h.x() == 1 && g.x() == 1) {
-            return new PosRotate3D(new Vec3(time * v.getX() * 0.5D + (v.getX() > 0 ? 0 : 1), 0.5D, 0.5D), new Vector3f(0, v.getX() >= 1 ? 0 : Mth.PI, 0));
-        }
-        if (h.y() == 1 && g.y() == 1) {
-            return new PosRotate3D(new Vec3(0.5D, time * v.getY() * 0.5D + (v.getY() > 0 ? 0 : 1), 0.5D), new Vector3f());
-        }
-        if (h.z() == 1 && g.z() == 1) {
-            return new PosRotate3D(
-                    new Vec3(0.5D, 0.5D,
-                            time * v.getZ() * 0.5D + (v.getZ() > 0 ? 0 : 1)),
-                    new Vector3f(0, v.getZ() * Mth.PI / 4F, 0));
-        }
-
-        double sin = Math.sin(time * 0.5D * Math.PI) * 0.5D;
-        double cos = Math.cos(time * 0.5D * Math.PI) * 0.5D;
-
-        Vector3d pos = vd.mul(h, new Vector3d()).mul(
-                h.x() == 1 ? sin : cos,
-                h.y() == 1 ? sin : cos,
-                h.z() == 1 ? sin : cos
-        ).add(offset);
-
-        Vector3f rot = new Vector3f();
-
-        if (h.x() == 1) {
-            rot.set(0, vd.x() == 1 ? 0 : 180, 0);
-            if (g.z() == 1)
-                rot.add(0F, (float)(time * vd.z() * vd.x() * 90F), 0F);
-            else if (g.y() == 1)
-                rot.add(0F, 0F, (float)(time * vd.y() * 90F));
-        } else if (h.y() == 1) {
-            if (g.x() == 1) {
-                rot.set(vd.x() == 1 ? 0 : 180, 0, 90 * vd.y() + time * vd.x() * -90);
-            } else if (g.z() == 1) {
-                rot.set(90,  vd.z() * (-90 * time * vd.y()), -90);
-            }
-        } else if (h.z() == 1) {
-            if (g.x() == 1) {
-                rot.set(0,   vd.y() * ( 90 + time * vd.x() * -90), 0);
-            } else if (g.y() == 1) {
-                rot.set(90, -vd.z() * (-90 + time * vd.y() * -90), -90);
-            }
-        }
-
-        pos = pos.add(0.5, 0.5, 0.5);
-        return new PosRotate3D(new Vec3(pos.x(), pos.y(), pos.z()), rot.mul(Mth.DEG_TO_RAD));
-    }
-
-    private Path extendPath(Path path1, Path path2, int lowerBoundP1, int upperBoundP1) {
-        return ActionablePathNode.combine(path1, path2, lowerBoundP1, upperBoundP1);
+        return new PosRotate3D(position, rotation);
     }
 }
