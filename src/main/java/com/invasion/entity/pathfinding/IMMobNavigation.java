@@ -32,6 +32,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int completedTaskNodeIndex = -1;
     private Status lastActionResult = Status.SUCCESS;
     private boolean continuingEngineerBridge;
+    @Nullable
+    private BlockPos lastCompletedBridgeTarget;
 
     private int haltingTicks;
     private int stuckTime;
@@ -169,6 +171,15 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public void tick() {
+        if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
+            // Bridge construction owns movement until solid ground is
+            // reached. Combat targets otherwise replace the bridge path and
+            // make the engineer walk off its last plank.
+            mob.setTarget(null);
+            if (isDone() && lastCompletedBridgeTarget != null) {
+                holdAtLastBridgeTarget();
+            }
+        }
         tickObjectives();
         tickFollowing();
 
@@ -268,6 +279,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             // End this bridge step without letting vanilla immediately start
             // moving towards the next, still unsupported path node.
             stopHorizontalMovement();
+            lastCompletedBridgeTarget = moveTarget;
             getPath().setNextNodeIndex(nodeIndex + 1);
             return;
         }
@@ -403,6 +415,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         );
     }
 
+    private void holdAtLastBridgeTarget() {
+        double targetX = lastCompletedBridgeTarget.getX() + 0.5D;
+        double targetZ = lastCompletedBridgeTarget.getZ() + 0.5D;
+        if (Mth.square(mob.getX() - targetX)
+                + Mth.square(mob.getZ() - targetZ) < 1.0D) {
+            mob.setPos(targetX, lastCompletedBridgeTarget.getY(), targetZ);
+        }
+        stopHorizontalMovement();
+        mob.fallDistance = 0;
+    }
+
 	protected void handlePathAction(PathAction action) {
         if (action.getType() == PathAction.Type.CLIMB) {
             Vec3 targetPosition = com.invasion.util.math.PosUtils.center(mob.blockPosition().relative(action.getOrientation()));
@@ -443,6 +466,13 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public boolean moveTo(Path path, double speed) {
+        if (continuingEngineerBridge
+                && mob instanceof NexusEntity nexusMob
+                && nexusMob.hasNexus()
+                && path.getTarget() != null
+                && path.getTarget().distManhattan(nexusMob.getNexus().getOrigin()) > 2) {
+            return false;
+        }
         @Nullable Path previousPath = getPath();
         try {
             stuckTime = 0;

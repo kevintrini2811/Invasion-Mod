@@ -196,6 +196,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private boolean beginBuildUpAction() {
+        var movement = getDeltaMovement();
+        setXxa(0);
+        setZza(0);
+        setSpeed(0);
+        setDeltaMovement(0, Math.min(movement.y, 0), 0);
         setNoAi(true);
         return false;
     }
