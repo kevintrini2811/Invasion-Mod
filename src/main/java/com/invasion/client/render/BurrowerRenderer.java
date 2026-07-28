@@ -35,6 +35,11 @@ public final class BurrowerRenderer
                     .lerp(tickDelta, entity.getSegments3D()[i]);
             state.hasTrackedSegments |= state.segments[i + 1].position().lengthSqr() > 1.0E-6D;
         }
+        if (state.hasTrackedSegments) {
+            state.segments[0] = new PosRotate3D(
+                    entity.position(),
+                    state.segments[1].rotation());
+        }
     }
 
     @Override
