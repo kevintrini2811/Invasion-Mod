@@ -3,23 +3,25 @@ package com.invasion.entity.ai.goal;
 import java.util.EnumSet;
 
 import com.invasion.entity.HasAiGoals;
-import com.invasion.entity.IMSkeletonEntity;
+import com.invasion.entity.NexusEntity;
+import com.invasion.entity.RangedNexusAttacker;
 import com.invasion.util.math.PosUtils;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-public class SkeletonAttackNexusGoal extends Goal {
+public class SkeletonAttackNexusGoal<T extends PathfinderMob & NexusEntity & RangedNexusAttacker> extends Goal {
     private static final double MIN_RANGE_SQUARED = 16;
     private static final double MAX_RANGE_SQUARED = 16 * 16;
     private static final int ATTACK_DELAY = 65;
 
-    private final IMSkeletonEntity skeleton;
+    private final T skeleton;
     private int attackTime;
 
-    public SkeletonAttackNexusGoal(IMSkeletonEntity skeleton) {
+    public SkeletonAttackNexusGoal(T skeleton) {
         this.skeleton = skeleton;
         setFlags(EnumSet.of(Flag.LOOK));
     }

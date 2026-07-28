@@ -34,7 +34,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
-public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
+public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, RangedNexusAttacker {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
@@ -61,7 +61,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new EntityAIKillWithArrow<>(this, Player.class, 65, 16F));
-        goalSelector.addGoal(2, new SkeletonAttackNexusGoal(this));
+        goalSelector.addGoal(2, new SkeletonAttackNexusGoal<>(this));
         // goalSelector.add(1, new EntityAIRallyBehindEntity(this, EntityIMCreeper.class, 4.0F));
         goalSelector.addGoal(3, new AttackNexusGoal<>(this));
         goalSelector.addGoal(4, new GoToNexusGoal(this));
