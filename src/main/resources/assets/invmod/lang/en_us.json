@@ -1,5 +1,13 @@
 {
     "block.invmod.nexus_core": "Nexus Core",
+    "invmod.gui.nexus.title": "Nexus - Level %s",
+    "invmod.gui.nexus.mobskilled": "%s mobs killed",
+    "invmod.gui.nexus.activated": "Activated!",
+    "invmod.gui.nexus.activating": "Activating...",
+    "invmod.gui.nexus.power": "Power:",
+    "invmod.gui.nexus.areyousure": "Are you sure?",
+    "invmod.gui.nexus.wave": "Wave: %s",
+    "invmod.gui.nexus.debug": "Debug mode",
     "itemGroup.invmod.invasion_mod": "Invasion Mod",
 
     "item.invmod.phase_crystal": "Phase Crystal",

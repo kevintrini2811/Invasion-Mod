@@ -20,23 +20,32 @@ public class NexusScreen extends AbstractContainerScreen<NexusScreenHandler> {
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         context.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0x404040, false);
-        context.text(font, "Nexus - Level " + menu.getLevel(), 46, 6, 0x404040, false);
-        context.text(font, menu.getKills() + " mobs killed", 96, 60, 0x404040, false);
+        context.text(font, Component.translatable("invmod.gui.nexus.title",
+                menu.getLevel()), 46, 6, 0x404040, false);
+        context.text(font, Component.translatable("invmod.gui.nexus.mobskilled",
+                menu.getKills()), 96, 60, 0x404040, false);
         context.text(font, "R: " + menu.getSpawnRadius(), 142, 72, 0x404040, false);
 
         if (menu.getMode() == Mode.STARTED || menu.getMode() == Mode.WAITING || menu.getMode() == Mode.DEBUG) {
-            context.text(font, "Activated!", 13, 62, 4210752, false);
-            context.text(font, menu.getMode() == Mode.DEBUG ? "Debug mode" : "Wave " + menu.getCurrentWave(),
+            context.text(font, Component.translatable("invmod.gui.nexus.activated"),
+                    13, 62, 4210752, false);
+            context.text(font, menu.getMode() == Mode.DEBUG
+                            ? Component.translatable("invmod.gui.nexus.debug")
+                            : Component.translatable("invmod.gui.nexus.wave",
+                                    menu.getCurrentWave()),
                     55, 37, 0x404040, false);
         } else if (menu.getMode() == Mode.CONTINUOUS) {
-            context.text(font, "Power:", 56, 31, 4210752, false);
+            context.text(font, Component.translatable("invmod.gui.nexus.power"),
+                    56, 31, 4210752, false);
             context.text(font, "" + menu.getPowerLevel(), 61, 44, 0x404040, false);
         }
 
         if (menu.isActivating() && menu.getMode() == Mode.STOPPED) {
-            context.text(font, "Activating...", 13, 62, 0x404040, false);
+            context.text(font, Component.translatable("invmod.gui.nexus.activating"),
+                    13, 62, 0x404040, false);
             if (menu.getMode() != Mode.STABLE) {
-                context.text(font, "Are you sure?", 8, 72, 0x404040, false);
+                context.text(font, Component.translatable("invmod.gui.nexus.areyousure"),
+                        8, 72, 0x404040, false);
             }
         }
     }

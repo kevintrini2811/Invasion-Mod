@@ -142,7 +142,7 @@ public class Nexus implements ControllableNexusAccess {
 
         @Override
         public int getCount() {
-            return 9;
+            return 10;
         }
     };
 
