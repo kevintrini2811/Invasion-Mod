@@ -15,6 +15,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
@@ -22,13 +24,35 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.entity.EntityIMZombie;
+import com.invasion.entity.EntityIMZombiePigman;
+import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.InvEntities;
+import com.invasion.item.InvItems;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.NexusAccess;
 
 public class IMWaveSpawner implements Spawner {
 	private static final int MAX_SPAWN_TRIES = 20;
+	private static final List<Item> RANDOM_WAVE_WEAPONS = List.of(
+			Items.WOODEN_SWORD,
+			Items.STONE_SWORD,
+			Items.IRON_SWORD,
+			Items.GOLDEN_SWORD,
+			Items.DIAMOND_SWORD,
+			Items.NETHERITE_SWORD,
+			Items.WOODEN_AXE,
+			Items.STONE_AXE,
+			Items.IRON_AXE,
+			Items.GOLDEN_AXE,
+			Items.DIAMOND_AXE,
+			Items.NETHERITE_AXE,
+			Items.TRIDENT,
+			Items.MACE,
+			Items.BOW,
+			Items.CROSSBOW,
+			InvItems.INFUSED_SWORD,
+			InvItems.SEARING_BOW);
 	public static final int MIN_SPAWN_RADIUS = 8;
 	private static final int NORMAL_SPAWN_HEIGHT = 30;
 	private static final int MIN_SPAWN_POINTS_TO_KEEP = 15;
@@ -259,6 +283,7 @@ public class IMWaveSpawner implements Spawner {
 		}
 
 		Mob mob = mobConstruct.createMob(nexus);
+		equipRandomWaveWeapon(mob);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (int j = 0; j < spawnTries; j++) {
@@ -306,6 +331,26 @@ public class IMWaveSpawner implements Spawner {
         }
 		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mob.getName().getString() + "' after " + spawnTries + " tries");
 		return false;
+	}
+
+	private void equipRandomWaveWeapon(Mob mob) {
+		if (!(mob instanceof EntityIMZombie
+				|| mob instanceof EntityIMZombiePigman
+				|| mob instanceof ImpEnitty)
+				|| !mob.getMainHandItem().isEmpty()) {
+			return;
+		}
+
+		int chancePercent = Mth.clamp(nexus.getCurrentWave() - 1, 0, 100);
+		if (getRandom().nextInt(100) >= chancePercent) {
+			return;
+		}
+
+		Item weapon = RANDOM_WAVE_WEAPONS.get(
+				getRandom().nextInt(RANDOM_WAVE_WEAPONS.size()));
+		mob.setItemSlot(
+				net.minecraft.world.entity.EquipmentSlot.MAINHAND,
+				weapon.getDefaultInstance());
 	}
 
 	private void generateSpawnPoints() {
