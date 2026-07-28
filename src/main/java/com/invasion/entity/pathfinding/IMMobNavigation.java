@@ -555,6 +555,21 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     }
 
     @Override
+    public void recomputePath() {
+        if (mob instanceof PigmanEngineerEntity && isWaitingForTask()) {
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] rejected automatic recomputation during build: entity={}, path={}, node={}, pos={}",
+                    mob.getId(),
+                    path == null ? 0 : System.identityHashCode(path),
+                    path == null ? -1 : path.getNextNodeIndex(),
+                    mob.blockPosition()
+            );
+            return;
+        }
+        super.recomputePath();
+    }
+
+    @Override
     public int getStuckTime() {
         return stuckTime;
     }
