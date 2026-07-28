@@ -157,6 +157,16 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         theEntity.move(MoverType.SELF, movePos.position().subtract(theEntity.position()));
         ((BurrowerEntity) theEntity).setHeadRotation(movePos);
 
+        if (!waitingForNotify
+                && path.getNextNodeIndex() >= path.getNodeCount() - 1
+                && !path.canReach()) {
+            BlockPos digTarget = getNextBlockTowardTarget(activeNode.asBlockPos(), path.getTarget());
+            if (((BurrowerEntity) theEntity).tryClearPosition(digTarget, this)) {
+                setDoingTaskAndHold();
+                return;
+            }
+        }
+
         if (nodeChanged) {
             ((BurrowerEntity) theEntity).setHeadRotation(movePos);
             nodeChanged = false;
@@ -169,6 +179,23 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         } else {
             ticksStuck++;
         }
+    }
+
+    private BlockPos getNextBlockTowardTarget(BlockPos from, BlockPos target) {
+        int deltaX = target.getX() - from.getX();
+        int deltaY = target.getY() - from.getY();
+        int deltaZ = target.getZ() - from.getZ();
+        int absX = Math.abs(deltaX);
+        int absY = Math.abs(deltaY);
+        int absZ = Math.abs(deltaZ);
+
+        if (absY > absX && absY > absZ) {
+            return from.offset(0, Integer.signum(deltaY), 0);
+        }
+        if (absX >= absZ) {
+            return from.offset(Integer.signum(deltaX), 0, 0);
+        }
+        return from.offset(0, 0, Integer.signum(deltaZ));
     }
 
     private void updateSegments(PosRotate3D headPosition) {
