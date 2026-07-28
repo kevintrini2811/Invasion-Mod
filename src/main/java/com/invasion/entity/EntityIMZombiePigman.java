@@ -111,11 +111,13 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(0, new MineBlockGoal(this));
-        goalSelector.addGoal(1, new PredicatedGoal(new ChargeMobGoal<>(this, Player.class, 0.75F), () -> getTier() == 3));
+        goalSelector.addGoal(1, new PredicatedGoal(
+                new ChargeMobGoal<>(this, Player.class, 0.75F),
+                () -> getTier() == 3 && !isHoldingBow()));
         goalSelector.addGoal(2, new AttackNexusGoal<>(this));
         goalSelector.addGoal(4, new ProvideSupportGoal(this, 4, true));
         goalSelector.addGoal(6, new GoToNexusGoal(this));
-        goalSelector.addGoal(7, new MobMeleeAttackGoal(this, 1.4F, false));
+        addWeaponCombatGoals(1.4F);
         goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0F));
         goalSelector.addGoal(9, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12.0F));

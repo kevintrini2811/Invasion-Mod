@@ -159,7 +159,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         goalSelector.addGoal(3, new PredicatedGoal(new SprintGoal<>(this), () -> getTier() == 3));
         goalSelector.addGoal(4, new PredicatedGoal(new StoopGoal(this), () -> getTier() == 3));
         goalSelector.addGoal(5, new GoToNexusGoal(this));
-        goalSelector.addGoal(6, new MobMeleeAttackGoal(this, 1.3F, false));
+        addWeaponCombatGoals(1.3F);
         goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12));
