@@ -235,8 +235,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 && completedTaskNodeIndex == nodeIndex) {
             BlockPos moveTarget = getCompletedActionMoveTarget(
                     currentAction, getPath().getNextNodePos());
-            if (!hasReachedCompletedActionNode(currentAction, moveTarget)) {
-                moveToCompletedActionNode(moveTarget);
+            if (!captureCompletedBridgeTarget(moveTarget)) {
+                moveToCompletedBridgeTarget(moveTarget);
                 return;
             }
 
@@ -310,6 +310,45 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             return nodePos.above();
         }
         return nodePos;
+    }
+
+    private boolean captureCompletedBridgeTarget(BlockPos target) {
+        double targetX = target.getX() + 0.5D;
+        double targetZ = target.getZ() + 0.5D;
+        double horizontalDistanceSqr = Mth.square(mob.getX() - targetX)
+                + Mth.square(mob.getZ() - targetZ);
+
+        // Capture the final part of the step while the entity is still safely
+        // supported by the old or diagonal corner planks. This prevents
+        // movement inertia from carrying it over the far edge.
+        if (horizontalDistanceSqr <= 0.49D
+                && Math.abs(mob.getY() - target.getY()) < 1.25D) {
+            mob.setPos(targetX, target.getY(), targetZ);
+            stopHorizontalMovement();
+            mob.fallDistance = 0;
+            return true;
+        }
+        return false;
+    }
+
+    private void moveToCompletedBridgeTarget(BlockPos target) {
+        Vec3 movement = mob.getDeltaMovement();
+        double horizontalSpeedSqr = movement.x * movement.x + movement.z * movement.z;
+        if (horizontalSpeedSqr > 0.0144D) {
+            double scale = 0.12D / Math.sqrt(horizontalSpeedSqr);
+            mob.setDeltaMovement(
+                    movement.x * scale,
+                    Math.max(movement.y, -0.05D),
+                    movement.z * scale
+            );
+        }
+        mob.fallDistance = 0;
+        mob.getMoveControl().setWantedPosition(
+                target.getX() + 0.5D,
+                target.getY(),
+                target.getZ() + 0.5D,
+                0.55D
+        );
     }
 
     private void moveToCompletedActionNode(BlockPos nodePos) {
