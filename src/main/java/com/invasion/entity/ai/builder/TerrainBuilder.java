@@ -137,76 +137,32 @@ public class TerrainBuilder implements ITerrainBuild {
         BlockState ladderState = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, orientation);
 
-        BlockPos.MutableBlockPos mutable = basePos.mutable();
-        int height = Math.max(1, Math.min(layersToBuild, 32));
+        int height = Math.max(1, Math.min(layersToBuild, 3));
+        BlockPos bottomLadderPos = basePos.below();
 
-        // Keep the ladder continuous below the active path node. This mirrors
-        // the legacy engineer and prevents it from slipping through a gap while
-        // it builds the next layer.
-        BlockPos lowerLadderPos = basePos.below();
-        BlockPos lowerSupportPos = lowerLadderPos.relative(orientation.getOpposite());
-        if (!world.getBlockState(lowerSupportPos)
-                .isCollisionShapeFullBlock(world, mutable.set(lowerSupportPos))) {
-            builder.add(new ModifyBlockEntry(
-                    lowerSupportPos,
-                    Blocks.OAK_PLANKS.defaultBlockState(),
-                    (int) (PLANKS_COST / buildRate)
-            ));
-        }
-        if (PathingUtil.isAirOrReplaceable(world.getBlockState(lowerLadderPos))) {
-            builder.add(new ModifyBlockEntry(
-                    lowerLadderPos,
-                    ladderState,
-                    (int) (LADDER_COST / buildRate)
-            ));
-        }
-
+        // Complete the three-block support column first. Existing solid blocks
+        // count towards its height and are deliberately left untouched.
         for (int i = 0; i < height; i++) {
-            // Position der Leiter
-            mutable.set(basePos).move(Direction.UP, i);
-            BlockPos ladderPos = mutable.immutable();
-
-            // Support dahinter
-            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
-
-            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
+            BlockPos supportPos = bottomLadderPos.above(i)
+                    .relative(orientation.getOpposite());
+            if (PathingUtil.isAirOrReplaceable(world.getBlockState(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
                         Blocks.OAK_PLANKS.defaultBlockState(),
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
+        }
 
-            // As in 1.7.10, never replace an existing ladder merely to
-            // change its facing. That otherwise creates an endless rebuild.
-            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
+        // Only after the support column is complete, place its three ladders.
+        for (int i = 0; i < height; i++) {
+            BlockPos ladderPos = bottomLadderPos.above(i);
+            if (PathingUtil.isAirOrReplaceable(world.getBlockState(ladderPos))) {
                 builder.add(new ModifyBlockEntry(
                         ladderPos,
                         ladderState,
                         (int) (LADDER_COST / buildRate)
                 ));
-            }
-        }
-
-        return builder.build();
-    }
-
-    public Stream<ModifyBlockEntry> askBuildPlatform(BlockPos feetPos) {
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        Level world = mob.asEntity().level();
-        BlockPos floorCenter = feetPos.below();
-
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos floorPos = floorCenter.offset(x, 0, z);
-                BlockState state = world.getBlockState(floorPos);
-                if (PathingUtil.isAirOrReplaceable(state)) {
-                    builder.add(new ModifyBlockEntry(
-                            floorPos,
-                            Blocks.OAK_PLANKS.defaultBlockState(),
-                            (int) (PLANKS_COST / buildRate)
-                    ));
-                }
             }
         }
 

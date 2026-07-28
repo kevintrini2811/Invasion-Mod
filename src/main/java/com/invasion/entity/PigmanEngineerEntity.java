@@ -225,11 +225,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         return true;
     }
 
-    @Override
-    public boolean buildTowerPlatform(BlockPos pos, Notifiable asker) {
-        return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildPlatform);
-    }
-
 
 
 
