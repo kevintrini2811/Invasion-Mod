@@ -115,6 +115,11 @@ public final class VanillaMobSpawnReplacement {
             converted.setPersistenceRequired();
         }
         converted.setNexus(nexus);
+        if (converted instanceof EntityIMLiving imMob) {
+            // Nexus-bound wave mobs are intentionally persistent, but natural
+            // replacements must still occupy a slot in Minecraft's monster cap.
+            imMob.setCountsTowardMobCap(true);
+        }
 
         // Remove the original before adding its replacement. convertTo adds the
         // new entity first, which lets both entities coexist in the tracker for

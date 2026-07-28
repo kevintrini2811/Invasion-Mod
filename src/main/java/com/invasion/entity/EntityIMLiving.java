@@ -26,6 +26,7 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
 
     private int stunTimer;
+    private boolean countsTowardMobCap;
 
     protected int flammability = 2;
 
@@ -113,7 +114,12 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
 
     @Override
     public final boolean requiresCustomPersistence() {
-        return hasNexus() || super.requiresCustomPersistence();
+        return hasNexus() && !countsTowardMobCap
+                || super.requiresCustomPersistence();
+    }
+
+    public final void setCountsTowardMobCap(boolean countsTowardMobCap) {
+        this.countsTowardMobCap = countsTowardMobCap;
     }
 
     protected void sunlightDamageTick() {
@@ -124,6 +130,7 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putInt("stunTimer", stunTimer);
+        compound.putBoolean("countsTowardMobCap", countsTowardMobCap);
         nexus.writeNbt(compound);
     }
 
