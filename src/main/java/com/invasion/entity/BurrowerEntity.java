@@ -24,6 +24,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -182,18 +183,27 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
             clientMovementHistory.removeFirst();
         }
         Vec3[] history = clientMovementHistory.toArray(Vec3[]::new);
+        Vec3[] sampledPoints = new Vec3[NUMBER_OF_SEGMENTS + 1];
+        for (int i = 0; i < sampledPoints.length; i++) {
+            sampledPoints[i] = sampleClientHistory(history, (i + 1) * 0.20D);
+        }
+
         for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
             segments3DLastTick[i] = segments3D[i];
-            Vec3 point = sampleClientHistory(history, (i + 1) * 0.20D);
-            Vec3 ahead = i == 0 ? position() : segments3D[i - 1].position();
-            Vec3 direction = ahead.subtract(point);
+            Vec3 pointAhead = i == 0 ? position() : sampledPoints[i - 1];
+            Vec3 direction = pointAhead.subtract(sampledPoints[i + 1]);
             double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
-            Vector3f rotation = new Vector3f(0.0F,
-                    horizontal > 1.0E-4D
-                            ? (float) -Math.atan2(direction.z, direction.x)
-                            : segments3D[i].rotation().y(),
-                    (float) Math.atan2(direction.y, horizontal));
-            segments3D[i] = new PosRotate3D(point, rotation);
+            float oldYaw = segments3D[i].rotation().y();
+            float targetYaw = horizontal > 1.0E-4D
+                    ? (float) -Math.atan2(direction.z, direction.x)
+                    : oldYaw;
+            float oldPitch = segments3D[i].rotation().z();
+            float targetPitch = (float) Math.atan2(direction.y, horizontal);
+            Vector3f rotation = new Vector3f(
+                    0.0F,
+                    Mth.rotLerpRad(0.35F, oldYaw, targetYaw),
+                    Mth.rotLerpRad(0.35F, oldPitch, targetPitch));
+            segments3D[i] = new PosRotate3D(sampledPoints[i], rotation);
         }
     }
 
