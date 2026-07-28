@@ -8,6 +8,7 @@ import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.pathfinder.PathFinder;
+import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.phys.Vec3;
 
 @Deprecated
@@ -95,7 +96,10 @@ public class PathNavigateAdapter extends PathNavigation {
 
     @Override
     protected PathFinder createPathFinder(int range) {
-        return null;
+        // PathNavigation requires a non-null finder during its constructor in
+        // 26.2, even though this adapter delegates all pathfinding operations
+        // to the Invasion navigator.
+        return new PathFinder(new WalkNodeEvaluator(), range);
     }
 
     @Override
