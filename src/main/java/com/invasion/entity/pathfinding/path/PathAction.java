@@ -22,10 +22,11 @@ public enum PathAction {
     SCAFFOLD_UP(Type.SCAFFOLD, Direction.UP);
 
     private static final List<PathAction> LADDER_ACTIONS = List.of(
-            LADDER_UP_PZ, LADDER_UP_NX, LADDER_UP_NZ, LADDER_UP_NX
+            LADDER_UP_PZ, LADDER_UP_NX, LADDER_UP_NZ, LADDER_UP_PX
     );
     private static final List<PathAction> TOWER_ACTIONS = List.of(
-            LADDER_TOWER_UP_PZ, LADDER_TOWER_UP_NX, LADDER_TOWER_UP_NZ, LADDER_TOWER_UP_NX
+            LADDER_TOWER_UP_PZ, LADDER_TOWER_UP_NX,
+            LADDER_TOWER_UP_NZ, LADDER_TOWER_UP_PX
     );
 
     public static PathAction getLadderActionForDirection(Direction direction) {

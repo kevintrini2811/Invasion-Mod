@@ -159,12 +159,15 @@ public class TerrainBuilder implements ITerrainBuild {
                 ));
             }
 
-            // Leiter setzen
-            builder.add(new ModifyBlockEntry(
-                    ladderPos,
-                    ladderState,
-                    (int) (LADDER_COST / buildRate)
-            ));
+            // As in 1.7.10, never replace an existing ladder merely to
+            // change its facing. That otherwise creates an endless rebuild.
+            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
+                builder.add(new ModifyBlockEntry(
+                        ladderPos,
+                        ladderState,
+                        (int) (LADDER_COST / buildRate)
+                ));
+            }
         }
 
         return builder.build();
@@ -203,12 +206,13 @@ public class TerrainBuilder implements ITerrainBuild {
                 ));
             }
 
-            // Leiter selbst
-            builder.add(new ModifyBlockEntry(
-                    ladderPos,
-                    ladderState,
-                    (int) (LADDER_COST / buildRate)
-            ));
+            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
+                builder.add(new ModifyBlockEntry(
+                        ladderPos,
+                        ladderState,
+                        (int) (LADDER_COST / buildRate)
+                ));
+            }
         }
 
         return builder.build();
@@ -392,12 +396,13 @@ public class TerrainBuilder implements ITerrainBuild {
                 ));
             }
 
-            // Leiter selbst setzen – ohne irgendwelche Checks
-            builder.add(new ModifyBlockEntry(
-                    ladderPos,
-                    ladderState,
-                    (int) (LADDER_COST / buildRate)
-            ));
+            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
+                builder.add(new ModifyBlockEntry(
+                        ladderPos,
+                        ladderState,
+                        (int) (LADDER_COST / buildRate)
+                ));
+            }
         }
 
         return builder.build();

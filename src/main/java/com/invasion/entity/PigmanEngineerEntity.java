@@ -67,6 +67,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
@@ -205,7 +206,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         // Nexus über uns -> Turm nach oben
         if (dy > 0) {
             BlockPos above = basePos.above();
-            if (world.getBlockState(above).isAir()) {
+            BlockState aboveState = world.getBlockState(above);
+            if (aboveState.isAir()
+                    || aboveState.is(Blocks.OAK_PLANKS)
+                    || aboveState.is(Blocks.COBBLESTONE)) {
                 // Über uns ist Luft -> noch nicht direkt unter der Decke
                 return;
             }
