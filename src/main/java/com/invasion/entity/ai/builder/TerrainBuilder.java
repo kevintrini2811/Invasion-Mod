@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.pathfinding.ClimberUtil;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
+import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.nexus.ai.scaffold.Scaffold;
 import com.invasion.util.math.PosUtils;
 
@@ -429,6 +430,51 @@ public class TerrainBuilder implements ITerrainBuild {
                     (needsSupport ? Blocks.COBBLESTONE : Blocks.OAK_PLANKS).defaultBlockState(),
                     (int) ((needsSupport ? COBBLE_COST : PLANKS_COST) / buildRate))
             );
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * Builds a contiguous bridge run, following the 1.7.10 BRIDGE action:
+     * every traversable air node receives a block directly below it. Batching
+     * nearby nodes compensates for the modern navigator dropping paths at a
+     * void edge, while remaining inside the engineer's build reach.
+     */
+    public Stream<ModifyBlockEntry> askBuildBridgeLine(
+            BlockPos firstPos, Direction direction, int maxLength) {
+        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
+        Level world = mob.asEntity().level();
+
+        for (int distance = 0; distance < maxLength; distance++) {
+            BlockPos feetPos = firstPos.relative(direction, distance);
+            BlockState feetState = world.getBlockState(feetPos);
+            BlockState headState = world.getBlockState(feetPos.above());
+            if ((!PathingUtil.isAirOrReplaceable(feetState)
+                    && feetState.getFluidState().isEmpty())
+                    || !PathingUtil.isAirOrReplaceable(headState)) {
+                break;
+            }
+
+            BlockPos floorPos = feetState.getFluidState().isEmpty()
+                    ? feetPos.below()
+                    : feetPos;
+            BlockState floorState = world.getBlockState(floorPos);
+            if (floorState.isCollisionShapeFullBlock(world, floorPos)) {
+                break;
+            }
+
+            BlockPos.MutableBlockPos mutable = floorPos.mutable();
+            boolean needsSupport = IMLandPathNodeMaker.avoidsBlock(
+                    mob.asEntity(), mutable.move(Direction.DOWN))
+                    || IMLandPathNodeMaker.avoidsBlock(
+                            mob.asEntity(), mutable.move(Direction.DOWN));
+            builder.add(new ModifyBlockEntry(
+                    floorPos,
+                    (needsSupport ? Blocks.COBBLESTONE : Blocks.OAK_PLANKS)
+                            .defaultBlockState(),
+                    (int) ((needsSupport ? COBBLE_COST : PLANKS_COST)
+                            / buildRate)));
         }
 
         return builder.build();
