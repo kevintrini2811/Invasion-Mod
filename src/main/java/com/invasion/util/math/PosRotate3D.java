@@ -25,6 +25,10 @@ public record PosRotate3D (Vec3 position, Vector3fc rotation) {
     }
 
     public static Vector3fc lerp(float delta, Vector3fc a, Vector3fc b, Vector3f into) {
-        return b.sub(a, into).mul(delta).add(a);
+        return into.set(
+                Mth.rotLerpRad(delta, a.x(), b.x()),
+                Mth.rotLerpRad(delta, a.y(), b.y()),
+                Mth.rotLerpRad(delta, a.z(), b.z())
+        );
     }
 }
