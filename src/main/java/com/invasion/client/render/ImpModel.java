@@ -1,5 +1,7 @@
 package com.invasion.client.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.ArmedModel;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartNames;
@@ -8,10 +10,12 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.ArmedEntityRenderState;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.HumanoidArm;
 
-public final class ImpModel extends EntityModel<LivingEntityRenderState> {
+public final class ImpModel extends EntityModel<ArmedEntityRenderState>
+        implements ArmedModel<ArmedEntityRenderState> {
     private final ModelPart head;
     private final ModelPart rightArm;
     private final ModelPart leftArm;
@@ -65,7 +69,7 @@ public final class ImpModel extends EntityModel<LivingEntityRenderState> {
     }
 
     @Override
-    public void setupAnim(LivingEntityRenderState state) {
+    public void setupAnim(ArmedEntityRenderState state) {
         super.setupAnim(state);
         head.yRot = state.yRot * Mth.DEG_TO_RAD;
         head.xRot = state.xRot * Mth.DEG_TO_RAD;
@@ -79,5 +83,14 @@ public final class ImpModel extends EntityModel<LivingEntityRenderState> {
         leftShin.xRot = cosB * 1.4F * state.walkAnimationSpeed + 0.82461F;
         rightFoot.xRot = cosA * 1.4F * state.walkAnimationSpeed - 0.01403F;
         leftFoot.xRot = cosB * 1.4F * state.walkAnimationSpeed - 0.01214F;
+    }
+
+    @Override
+    public void translateToHand(
+            ArmedEntityRenderState state, HumanoidArm arm,
+            PoseStack poseStack) {
+        root.translateAndRotate(poseStack);
+        (arm == HumanoidArm.RIGHT ? rightArm : leftArm)
+                .translateAndRotate(poseStack);
     }
 }
