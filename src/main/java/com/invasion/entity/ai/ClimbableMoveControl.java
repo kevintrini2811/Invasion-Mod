@@ -61,8 +61,22 @@ public class ClimbableMoveControl extends MoveControl {
                 }
             } else if (ladderPos.isPresent()) {
                 Vector3f orientation = ladderPos.get().step();
-                float newYaw = (float) (Math.atan2(dX + orientation.x, dZ + orientation.z) * Mth.RAD_TO_DEG) - 90;
+                float newYaw = (float) (Math.atan2(
+                        dX - orientation.x,
+                        dZ - orientation.z) * Mth.RAD_TO_DEG) - 90;
                 mob.setYRot(rotlerp(mob.getYRot(), newYaw, getTurnRate()));
+
+                // A purely vertical MOVE_TO has no forward input in modern
+                // vanilla movement, so ladder physics otherwise lets the mob
+                // slide back down. Push gently toward the supporting wall and
+                // provide the upward movement represented by the path node.
+                if (dY > 0.05D) {
+                    var velocity = mob.getDeltaMovement();
+                    mob.setDeltaMovement(
+                            velocity.x * 0.5D - orientation.x * 0.08D,
+                            Math.max(velocity.y, 0.2D),
+                            velocity.z * 0.5D - orientation.z * 0.08D);
+                }
                 if (mob instanceof Animatable ae) {
                     ae.setMoveState(MoveState.CLIMBING);
                 }

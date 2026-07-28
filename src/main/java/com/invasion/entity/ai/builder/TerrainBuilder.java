@@ -138,10 +138,28 @@ public class TerrainBuilder implements ITerrainBuild {
                 .setValue(LadderBlock.FACING, orientation.getOpposite());
 
         BlockPos.MutableBlockPos mutable = basePos.mutable();
+        int height = Math.max(1, Math.min(layersToBuild, 32));
 
-        // Wenn layersToBuild zu klein ist (oder 0), bau wenigstens 6 hoch,
-        // damit man den Effekt deutlich sieht.
-        int height = Math.max(layersToBuild, 6);
+        // Keep the ladder continuous below the active path node. This mirrors
+        // the legacy engineer and prevents it from slipping through a gap while
+        // it builds the next layer.
+        BlockPos lowerLadderPos = basePos.below();
+        BlockPos lowerSupportPos = lowerLadderPos.relative(orientation);
+        if (!world.getBlockState(lowerSupportPos)
+                .isCollisionShapeFullBlock(world, mutable.set(lowerSupportPos))) {
+            builder.add(new ModifyBlockEntry(
+                    lowerSupportPos,
+                    Blocks.OAK_PLANKS.defaultBlockState(),
+                    (int) (PLANKS_COST / buildRate)
+            ));
+        }
+        if (PathingUtil.isAirOrReplaceable(world.getBlockState(lowerLadderPos))) {
+            builder.add(new ModifyBlockEntry(
+                    lowerLadderPos,
+                    ladderState,
+                    (int) (LADDER_COST / buildRate)
+            ));
+        }
 
         for (int i = 0; i < height; i++) {
             // Position der Leiter

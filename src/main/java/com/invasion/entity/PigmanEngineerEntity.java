@@ -429,40 +429,16 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             if (dir == null || !dir.getAxis().isHorizontal()) {
                 dir = getDirection();
             }
-
-            int startY = pos.getY();
-            int targetY = startY;
-            NexusAccess nexus = getNexus();
-            if (nexus != null) {
-                targetY = nexus.getOrigin().getY();
-            }
-
-            int diff = targetY - startY;
-
-            // Sicherstellen, dass wir überhaupt etwas tun
-            if (diff == 0) {
-                diff = 4; // z.B. kleine Standardhöhe nach oben, kannst du anpassen
-            }
-
             final Direction towerDir = dir;
+            this.currentBuildTarget = pos;
 
-            if (diff > 0) {
-                // Nexus liegt höher -> normalen Leiter-Tower nach oben bauen
-                int layersUp = Math.min(diff, 32);
-                this.currentBuildTarget = pos;
-
-                return terrainModifier.submitJob(pos, asker, p ->
-                        terrainBuilder.askBuildLadderTower(p, towerDir, layersUp)
-                );
-            } else {
-                // Nexus liegt tiefer -> Schacht nach unten bauen
-                int depthDown = Math.min(-diff, 32); // positive Tiefe
-                this.currentBuildTarget = pos;
-
-                return terrainModifier.submitJob(pos, asker, p ->
-                        terrainBuilder.askBuildLadderShaftDown(p, towerDir, depthDown)
-                );
-            }
+            // The legacy navigator builds one layer for each vertical path
+            // node. The next path node then evaluates the new ladder as real
+            // progress toward the Nexus instead of treating a remote tower as
+            // one finished action.
+            return terrainModifier.submitJob(pos, asker, p ->
+                    terrainBuilder.askBuildLadderTower(p, towerDir, 1)
+            );
         }
 
 
