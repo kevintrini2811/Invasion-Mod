@@ -80,12 +80,12 @@ public class IMPathNodeNavigator {
 
         while (!minHeap.isEmpty()) {
             if (nodesOpened > nodeLimit) {
-                return createPath(start, previousPoint.asBlockPos(), false);
+                return createPath(previousPoint, target.asBlockPos(), false);
             }
             Node examiningPoint = minHeap.pop();
             float distanceToTarget = examiningPoint.distanceTo(target);
             if (distanceToTarget < this.targetRadius + 0.1F) {
-                return createPath(start, examiningPoint.asBlockPos(), true);
+                return createPath(examiningPoint, target.asBlockPos(), true);
             }
             if (distanceToTarget < previousPoint.distanceTo(target)) {
                 previousPoint = examiningPoint;
@@ -116,7 +116,7 @@ public class IMPathNodeNavigator {
             }
         }
 
-        return previousPoint == start ? null : createPath(previousPoint, finalTarget.asBlockPos(), true);
+        return previousPoint == start ? null : createPath(previousPoint, finalTarget.asBlockPos(), false);
     }
 
     private Path createPath(Node endNode, BlockPos target, boolean reachesTarget) {
