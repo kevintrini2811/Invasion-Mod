@@ -204,6 +204,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, Level world) {
         super(type, world);
         getNavigatorNew().setCanDestroyBlocks(true);
+        setCanPickUpLoot(true);
     }
 
     @Override
@@ -289,6 +290,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 currentBuildTarget = null;
             }
         }
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot.isArmor()
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
 
