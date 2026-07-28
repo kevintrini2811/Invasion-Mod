@@ -65,6 +65,9 @@ public final class TerrainModifier implements ITerrainModify {
 
     @Override
     public boolean requestTask(Collection<ModifyBlockEntry> entries, @Nullable Notifiable onFinished, @Nullable Notifiable onBlockChanged) {
+        if (entries.isEmpty()) {
+            return false;
+        }
         if (isReadyForTask(onFinished)) {
             modList.addAll(entries);
             finishCallback = onFinished == null ? Notifiable.NONE : onFinished;

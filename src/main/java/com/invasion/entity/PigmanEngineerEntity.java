@@ -11,11 +11,8 @@ import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
-import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
-import com.invasion.nexus.Nexus;
-import com.invasion.nexus.NexusAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvent;
@@ -55,7 +52,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 2.8F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
 
@@ -372,13 +369,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
         if (action.getType() == PathAction.Type.BRIDGE) {
-            // NEU: Build-Target merken
-            this.currentBuildTarget = pos;
             return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildBridge);
         }
 
         if (action.getType() == PathAction.Type.SCAFFOLD) {
-            this.currentBuildTarget = pos;
             return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildScaffoldLayer);
         }
 
@@ -388,12 +382,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 dir = getDirection();
             }
             final Direction towerDir = dir;
-            this.currentBuildTarget = pos;
-
-            // The legacy navigator builds one layer for each vertical path
-            // node. The next path node then evaluates the new ladder as real
-            // progress toward the Nexus instead of treating a remote tower as
-            // one finished action.
             return terrainModifier.submitJob(pos, asker, p ->
                     terrainBuilder.askBuildLadderTower(p, towerDir, 1)
             );
@@ -407,9 +395,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 if (direction == null) {
                     direction = getDirection();
                 }
-
-                // NEU:
-                this.currentBuildTarget = p;
 
                 return terrainBuilder.askBuildLadder(p, direction);
             });
