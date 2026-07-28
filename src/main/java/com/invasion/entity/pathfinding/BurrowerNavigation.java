@@ -31,6 +31,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     private final float[] stableSegmentYaw;
     private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
     private static final double SEGMENT_SPACING = 0.20D;
+    private static final double SLITHER_AMPLITUDE = 0.075D;
+    private static final float SLITHER_SEGMENT_PHASE = 0.58F;
+    private static final float SLITHER_SPEED = 0.11F;
     private static final int MAX_HISTORY_SIZE = 512;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
@@ -212,6 +215,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
             sampledSegments[i] =
                     sampleHistoryAtDistance(history, (i + 1) * SEGMENT_SPACING);
         }
+        applySlitherWave(headPosition, sampledSegments);
 
         for (int i = 0; i < segmentCount; i++) {
             Vec3 pointAhead = i == 0
@@ -223,6 +227,36 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                     i,
                     new PosRotate3D(sampledSegments[i].position(), rotation)
             );
+        }
+    }
+
+    private void applySlitherWave(PosRotate3D headPosition, PosRotate3D[] segments) {
+        for (int i = 0; i < segments.length; i++) {
+            Vec3 pointAhead = i == 0
+                    ? headPosition.position()
+                    : segments[i - 1].position();
+            Vec3 pointBehind = i + 1 < segments.length
+                    ? segments[i + 1].position()
+                    : segments[i].position();
+            Vec3 tangent = pointAhead.subtract(pointBehind);
+            double horizontalLength =
+                    Math.sqrt(tangent.x * tangent.x + tangent.z * tangent.z);
+
+            Vec3 lateral;
+            if (horizontalLength > 1.0E-4D) {
+                lateral = new Vec3(-tangent.z / horizontalLength, 0.0D,
+                        tangent.x / horizontalLength);
+            } else {
+                float yaw = stableSegmentYaw[Math.min(i, segmentCount - 1)];
+                lateral = new Vec3(Math.sin(yaw), 0.0D, Math.cos(yaw));
+            }
+
+            float phase = theEntity.tickCount * SLITHER_SPEED
+                    - i * SLITHER_SEGMENT_PHASE;
+            double headTaper = Math.min(1.0D, (i + 1) / 3.0D);
+            Vec3 wavedPosition = segments[i].position().add(
+                    lateral.scale(Mth.sin(phase) * SLITHER_AMPLITUDE * headTaper));
+            segments[i] = new PosRotate3D(wavedPosition, segments[i].rotation());
         }
     }
 
