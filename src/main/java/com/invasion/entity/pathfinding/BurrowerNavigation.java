@@ -28,6 +28,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     protected Node prevNode;
 
     private final int segmentCount;
+    private final float[] stableSegmentYaw;
     private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
     private static final double SEGMENT_SPACING = 0.20D;
     private static final int MAX_HISTORY_SIZE = 512;
@@ -37,6 +38,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     public BurrowerNavigation(BurrowerEntity entity, PathSource pathSource, int segments, int offset) {
         super(entity, pathSource);
         segmentCount = segments;
+        stableSegmentYaw = new float[segments];
 
         actor.setCanDestroyBlocks(true);
         actor.setCanClimb(true);
@@ -216,7 +218,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                     ? headPosition.position()
                     : sampledSegments[i - 1].position();
             Vec3 pointBehind = sampledSegments[i + 1].position();
-            Vector3f rotation = rotationAlong(pointAhead.subtract(pointBehind));
+            Vector3f rotation = rotationAlong(pointAhead.subtract(pointBehind), i);
             ((BurrowerEntity) theEntity).setSegment(
                     i,
                     new PosRotate3D(sampledSegments[i].position(), rotation)
@@ -224,11 +226,17 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         }
     }
 
-    private Vector3f rotationAlong(Vec3 direction) {
+    private Vector3f rotationAlong(Vec3 direction, int segmentIndex) {
         double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+        double vertical = Math.abs(direction.y);
+        if (horizontal > Math.max(0.02D, vertical * 0.2D)) {
+            float targetYaw = (float) -Math.atan2(direction.z, direction.x);
+            stableSegmentYaw[segmentIndex] =
+                    Mth.rotLerpRad(0.35F, stableSegmentYaw[segmentIndex], targetYaw);
+        }
         return new Vector3f(
                 0,
-                (float) -Math.atan2(direction.z, direction.x),
+                stableSegmentYaw[segmentIndex],
                 (float) Math.atan2(direction.y, horizontal)
         );
     }
