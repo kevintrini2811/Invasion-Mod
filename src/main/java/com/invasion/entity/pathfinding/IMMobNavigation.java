@@ -367,6 +367,15 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         mob.setZza(0);
         mob.setSpeed(0);
         mob.setDeltaMovement(0, movement.y, 0);
+        // Replace the previous MOVE_TO operation as well; zeroing velocity
+        // alone does not prevent MoveControl from accelerating again later in
+        // the same tick.
+        mob.getMoveControl().setWantedPosition(
+                mob.getX(),
+                mob.getY(),
+                mob.getZ(),
+                0
+        );
     }
 
 	protected void handlePathAction(PathAction action) {

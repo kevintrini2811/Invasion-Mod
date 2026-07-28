@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.HasAiGoals;
+import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.nexus.NexusAccess;
 
@@ -84,7 +85,10 @@ public class GoToNexusGoal extends Goal {
 
     @Override
     public void tick() {
-        if (pathFailedCount > 1) {
+        // An engineer at the end of a short bridge path must wait for another
+        // buildable path. Directly steering it at the nexus walks it off the
+        // final plank without giving the bridge action a chance to run.
+        if (pathFailedCount > 1 && !(mob instanceof PigmanEngineerEntity)) {
             @Nullable
             NexusAccess nexus = nexusEntity.getNexus();
             if (nexus != null) {
