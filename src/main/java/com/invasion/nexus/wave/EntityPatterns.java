@@ -50,7 +50,7 @@ public interface EntityPatterns {
         }
 
         EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
-        InvasionMod.LOGGER.info("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
+        InvasionMod.LOGGER.debug("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
                 entityId, name, spawnWeight);
 
         return register(name, new EntityPattern.Builder(mobType), spawnWeight);
@@ -202,7 +202,7 @@ public interface EntityPatterns {
             EntityType<?> type = opt.get();
             EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
 
-            InvasionMod.LOGGER.info("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
+            InvasionMod.LOGGER.debug("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
                     entityId, name, spawnWeight);
 
             return EntityPatterns.register(name, new EntityPattern.Builder(mobType), spawnWeight);

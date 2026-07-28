@@ -19,9 +19,9 @@ public class Config {
         properties.clear();
         try {
             if (!configFile.exists()) {
-                InvasionMod.LOGGER.info("Config not found. Creating file '" + configFile.getName() + "' in minecraft directory");
+                InvasionMod.LOGGER.debug("Config not found. Creating file '" + configFile.getName() + "' in minecraft directory");
                 if (!configFile.createNewFile()) {
-                    InvasionMod.LOGGER.info("Unable to create new config file.");
+                    InvasionMod.LOGGER.debug("Unable to create new config file.");
                 }
             } else {
                 try (FileReader configRead = new FileReader(configFile)) {

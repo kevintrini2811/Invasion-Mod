@@ -50,7 +50,7 @@ public class AttackNexusGoal<E extends PathfinderMob & NexusEntity> extends Goal
 
     @Override
     public void stop() {
-        InvasionMod.LOGGER.info("Break Nexus Goal Stop");
+        InvasionMod.LOGGER.debug("Break Nexus Goal Stop");
         mob.setAggressive(false);
     }
 }
