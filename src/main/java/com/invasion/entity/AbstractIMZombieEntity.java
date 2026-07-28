@@ -66,8 +66,16 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
         ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
-        return isUsableWeapon(stack)
-                && !isUsableWeapon(heldItem);
+        if (isUsableWeapon(stack)) {
+            return !isUsableWeapon(heldItem);
+        }
+        if (isBrute()) {
+            return false;
+        }
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot.isArmor()
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
     private static boolean isUsableWeapon(ItemStack stack) {
@@ -105,8 +113,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     public void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
 
-        if (tickCount % 5 != 0
-                || isUsableWeapon(getItemBySlot(EquipmentSlot.MAINHAND))) {
+        if (tickCount % 5 != 0) {
             return;
         }
 
@@ -116,9 +123,6 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
                 candidate -> !candidate.hasPickUpDelay()
                         && wantsToPickUp(world, candidate.getItem()))) {
             pickUpItem(world, item);
-            if (isUsableWeapon(getItemBySlot(EquipmentSlot.MAINHAND))) {
-                break;
-            }
         }
     }
 

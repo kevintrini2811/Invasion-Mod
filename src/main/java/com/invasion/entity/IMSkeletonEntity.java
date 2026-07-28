@@ -14,6 +14,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.SpawnGroupData;
@@ -25,6 +26,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
@@ -50,6 +52,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
     public IMSkeletonEntity(EntityType<IMSkeletonEntity> type, Level world) {
         super(type, world);
         setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
+        setCanPickUpLoot(true);
     }
 
     public static AttributeSupplier.Builder createIMSkeletonAttributes() {
@@ -112,6 +115,29 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
 
     protected AbstractArrow createArrowProjectile(ItemStack arrow, float damageModifier, @Nullable ItemStack shotFrom) {
         return ProjectileUtil.getMobArrow(this, arrow, damageModifier, shotFrom);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot.isArmor()
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+    }
+
+    @Override
+    public void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
+        if (tickCount % 5 != 0) {
+            return;
+        }
+        for (ItemEntity item : world.getEntitiesOfClass(
+                ItemEntity.class,
+                getBoundingBox().inflate(1.25D),
+                candidate -> !candidate.hasPickUpDelay()
+                        && wantsToPickUp(world, candidate.getItem()))) {
+            pickUpItem(world, item);
+        }
     }
 
     public void performRangedNexusAttack(net.minecraft.world.phys.Vec3 target) {
