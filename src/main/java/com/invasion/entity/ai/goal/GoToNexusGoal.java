@@ -17,6 +17,8 @@ import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.nexus.NexusAccess;
 
 public class GoToNexusGoal extends Goal {
+    private static final int STUCK_REPATH_TIMEOUT = 20 * 10;
+
     private PathfinderMob mob;
     private final NexusEntity nexusEntity;
     private Optional<BlockPos> lastPathRequestPos = Optional.empty();
@@ -95,7 +97,8 @@ public class GoToNexusGoal extends Goal {
         // path node. Repathing here used to cancel that job and discard the
         // ladder-tower path before the engineer could climb it.
         if (!navigation.isWaitingForTask()
-                && (mob.getNavigation().isDone() || navigation.getStuckTime() > 40)) {
+                && (mob.getNavigation().isDone()
+                        || navigation.getStuckTime() > STUCK_REPATH_TIMEOUT)) {
             start();
         }
     }

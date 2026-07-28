@@ -30,6 +30,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int activeTaskNodeIndex = -1;
     private int completedTaskNodeIndex = -1;
     private Status lastActionResult = Status.SUCCESS;
+    private boolean debugTowerInProgress;
+    @Nullable
+    private BlockPos debugTowerBottom;
 
     private int haltingTicks;
     private int stuckTime;
@@ -224,12 +227,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         PathAction currentAction = getCurrentWorkingAction();
         int nodeIndex = getPath().getNextNodeIndex();
 
-        if (currentAction.getType() == PathAction.Type.TOWER
+        if (debugTowerInProgress
                 && completedTaskNodeIndex == nodeIndex
                 && lastActionResult == Status.SUCCESS) {
-            BlockPos bottomLadderPos = getPath().getNextNodePos().below();
-            if (!isCenteredOn(bottomLadderPos)) {
-                moveToCompletedActionNode(bottomLadderPos);
+            if (!isCenteredOn(debugTowerBottom)) {
+                moveToCompletedActionNode(debugTowerBottom);
                 stuckTime = 0;
                 return;
             }
@@ -329,6 +331,10 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             if (completedTaskNodeIndex == nodeIndex) {
                 return;
             }
+            if (action.getType() == PathAction.Type.TOWER) {
+                debugTowerInProgress = true;
+                debugTowerBottom = getPath().getNextNodePos().below();
+            }
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 activeTaskNodeIndex = nodeIndex;
@@ -347,6 +353,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public boolean moveTo(Path path, double speed) {
+        // During the deliberately reduced tower test, queued scaffold and
+        // nexus callbacks must not replace the path that owns the tower.
+        if (debugTowerInProgress) {
+            return false;
+        }
         @Nullable Path previousPath = getPath();
         try {
             stuckTime = 0;
