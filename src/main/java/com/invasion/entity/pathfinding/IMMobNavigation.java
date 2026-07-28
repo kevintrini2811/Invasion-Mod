@@ -331,7 +331,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             if (completedTaskNodeIndex == nodeIndex) {
                 return;
             }
-            if (action.getType() == PathAction.Type.TOWER) {
+            if (action.getType() == PathAction.Type.TOWER
+                    || action.getType() == PathAction.Type.SCAFFOLD) {
                 debugTowerInProgress = true;
                 debugTowerBottom = mob.blockPosition();
             }

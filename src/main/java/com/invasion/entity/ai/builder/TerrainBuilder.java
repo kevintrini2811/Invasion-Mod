@@ -124,6 +124,19 @@ public class TerrainBuilder implements ITerrainBuild {
         return builder.build();
     }
 
+    public Stream<ModifyBlockEntry> askBuildScaffoldBlockPlan(BlockPos scaffoldPos, BlockPos planBase) {
+        @Nullable
+        Scaffold scaffold = mob.getNexus().getAttackerAI().getScaffolds().getAt(scaffoldPos);
+        if (scaffold == null) {
+            return Stream.empty();
+        }
+
+        // Scaffold orientation points from the ladder into its support wall;
+        // the ladder block's FACING property points in the opposite direction.
+        Direction ladderFacing = scaffold.getNode().orientation().getOpposite();
+        return askBuildLadderTower(planBase, ladderFacing, 3);
+    }
+
 
     @Override
     public Stream<ModifyBlockEntry> askBuildLadderTower(BlockPos basePos, Direction orientation, int layersToBuild) {

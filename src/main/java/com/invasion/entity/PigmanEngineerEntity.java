@@ -195,7 +195,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
 
         if (action.getType() == PathAction.Type.SCAFFOLD) {
-            return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildScaffoldLayer);
+            BlockPos planBase = blockPosition().above();
+            return terrainModifier.submitJob(planBase, asker, ignored ->
+                    terrainBuilder.askBuildScaffoldBlockPlan(pos, planBase)
+            );
         }
 
         if (action.getType() == PathAction.Type.TOWER) {
