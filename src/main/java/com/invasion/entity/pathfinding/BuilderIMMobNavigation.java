@@ -68,7 +68,13 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
             jobRequestTimer = Math.max(0, jobRequestTimer - 1);
             int yDifference = nexusEntity.getNexus().getOrigin().getY() - mob.blockPosition().getY();
             int weight = yDifference > 1 ? Math.max(6000 / yDifference, 1) : 1;
-            if (getAIGoal() == Goal.BREAK_NEXUS && (getLastPathDistanceToTarget() > 2 && jobRequestTimer <= 0 || mob.getRandom().nextInt(weight) == 0)) {
+            // A build job is a recovery route, not a periodic replacement for
+            // a valid path. Replacing an active ladder route caused engineers
+            // to abandon one tower and start another next to it.
+            if (getAIGoal() == Goal.BREAK_NEXUS
+                    && isDone()
+                    && (getLastPathDistanceToTarget() > 2 && jobRequestTimer <= 0
+                            || mob.getRandom().nextInt(weight) == 0)) {
                 waitingForJob = true;
                 nexusEntity.getNexus().getAttackerAI().requestBuildJob(nexusEntity, target -> {
                     waitingForJob = false;
