@@ -53,6 +53,7 @@ import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
 import com.invasion.entity.ai.builder.TerrainBuilder;
 import com.invasion.entity.ai.builder.TerrainModifier;
+import com.invasion.util.math.PosUtils;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.MineBlockGoal;
@@ -71,6 +72,9 @@ import com.invasion.nexus.NexusAccess;
 
 
 public class EntityIMZombie extends AbstractIMZombieEntity {
+    private static final float TERRAIN_REACH = 3.0F;
+    private static final double TERRAIN_REACH_SQR = TERRAIN_REACH * TERRAIN_REACH;
+
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
@@ -101,7 +105,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     protected int maxSelfDamage = 6;
     // Zombies may only modify terrain within their actual interaction range.
     // This also prevents an entire cobblestone ramp from being placed remotely.
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 3.0F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, TERRAIN_REACH);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
     private static AttributeSupplier.Builder createBaseAttributes() {
         return Zombie.createAttributes()
@@ -287,7 +291,10 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         // in einem offenen Bereich stehen -> dann lieber nicht sinnlos Rampen spammen
         BlockPos forwardPos = mobPos.relative(dir);
         BlockPos forwardUpPos = forwardPos.above();
-        if (world.getBlockState(forwardPos).isAir() && world.getBlockState(forwardUpPos).isAir()) {
+        boolean standingOnRamp = world.getBlockState(mobPos.below()).is(Blocks.COBBLESTONE);
+        if (!standingOnRamp
+                && world.getBlockState(forwardPos).isAir()
+                && world.getBlockState(forwardUpPos).isAir()) {
             return false;
         }
 
@@ -301,6 +308,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
         terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
                 terrainBuilder.askBuildRampUp(pos, rampDir, rampSteps)
+                        .filter(entry -> getEyePosition().distanceToSqr(PosUtils.center(entry.pos()))
+                                <= TERRAIN_REACH_SQR)
         );
 
         return true;
