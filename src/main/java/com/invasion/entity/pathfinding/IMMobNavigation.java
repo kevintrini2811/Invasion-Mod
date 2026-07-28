@@ -333,7 +333,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             }
             if (action.getType() == PathAction.Type.TOWER) {
                 debugTowerInProgress = true;
-                debugTowerBottom = getPath().getNextNodePos().below();
+                debugTowerBottom = mob.blockPosition();
             }
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {

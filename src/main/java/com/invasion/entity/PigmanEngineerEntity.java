@@ -204,7 +204,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 dir = getDirection();
             }
             final Direction towerDir = dir;
-            return terrainModifier.submitJob(pos, asker, p ->
+            // The block plan is anchored on the engineer's current feet so it
+            // can be completed without walking between placements.
+            BlockPos planBase = blockPosition().above();
+            return terrainModifier.submitJob(planBase, asker, p ->
                     terrainBuilder.askBuildLadderTower(p, towerDir, 3)
             );
         }
