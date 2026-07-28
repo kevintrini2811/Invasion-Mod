@@ -286,7 +286,10 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
             return new PosRotate3D(new Vec3(0.5D, time * v.getY() * 0.5D + (v.getY() > 0 ? 0 : 1), 0.5D), new Vector3f());
         }
         if (h.z() == 1 && g.z() == 1) {
-            return new PosRotate3D(new Vec3(time * v.getZ() * 0.5D + (v.getZ() > 0 ? 0 : 1), 0.5, 0.5), new Vector3f(0, v.getZ() * Mth.PI / 4F, 0));
+            return new PosRotate3D(
+                    new Vec3(0.5D, 0.5D,
+                            time * v.getZ() * 0.5D + (v.getZ() > 0 ? 0 : 1)),
+                    new Vector3f(0, v.getZ() * Mth.PI / 4F, 0));
         }
 
         double sin = Math.sin(time * 0.5D * Math.PI) * 0.5D;

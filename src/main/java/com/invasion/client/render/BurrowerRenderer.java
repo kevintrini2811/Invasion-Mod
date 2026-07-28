@@ -40,6 +40,17 @@ public final class BurrowerRenderer
     @Override
     protected void scale(BurrowerRenderState state, PoseStack poseStack) {
         poseStack.scale(2.2F, 2.2F, 2.2F);
+        // LivingEntityRenderer applies this offset after scale(). Vanilla
+        // models are authored around y=24, while the legacy Burrower uses
+        // independently positioned world-space segments around the origin.
+        poseStack.translate(0.0F, 1.501F, 0.0F);
+    }
+
+    @Override
+    protected void setupRotations(BurrowerRenderState state, PoseStack poseStack,
+            float bodyRotation, float scale) {
+        // Every segment already contains its complete world-space rotation.
+        // Applying the normal mob body yaw would rotate the whole chain again.
     }
 
     @Override
