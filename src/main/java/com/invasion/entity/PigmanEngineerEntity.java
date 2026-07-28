@@ -2,6 +2,7 @@ package com.invasion.entity;
 
 import com.invasion.Notifiable;
 import com.invasion.entity.ai.builder.TerrainBuilder;
+import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
@@ -55,6 +56,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
+    private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
 
     private float supportThisTick;
@@ -201,6 +203,15 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, Level world) {
         super(type, world);
+        getNavigatorNew().setCanDestroyBlocks(true);
+    }
+
+    @Override
+    public boolean onPathBlocked(Path path, Notifiable notifee) {
+        if (path.isDone()) {
+            return false;
+        }
+        return terrainDigger.askClearPosition(path.getNextNodePos(), notifee, 1.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
