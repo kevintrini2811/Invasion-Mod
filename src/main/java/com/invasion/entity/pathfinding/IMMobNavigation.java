@@ -26,6 +26,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private Goal prevGoal = Goal.NONE;
 
     private int waitingForNotify;
+    private int activeTaskNodeIndex = -1;
+    private int completedTaskNodeIndex = -1;
     private Status lastActionResult = Status.SUCCESS;
 
     private int haltingTicks;
@@ -111,6 +113,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     public void notifyTask(Status result) {
 	    waitingForNotify = 0;
         lastActionResult = result;
+        completedTaskNodeIndex = activeTaskNodeIndex;
+        activeTaskNodeIndex = -1;
 	}
 
     @Override
@@ -147,7 +151,16 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
         if (haltingTicks > 0 || waitingForNotify > 0) {
             haltingTicks = Math.max(0, haltingTicks - 1);
-            waitingForNotify = Math.max(0, (waitingForNotify / 2) - 1);
+            waitingForNotify = Math.max(0, waitingForNotify - 1);
+            mob.setXxa(0);
+            mob.setZza(0);
+            mob.setSpeed(0);
+            mob.setDeltaMovement(
+                    mob.getDeltaMovement().x * 0.25D,
+                    mob.onClimbable() ? Math.max(0, mob.getDeltaMovement().y) : mob.getDeltaMovement().y,
+                    mob.getDeltaMovement().z * 0.25D);
+            mob.setShiftKeyDown(mob.onClimbable());
+            mob.fallDistance = 0;
         } else {
             if (mob instanceof NexusEntity e
                     && getCurrentWorkingAction() == PathAction.NONE) {
@@ -199,13 +212,35 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
 	@Override
     protected void followThePath() {
-	    super.followThePath();
 	    mob.setShiftKeyDown(false);
 	    if (mob instanceof NexusEntity e) {
             e.setIsHoldingIntoLadder(false);
         }
-	    PathAction currentAction = getCurrentWorkingAction();
-	    if (currentAction != PathAction.NONE) {
+
+        PathAction currentAction = getCurrentWorkingAction();
+        int nodeIndex = getPath().getNextNodeIndex();
+
+        if (currentAction != PathAction.NONE
+                && completedTaskNodeIndex == nodeIndex
+                && lastActionResult != Status.SUCCESS) {
+            stop();
+            return;
+        }
+
+        // Legacy NavigatorEngy resolves a build action before allowing the
+        // path to advance past that node. Modern vanilla navigation otherwise
+        // considers a nearby actionable node reached and silently skips it.
+        if (currentAction != PathAction.NONE
+                && currentAction.getType() != PathAction.Type.CLIMB
+                && completedTaskNodeIndex != nodeIndex) {
+            handlePathAction(currentAction);
+            return;
+        }
+
+	    super.followThePath();
+
+        currentAction = getCurrentWorkingAction();
+	    if (currentAction.getType() == PathAction.Type.CLIMB) {
             handlePathAction(currentAction);
 	    }
 	}
@@ -224,9 +259,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 mob.setJumping(false);
             }
         } else {
+            int nodeIndex = getPath().getNextNodeIndex();
+            if (completedTaskNodeIndex == nodeIndex) {
+                return;
+            }
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
+                activeTaskNodeIndex = nodeIndex;
                 waitingForNotify = MAX_WAIT_TIME;
+            } else {
+                lastActionResult = Status.SUCCESS;
+                completedTaskNodeIndex = nodeIndex;
             }
         }
 	}
@@ -248,6 +291,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             }
             Path currentPath = getPath();
             if (currentPath != null && currentPath != previousPath) {
+                activeTaskNodeIndex = -1;
+                completedTaskNodeIndex = -1;
                 PathingDebugger.sendPathToClients(mob, currentPath, 0.5F);
             }
         }

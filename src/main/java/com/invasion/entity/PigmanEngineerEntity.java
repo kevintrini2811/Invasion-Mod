@@ -11,69 +11,37 @@ import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
-import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
-import com.invasion.nexus.Nexus;
-import com.invasion.nexus.NexusAccess;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.villager.Villager;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.server.level.ServerLevel;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
@@ -86,162 +54,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 2.8F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
 
     private float supportThisTick;
-    @org.jetbrains.annotations.Nullable
-    private BlockPos currentBuildTarget;
-
-    /**
-     * Vanilla's modern ground navigator rejects a node over a gap before our
-     * actionable node can always be considered. Detect the next ledge while
-     * attacking a nexus so the engineer can still start the original bridge
-     * building action.
-     */
-    private void tryBuildBridgeAhead() {
-        if (terrainModifier.isBusy() || !hasNexus() || getAIGoal() != HasAiGoals.Goal.BREAK_NEXUS) {
-            return;
-        }
-
-        BlockPos mobPos = blockPosition();
-        Direction bridgeDirection = null;
-        var path = getNavigation().getPath();
-        if (path != null && !path.isDone()) {
-            BlockPos pathPos = path.getNextNodePos();
-            int dx = pathPos.getX() - mobPos.getX();
-            int dz = pathPos.getZ() - mobPos.getZ();
-            if ((dx != 0 || dz != 0)
-                    && Math.abs(pathPos.getY() - mobPos.getY()) <= 1) {
-                Direction direction =
-                        Direction.getApproximateNearest(dx, 0, dz);
-                if (direction.getAxis().isHorizontal()) {
-                    bridgeDirection = direction;
-                }
-            }
-        }
-
-        if (bridgeDirection == null) {
-            BlockPos nexusPos = getNexus().getOrigin();
-            double dx = nexusPos.getX() - mobPos.getX();
-            double dz = nexusPos.getZ() - mobPos.getZ();
-            Direction direction = Direction.getApproximateNearest(dx, 0, dz);
-            if (!direction.getAxis().isHorizontal()) {
-                return;
-            }
-            bridgeDirection = direction;
-        }
-
-        // Always begin with the adjacent block. The modern path can skip one
-        // node over a gap; building only below that node leaves an unusable hole.
-        BlockPos nextPos = mobPos.relative(bridgeDirection);
-        Level world = level();
-        BlockPos currentFloor = mobPos.below();
-        BlockPos bridgeFloor = nextPos.below();
-        boolean standingAtLedge = world.getBlockState(currentFloor)
-                .isCollisionShapeFullBlock(world, currentFloor);
-        BlockState stateAtNextPos = world.getBlockState(nextPos);
-        boolean spaceIsClear = (PathingUtil.isAirOrReplaceable(stateAtNextPos)
-                || !stateAtNextPos.getFluidState().isEmpty())
-                && PathingUtil.isAirOrReplaceable(world.getBlockState(nextPos.above()));
-        boolean floorIsMissing = !world.getBlockState(bridgeFloor)
-                .isCollisionShapeFullBlock(world, bridgeFloor);
-
-        if (standingAtLedge && spaceIsClear && floorIsMissing) {
-            currentBuildTarget = nextPos;
-            Direction direction = bridgeDirection;
-            terrainModifier.submitJob(
-                    nextPos,
-                    Notifiable.NONE,
-                    pos -> terrainBuilder.askBuildBridgeLine(
-                            pos, direction, 3));
-        }
-    }
-
-    private void tryEmergencyTowerBuild() {
-        if (terrainModifier.isBusy()) {
-            return;
-        }
-
-        NexusAccess nexus = getNexus();
-        if (nexus == null) {
-            return;
-        }
-
-        Level world = level();
-        BlockPos nexusPos = nexus.getOrigin();
-        BlockPos mobPos = this.blockPosition();
-
-        // Vertikaler Abstand zum Nexus
-        int dy = nexusPos.getY() - mobPos.getY();
-        if (Math.abs(dy) <= 2) {
-            // fast gleiche Höhe -> nichts bauen
-            return;
-        }
-
-        // Horizontaler Abstand (2D) zum Nexus
-        double dx = (nexusPos.getX() + 0.5D) - this.getX();
-        double dz = (nexusPos.getZ() + 0.5D) - this.getZ();
-        double horizDistSq = dx * dx + dz * dz;
-
-        if (horizDistSq > 4.0D * 4.0D) {
-            // Zu weit weg -> erst näher laufen
-            return;
-        }
-
-        // Richtung zum Nexus (nur horizontal)
-        Direction orientation = Direction.getApproximateNearest(dx, 0.0D, dz);
-        if (!orientation.getAxis().isHorizontal()) {
-            orientation = this.getDirection();
-        }
-
-        // Basis-Position: Block auf dem wir stehen / vor uns
-        BlockPos basePos = mobPos;
-        BlockState baseState = world.getBlockState(basePos);
-        if (!PathingUtil.isAirOrReplaceable(baseState)) {
-            basePos = basePos.relative(orientation);
-        }
-
-        // Nexus über uns -> Turm nach oben
-        if (dy > 0) {
-            BlockPos above = basePos.above();
-            BlockState aboveState = world.getBlockState(above);
-            if (aboveState.isAir()
-                    || aboveState.is(Blocks.OAK_PLANKS)
-                    || aboveState.is(Blocks.COBBLESTONE)) {
-                // Über uns ist Luft -> noch nicht direkt unter der Decke
-                return;
-            }
-
-            int layers = Math.min(32, dy + 1);
-            final Direction towerDir = orientation;
-            final int towerLayers = Math.max(4, layers);
-
-            this.currentBuildTarget = basePos;
-
-            terrainModifier.submitJob(basePos, Notifiable.NONE, p ->
-                    terrainBuilder.askBuildLadderTower(p, towerDir, towerLayers)
-            );
-        } else {
-            // Nexus unter uns -> Schacht nach unten
-            BlockPos below = basePos.below();
-            if (world.getBlockState(below).isAir()) {
-                // Unter uns ist Luft -> kein solider Boden zum Reinarbeiten
-                return;
-            }
-
-            int depth = Math.min(32, -dy + 1);
-            final Direction shaftDir = orientation;
-            final int shaftDepth = Math.max(4, depth);
-
-            this.currentBuildTarget = basePos;
-
-            terrainModifier.submitJob(basePos, Notifiable.NONE, p ->
-                    terrainBuilder.askBuildLadderShaftDown(p, shaftDir, shaftDepth)
-            );
-        }
-    }
 
 
 
@@ -331,22 +148,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
 
-        if (!level().isClientSide()) {
-            // Wenn gerade kein anderer Baujob läuft:
-            if (!terrainModifier.isBusy()) {
-                tryBuildBridgeAhead();
-            }
-            if (!terrainModifier.isBusy()) {
-                // Notfall-Turm direkt unter dem Nexus ausprobieren
-                tryEmergencyTowerBuild();
-            }
-
-            // Wenn nach onUpdate + evtl. Emergency-Build nichts mehr zu tun ist,
-            // Build-Target zurücksetzen
-            if (!terrainModifier.isBusy()) {
-                currentBuildTarget = null;
-            }
-        }
     }
 
     @Override
@@ -366,30 +167,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         terrainBuilder.setBuildRate(1 + supportThisTick * 0.33F);
         supportThisTick = 0;
     }
-
-
-    @Override
-    public void travel(Vec3 movementInput) {
-        if (!this.level().isClientSide() && terrainModifier.isBusy() && currentBuildTarget != null) {
-
-            double maxReach = 4.5D;           // wie im TerrainModifier
-            double maxReachSq = maxReach * maxReach;
-
-            double distSq = this.getEyePosition().distanceToSqr(
-                    Vec3.atCenterOf(currentBuildTarget)
-            );
-
-            // Erst wenn er WIRKLICH in Reichweite ist, einfrieren
-            if (distSq <= maxReachSq) {
-                super.travel(Vec3.ZERO);
-                return;
-            }
-        }
-
-        super.travel(movementInput);
-    }
-
-
 
 
     @Override
@@ -414,13 +191,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
         if (action.getType() == PathAction.Type.BRIDGE) {
-            // NEU: Build-Target merken
-            this.currentBuildTarget = pos;
             return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildBridge);
         }
 
         if (action.getType() == PathAction.Type.SCAFFOLD) {
-            this.currentBuildTarget = pos;
             return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildScaffoldLayer);
         }
 
@@ -430,12 +204,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 dir = getDirection();
             }
             final Direction towerDir = dir;
-            this.currentBuildTarget = pos;
-
-            // The legacy navigator builds one layer for each vertical path
-            // node. The next path node then evaluates the new ladder as real
-            // progress toward the Nexus instead of treating a remote tower as
-            // one finished action.
             return terrainModifier.submitJob(pos, asker, p ->
                     terrainBuilder.askBuildLadderTower(p, towerDir, 1)
             );
@@ -449,9 +217,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 if (direction == null) {
                     direction = getDirection();
                 }
-
-                // NEU:
-                this.currentBuildTarget = p;
 
                 return terrainBuilder.askBuildLadder(p, direction);
             });
