@@ -337,6 +337,10 @@ public class IMNavigation implements Navigation {
 			return 0;
 		}
 
+		if (path.getPreviousNode() == null || path.getTarget() == null) {
+			return 0;
+		}
+
 		return path.getPreviousNode().distanceTo(path.getTarget());
 	}
 
