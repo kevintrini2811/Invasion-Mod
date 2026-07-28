@@ -207,13 +207,21 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         int mainIndex = path.getNextNodeIndex();
         if (newPath.getNode(0).equals(activeNode)) {
             if (segmentPathIndices.length > 0) {
-                int lowestIndex = Math.max(0, segmentPathIndices[segmentPathIndices.length - 1]);
+                int lowestIndex = Mth.clamp(
+                        segmentPathIndices[segmentPathIndices.length - 1],
+                        0,
+                        mainIndex
+                );
                 path = extendPath(path, newPath, lowestIndex, mainIndex);
                 mainIndex -= lowestIndex;
                 path.setNextNodeIndex(mainIndex);
                 nextNode = path.getNode(mainIndex + 1);
                 for (int i = 0; i < segmentPathIndices.length; i++) {
-                    segmentPathIndices[i] -= lowestIndex;
+                    segmentPathIndices[i] = Mth.clamp(
+                            segmentPathIndices[i] - lowestIndex,
+                            -1,
+                            mainIndex
+                    );
                     if (segmentPathIndices[i] == mainIndex) {
                         nextSegmentNodes[i] = nextNode;
                     }
