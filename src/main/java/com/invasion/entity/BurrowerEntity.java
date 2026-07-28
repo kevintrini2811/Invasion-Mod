@@ -52,6 +52,7 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     private final PosRotate3D[] segments3D = new PosRotate3D[NUMBER_OF_SEGMENTS];
     private final PosRotate3D[] segments3DLastTick = new PosRotate3D[NUMBER_OF_SEGMENTS];
+    private final PosRotate3D[] segmentTargets = new PosRotate3D[NUMBER_OF_SEGMENTS];
 
     protected final Vector3f rot = new Vector3f();
     protected final Vector3f prevRot = new Vector3f();
@@ -60,6 +61,7 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         super(type, world);
         Arrays.fill(segments3D, PosRotate3D.ZERO);
         Arrays.fill(segments3DLastTick, PosRotate3D.ZERO);
+        Arrays.fill(segmentTargets, PosRotate3D.ZERO);
         getNavigatorNew().setCanDestroyBlocks(true);
     }
 
@@ -185,12 +187,27 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
             // Rotation accessors are defined after all position accessors, so a
             // normal dirty-data packet has applied both values by this point.
             if (SEGMENT_ROTATIONS[i].equals(data)) {
-                segments3DLastTick[i] = segments3D[i];
                 Vector3fc position = entityData.get(SEGMENT_POSITIONS[i]);
-                segments3D[i] = new PosRotate3D(
+                PosRotate3D target = new PosRotate3D(
                         new Vec3(position.x(), position.y(), position.z()),
                         new Vector3f(entityData.get(SEGMENT_ROTATIONS[i])));
+                segmentTargets[i] = target;
+                if (segments3D[i].position().lengthSqr() < 1.0E-6D) {
+                    segments3D[i] = target;
+                    segments3DLastTick[i] = target;
+                }
                 return;
+            }
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (level().isClientSide()) {
+            for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
+                segments3DLastTick[i] = segments3D[i];
+                segments3D[i] = segments3D[i].lerp(0.5F, segmentTargets[i]);
             }
         }
     }
