@@ -40,7 +40,8 @@ public class Participants {
 
     public void bindPlayers(AABB arena) {
         final long now = System.currentTimeMillis();
-        for (Player player : nexus.getWorld().getEntitiesOfClass(Player.class, arena, EntitySelector.NO_CREATIVE_OR_SPECTATOR)) {
+        for (Player player : nexus.getWorld().getEntitiesOfClass(
+                Player.class, arena, EntitySelector.NO_SPECTATORS)) {
             entries.compute(player.getUUID(), (id, oldEntry) -> {
                 if (oldEntry == null || now - oldEntry.time > NexusAccess.BIND_EXPIRE_TIME) {
                     Component message = Component.translatable("invmod.message.nexus.lifenowbound", pluralize(player.getDisplayName())).withStyle(ChatFormatting.DARK_GREEN);
@@ -48,8 +49,9 @@ public class Participants {
                     if (oldEntry == null) {
                         player.sendSystemMessage(message);
                     }
-                    return new Entry(now, player.getUUID());
+                    return new Entry(now, player.getUUID(), player.isCreative());
                 }
+                oldEntry.creativeAtBinding = player.isCreative();
                 return oldEntry;
             });
         }
@@ -131,8 +133,11 @@ public class Participants {
                 Player player = entry.getEntity();
                 if (player != null) {
                     player.level().playSound(null, player.blockPosition(), SoundEvents.ENDER_DRAGON_DEATH, SoundSource.AMBIENT, 4, 1);
-                    player.hurt(player.level().damageSources().magic(), 500);
-                } else if (nexus.getWorld() instanceof ServerLevel sw) {
+                    if (!player.isCreative()) {
+                        player.hurt(player.level().damageSources().magic(), 500);
+                    }
+                } else if (!entry.creativeAtBinding
+                        && nexus.getWorld() instanceof ServerLevel sw) {
                     BountyHunter.of(sw).add(entry.id);
                 }
             }
@@ -177,16 +182,20 @@ public class Participants {
     private class Entry {
         long time;
         private final UUID id;
+        private boolean creativeAtBinding;
         @Nullable
         private Player entity;
 
-        public Entry(long time, UUID playerId) {
+        public Entry(long time, UUID playerId, boolean creativeAtBinding) {
             this.time = time;
             id = playerId;
+            this.creativeAtBinding = creativeAtBinding;
         }
 
         public Entry(CompoundTag compound) {
-            this(compound.getLongOr("time", 0L), compound.read("id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow());
+            this(compound.getLongOr("time", 0L),
+                    compound.read("id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
+                    compound.getBooleanOr("creativeAtBinding", false));
         }
 
         public Player getEntity() {
@@ -198,6 +207,7 @@ public class Participants {
         public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
             compound.store("id", net.minecraft.core.UUIDUtil.CODEC, id);
             compound.putLong("time", time);
+            compound.putBoolean("creativeAtBinding", creativeAtBinding);
             return compound;
         }
     }

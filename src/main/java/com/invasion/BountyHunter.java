@@ -70,9 +70,15 @@ public class BountyHunter extends SavedData {
                 Player player = world.getPlayerByUUID(id);
                 if (player != null) {
                     players.remove(id);
-                    player.hurt(world.damageSources().magic(), 500);
-                    player.setHealth(1);
-                    world.getServer().getPlayerList().broadcastAll(new ClientboundSystemChatPacket(Component.literal("Nexus energies caught up to ").append(player.getDisplayName()), false));
+                    if (!player.isCreative()) {
+                        player.hurt(world.damageSources().magic(), 500);
+                        player.setHealth(1);
+                        world.getServer().getPlayerList().broadcastAll(
+                                new ClientboundSystemChatPacket(
+                                        Component.literal("Nexus energies caught up to ")
+                                                .append(player.getDisplayName()),
+                                        false));
+                    }
                     setDirty();
                 }
             }
