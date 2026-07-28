@@ -29,7 +29,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     private final int segmentCount;
     private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
-    private static final double SEGMENT_SPACING = 0.22D;
+    private static final double SEGMENT_SPACING = 0.20D;
     private static final int MAX_HISTORY_SIZE = 512;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
@@ -205,12 +205,32 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         }
 
         PosRotate3D[] history = movementHistory.toArray(PosRotate3D[]::new);
+        PosRotate3D[] sampledSegments = new PosRotate3D[segmentCount + 1];
+        for (int i = 0; i < sampledSegments.length; i++) {
+            sampledSegments[i] =
+                    sampleHistoryAtDistance(history, (i + 1) * SEGMENT_SPACING);
+        }
+
         for (int i = 0; i < segmentCount; i++) {
+            Vec3 pointAhead = i == 0
+                    ? headPosition.position()
+                    : sampledSegments[i - 1].position();
+            Vec3 pointBehind = sampledSegments[i + 1].position();
+            Vector3f rotation = rotationAlong(pointAhead.subtract(pointBehind));
             ((BurrowerEntity) theEntity).setSegment(
                     i,
-                    sampleHistoryAtDistance(history, (i + 1) * SEGMENT_SPACING)
+                    new PosRotate3D(sampledSegments[i].position(), rotation)
             );
         }
+    }
+
+    private Vector3f rotationAlong(Vec3 direction) {
+        double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
+        return new Vector3f(
+                0,
+                (float) -Math.atan2(direction.z, direction.x),
+                (float) Math.atan2(direction.y, horizontal)
+        );
     }
 
     private PosRotate3D sampleHistoryAtDistance(PosRotate3D[] history, double targetDistance) {
