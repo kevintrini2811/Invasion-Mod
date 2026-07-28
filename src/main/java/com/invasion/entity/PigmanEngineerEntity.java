@@ -205,7 +205,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
             final Direction towerDir = dir;
             return terrainModifier.submitJob(pos, asker, p ->
-                    terrainBuilder.askBuildLadderTower(p, towerDir, 1)
+                    terrainBuilder.askBuildLadderTower(p, towerDir, 3)
             );
         }
 
@@ -223,6 +223,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean buildTowerPlatform(BlockPos pos, Notifiable asker) {
+        return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildPlatform);
     }
 
 

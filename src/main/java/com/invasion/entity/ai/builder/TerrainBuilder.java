@@ -191,6 +191,28 @@ public class TerrainBuilder implements ITerrainBuild {
         return builder.build();
     }
 
+    public Stream<ModifyBlockEntry> askBuildPlatform(BlockPos feetPos) {
+        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
+        Level world = mob.asEntity().level();
+        BlockPos floorCenter = feetPos.below();
+
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos floorPos = floorCenter.offset(x, 0, z);
+                BlockState state = world.getBlockState(floorPos);
+                if (PathingUtil.isAirOrReplaceable(state)) {
+                    builder.add(new ModifyBlockEntry(
+                            floorPos,
+                            Blocks.OAK_PLANKS.defaultBlockState(),
+                            (int) (PLANKS_COST / buildRate)
+                    ));
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
 
     public Stream<ModifyBlockEntry> askBuildLadderShaftDown(BlockPos basePos, Direction orientation, int depth) {
         Stream.Builder<ModifyBlockEntry> builder = Stream.builder();

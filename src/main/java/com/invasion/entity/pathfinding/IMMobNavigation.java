@@ -30,6 +30,14 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int activeTaskNodeIndex = -1;
     private int completedTaskNodeIndex = -1;
     private Status lastActionResult = Status.SUCCESS;
+    @Nullable
+    private BlockPos towerCycleBase;
+    @Nullable
+    private BlockPos towerCycleTop;
+    @Nullable
+    private Direction towerCycleOrientation;
+    private boolean towerPlatformRequested;
+    private boolean towerPlatformComplete;
 
     private int haltingTicks;
     private int stuckTime;
@@ -110,12 +118,16 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 		return waitingForNotify > 0;
 	}
 
-	@Override
+    @Override
     public void notifyTask(Status result) {
 	    waitingForNotify = 0;
         lastActionResult = result;
-        completedTaskNodeIndex = activeTaskNodeIndex;
-        activeTaskNodeIndex = -1;
+        if (towerPlatformRequested && !towerPlatformComplete) {
+            towerPlatformComplete = result == Status.SUCCESS;
+        } else {
+            completedTaskNodeIndex = activeTaskNodeIndex;
+            activeTaskNodeIndex = -1;
+        }
         // Time spent deliberately standing still for a terrain job must not
         // trigger the goal's stuck-path recovery immediately afterwards.
         stuckTime = 0;
@@ -224,6 +236,30 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         PathAction currentAction = getCurrentWorkingAction();
         int nodeIndex = getPath().getNextNodeIndex();
 
+        if (currentAction.getType() == PathAction.Type.TOWER
+                && completedTaskNodeIndex == nodeIndex
+                && towerCycleTop != null) {
+            if (!hasReachedTowerTop()) {
+                moveThroughTowerCycle();
+                return;
+            }
+            if (!towerPlatformRequested) {
+                towerPlatformRequested = true;
+                if (mob instanceof NexusEntity e
+                        && e.buildTowerPlatform(towerCycleTop, this)) {
+                    waitingForNotify = MAX_WAIT_TIME;
+                    return;
+                }
+                towerPlatformComplete = true;
+            }
+            if (!towerPlatformComplete) {
+                stop();
+                return;
+            }
+            advancePastTowerCycle();
+            return;
+        }
+
         if (currentAction != PathAction.NONE
                 && completedTaskNodeIndex == nodeIndex
                 && lastActionResult != Status.SUCCESS) {
@@ -304,6 +340,14 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             if (completedTaskNodeIndex == nodeIndex) {
                 return;
             }
+            if (action.getType() == PathAction.Type.TOWER) {
+                BlockPos base = getPath().getNextNodePos();
+                towerCycleBase = base;
+                towerCycleTop = base.above(3);
+                towerCycleOrientation = action.getOrientation();
+                towerPlatformRequested = false;
+                towerPlatformComplete = false;
+            }
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 activeTaskNodeIndex = nodeIndex;
@@ -314,6 +358,67 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             }
         }
 	}
+
+    private boolean hasReachedTowerTop() {
+        double targetX = towerCycleBase.getX() + 0.5D;
+        double targetZ = towerCycleBase.getZ() + 0.5D;
+        double horizontalDistanceSqr = Mth.square(mob.getX() - targetX)
+                + Mth.square(mob.getZ() - targetZ);
+        return horizontalDistanceSqr < 0.25D
+                && mob.getY() >= towerCycleTop.getY() - 0.15D;
+    }
+
+    private void moveThroughTowerCycle() {
+        double centerX = towerCycleBase.getX() + 0.5D;
+        double centerZ = towerCycleBase.getZ() + 0.5D;
+        double horizontalDistanceSqr = Mth.square(mob.getX() - centerX)
+                + Mth.square(mob.getZ() - centerZ);
+
+        mob.fallDistance = 0;
+        if (horizontalDistanceSqr >= 0.20D) {
+            // First line the engineer up with the ladder column.
+            mob.getMoveControl().setWantedPosition(centerX, mob.getY(), centerZ, speedModifier);
+            return;
+        }
+
+        // Then press slightly into the support wall while moving straight up.
+        // This keeps contact with the ladder for the complete three-block run.
+        double climbX = centerX;
+        double climbZ = centerZ;
+        if (towerCycleOrientation != null) {
+            Direction intoSupport = towerCycleOrientation.getOpposite();
+            climbX += intoSupport.getStepX() * 0.2D;
+            climbZ += intoSupport.getStepZ() * 0.2D;
+        }
+        mob.getMoveControl().setWantedPosition(
+                climbX,
+                towerCycleTop.getY(),
+                climbZ,
+                speedModifier
+        );
+    }
+
+    private void advancePastTowerCycle() {
+        int nextIndex = getPath().getNextNodeIndex() + 1;
+        while (nextIndex < getPath().getNodeCount()) {
+            BlockPos pos = getPath().getNode(nextIndex).asBlockPos();
+            if (pos.getX() != towerCycleBase.getX()
+                    || pos.getZ() != towerCycleBase.getZ()
+                    || pos.getY() > towerCycleTop.getY()) {
+                break;
+            }
+            nextIndex++;
+        }
+        getPath().setNextNodeIndex(nextIndex);
+        activeTaskNodeIndex = -1;
+        completedTaskNodeIndex = -1;
+        towerCycleBase = null;
+        towerCycleTop = null;
+        towerCycleOrientation = null;
+        towerPlatformRequested = false;
+        towerPlatformComplete = false;
+        stuckTime = 0;
+    }
 
 	@Override
     public Vec3 getTempMobPos() {
@@ -334,6 +439,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             if (currentPath != null && currentPath != previousPath) {
                 activeTaskNodeIndex = -1;
                 completedTaskNodeIndex = -1;
+                towerCycleBase = null;
+                towerCycleTop = null;
+                towerCycleOrientation = null;
+                towerPlatformRequested = false;
+                towerPlatformComplete = false;
                 PathingDebugger.sendPathToClients(mob, currentPath, 0.5F);
             }
         }

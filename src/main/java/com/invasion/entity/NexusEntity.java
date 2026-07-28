@@ -84,6 +84,10 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
         return false;
     }
 
+    default boolean buildTowerPlatform(BlockPos pos, Notifiable asker) {
+        return false;
+    }
+
     @Deprecated
     default void setGravity(float acceleration) {
         asEntity().getAttribute(Attributes.GRAVITY).setBaseValue(acceleration);
