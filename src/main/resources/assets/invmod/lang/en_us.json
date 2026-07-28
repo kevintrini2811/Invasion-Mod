@@ -114,7 +114,7 @@
     "invmod.message.command.nexus_selected": "Nexus selected for /invasion commands.",
     "invmod.message.command.other_nexus_active": "Another Nexus is already active.",
     "invmod.message.command.no_invasion_to_pause": "There is no invasion to pause or resume.",
-    "invmod.message.command.invasion_paused": "%s paused the invasion. All invasion mobs were removed.",
+    "invmod.message.command.invasion_paused": "%s paused the invasion.",
     "invmod.message.command.invasion_resumed": "%s resumed the invasion.",
 
     "invmod.message.bone.nonearbynexus1": "The wolf doesn't like this Strange Bone.",

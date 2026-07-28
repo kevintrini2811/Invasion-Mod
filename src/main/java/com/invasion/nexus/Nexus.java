@@ -16,6 +16,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
@@ -32,6 +33,7 @@ import com.invasion.entity.SpawnProxyEntity;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.ai.AttackerAI;
 import com.invasion.nexus.spawns.IMWaveSpawner;
+import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
@@ -306,31 +308,31 @@ public class Nexus implements ControllableNexusAccess {
     }
     @Override
     public boolean togglePause() {
-        // Wenn momentan gar keine Invasion läuft, nichts tun
         if (!mode.isActive() && !paused) {
             return false;
         }
 
-        // Von "läuft" -> "pausiert"
         if (!paused) {
             paused = true;
-
-            // Spawner anhalten (stoppt neue Spawns, killt externe Invasionsmobs)
-            waveSpawner.stop();
-
-            // Alle aktuellen Invasions-Mobs despawnen
-            killAllMobs();
-
-            return true; // jetzt PAUSIERT
+            setInvasionMobsPaused(true);
+            return true;
         }
 
-        // Von "pausiert" -> "läuft weiter"
         paused = false;
+        if (!waveSpawner.isActive()) {
+            onLoaded();
+        }
+        setInvasionMobsPaused(false);
+        return false;
+    }
 
-        // Nutzt die bestehende Resume-Logik (wie beim Welt-Laden)
-        onLoaded();
-
-        return false; // jetzt NICHT mehr pausiert
+    private void setInvasionMobsPaused(boolean pause) {
+        AABB area = boundingBoxToRadius != null ? boundingBoxToRadius : computeSpawnArea();
+        for (Mob mob : getWorld().getEntitiesOfClass(Mob.class, area, entity ->
+                (entity instanceof Combatant<?> combatant && combatant.getNexus() == this)
+                        || EntityPatterns.isExternalInvasionMob(entity.getType()))) {
+            mob.setNoAi(pause);
+        }
     }
 
     @Override
@@ -361,7 +363,7 @@ public class Nexus implements ControllableNexusAccess {
 
     @Override
     public void damage(DamageSource source, int amount) {
-        if (amount <= 0 || hp <= 0) {
+        if (paused || amount <= 0 || hp <= 0) {
             return;
         }
 
