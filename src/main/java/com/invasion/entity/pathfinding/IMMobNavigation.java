@@ -34,6 +34,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private boolean continuingEngineerBridge;
     @Nullable
     private BlockPos lastCompletedBridgeTarget;
+    private int lastLoggedBridgePath;
+    private int lastLoggedBridgeNode = -1;
+    private PathAction lastLoggedBridgeAction = PathAction.NONE;
 
     private int haltingTicks;
     private int stuckTime;
@@ -141,6 +144,16 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     public void notifyTask(Status result) {
 	    waitingForNotify = 0;
         lastActionResult = result;
+        if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] build finished: entity={}, path={}, node={}, result={}, pos={}",
+                    mob.getId(),
+                    path == null ? 0 : System.identityHashCode(path),
+                    activeTaskNodeIndex,
+                    result,
+                    mob.blockPosition()
+            );
+        }
         completedTaskNodeIndex = activeTaskNodeIndex;
         activeTaskNodeIndex = -1;
         // Time spent deliberately standing still for a terrain job must not
@@ -259,6 +272,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
         PathAction currentAction = getCurrentWorkingAction();
         int nodeIndex = getPath().getNextNodeIndex();
+        logEngineerBridgeTransition(currentAction, nodeIndex);
 
         if (currentAction != PathAction.NONE
                 && completedTaskNodeIndex == nodeIndex
@@ -315,6 +329,34 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             handlePathAction(currentAction);
 	    }
 	}
+
+    private void logEngineerBridgeTransition(PathAction action, int nodeIndex) {
+        if (!(mob instanceof PigmanEngineerEntity)
+                || (!continuingEngineerBridge && action.getType() != PathAction.Type.BRIDGE)) {
+            return;
+        }
+
+        int pathId = System.identityHashCode(getPath());
+        if (pathId != lastLoggedBridgePath
+                || nodeIndex != lastLoggedBridgeNode
+                || action != lastLoggedBridgeAction) {
+            lastLoggedBridgePath = pathId;
+            lastLoggedBridgeNode = nodeIndex;
+            lastLoggedBridgeAction = action;
+            BlockPos nodePos = getPath().getNextNodePos();
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] path state: entity={}, path={}, node={}/{}, action={}, nodePos={}, mobPos={}, requiresBridge={}",
+                    mob.getId(),
+                    pathId,
+                    nodeIndex,
+                    getPath().getNodeCount(),
+                    action,
+                    nodePos,
+                    mob.blockPosition(),
+                    requiresBridgeAt(nodePos)
+            );
+        }
+    }
 
     private boolean hasReachedCompletedActionNode(PathAction action, BlockPos nodePos) {
         double targetX = nodePos.getX() + 0.5D;
@@ -483,6 +525,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             }
             Path currentPath = getPath();
             if (currentPath != null && currentPath != previousPath) {
+                if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
+                    InvasionMod.LOGGER.warn(
+                            "[EngineerBridge] path replaced: entity={}, oldPath={}, newPath={}, nodes={}, target={}, pos={}",
+                            mob.getId(),
+                            previousPath == null ? 0 : System.identityHashCode(previousPath),
+                            System.identityHashCode(currentPath),
+                            currentPath.getNodeCount(),
+                            currentPath.getTarget(),
+                            mob.blockPosition()
+                    );
+                }
                 activeTaskNodeIndex = -1;
                 completedTaskNodeIndex = -1;
                 PathingDebugger.sendPathToClients(mob, currentPath, 0.5F);
