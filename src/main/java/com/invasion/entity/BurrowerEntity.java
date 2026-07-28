@@ -89,6 +89,7 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
                 .add(Attributes.MOVEMENT_SPEED, 0.2)
                 .add(Attributes.ATTACK_DAMAGE, 8)
                 .add(Attributes.FOLLOW_RANGE, 32)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1)
                 .add(Attributes.GRAVITY, 0)
                 .add(Attributes.STEP_HEIGHT, 0);
     }
