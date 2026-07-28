@@ -32,15 +32,6 @@ public class ClimbableMoveControl extends MoveControl {
     public void tick() {
         Operation prevState = operation;
 
-        if (operation == MoveControl.Operation.STRAFE) {
-            Optional<Direction> ladderPos = getClimbFace(mob.blockPosition()).or(() -> getClimbFace(mob.blockPosition().above()));
-            if (ladderPos.isPresent()) {
-                mob.getJumpControl().jump();
-                operation = Operation.WAIT;
-                return;
-            }
-        }
-
         super.tick();
 
         if (prevState == Operation.MOVE_TO) {
