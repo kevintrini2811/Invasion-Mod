@@ -105,19 +105,23 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
 
         BlockPos mobPos = blockPosition();
-        BlockPos nextPos = null;
+        Direction bridgeDirection = null;
         var path = getNavigation().getPath();
         if (path != null && !path.isDone()) {
             BlockPos pathPos = path.getNextNodePos();
-            int horizontalDistance = Math.abs(pathPos.getX() - mobPos.getX())
-                    + Math.abs(pathPos.getZ() - mobPos.getZ());
-            if (horizontalDistance > 0 && horizontalDistance <= 2
+            int dx = pathPos.getX() - mobPos.getX();
+            int dz = pathPos.getZ() - mobPos.getZ();
+            if ((dx != 0 || dz != 0)
                     && Math.abs(pathPos.getY() - mobPos.getY()) <= 1) {
-                nextPos = new BlockPos(pathPos.getX(), mobPos.getY(), pathPos.getZ());
+                Direction direction =
+                        Direction.getApproximateNearest(dx, 0, dz);
+                if (direction.getAxis().isHorizontal()) {
+                    bridgeDirection = direction;
+                }
             }
         }
 
-        if (nextPos == null) {
+        if (bridgeDirection == null) {
             BlockPos nexusPos = getNexus().getOrigin();
             double dx = nexusPos.getX() - mobPos.getX();
             double dz = nexusPos.getZ() - mobPos.getZ();
@@ -125,9 +129,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             if (!direction.getAxis().isHorizontal()) {
                 return;
             }
-            nextPos = mobPos.relative(direction);
+            bridgeDirection = direction;
         }
 
+        // Always begin with the adjacent block. The modern path can skip one
+        // node over a gap; building only below that node leaves an unusable hole.
+        BlockPos nextPos = mobPos.relative(bridgeDirection);
         Level world = level();
         BlockPos currentFloor = mobPos.below();
         BlockPos bridgeFloor = nextPos.below();
@@ -142,7 +149,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         if (standingAtLedge && spaceIsClear && floorIsMissing) {
             currentBuildTarget = nextPos;
-            terrainModifier.submitJob(nextPos, Notifiable.NONE, terrainBuilder::askBuildBridge);
+            Direction direction = bridgeDirection;
+            terrainModifier.submitJob(
+                    nextPos,
+                    Notifiable.NONE,
+                    pos -> terrainBuilder.askBuildBridgeLine(
+                            pos, direction, 3));
         }
     }
 
