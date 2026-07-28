@@ -48,17 +48,13 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     private static final EntityDataAccessor<Vector3fc> HEAD_ROTATION =
             SynchedEntityData.defineId(BurrowerEntity.class, EntityDataSerializers.VECTOR3);
-    private static final EntityDataAccessor<Vector3fc>[] SEGMENT_POSITIONS =
-            createTrackedVectors();
-    private static final EntityDataAccessor<Vector3fc>[] SEGMENT_ROTATIONS =
-            createTrackedVectors();
-
     private TerrainModifier terrainModifier = new TerrainModifier(this, 2);
     private TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1);
 
     private final PosRotate3D[] segments3D = new PosRotate3D[NUMBER_OF_SEGMENTS];
     private final PosRotate3D[] segments3DLastTick = new PosRotate3D[NUMBER_OF_SEGMENTS];
-    private final PosRotate3D[] segmentTargets = new PosRotate3D[NUMBER_OF_SEGMENTS];
+    private final Deque<Vec3> clientMovementHistory = new ArrayDeque<>();
+    private BurrowerTailEntity tailHitbox;
 
     protected final Vector3f rot = new Vector3f();
     protected final Vector3f prevRot = new Vector3f();
@@ -67,28 +63,13 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         super(type, world);
         Arrays.fill(segments3D, PosRotate3D.ZERO);
         Arrays.fill(segments3DLastTick, PosRotate3D.ZERO);
-        Arrays.fill(segmentTargets, PosRotate3D.ZERO);
         getNavigatorNew().setCanDestroyBlocks(true);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static EntityDataAccessor<Vector3fc>[] createTrackedVectors() {
-        EntityDataAccessor<Vector3fc>[] accessors = new EntityDataAccessor[NUMBER_OF_SEGMENTS];
-        for (int i = 0; i < accessors.length; i++) {
-            accessors[i] =
-                    SynchedEntityData.defineId(BurrowerEntity.class, EntityDataSerializers.VECTOR3);
-        }
-        return accessors;
     }
 
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(HEAD_ROTATION, new Vector3f());
-        for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
-            builder.define(SEGMENT_POSITIONS[i], new Vector3f());
-            builder.define(SEGMENT_ROTATIONS[i], new Vector3f());
-        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -164,9 +145,9 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         if (index < segments3D.length) {
             segments3DLastTick[index] = segments3D[index];
             segments3D[index] = pos;
-            entityData.set(SEGMENT_POSITIONS[index],
-                    new Vector3f((float) pos.position().x, (float) pos.position().y, (float) pos.position().z));
-            entityData.set(SEGMENT_ROTATIONS[index], new Vector3f(pos.rotation()), true);
+            if (!level().isClientSide() && index == NUMBER_OF_SEGMENTS - 1) {
+                updateTailHitbox(pos.position());
+            }
         }
     }
 
@@ -189,22 +170,6 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
             return;
         }
 
-        for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
-            // Rotation accessors are defined after all position accessors, so a
-            // normal dirty-data packet has applied both values by this point.
-            if (SEGMENT_ROTATIONS[i].equals(data)) {
-                Vector3fc position = entityData.get(SEGMENT_POSITIONS[i]);
-                PosRotate3D target = new PosRotate3D(
-                        new Vec3(position.x(), position.y(), position.z()),
-                        new Vector3f(entityData.get(SEGMENT_ROTATIONS[i])));
-                segmentTargets[i] = target;
-                if (segments3D[i].position().lengthSqr() < 1.0E-6D) {
-                    segments3D[i] = target;
-                    segments3DLastTick[i] = target;
-                }
-                return;
-            }
-        }
     }
 
     @Override
