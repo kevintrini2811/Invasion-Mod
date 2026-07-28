@@ -99,7 +99,9 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // masSelfDamage = max damage loss before the mob can no longer mine blocks. If health is less than (maxHealth - maxSelfDamage) it stops.
     protected int selfDamage = 2;
     protected int maxSelfDamage = 6;
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 32.0F);
+    // Zombies may only modify terrain within their actual interaction range.
+    // This also prevents an entire cobblestone ramp from being placed remotely.
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 3.0F);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
     private static AttributeSupplier.Builder createBaseAttributes() {
         return Zombie.createAttributes()
