@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -27,6 +28,8 @@ import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.InvEntities;
+import com.invasion.entity.IMSkeletonEntity;
+import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
@@ -53,6 +56,31 @@ public class IMWaveSpawner implements Spawner {
 			Items.CROSSBOW,
 			InvItems.INFUSED_SWORD,
 			InvItems.SEARING_BOW);
+	private static final List<Item> RANDOM_WAVE_ARMOR = List.of(
+			Items.LEATHER_HELMET,
+			Items.LEATHER_CHESTPLATE,
+			Items.LEATHER_LEGGINGS,
+			Items.LEATHER_BOOTS,
+			Items.CHAINMAIL_HELMET,
+			Items.CHAINMAIL_CHESTPLATE,
+			Items.CHAINMAIL_LEGGINGS,
+			Items.CHAINMAIL_BOOTS,
+			Items.IRON_HELMET,
+			Items.IRON_CHESTPLATE,
+			Items.IRON_LEGGINGS,
+			Items.IRON_BOOTS,
+			Items.GOLDEN_HELMET,
+			Items.GOLDEN_CHESTPLATE,
+			Items.GOLDEN_LEGGINGS,
+			Items.GOLDEN_BOOTS,
+			Items.DIAMOND_HELMET,
+			Items.DIAMOND_CHESTPLATE,
+			Items.DIAMOND_LEGGINGS,
+			Items.DIAMOND_BOOTS,
+			Items.NETHERITE_HELMET,
+			Items.NETHERITE_CHESTPLATE,
+			Items.NETHERITE_LEGGINGS,
+			Items.NETHERITE_BOOTS);
 	public static final int MIN_SPAWN_RADIUS = 8;
 	private static final int NORMAL_SPAWN_HEIGHT = 30;
 	private static final int MIN_SPAWN_POINTS_TO_KEEP = 15;
@@ -284,6 +312,7 @@ public class IMWaveSpawner implements Spawner {
 
 		Mob mob = mobConstruct.createMob(nexus);
 		equipRandomWaveWeapon(mob);
+		equipRandomWaveArmor(mob);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (int j = 0; j < spawnTries; j++) {
@@ -355,6 +384,36 @@ public class IMWaveSpawner implements Spawner {
 		mob.setItemSlot(
 				net.minecraft.world.entity.EquipmentSlot.MAINHAND,
 				weapon.getDefaultInstance());
+	}
+
+	private void equipRandomWaveArmor(Mob mob) {
+		boolean canWearWaveArmor = mob instanceof IMSkeletonEntity
+				|| mob instanceof PigmanEngineerEntity
+				|| mob instanceof EntityIMZombie zombie && !zombie.isBrute()
+				|| mob instanceof EntityIMZombiePigman pigman && !pigman.isBrute();
+		if (!canWearWaveArmor) {
+			return;
+		}
+
+		int chancePercent = Mth.clamp(nexus.getCurrentWave() - 1, 0, 100);
+		if (getRandom().nextInt(100) >= chancePercent) {
+			return;
+		}
+
+		List<Item> availableArmor = new ArrayList<>();
+		for (Item armor : RANDOM_WAVE_ARMOR) {
+			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
+			if (mob.getItemBySlot(slot).isEmpty()) {
+				availableArmor.add(armor);
+			}
+		}
+		if (availableArmor.isEmpty()) {
+			return;
+		}
+
+		Item armor = availableArmor.get(getRandom().nextInt(availableArmor.size()));
+		EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
+		mob.setItemSlot(slot, armor.getDefaultInstance());
 	}
 
 	private void generateSpawnPoints() {
