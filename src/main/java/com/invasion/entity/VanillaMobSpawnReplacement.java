@@ -10,7 +10,7 @@ import com.invasion.nexus.WorldNexusStorage;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.ConversionParams;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
@@ -90,10 +90,41 @@ public final class VanillaMobSpawnReplacement {
     private static <T extends Mob & NexusEntity> void convert(
             Mob source, EntityType<T> targetType,
             com.invasion.nexus.NexusAccess nexus) {
-        source.convertTo(
-                targetType,
-                ConversionParams.single(source, true, true),
-                EntitySpawnReason.CONVERSION,
-                converted -> converted.setNexus(nexus));
+        if (!(source.level() instanceof ServerLevel world)) {
+            return;
+        }
+
+        T converted = targetType.create(world, EntitySpawnReason.CONVERSION);
+        if (converted == null) {
+            return;
+        }
+
+        Entity vehicle = source.getVehicle();
+        source.stopRiding();
+
+        converted.snapTo(
+                source.getX(), source.getY(), source.getZ(),
+                source.getYRot(), source.getXRot());
+        converted.setDeltaMovement(source.getDeltaMovement());
+        converted.setBaby(source.isBaby());
+        converted.setCustomName(source.getCustomName());
+        converted.setCustomNameVisible(source.isCustomNameVisible());
+        converted.setNoAi(source.isNoAi());
+        converted.setCanPickUpLoot(source.canPickUpLoot());
+        if (source.isPersistenceRequired()) {
+            converted.setPersistenceRequired();
+        }
+        converted.setNexus(nexus);
+
+        // Remove the original before adding its replacement. convertTo adds the
+        // new entity first, which lets both entities coexist in the tracker for
+        // part of a tick and can appear as duplicate spawns on the client.
+        source.discard();
+        if (!world.addFreshEntity(converted)) {
+            return;
+        }
+        if (vehicle != null && !vehicle.isRemoved()) {
+            converted.startRiding(vehicle);
+        }
     }
 }

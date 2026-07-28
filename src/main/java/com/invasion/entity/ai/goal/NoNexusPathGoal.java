@@ -2,6 +2,7 @@ package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.pathfinding.Navigation;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
@@ -13,7 +14,9 @@ public class NoNexusPathGoal extends PredicatedGoal {
 	}
 
 	public static boolean isLostPathToNexus(NexusEntity entity) {
-	    return entity.getNavigatorNew().hasGoal(HasAiGoals.Goal.BREAK_NEXUS)
-            && entity.getNavigatorNew().getLastPathDistanceToTarget() > PATH_DISTANCE_TRIGGER;
+	    Navigation navigation = entity.getNavigatorNew();
+	    return navigation != null
+            && navigation.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)
+            && navigation.getLastPathDistanceToTarget() > PATH_DISTANCE_TRIGGER;
 	}
 }
