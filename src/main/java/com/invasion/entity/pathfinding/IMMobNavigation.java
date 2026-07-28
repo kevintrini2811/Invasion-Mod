@@ -30,9 +30,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int activeTaskNodeIndex = -1;
     private int completedTaskNodeIndex = -1;
     private Status lastActionResult = Status.SUCCESS;
-    private boolean debugTowerInProgress;
-    @Nullable
-    private BlockPos debugTowerBottom;
 
     private int haltingTicks;
     private int stuckTime;
@@ -227,22 +224,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         PathAction currentAction = getCurrentWorkingAction();
         int nodeIndex = getPath().getNextNodeIndex();
 
-        if (debugTowerInProgress
-                && completedTaskNodeIndex == nodeIndex
-                && lastActionResult == Status.SUCCESS) {
-            if (!isCenteredOn(debugTowerBottom)) {
-                moveToCompletedActionNode(debugTowerBottom);
-                stuckTime = 0;
-                return;
-            }
-
-            // Deliberate debugging endpoint: once construction and centering
-            // have succeeded, freeze this engineer before any climbing logic.
-            stop();
-            mob.setNoAi(true);
-            return;
-        }
-
         if (currentAction != PathAction.NONE
                 && completedTaskNodeIndex == nodeIndex
                 && lastActionResult != Status.SUCCESS) {
@@ -295,14 +276,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 && Math.abs(mob.getY() - nodePos.getY()) < 1.0D;
     }
 
-    private boolean isCenteredOn(BlockPos pos) {
-        double targetX = pos.getX() + 0.5D;
-        double targetZ = pos.getZ() + 0.5D;
-        return Mth.square(mob.getX() - targetX)
-                + Mth.square(mob.getZ() - targetZ) < 0.04D
-                && Math.abs(mob.getY() - pos.getY()) < 0.6D;
-    }
-
     private void moveToCompletedActionNode(BlockPos nodePos) {
         mob.fallDistance = 0;
         mob.getMoveControl().setWantedPosition(
@@ -331,11 +304,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             if (completedTaskNodeIndex == nodeIndex) {
                 return;
             }
-            if (action.getType() == PathAction.Type.TOWER
-                    || action.getType() == PathAction.Type.SCAFFOLD) {
-                debugTowerInProgress = true;
-                debugTowerBottom = mob.blockPosition();
-            }
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 activeTaskNodeIndex = nodeIndex;
@@ -354,11 +322,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public boolean moveTo(Path path, double speed) {
-        // During the deliberately reduced tower test, queued scaffold and
-        // nexus callbacks must not replace the path that owns the tower.
-        if (debugTowerInProgress) {
-            return false;
-        }
         @Nullable Path previousPath = getPath();
         try {
             stuckTime = 0;

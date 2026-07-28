@@ -1,7 +1,6 @@
 package com.invasion.entity;
 
 import com.invasion.Notifiable;
-import com.invasion.entity.ai.builder.TerrainBuilder;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
@@ -14,7 +13,6 @@ import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -56,9 +54,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     private final TerrainModifier terrainModifier = new TerrainModifier(this, 2.8F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
-    private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
-
-    private float supportThisTick;
 
 
 
@@ -158,17 +153,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
-
-
-
-    @Override
-    public void aiStep() {
-        super.aiStep();
-        terrainBuilder.setBuildRate(1 + supportThisTick * 0.33F);
-        supportThisTick = 0;
-    }
-
-
     @Override
     public void baseTick() {
         super.baseTick();
@@ -191,44 +175,26 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
         if (action.getType() == PathAction.Type.BRIDGE) {
-            return terrainModifier.submitJob(pos, asker, terrainBuilder::askBuildBridge);
+            return beginBridgeAction();
         }
 
-        if (action.getType() == PathAction.Type.SCAFFOLD) {
-            BlockPos planBase = blockPosition().above();
-            return terrainModifier.submitJob(planBase, asker, ignored ->
-                    terrainBuilder.askBuildScaffoldBlockPlan(pos, planBase)
-            );
+        if (action.getType() == PathAction.Type.TOWER
+                || action.getType() == PathAction.Type.SCAFFOLD
+                || action.getType() == PathAction.Type.LADDER) {
+            return beginBuildUpAction();
         }
 
-        if (action.getType() == PathAction.Type.TOWER) {
-            Direction dir = action.getOrientation();
-            if (dir == null || !dir.getAxis().isHorizontal()) {
-                dir = getDirection();
-            }
-            final Direction towerDir = dir;
-            // The block plan is anchored on the engineer's current feet so it
-            // can be completed without walking between placements.
-            BlockPos planBase = blockPosition().above();
-            return terrainModifier.submitJob(planBase, asker, p ->
-                    terrainBuilder.askBuildLadderTower(p, towerDir, 3)
-            );
-        }
+        return false;
+    }
 
+    private boolean beginBuildUpAction() {
+        setNoAi(true);
+        return false;
+    }
 
-
-        if (action.getType() == PathAction.Type.LADDER) {
-            return terrainModifier.submitJob(pos, asker, p -> {
-                Direction direction = action.getOrientation();
-                if (direction == null) {
-                    direction = getDirection();
-                }
-
-                return terrainBuilder.askBuildLadder(p, direction);
-            });
-        }
-
-        return true;
+    private boolean beginBridgeAction() {
+        setNoAi(true);
+        return false;
     }
 
 
@@ -256,7 +222,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     public void supportForTick(Mob entity, float amount) {
-        supportThisTick += amount;
+        // Building support is intentionally disabled while the engineer's
+        // construction system is rebuilt from a blank state.
     }
 
     @Override
