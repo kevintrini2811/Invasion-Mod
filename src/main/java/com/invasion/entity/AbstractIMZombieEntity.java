@@ -76,24 +76,29 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
                 || stack.is(Items.TRIDENT)
                 || stack.is(Items.MACE)
                 || stack.is(InvItems.INFUSED_SWORD)
-                || stack.is(Items.BOW);
+                || stack.is(Items.BOW)
+                || stack.is(InvItems.SEARING_BOW)
+                || stack.is(Items.CROSSBOW);
     }
 
-    public final boolean isHoldingBow() {
-        return getItemBySlot(EquipmentSlot.MAINHAND).is(Items.BOW);
+    public final boolean isHoldingRangedWeapon() {
+        ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
+        return heldItem.is(Items.BOW)
+                || heldItem.is(InvItems.SEARING_BOW)
+                || heldItem.is(Items.CROSSBOW);
     }
 
     protected final void addWeaponCombatGoals(double meleeSpeed) {
         goalSelector.addGoal(1, new PredicatedGoal(
                 new EntityAIKillWithArrow<>(this, Player.class, 65, 16F),
-                this::isHoldingBow));
+                this::isHoldingRangedWeapon));
         goalSelector.addGoal(2, new PredicatedGoal(
                 new SkeletonAttackNexusGoal<>(this),
-                this::isHoldingBow));
+                this::isHoldingRangedWeapon));
         goalSelector.addGoal(6, new PredicatedGoal(
                 new com.invasion.entity.ai.goal.MobMeleeAttackGoal(
                         this, meleeSpeed, false),
-                () -> !isHoldingBow()));
+                () -> !isHoldingRangedWeapon()));
     }
 
     @Override
@@ -144,7 +149,10 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         projectile.shoot(
                 dX, dY + horizontalDistance * 0.2F, dZ, 1.1F, 12);
         playSound(
-                SoundEvents.SKELETON_SHOOT, 1,
+                getMainHandItem().is(Items.CROSSBOW)
+                        ? SoundEvents.CROSSBOW_SHOOT
+                        : SoundEvents.SKELETON_SHOOT,
+                1,
                 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(projectile);
     }
