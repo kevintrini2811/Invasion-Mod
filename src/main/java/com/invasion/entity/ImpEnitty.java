@@ -1,16 +1,28 @@
 package com.invasion.entity;
 
+import com.invasion.item.InvItems;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
+import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.KillEntityGoal;
 import com.invasion.entity.ai.goal.NoNexusPathGoal;
+import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.ProvideSupportGoal;
+import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.RangedAttackMob;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -19,12 +31,16 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
-public class ImpEnitty extends IMMobEntity {
+public class ImpEnitty extends IMMobEntity
+        implements RangedAttackMob, RangedNexusAttacker {
     public ImpEnitty(EntityType<ImpEnitty> type, Level world) {
         super(type, world);
         getNavigatorNew().getActor().setCanClimb(true);
+        setCanPickUpLoot(true);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -37,10 +53,23 @@ public class ImpEnitty extends IMMobEntity {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
-        goalSelector.addGoal(1, new KillEntityGoal<>(this, Player.class, 40));
+        goalSelector.addGoal(1, new PredicatedGoal(
+                new KillEntityGoal<>(this, Player.class, 40),
+                () -> !isHoldingRangedWeapon()));
+        goalSelector.addGoal(1, new PredicatedGoal(
+                new EntityAIKillWithArrow<>(this, Player.class, 65, 16F),
+                this::isHoldingRangedWeapon));
         goalSelector.addGoal(2, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(2, new PredicatedGoal(
+                new SkeletonAttackNexusGoal<>(this),
+                this::isHoldingRangedWeapon));
         goalSelector.addGoal(3, new ProvideSupportGoal(this, 4, true));
-        goalSelector.addGoal(4, new KillEntityGoal<>(this, Mob.class, 40));
+        goalSelector.addGoal(4, new PredicatedGoal(
+                new KillEntityGoal<>(this, Mob.class, 40),
+                () -> !isHoldingRangedWeapon()));
+        goalSelector.addGoal(4, new PredicatedGoal(
+                new EntityAIKillWithArrow<>(this, Mob.class, 65, 16F),
+                this::isHoldingRangedWeapon));
         goalSelector.addGoal(5, new GoToNexusGoal(this));
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8));
@@ -61,5 +90,79 @@ public class ImpEnitty extends IMMobEntity {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        return isUsableWeapon(stack)
+                && !isUsableWeapon(getMainHandItem());
+    }
+
+    private static boolean isUsableWeapon(ItemStack stack) {
+        return stack.is(ItemTags.SWORDS)
+                || stack.is(ItemTags.AXES)
+                || stack.is(Items.TRIDENT)
+                || stack.is(Items.MACE)
+                || stack.is(InvItems.INFUSED_SWORD)
+                || stack.is(Items.BOW)
+                || stack.is(InvItems.SEARING_BOW)
+                || stack.is(Items.CROSSBOW);
+    }
+
+    private boolean isHoldingRangedWeapon() {
+        ItemStack heldItem = getMainHandItem();
+        return heldItem.is(Items.BOW)
+                || heldItem.is(InvItems.SEARING_BOW)
+                || heldItem.is(Items.CROSSBOW);
+    }
+
+    @Override
+    public void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
+        if (tickCount % 5 != 0 || isUsableWeapon(getMainHandItem())) {
+            return;
+        }
+        for (ItemEntity item : world.getEntitiesOfClass(
+                ItemEntity.class,
+                getBoundingBox().inflate(1.25D),
+                candidate -> !candidate.hasPickUpDelay()
+                        && wantsToPickUp(world, candidate.getItem()))) {
+            pickUpItem(world, item);
+            if (isUsableWeapon(getMainHandItem())) {
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void performRangedAttack(LivingEntity target, float pullProgress) {
+        ItemStack weapon = getMainHandItem();
+        AbstractArrow projectile = ProjectileUtil.getMobArrow(
+                this, getProjectile(weapon), pullProgress, weapon);
+        shootArrow(projectile, target.getX(), target.getY(0.3333333333333333),
+                target.getZ());
+    }
+
+    @Override
+    public void performRangedNexusAttack(net.minecraft.world.phys.Vec3 target) {
+        shootArrow(new SkeletonArrowEntity(level(), this, getMainHandItem()),
+                target.x, target.y, target.z);
+    }
+
+    private void shootArrow(
+            AbstractArrow projectile, double targetX, double targetY,
+            double targetZ) {
+        double dX = targetX - getX();
+        double dY = targetY - projectile.getY();
+        double dZ = targetZ - getZ();
+        double horizontalDistance = Math.sqrt(dX * dX + dZ * dZ);
+        projectile.shoot(
+                dX, dY + horizontalDistance * 0.2F, dZ, 1.1F, 12);
+        playSound(
+                getMainHandItem().is(Items.CROSSBOW)
+                        ? SoundEvents.CROSSBOW_SHOOT
+                        : SoundEvents.SKELETON_SHOOT,
+                1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
+        level().addFreshEntity(projectile);
     }
 }
