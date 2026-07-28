@@ -175,7 +175,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         // Nexus über uns -> Turm nach oben
         if (dy > 0) {
             BlockPos above = basePos.above();
-            if (world.getBlockState(above).isAir()) {
+            BlockState aboveState = world.getBlockState(above);
+            if (aboveState.isAir()
+                    || aboveState.is(Blocks.OAK_PLANKS)
+                    || aboveState.is(Blocks.COBBLESTONE)) {
                 // Über uns ist Luft -> noch nicht direkt unter der Decke
                 return;
             }

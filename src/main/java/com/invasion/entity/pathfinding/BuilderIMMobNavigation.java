@@ -266,7 +266,11 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                 // Falls keine sinnvolle Ladder-Orientierung vorhanden war, prüfen wir,
                 // ob direkt über uns ein solider Block ist (z.B. Nexus-Boden).
                 BlockPos.MutableBlockPos ceiling = mutable.set(x, y + 1, z);
-                if (!PathingUtil.isAirOrReplaceable(level.getBlockState(ceiling))) {
+                BlockState ceilingState = level.getBlockState(ceiling);
+                boolean isBridgeUnderside = ceilingState.is(Blocks.OAK_PLANKS)
+                        || ceilingState.is(Blocks.COBBLESTONE);
+                if (!isBridgeUnderside
+                        && !PathingUtil.isAirOrReplaceable(ceilingState)) {
                     // Über uns ist ein solider Block -> versuch irgendeine Turm-Richtung
                     for (Direction dir : Direction.Plane.HORIZONTAL) {
                         if (canPositionFitTower(mutable.set(x, y, z), dir)) {
