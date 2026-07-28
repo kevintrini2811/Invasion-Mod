@@ -130,6 +130,11 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         return terrainDigger.askClearPosition(pos, notifee, 1);
     }
 
+    @Override
+    public BlockPos[] getBlockRemovalOrder(BlockPos pos) {
+        return new BlockPos[] { pos };
+    }
+
     public Vector3f getRotation() {
         return rot;
     }
