@@ -270,8 +270,14 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     }
 
     public static boolean canMineBlock(PathfinderMob entity, BlockPos pos) {
-        return entity.getNavigation().getNodeEvaluator() instanceof IMLandPathNodeMaker maker
-                && maker.canMineBlock(entity.level(), pos, entity.level().getBlockState(pos));
+        BlockState state = entity.level().getBlockState(pos);
+        if (entity.getNavigation().getNodeEvaluator() instanceof IMLandPathNodeMaker maker) {
+            return maker.canMineBlock(entity.level(), pos, state);
+        }
+        if (entity.getNavigation() instanceof PathNavigateAdapter adapter) {
+            return adapter.getNewNavigator().getActor().isBlockDestructible(entity.level(), pos, state);
+        }
+        return false;
     }
 
     public static boolean avoidsBlock(PathfinderMob entity, BlockPos pos) {
