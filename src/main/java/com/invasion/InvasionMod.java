@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.InvEntities;
-import com.invasion.entity.ZombieSpawnReplacement;
+import com.invasion.entity.VanillaMobSpawnReplacement;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.particle.InvParticles;
@@ -75,7 +75,7 @@ public class InvasionMod implements ModInitializer {
         InvItems.bootstrap();
         InvSounds.boostrap();
         InvEntities.bootstrap();
-        ZombieSpawnReplacement.bootstrap();
+        VanillaMobSpawnReplacement.bootstrap();
         InvParticles.bootstrap();
         InvScreenHandlers.bootstrap();
         // Keine Drops von Invasions-Mobs (inkl. Mutant Monsters & Giant)
