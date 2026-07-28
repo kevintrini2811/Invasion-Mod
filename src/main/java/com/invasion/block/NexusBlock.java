@@ -71,12 +71,12 @@ public class NexusBlock extends BaseEntityBlock {
                     WorldNexusStorage storage = WorldNexusStorage.of(sw);
                     if (storage.setActiveNexus(nexus)) {
                         player.sendSystemMessage(
-                                Component.literal("Nexus für /invasion-Befehle ausgewählt.")
+                                Component.translatable("invmod.message.command.nexus_selected")
                                         .withStyle(ChatFormatting.GREEN)
                         );
                     } else {
                         player.sendSystemMessage(
-                                Component.literal("Ein anderer Nexus ist bereits aktiv.")
+                                Component.translatable("invmod.message.command.other_nexus_active")
                                         .withStyle(ChatFormatting.RED)
                         );
                     }

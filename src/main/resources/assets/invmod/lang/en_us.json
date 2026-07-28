@@ -108,6 +108,13 @@
     "invmod.message.wave.group": "A group of mobs has gathered...",
     "invmod.message.wave.groupsmall": "A small group of mobs has gathered...",
     "invmod.message.wave.grouplarge": "A large number of mobs is slipping through the Nexus rift!",
+    "invmod.message.wave.mutant_spawned": "A mutant has spawned: %s",
+
+    "invmod.message.command.nexus_selected": "Nexus selected for /invasion commands.",
+    "invmod.message.command.other_nexus_active": "Another Nexus is already active.",
+    "invmod.message.command.no_invasion_to_pause": "There is no invasion to pause or resume.",
+    "invmod.message.command.invasion_paused": "%s paused the invasion. All invasion mobs were removed.",
+    "invmod.message.command.invasion_resumed": "%s resumed the invasion.",
 
     "invmod.message.bone.nonearbynexus1": "The wolf doesn't like this Strange Bone.",
     "invmod.message.bone.nonearbynexus2": "Maybe a certain block is missing...",

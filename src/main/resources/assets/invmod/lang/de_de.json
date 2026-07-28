@@ -107,6 +107,13 @@
     "invmod.message.wave.group": "Eine Gruppe Monster hat sich versammelt...",
     "invmod.message.wave.groupsmall": "Eine kleine Gruppe Monster hat sich versammelt...",
     "invmod.message.wave.grouplarge": "Eine große Gruppe Monster hat sich versammelt...",
+    "invmod.message.wave.mutant_spawned": "Ein Mutant ist gespawnt: %s",
+
+    "invmod.message.command.nexus_selected": "Nexus für /invasion-Befehle ausgewählt.",
+    "invmod.message.command.other_nexus_active": "Ein anderer Nexus ist bereits aktiv.",
+    "invmod.message.command.no_invasion_to_pause": "Es läuft gerade keine Invasion, die pausiert oder fortgesetzt werden könnte.",
+    "invmod.message.command.invasion_paused": "%s hat die Invasion pausiert. Alle Invasions-Mobs wurden entfernt.",
+    "invmod.message.command.invasion_resumed": "%s hat die Invasion fortgesetzt.",
 
     "invmod.message.bone.nonearbynexus1": "Der Wolf mag diesen Seltsamen Knochen nicht.",
     "invmod.message.bone.nonearbynexus2": "Vielleicht fehlt ein bestimmter Block...",

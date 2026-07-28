@@ -32,10 +32,14 @@ public class ChatUtils {
      * ohne dass eine Welt oder ein Nexus benötigt wird.
      */
     public static void broadcastGlobal(String message, ChatFormatting color) {
+        broadcastGlobal(Component.literal(message), color);
+    }
+
+    public static void broadcastGlobal(Component message, ChatFormatting color) {
         if (SERVER == null) return;
 
         SERVER.getPlayerList().broadcastSystemMessage(
-                Component.literal(message).withStyle(color),
+                message.copy().withStyle(color),
                 false
         );
     }
