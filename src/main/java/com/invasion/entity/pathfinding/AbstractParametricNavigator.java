@@ -15,6 +15,14 @@ public abstract class AbstractParametricNavigator extends IMNavigation {
 
     @Override
     public void tick() {
+        if (theEntity.getTarget() != null) {
+            transitionAIGoal(Goal.TARGET_ENTITY);
+        } else if (theEntity.getNexus() != null) {
+            transitionAIGoal(Goal.BREAK_NEXUS);
+        } else {
+            transitionAIGoal(Goal.CHILL);
+        }
+
         totalTicks++;
         if (isIdle() || waitingForNotify) {
             return;
