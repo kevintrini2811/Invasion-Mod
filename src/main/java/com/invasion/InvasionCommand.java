@@ -149,7 +149,7 @@ public class InvasionCommand {
             // Wenn weder aktiv noch pausiert → es gibt nichts zu tun
             if (!nexus.isActive() && !nexus.isPaused()) {
                 source.sendSuccess(
-                        () -> Component.literal("Es läuft gerade keine Invasion, die pausiert oder fortgesetzt werden könnte.")
+                        () -> Component.translatable("invmod.message.command.no_invasion_to_pause")
                                 .withStyle(ChatFormatting.RED),
                         false
                 );
@@ -161,13 +161,17 @@ public class InvasionCommand {
             if (nowPaused) {
                 // Jetzt PAUSIERT
                 source.getServer().sendSystemMessage(
-                        Component.literal(source.getTextName() + " hat die Invasion pausiert. Alle Invasions-Mobs wurden entfernt.")
+                        Component.translatable(
+                                        "invmod.message.command.invasion_paused",
+                                        source.getDisplayName())
                                 .withStyle(ChatFormatting.GOLD)
                 );
             } else {
                 // Jetzt wieder aktiv
                 source.getServer().sendSystemMessage(
-                        Component.literal(source.getTextName() + " hat die Invasion fortgesetzt.")
+                        Component.translatable(
+                                        "invmod.message.command.invasion_resumed",
+                                        source.getDisplayName())
                                 .withStyle(ChatFormatting.GREEN)
                 );
             }

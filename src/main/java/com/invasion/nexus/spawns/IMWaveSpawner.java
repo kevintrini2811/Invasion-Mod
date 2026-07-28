@@ -317,7 +317,11 @@ public class IMWaveSpawner implements Spawner {
 
                 markAsInvasionAlly(mob);
                 if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
-                    ChatUtils.broadcastGlobal("Ein Mutant ist gespawnt: " + mob.getName().getString(), ChatFormatting.DARK_RED);
+                    ChatUtils.broadcastGlobal(
+                            net.minecraft.network.chat.Component.translatable(
+                                    "invmod.message.wave.mutant_spawned",
+                                    mob.getDisplayName()),
+                            ChatFormatting.DARK_RED);
                 }
                 if (debugMode) {
                     InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave()
