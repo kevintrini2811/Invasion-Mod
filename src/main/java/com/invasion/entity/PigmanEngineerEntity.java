@@ -201,6 +201,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private boolean beginBridgeAction(BlockPos feetPos, Notifiable asker) {
+        var movement = getDeltaMovement();
+        setXxa(0);
+        setZza(0);
+        setSpeed(0);
+        setDeltaMovement(0, movement.y, 0);
+
         BlockState feetState = level().getBlockState(feetPos);
         BlockPos placementPos = feetState.getFluidState().isEmpty()
                 ? feetPos.below()

@@ -231,6 +231,22 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             return;
         }
 
+        if (currentAction.getType() == PathAction.Type.BRIDGE
+                && completedTaskNodeIndex == nodeIndex) {
+            BlockPos moveTarget = getCompletedActionMoveTarget(
+                    currentAction, getPath().getNextNodePos());
+            if (!hasReachedCompletedActionNode(currentAction, moveTarget)) {
+                moveToCompletedActionNode(moveTarget);
+                return;
+            }
+
+            // End this bridge step without letting vanilla immediately start
+            // moving towards the next, still unsupported path node.
+            stopHorizontalMovement();
+            getPath().setNextNodeIndex(nodeIndex + 1);
+            return;
+        }
+
         // Legacy NavigatorEngy resolves a build action before allowing the
         // path to advance past that node. Modern vanilla navigation otherwise
         // considers a nearby actionable node reached and silently skips it.
@@ -269,6 +285,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         double horizontalDistanceSqr = Mth.square(mob.getX() - targetX)
                 + Mth.square(mob.getZ() - targetZ);
 
+        if (action.getType() == PathAction.Type.BRIDGE) {
+            return horizontalDistanceSqr < 0.09D
+                    && Math.abs(mob.getY() - nodePos.getY()) < 0.6D;
+        }
+
         if (action.getType() == PathAction.Type.TOWER
                 || action.getType() == PathAction.Type.LADDER) {
             return horizontalDistanceSqr < 0.36D
@@ -299,6 +320,14 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 nodePos.getZ() + 0.5D,
                 speedModifier
         );
+    }
+
+    private void stopHorizontalMovement() {
+        Vec3 movement = mob.getDeltaMovement();
+        mob.setXxa(0);
+        mob.setZza(0);
+        mob.setSpeed(0);
+        mob.setDeltaMovement(0, movement.y, 0);
     }
 
 	protected void handlePathAction(PathAction action) {
