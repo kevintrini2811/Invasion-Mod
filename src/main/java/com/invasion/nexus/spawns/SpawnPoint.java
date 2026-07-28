@@ -21,7 +21,7 @@ public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements Pol
 
     public boolean isValidFor(LevelReader world, Mob entity) {
         if (world.isOutsideBuildHeight(pos)) {
-            InvasionMod.LOGGER.info("[Spawn] Spawn point was outside of build limit {}", pos);
+            InvasionMod.LOGGER.debug("[Spawn] Spawn point was outside of build limit {}", pos);
             return false;
         }
         applyTo(entity);

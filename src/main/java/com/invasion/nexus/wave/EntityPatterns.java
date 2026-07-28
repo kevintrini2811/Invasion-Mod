@@ -42,7 +42,7 @@ public interface EntityPatterns {
                 .orElseThrow(() -> new IllegalArgumentException("Unknown entity type: " + entityId));
 
         Identifier resolvedId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        InvasionMod.LOGGER.info("[EntityPatterns] registerExternal {} -> resolvedId={}", entityId, resolvedId);
+        InvasionMod.LOGGER.debug("[EntityPatterns] registerExternal {} -> resolvedId={}", entityId, resolvedId);
 
         // Wenn der Registry-Eintrag wirklich nicht existiert (d. h. wir kriegen NICHT unsere gewünschte ID zurück)
         if (!entityId.equals(resolvedId)) {
@@ -52,7 +52,7 @@ public interface EntityPatterns {
         }
 
         EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
-        InvasionMod.LOGGER.info("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
+        InvasionMod.LOGGER.debug("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
                 entityId, name, spawnWeight);
 
         return register(name, new EntityPattern.Builder(mobType), spawnWeight);
@@ -204,7 +204,7 @@ public interface EntityPatterns {
             EntityType<?> type = opt.get();
             EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
 
-            InvasionMod.LOGGER.info("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
+            InvasionMod.LOGGER.debug("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
                     entityId, name, spawnWeight);
 
             return EntityPatterns.register(name, new EntityPattern.Builder(mobType), spawnWeight);

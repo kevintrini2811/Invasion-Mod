@@ -61,12 +61,12 @@ public class InvasionMod implements ModInitializer {
         });
         ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
             ChatUtils.setServer(server);
-            LOGGER.info("ChatUtils: Server gesetzt.");
+            LOGGER.debug("ChatUtils: Server gesetzt.");
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register((MinecraftServer server) -> {
             ChatUtils.clearServer();
-            LOGGER.info("ChatUtils: Server gelöscht.");
+            LOGGER.debug("ChatUtils: Server gelöscht.");
         });
         ServerLifecycleEvents.SERVER_STARTING.register(server -> SERVER = server);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->

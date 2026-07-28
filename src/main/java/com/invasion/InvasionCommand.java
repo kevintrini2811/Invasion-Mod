@@ -76,7 +76,7 @@ public class InvasionCommand {
 
     private static int stop(CommandSourceStack source) {
         handleWithNexus(source, nexus -> {
-            InvasionMod.LOGGER.info("Nexus manually stopped by command");
+            InvasionMod.LOGGER.debug("Nexus manually stopped by command");
             nexus.stop(true);
             source.getServer().sendSystemMessage(Component.literal(source.getTextName() + " has ended the invasion!").withStyle(ChatFormatting.RED));
         });

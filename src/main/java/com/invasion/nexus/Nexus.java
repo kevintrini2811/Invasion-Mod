@@ -521,7 +521,7 @@ public class Nexus implements ControllableNexusAccess {
                         boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_CHIME);
                         waveDelayTimer = 0L;
                         waveDelay = waveSpawner.getWaveRestTime();
-                        InvasionMod.LOGGER.info("Next wave begins in: {}ticks", waveDelay);
+                        InvasionMod.LOGGER.debug("Next wave begins in: {}ticks", waveDelay);
                     } else {
                         waveDelayTimer += elapsed;
                         if (waveDelayTimer > waveDelay) {
@@ -685,7 +685,7 @@ public class Nexus implements ControllableNexusAccess {
         if (mode == this.mode) {
             return;
         }
-        InvasionMod.LOGGER.info("Nexus {} changing mode from {} to {}", this.getUuid(), this.mode, mode);
+        InvasionMod.LOGGER.debug("Nexus {} changing mode from {} to {}", this.getUuid(), this.mode, mode);
         this.mode = mode;
         if (getWorld() instanceof ServerLevel sw) {
             if (sw.getBlockState(pos).is(InvBlocks.NEXUS_CORE)) {

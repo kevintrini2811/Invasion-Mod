@@ -141,7 +141,7 @@ public class WaveBuilder {
 
         // Hilfsfunktion: Nur ins Log schreiben (kein Chat)
         java.util.function.Consumer<String> announce = msg ->
-                InvasionMod.LOGGER.info("[Wave] " + msg + " (Welle " + waveNumber + ")");
+                InvasionMod.LOGGER.debug("[Wave] " + msg + " (Welle " + waveNumber + ")");
 
         // ENTRY 1: Früher Teil der Wave mit Standard-Mobs
         announce.accept("Phase 1 gestartet: Standardmobs greifen an!");

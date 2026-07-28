@@ -60,7 +60,7 @@ public class IMPathNodeNavigator {
         this.targetRadius = targetRadius;
         Path path = addToPath(start, target);
         if (path != null) {
-            InvasionMod.LOGGER.info("Path find success");
+            InvasionMod.LOGGER.debug("Path find success");
         }
         return path;
     }

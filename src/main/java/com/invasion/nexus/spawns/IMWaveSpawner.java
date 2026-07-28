@@ -203,7 +203,7 @@ public class IMWaveSpawner implements Spawner {
             mob.discard();  // Alternative: einfach verschwinden lassen
         }
 
-        InvasionMod.LOGGER.info("Killed {} external invasion mobs after nexus end.", mobs.size());
+        InvasionMod.LOGGER.debug("Killed {} external invasion mobs after nexus end.", mobs.size());
     }
 
 
@@ -298,7 +298,7 @@ public class IMWaveSpawner implements Spawner {
 			if (!permitSpawns) {
 				successfulSpawns++;
 				if (debugMode) {
-				    InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave() / 1000 + "  Type: " + mob + "  Coords: " + spawnPoint + "  Specified: " + angle);
+				    InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave() / 1000 + "  Type: " + mob + "  Coords: " + spawnPoint + "  Specified: " + angle);
 				}
 
 				return true;
@@ -324,7 +324,7 @@ public class IMWaveSpawner implements Spawner {
                             ChatFormatting.DARK_RED);
                 }
                 if (debugMode) {
-                    InvasionMod.LOGGER.info("[Spawn] Time: " + currentWave.getTimeInWave()
+                    InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave()
                             + "  Mob: " + mob.getName().getString()
                             + "  Coords: " + mob.getX() + ", " + mob.getY() + ", " + mob.getZ()
                             + "  θ" + spawnPoint.getAngle() + "  Specified: " + angle);
@@ -403,12 +403,12 @@ public class IMWaveSpawner implements Spawner {
 
 		}
 
-		InvasionMod.LOGGER.info("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
+		InvasionMod.LOGGER.debug("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
 	}
 
 	private void addValidSpawn(Mob entity, List<SpawnPoint> spawnPoints, BlockPos pos) {
 	    if (nexus.getWorld().isOutsideBuildHeight(pos)) {
-	        InvasionMod.LOGGER.info("[Spawn] Spawn point was outside of build limit {}", pos);
+	        InvasionMod.LOGGER.debug("[Spawn] Spawn point was outside of build limit {}", pos);
 	        return;
 	    }
 		entity.absSnapTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
