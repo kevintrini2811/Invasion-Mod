@@ -58,7 +58,7 @@ public class GoToNexusGoal extends Goal {
                 }
 
                 @Nullable
-                Path path = mob.getNavigation().createPath(target, (int)distance);
+                Path path = mob.getNavigation().createPath(target, 1);
                 if (path != null) {
                     mob.setTarget(null);
                     mob.getNavigation().moveTo(path, distance > 2000 ? 2 : 1);
