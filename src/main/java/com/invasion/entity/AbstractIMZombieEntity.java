@@ -30,6 +30,14 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity implement
 
     protected AbstractIMZombieEntity(EntityType<? extends AbstractIMZombieEntity> type, Level world, float diggingSpeed) {
         super(type, world);
+        setCanPickUpLoot(true);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
+        return stack.is(ItemTags.MELEE_WEAPON_ENCHANTABLE)
+                && !heldItem.is(ItemTags.MELEE_WEAPON_ENCHANTABLE);
     }
 
     @Override

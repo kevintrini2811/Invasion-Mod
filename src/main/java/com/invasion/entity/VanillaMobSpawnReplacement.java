@@ -111,6 +111,9 @@ public final class VanillaMobSpawnReplacement {
         converted.setCustomNameVisible(source.isCustomNameVisible());
         converted.setNoAi(source.isNoAi());
         converted.setCanPickUpLoot(source.canPickUpLoot());
+        if (converted instanceof AbstractIMZombieEntity) {
+            converted.setCanPickUpLoot(true);
+        }
         if (source.isPersistenceRequired()) {
             converted.setPersistenceRequired();
         }
