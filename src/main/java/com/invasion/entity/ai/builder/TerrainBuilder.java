@@ -137,12 +137,27 @@ public class TerrainBuilder implements ITerrainBuild {
         BlockState ladderState = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, orientation);
 
-        int height = Math.max(1, Math.min(layersToBuild, 3));
         BlockPos bottomLadderPos = basePos.below();
+        BlockPos floorCenter = bottomLadderPos.below();
 
-        // Complete the three-block support column first. Existing solid blocks
-        // count towards its height and are deliberately left untouched.
-        for (int i = 0; i < height; i++) {
+        // Ebene 0 from engineer.txt: a complete 3x3 floor below the engineer.
+        // Existing blocks are part of the plan and are not replaced.
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos floorPos = floorCenter.offset(x, 0, z);
+                if (PathingUtil.isAirOrReplaceable(world.getBlockState(floorPos))) {
+                    builder.add(new ModifyBlockEntry(
+                            floorPos,
+                            Blocks.OAK_PLANKS.defaultBlockState(),
+                            (int) (PLANKS_COST / buildRate)
+                    ));
+                }
+            }
+        }
+
+        // Ebenen 1-3: the three support blocks behind the engineer/ladder
+        // centre. All blocks are queued before any ladder is placed.
+        for (int i = 0; i < 3; i++) {
             BlockPos supportPos = bottomLadderPos.above(i)
                     .relative(orientation.getOpposite());
             if (PathingUtil.isAirOrReplaceable(world.getBlockState(supportPos))) {
@@ -154,8 +169,9 @@ public class TerrainBuilder implements ITerrainBuild {
             }
         }
 
-        // Only after the support column is complete, place its three ladders.
-        for (int i = 0; i < height; i++) {
+        // Final state from engineer.txt: ladders share the engineer's centre
+        // column on levels 1 and 2 and continue through level 3.
+        for (int i = 0; i < 3; i++) {
             BlockPos ladderPos = bottomLadderPos.above(i);
             if (PathingUtil.isAirOrReplaceable(world.getBlockState(ladderPos))) {
                 builder.add(new ModifyBlockEntry(
