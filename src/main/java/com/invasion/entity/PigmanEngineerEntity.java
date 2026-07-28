@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import com.invasion.Notifiable;
+import com.invasion.entity.ai.builder.ModifyBlockEntry;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
@@ -40,7 +41,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
+    private static final int BRIDGE_PLANK_BUILD_TIME = 45;
+
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
@@ -357,7 +363,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
         if (action.getType() == PathAction.Type.BRIDGE) {
-            return beginBridgeAction();
+            return beginBridgeAction(pos, asker);
         }
 
         if (action.getType() == PathAction.Type.TOWER
@@ -374,9 +380,38 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         return false;
     }
 
-    private boolean beginBridgeAction() {
-        setNoAi(true);
-        return false;
+    private boolean beginBridgeAction(BlockPos feetPos, Notifiable asker) {
+        BlockState feetState = level().getBlockState(feetPos);
+        BlockPos placementPos = feetState.getFluidState().isEmpty()
+                ? feetPos.below()
+                : feetPos;
+
+        List<ModifyBlockEntry> entries = new ArrayList<>(3);
+        BlockPos currentFeetPos = blockPosition();
+        int stepX = Integer.signum(feetPos.getX() - currentFeetPos.getX());
+        int stepZ = Integer.signum(feetPos.getZ() - currentFeetPos.getZ());
+
+        if (stepX != 0 && stepZ != 0) {
+            // Fill both sides of the corner before the diagonal destination.
+            // This leaves no unsupported diagonal gap between bridge blocks.
+            addBridgePlank(entries, placementPos.offset(-stepX, 0, 0));
+            addBridgePlank(entries, placementPos.offset(0, 0, -stepZ));
+        }
+        addBridgePlank(entries, placementPos);
+
+        return terrainModifier.requestTask(entries, asker, null);
+    }
+
+    private void addBridgePlank(List<ModifyBlockEntry> entries, BlockPos pos) {
+        BlockState replacedState = level().getBlockState(pos);
+        // Air and every fluid state are valid, including flowing water/lava.
+        if (replacedState.isAir() || !replacedState.getFluidState().isEmpty()) {
+            entries.add(new ModifyBlockEntry(
+                    pos,
+                    Blocks.OAK_PLANKS.defaultBlockState(),
+                    BRIDGE_PLANK_BUILD_TIME
+            ));
+        }
     }
 
 
