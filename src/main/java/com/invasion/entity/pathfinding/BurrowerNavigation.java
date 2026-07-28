@@ -50,16 +50,29 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 super.getSuccessors(worldMap, currentNode, pathBuilder);
 
                 BlockPos above = currentNode.asBlockPos().above();
-                if (getNodeDestructability(worldMap, above) > com.invasion.block.DestructableType.UNBREAKABLE
-                        && isAdjacentSolidBlock(worldMap, above)) {
+                if (isClearClimbingSpace(worldMap, above) && hasClimbingSurface(worldMap, above)) {
                     pathBuilder.addNode(above, PathAction.NONE);
                 }
 
                 BlockPos below = currentNode.asBlockPos().below();
-                if (getNodeDestructability(worldMap, below) > com.invasion.block.DestructableType.UNBREAKABLE
-                        && isAdjacentSolidBlock(worldMap, below)) {
+                if (isClearClimbingSpace(worldMap, below) && hasClimbingSurface(worldMap, below)) {
                     pathBuilder.addNode(below, PathAction.NONE);
                 }
+            }
+
+            private boolean isClearClimbingSpace(BlockGetter worldMap, BlockPos pos) {
+                BlockState state = worldMap.getBlockState(pos);
+                return state.isAir() || !state.blocksMotion();
+            }
+
+            private boolean hasClimbingSurface(BlockGetter worldMap, BlockPos pos) {
+                for (Direction direction : Direction.Plane.HORIZONTAL) {
+                    BlockState state = worldMap.getBlockState(pos.relative(direction));
+                    if (!state.isAir() && state.blocksMotion()) {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             @Override
