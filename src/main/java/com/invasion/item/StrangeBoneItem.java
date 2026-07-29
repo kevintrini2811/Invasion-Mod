@@ -6,12 +6,13 @@ import com.invasion.entity.IMWolfEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
-import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.Mode;
 import com.invasion.nexus.Nexus;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.nexus.WorldNexusStorage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -65,17 +66,22 @@ class StrangeBoneItem extends Item {
 
     @Override
     public InteractionResult interactLivingEntity(ItemStack stack, Player user, LivingEntity entity, InteractionHand hand) {
-        if (entity.level().isClientSide()
-                || !(entity instanceof Wolf wolf)
-                || entity instanceof IMWolfEntity) {
+        if (!(entity instanceof Wolf wolf) || entity instanceof IMWolfEntity) {
             return InteractionResult.PASS;
+        }
+        if (entity.level().isClientSide()) {
+            return InteractionResult.SUCCESS;
         }
         if (wolf.isTame() && !wolf.isOwnedBy(user)) {
             return InteractionResult.FAIL;
         }
 
         @Nullable
-        NexusAccess nexus = IHasNexus.findNexus(entity.level(), entity.blockPosition());
+        NexusAccess nexus = entity.level() instanceof ServerLevel serverLevel
+                ? WorldNexusStorage.of(serverLevel).getNexus()
+                        .filter(NexusAccess::isActive)
+                        .orElse(null)
+                : null;
 
         if (nexus == null) {
             user.sendSystemMessage(Component.translatable("invmod.message.bone.nonearbynexus1").withStyle(ChatFormatting.RED));
