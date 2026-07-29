@@ -125,7 +125,7 @@ public final class VanillaMobSpawnReplacement {
             converted.setPersistenceRequired();
         }
         converted.setNexus(nexus);
-        double reducedMaxHealth = converted.getMaxHealth() * 0.5D;
+        double reducedMaxHealth = converted.getMaxHealth() * 0.3D;
         converted.getAttribute(Attributes.MAX_HEALTH).setBaseValue(reducedMaxHealth);
         converted.setHealth((float)reducedMaxHealth);
         if (converted instanceof EntityIMLiving imMob) {
