@@ -8,11 +8,13 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.LivingEntity;
@@ -91,6 +93,7 @@ public class Nexus implements ControllableNexusAccess {
     private final Participants boundPlayers = new Participants(this);
     private final Combatants mobList;
     private final AttackerAI attackerAI = new AttackerAI(this);
+    private final ServerBossEvent waveProgressHud;
 
     private final InvasionConfig config = InvasionMod.getConfig();
 
@@ -154,6 +157,12 @@ public class Nexus implements ControllableNexusAccess {
         this.world = world;
         this.storage = storage;
         this.pos = pos;
+        waveProgressHud = new ServerBossEvent(
+                uuid,
+                createWaveProgressMessage(),
+                BossEvent.BossBarColor.GREEN,
+                BossEvent.BossBarOverlay.PROGRESS);
+        waveProgressHud.setVisible(false);
         mobList = new Combatants(this);
         boundingBoxToRadius = computeSpawnArea();
         nexusItemStacks.addListener(i -> storage.setDirty());
@@ -247,10 +256,11 @@ public class Nexus implements ControllableNexusAccess {
         if (!mode.isActive() || !boundPlayers.reconnect(player)) {
             return;
         }
-        player.sendSystemMessage(createWaveProgressMessage());
+        waveProgressHud.addPlayer(player);
     }
 
     public void tick() {
+        updateWaveProgressHud();
         if (!mode.isActive() || paused) {
             return;
         }
@@ -302,6 +312,8 @@ public class Nexus implements ControllableNexusAccess {
         currentWave = 0;
         activated = false;
         paused = false;
+        waveProgressHud.removeAllPlayers();
+        waveProgressHud.setVisible(false);
 
         if (killEnemies) {
             killAllMobs();
@@ -395,10 +407,6 @@ public class Nexus implements ControllableNexusAccess {
                 }
                 return;
             }
-            while (mobsLeftInWave + mobsToKillInWave * 0.1F <= lastMobsLeftInWave) {
-                boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.stabilizedto", "" + ChatFormatting.DARK_GREEN + (100 - 100 * mobsLeftInWave / mobsToKillInWave) + "%");
-                lastMobsLeftInWave = ((int) (lastMobsLeftInWave - mobsToKillInWave * 0.1F));
-            }
         } else if (reason == RemovalReason.DISCARDED) {
             if (combatant.asEntity().getType().create(getWorld()) instanceof Combatant<?> copy) {
                 copy.asEntity().restoreFrom(combatant.asEntity());
@@ -413,13 +421,36 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private Component createWaveProgressMessage() {
-        int total = Math.max(1, mobsToKillInWave);
+        int total = Math.max(0, mobsToKillInWave);
         int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
-        int progressPercent = defeated * 100 / total;
+        int progressPercent = total == 0 ? 0 : defeated * 100 / total;
         return Component.translatable(
                 "invmod.message.wave.progress",
                 currentWave, defeated, total, progressPercent + "%")
                 .withStyle(ChatFormatting.GREEN);
+    }
+
+    private void updateWaveProgressHud() {
+        if (!mode.isActive()) {
+            waveProgressHud.removeAllPlayers();
+            waveProgressHud.setVisible(false);
+            return;
+        }
+
+        int total = Math.max(0, mobsToKillInWave);
+        int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
+        waveProgressHud.setName(createWaveProgressMessage());
+        waveProgressHud.setProgress(total == 0 ? 0 : (float) defeated / total);
+        waveProgressHud.setVisible(true);
+
+        for (ServerPlayer player : List.copyOf(waveProgressHud.getPlayers())) {
+            if (player.level() != world) {
+                waveProgressHud.removePlayer(player);
+            }
+        }
+        for (ServerPlayer player : world.players()) {
+            waveProgressHud.addPlayer(player);
+        }
     }
 
     @Override
