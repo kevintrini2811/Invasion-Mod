@@ -22,6 +22,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -243,6 +244,13 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     public boolean isPowered() {
         return getTier() > 1;
+    }
+
+    @Override
+    public Component getName() {
+        return isPowered()
+                ? Component.translatable("entity.invmod.charged_creeper")
+                : super.getName();
     }
 
     @Override

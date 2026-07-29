@@ -71,6 +71,7 @@
     "entity.invmod.burrower": "IM Gräber",
     "entity.invmod.wolf": "IM Wolf",
     "entity.invmod.creeper": "IM Creeper",
+    "entity.invmod.charged_creeper": "IM Geladener Creeper",
     "entity.invmod.boulder": "IM Felsbrocken",
     "entity.invmod.burrower_tail": "IM Gräberschwanz",
     "entity.invmod.skeleton_arrow": "IM Skelettpfeil",

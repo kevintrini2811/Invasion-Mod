@@ -72,6 +72,7 @@
     "entity.invmod.burrower": "IM Burrower",
     "entity.invmod.wolf": "IM Wolf",
     "entity.invmod.creeper": "IM Creeper",
+    "entity.invmod.charged_creeper": "IM Charged Creeper",
     "entity.invmod.boulder": "IM Boulder",
     "entity.invmod.burrower_tail": "IM Burrower Tail",
     "entity.invmod.skeleton_arrow": "IM Skeleton Arrow",
