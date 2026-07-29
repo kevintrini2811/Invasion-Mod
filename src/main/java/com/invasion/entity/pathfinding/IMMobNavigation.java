@@ -43,6 +43,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int stuckTime;
     private boolean climbingLadder;
     private boolean gravityBeforeLadder;
+    private int ladderColumnX;
+    private int ladderColumnZ;
+    private int ladderExitY;
 
     @Nullable
     private Entity followingEntity;
@@ -187,8 +190,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public void tick() {
-        if (climbingLadder && (getPath() == null || getPath().isDone())) {
-            finishLadderClimb();
+        if (climbingLadder) {
+            climbLadder();
+            return;
         }
         if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
             // Bridge construction owns movement until solid ground is
@@ -271,12 +275,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
 	@Override
     protected void followThePath() {
-        BlockPos ladderPos = getTargetedLadder();
-        if (ladderPos != null) {
-            climbLadder(ladderPos);
+        if (climbingLadder) {
+            climbLadder();
             return;
         }
-        finishLadderClimb();
+
+        BlockPos ladderPos = getTargetedLadder();
+        if (ladderPos != null) {
+            beginLadderClimb(ladderPos);
+            climbLadder();
+            return;
+        }
 
 	    mob.setShiftKeyDown(false);
 	    if (mob instanceof NexusEntity e) {
@@ -356,21 +365,34 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         return null;
     }
 
-    private void climbLadder(BlockPos ladderPos) {
-        if (!climbingLadder) {
-            climbingLadder = true;
-            gravityBeforeLadder = mob.isNoGravity();
-            mob.setNoGravity(true);
-        }
+    private void beginLadderClimb(BlockPos ladderPos) {
+        climbingLadder = true;
+        gravityBeforeLadder = mob.isNoGravity();
+        ladderColumnX = ladderPos.getX();
+        ladderColumnZ = ladderPos.getZ();
 
-        BlockPos nodePos = getPath().getNextNodePos();
-        double targetX = ladderPos.getX() + 0.5D;
-        double targetZ = ladderPos.getZ() + 0.5D;
-        double targetY = nodePos.getY();
+        BlockPos.MutableBlockPos scan = ladderPos.mutable();
+        int topY = ladderPos.getY();
+        for (int offset = 1; offset <= 32; offset++) {
+            scan.set(ladderPos).move(Direction.UP, offset);
+            if (!mob.level().getBlockState(scan).is(Blocks.LADDER)) {
+                break;
+            }
+            topY = scan.getY();
+        }
+        ladderExitY = topY + 1;
+        mob.setNoGravity(true);
+    }
+
+    private void climbLadder() {
+        double targetX = ladderColumnX + 0.5D;
+        double targetZ = ladderColumnZ + 0.5D;
 
         // Own all movement while climbing. Centering the mob in the ladder
         // cell and disabling gravity prevents sideways knockback and the
-        // between-tick slide that made the previous implementation fall.
+        // between-tick slide that made the previous implementation fall. The
+        // column stays locked until its physical top, regardless of which
+        // path node vanilla selects in the meantime.
         mob.setPos(targetX, mob.getY(), targetZ);
         mob.setDeltaMovement(0, 0.2D, 0);
         mob.setXxa(0);
@@ -379,9 +401,34 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         mob.setShiftKeyDown(false);
         mob.setJumping(false);
 
-        if (mob.getY() >= targetY - 0.05D) {
-            mob.setPos(targetX, targetY, targetZ);
+        advanceReachedLadderNodes();
+
+        if (mob.getY() >= ladderExitY - 0.05D) {
+            mob.setPos(targetX, ladderExitY, targetZ);
             mob.setDeltaMovement(0, 0, 0);
+            advanceReachedLadderNodes();
+            finishLadderClimb();
+        }
+    }
+
+    private void advanceReachedLadderNodes() {
+        if (getPath() == null) {
+            return;
+        }
+        while (!getPath().isDone()) {
+            BlockPos nodePos = getPath().getNextNodePos();
+            boolean belongsToColumn =
+                    nodePos.getX() == ladderColumnX
+                            && nodePos.getZ() == ladderColumnZ;
+            boolean isLadderNode =
+                    belongsToColumn
+                            && (mob.level().getBlockState(nodePos)
+                                            .is(Blocks.LADDER)
+                                    || mob.level().getBlockState(nodePos.below())
+                                            .is(Blocks.LADDER));
+            if (!isLadderNode || nodePos.getY() > mob.getY() + 0.1D) {
+                return;
+            }
             getPath().setNextNodeIndex(getPath().getNextNodeIndex() + 1);
         }
     }
