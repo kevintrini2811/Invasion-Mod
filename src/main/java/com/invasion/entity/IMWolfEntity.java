@@ -83,6 +83,11 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
+    public boolean shouldTryTeleportToOwner() {
+        return false;
+    }
+
+    @Override
     public double findDistanceToNexus() {
         return nexus.getPos().map(pos -> {
             return Math.sqrt(com.invasion.util.math.PosUtils.center(pos.pos()).distanceToSqr(getX(), getY(0.5), getZ()));
