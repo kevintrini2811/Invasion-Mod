@@ -255,6 +255,14 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     @Override
+    public int getRandomEquipmentChancePercent() {
+        return mode == Mode.CONTINUOUS
+                ? Math.clamp(continuousAttackCount - 1, 0, 100)
+                : ControllableNexusAccess.super
+                        .getRandomEquipmentChancePercent();
+    }
+
+    @Override
     public int getMobsLeftInWave() {
         return Math.max(0, mobsLeftInWave);
     }

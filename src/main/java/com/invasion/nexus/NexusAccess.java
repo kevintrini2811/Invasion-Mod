@@ -38,6 +38,10 @@ public interface NexusAccess {
         return Math.clamp(getCurrentWave() - 9, 0, 100);
     }
 
+    default int getRandomEquipmentChancePercent() {
+        return Math.clamp(getCurrentWave() - 1, 0, 100);
+    }
+
     default int getMobsLeftInWave() {
         return 0;
     }

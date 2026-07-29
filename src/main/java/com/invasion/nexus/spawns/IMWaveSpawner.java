@@ -396,7 +396,7 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		int chancePercent = Mth.clamp(nexus.getCurrentWave() - 1, 0, 100);
+		int chancePercent = nexus.getRandomEquipmentChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return;
 		}
@@ -417,7 +417,7 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		int chancePercent = Mth.clamp(nexus.getCurrentWave() - 1, 0, 100);
+		int chancePercent = nexus.getRandomEquipmentChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return;
 		}
