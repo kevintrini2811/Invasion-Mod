@@ -24,18 +24,18 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.DifficultyInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
@@ -51,9 +51,9 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
@@ -63,8 +63,6 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.Vec3;
 
 public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
-    private static final int CHARGED_CHANCE_PERCENT = 100;
-
     private static final Item[] CLASSIC_MUSIC_DISCS = {
             Items.MUSIC_DISC_13, Items.MUSIC_DISC_CAT, Items.MUSIC_DISC_BLOCKS,
             Items.MUSIC_DISC_CHIRP, Items.MUSIC_DISC_FAR, Items.MUSIC_DISC_MALL,
@@ -85,6 +83,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     private boolean explosionDeath;
     private boolean commitToExplode;
+    private boolean manuallyIgnited;
 
     private Direction explodeDirection = Direction.UP;
     @Nullable
@@ -99,21 +98,10 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         return Creeper.createAttributes().add(Attributes.MOVEMENT_SPEED, 0.21);
     }
 
-    public static boolean rollChargedVariant(RandomSource random) {
-        return CHARGED_CHANCE_PERCENT >= 100
-                || random.nextInt(100) < CHARGED_CHANCE_PERCENT;
-    }
-
-    @Override
-    public SpawnGroupData finalizeSpawn(
-            ServerLevelAccessor world, DifficultyInstance difficulty,
-            EntitySpawnReason spawnReason, @Nullable SpawnGroupData data) {
-        data = super.finalizeSpawn(world, difficulty, spawnReason, data);
-        if (spawnReason == EntitySpawnReason.SPAWN_ITEM_USE
-                && rollChargedVariant(getRandom())) {
-            setTier(2);
-        }
-        return data;
+    public static boolean rollChargedVariant(
+            RandomSource random, int wave) {
+        int chancePercent = Mth.clamp(wave - 9, 1, 100);
+        return random.nextInt(100) < chancePercent;
     }
 
     @Override
@@ -176,6 +164,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         } else if (isAlive()) {
             tickNexusFuse();
             tickStationaryFuse();
+            if (manuallyIgnited) {
+                setFuseSpeed(1);
+            }
             this.lastFuseTime = currentFuseTime;
             int speed = getFuseSpeed();
 
@@ -271,6 +262,32 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     @Override
+    protected InteractionResult mobInteract(
+            Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!stack.is(ItemTags.CREEPER_IGNITERS)) {
+            return super.mobInteract(player, hand);
+        }
+
+        SoundEvent sound = stack.is(Items.FIRE_CHARGE)
+                ? SoundEvents.FIRECHARGE_USE
+                : SoundEvents.FLINTANDSTEEL_USE;
+        level().playSound(
+                player, getX(), getY(), getZ(), sound, getSoundSource(),
+                1.0F, random.nextFloat() * 0.4F + 0.8F);
+        if (!level().isClientSide()) {
+            manuallyIgnited = true;
+            setFuseSpeed(1);
+            if (stack.isDamageableItem()) {
+                stack.hurtAndBreak(1, player, hand);
+            } else {
+                stack.shrink(1);
+            }
+        }
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
     public Component getName() {
         return isPowered()
                 ? Component.translatable("entity.invmod.charged_creeper")
@@ -314,6 +331,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         super.addAdditionalSaveData(nbt);
         nbt.putShort("Fuse", (short)fuseTime);
         nbt.putInt("stationaryTicks", stationaryTicks);
+        nbt.putBoolean("ignited", manuallyIgnited);
     }
 
     @Override
@@ -321,6 +339,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         super.readAdditionalSaveData(nbt);
         fuseTime = nbt.getShortOr("Fuse", (short) fuseTime);
         stationaryTicks = nbt.getIntOr("stationaryTicks", 0);
+        manuallyIgnited = nbt.getBooleanOr("ignited", false);
     }
 
     @Override
