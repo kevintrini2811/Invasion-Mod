@@ -169,40 +169,29 @@ public class InvasionCommand {
 	    });
 
 	    return 0;
-	}
+    }
     private static int pause(CommandSourceStack source) {
-        handleWithNexus(source, nexus -> {
-            // Wenn weder aktiv noch pausiert → es gibt nichts zu tun
-            if (!nexus.isActive() && !nexus.isPaused()) {
-                source.sendSuccess(
-                        () -> Component.translatable("invmod.message.command.no_invasion_to_pause")
-                                .withStyle(ChatFormatting.RED),
-                        false
-                );
-                return;
-            }
+        ControllableNexusAccess nexus =
+                WorldNexusStorage.of(source.getLevel()).getNexus().orElse(null);
+        if (nexus == null || !nexus.isActive()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_invasion_to_pause")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
 
-            boolean nowPaused = nexus.togglePause();
+        if (nexus.isPaused()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.invasion_already_paused")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
 
-            if (nowPaused) {
-                // Jetzt PAUSIERT
-                source.getServer().sendSystemMessage(
-                        Component.translatable(
-                                        "invmod.message.command.invasion_paused",
-                                        source.getDisplayName())
-                                .withStyle(ChatFormatting.GOLD)
-                );
-            } else {
-                // Jetzt wieder aktiv
-                source.getServer().sendSystemMessage(
-                        Component.translatable(
-                                        "invmod.message.command.invasion_resumed",
-                                        source.getDisplayName())
-                                .withStyle(ChatFormatting.GREEN)
-                );
-            }
-        });
-        return 0;
+        nexus.togglePause();
+        source.getServer().sendSystemMessage(Component.translatable(
+                "invmod.message.command.invasion_paused",
+                source.getDisplayName()).withStyle(ChatFormatting.GOLD));
+        return 1;
     }
 
 
