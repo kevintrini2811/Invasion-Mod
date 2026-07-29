@@ -1,11 +1,13 @@
 package com.invasion.block;
 
 import java.util.UUID;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.WorldlyContainer;
@@ -16,6 +18,7 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -26,10 +29,13 @@ import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.Nexus;
 import com.invasion.nexus.WorldNexusStorage;
 
-public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, MenuProvider {
+public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, MenuProvider, BeaconBeamOwner {
     private static final int[] SLOTS = {0, 1};
+    private static final List<BeaconBeamOwner.Section> BEAM_SECTIONS =
+            List.of(new BeaconBeamOwner.Section(0xFFFFFFFF));
 
     private UUID nexusId = UUID.randomUUID();
+    private boolean beamActive;
     @Nullable
     private Nexus nexus;
 
@@ -45,6 +51,30 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
     public UUID getNexusId() {
         return nexusId;
+    }
+
+    public boolean toggleBeam() {
+        beamActive = !beamActive;
+        setChanged();
+        if (level != null) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+        }
+        return beamActive;
+    }
+
+    @Override
+    public List<BeaconBeamOwner.Section> getBeamSections() {
+        return beamActive ? BEAM_SECTIONS : List.of();
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        return saveCustomOnly(registries);
     }
 
     @Override
@@ -144,6 +174,7 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     protected void loadAdditional(ValueInput compound) {
         super.loadAdditional(compound);
         nexusId = compound.read("nexusId", net.minecraft.core.UUIDUtil.CODEC).orElse(UUID.randomUUID());
+        beamActive = compound.getBooleanOr("beamActive", false);
         nexus = null;
     }
 
@@ -151,5 +182,6 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     protected void saveAdditional(ValueOutput compound) {
         super.saveAdditional(compound);
         compound.store("nexusId", net.minecraft.core.UUIDUtil.CODEC, nexusId);
+        compound.putBoolean("beamActive", beamActive);
     }
 }

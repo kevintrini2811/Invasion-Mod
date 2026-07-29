@@ -8,11 +8,10 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.RangeArgument;
-import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
-import com.invasion.entity.ElectricityBoltEntity;
+import com.invasion.block.InvBlockEntities;
+import com.invasion.block.NexusBlockEntity;
 import com.invasion.nexus.ControllableNexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.test.Tester;
@@ -41,9 +40,7 @@ public class InvasionCommand {
                 .then(Commands.literal("radius")
                         .then(Commands.literal("get").executes(context -> getRadius(context.getSource())))
                         .then(Commands.literal("set").then(Commands.argument("radius", IntegerArgumentType.integer(32, 128)).executes(context -> setRadius(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
-                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource(), Vec3i.ZERO))
-                    .then(Commands.argument("offset", BlockPosArgument.blockPos()).executes(context -> bolt(context.getSource(), BlockPosArgument.getBlockPos(context, "offset"))))
-                ));
+                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource()))));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> addTestCommands(LiteralArgumentBuilder<CommandSourceStack> builder) {
@@ -169,13 +166,33 @@ public class InvasionCommand {
         return 0;
     }
 
-	private static int bolt(CommandSourceStack source, Vec3i offset) {
-	    handleWithNexus(source, nexus -> {
-	        BlockPos nexusPos = nexus.getOrigin();
-	        source.getLevel().addFreshEntity(new ElectricityBoltEntity(source.getLevel(), com.invasion.util.math.PosUtils.center(nexusPos), com.invasion.util.math.PosUtils.center(nexusPos.offset(offset)), 40, true));
-	    });
-        return 0;
-    }
+	private static int bolt(CommandSourceStack source) {
+        var nexus = WorldNexusStorage.of(source.getLevel()).getNexus();
+        if (nexus.isEmpty()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_nexus_for_beam")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        NexusBlockEntity blockEntity = source.getLevel()
+                .getBlockEntity(nexus.get().getOrigin(), InvBlockEntities.NEXUS)
+                .map(entity -> (NexusBlockEntity) entity)
+                .orElse(null);
+        if (blockEntity == null) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_nexus_for_beam")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        boolean enabled = blockEntity.toggleBeam();
+        source.sendSuccess(() -> Component.translatable(enabled
+                ? "invmod.message.command.nexus_beam_enabled"
+                : "invmod.message.command.nexus_beam_disabled")
+                .withStyle(enabled ? ChatFormatting.AQUA : ChatFormatting.GRAY), true);
+        return 1;
+	}
 
 	private static int status(CommandSourceStack source) {
 	    handleWithNexus(source, nexus -> {

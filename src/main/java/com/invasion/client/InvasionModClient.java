@@ -6,7 +6,10 @@ import com.invasion.client.screen.NexusScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
+import com.invasion.block.InvBlockEntities;
 
 public class InvasionModClient implements ClientModInitializer {
 
@@ -19,6 +22,8 @@ public class InvasionModClient implements ClientModInitializer {
                 (handler, client) -> NexusHud.update(com.invasion.network.NexusHudPayload.hidden()));
         NexusHud.bootstrap();
         InvRenderers.bootstrap();
+        BlockEntityRendererRegistry.register(
+                InvBlockEntities.NEXUS, context -> new BeaconRenderer<>());
 
         MenuScreens.register(InvScreenHandlers.NEXUS, NexusScreen::new);
 
