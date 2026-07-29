@@ -49,6 +49,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        goalSelector.removeAllGoals(goal -> goal instanceof FollowOwnerGoal);
         targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, true));
     }
 
@@ -153,6 +154,34 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         }).isPresent();
     }
 
+    private Optional<Vec3> findWolfPositionAtNexus(
+            ServerLevel world, IMWolfEntity wolf, BlockPos nexusPos) {
+        Optional<Vec3> position = BlockPos
+                    .betweenClosedStream(
+                            new BlockPos(
+                                    nexusPos.getX() - 5,
+                                    world.getMinY(),
+                                    nexusPos.getZ() - 5),
+                            new BlockPos(
+                                    nexusPos.getX() + 5,
+                                    world.getMaxY() - 2,
+                                    nexusPos.getZ() + 5))
+                    .sorted(java.util.Comparator.comparingDouble(
+                            nexusPos::distSqr))
+                    .map(ground -> getWolfRespawnPoint(
+                            world, wolf, ground))
+                    .flatMap(Optional::stream)
+                    .findFirst();
+
+        if (position.isPresent()) {
+            return position;
+        }
+        BlockPos surface = world.getHeightmapPos(
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                nexusPos);
+        return getWolfRespawnPoint(world, wolf, surface.below());
+    }
+
     private Optional<Vec3> getWolfRespawnPoint(
             ServerLevel world, IMWolfEntity wolf, BlockPos ground) {
         var groundShape = world.getBlockState(ground)
@@ -165,13 +194,14 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                 ground.getX() + 0.5D,
                 ground.getY() + groundShape.max(Direction.Axis.Y),
                 ground.getZ() + 0.5D);
-        wolf.setPos(position);
+        var targetBox = wolf.getBoundingBox().move(
+                position.subtract(wolf.position()));
 
         // Other mobs crowding the Nexus must not prevent a bound wolf from
         // returning. Block collision still guarantees enough physical space;
         // ordinary entity pushing separates overlapping mobs afterwards.
         return world.noBlockCollision(
-                        wolf, wolf.getBoundingBox(), false)
+                        wolf, targetBox, false)
                 ? Optional.of(position)
                 : Optional.empty();
     }
@@ -185,10 +215,10 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                 if (newNexus != null && newNexus != getNexus()) {
                     setNexus(newNexus);
                     stack.consume(1, player);
-                    setHealth(25);
+                    return InteractionResult.SUCCESS_SERVER;
                 }
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResult.FAIL;
         }
         return super.mobInteract(player, hand);
     }
