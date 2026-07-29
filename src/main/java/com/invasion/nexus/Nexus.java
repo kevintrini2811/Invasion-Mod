@@ -456,7 +456,6 @@ public class Nexus implements ControllableNexusAccess {
             if (mobsLeftInWave <= 0) {
                 if (lastMobsLeftInWave > 0) {
                     boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.stableagain");
-                    boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.unleashingenergy");
                     lastMobsLeftInWave = mobsLeftInWave;
                 }
                 return;

@@ -90,7 +90,6 @@
 
     "invmod.message.nexus.hpat": "Nexus-Integrität: %s",
     "invmod.message.nexus.stableagain": "Der Nexus-Rift ist wieder Stabil!",
-    "invmod.message.nexus.unleashingenergy": "Entfessele gespeicherte Energie...",
     "invmod.message.nexus.stabilizedto": "Nexus-Rift auf %s stabilisiert.",
     "invmod.message.nexus.alreadyactivated": "Der Nexus kann nicht aktiviert werden, da er bereits angegriffen wird!",
     "invmod.message.nexus.listboundplayers": "Gebundene(r) Spieler: %s ",
