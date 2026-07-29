@@ -118,7 +118,7 @@
     "invmod.message.command.invasion_start_failed": "The invasion could not be started.",
     "invmod.message.command.invasion_started": "%s started the invasion at wave %s.",
     "invmod.message.command.no_invasion_to_pause": "No invasion is active. Nothing happened.",
-    "invmod.message.command.invasion_paused": "%s paused the invasion.",
+    "invmod.message.command.invasion_paused": "Invasion successfully paused.",
     "invmod.message.command.invasion_already_paused": "The invasion is already paused. Nothing changed.",
     "invmod.message.command.invasion_resumed": "%s resumed the invasion.",
 

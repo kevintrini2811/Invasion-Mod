@@ -188,9 +188,9 @@ public class InvasionCommand {
         }
 
         nexus.togglePause();
-        source.getServer().sendSystemMessage(Component.translatable(
-                "invmod.message.command.invasion_paused",
-                source.getDisplayName()).withStyle(ChatFormatting.GOLD));
+        source.sendSuccess(() -> Component.translatable(
+                "invmod.message.command.invasion_paused")
+                .withStyle(ChatFormatting.GOLD), true);
         return 1;
     }
 
