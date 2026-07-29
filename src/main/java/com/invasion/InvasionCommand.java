@@ -106,12 +106,21 @@ public class InvasionCommand {
     }
 
     private static int stop(CommandSourceStack source) {
-        handleWithNexus(source, nexus -> {
-            InvasionMod.LOGGER.debug("Nexus manually stopped by command");
-            nexus.stop(true);
-            source.getServer().sendSystemMessage(Component.literal(source.getTextName() + " has ended the invasion!").withStyle(ChatFormatting.RED));
-        });
-        return 0;
+        ControllableNexusAccess nexus =
+                WorldNexusStorage.of(source.getLevel()).getNexus().orElse(null);
+        if (nexus == null || !nexus.isActive()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_invasion_to_stop")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        InvasionMod.LOGGER.debug("Nexus manually stopped by command");
+        nexus.stop(true);
+        source.sendSuccess(() -> Component.translatable(
+                "invmod.message.command.invasion_stopped")
+                .withStyle(ChatFormatting.RED), true);
+        return 1;
     }
 
     private static int getRadius(CommandSourceStack source) {
