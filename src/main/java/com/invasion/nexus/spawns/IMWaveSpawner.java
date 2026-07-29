@@ -370,11 +370,12 @@ public class IMWaveSpawner implements Spawner {
 
 	private EntityConstruct replaceWithRareWaveVariant(
 			EntityConstruct construct) {
-		if (nexus.getCurrentWave() >= 10
+		int chargedChance = nexus.getChargedCreeperChancePercent();
+		if (chargedChance > 0
 				&& construct.entityType() == InvEntities.CREEPER
 				&& construct.tier() == 1
 				&& IMCreeperEntity.rollChargedVariant(
-						getRandom(), nexus.getCurrentWave())) {
+						getRandom(), chargedChance)) {
 			return new EntityConstruct(
 					construct.entityType(),
 					construct.texture(),

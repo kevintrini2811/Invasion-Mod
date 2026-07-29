@@ -99,9 +99,8 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     public static boolean rollChargedVariant(
-            RandomSource random, int wave) {
-        int chancePercent = Mth.clamp(wave - 9, 1, 100);
-        return random.nextInt(100) < chancePercent;
+            RandomSource random, int chancePercent) {
+        return random.nextInt(100) < Mth.clamp(chancePercent, 0, 100);
     }
 
     @Override

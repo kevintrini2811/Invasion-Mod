@@ -86,18 +86,23 @@ public class WaveBuilder {
                 .entry(Select.<EntityPattern>random()
                         .entry(Select.<EntityPattern>random()
                                 .entry(EntityPatterns.ZOMBIE_T1_ANY, ZOMBIE_T1_WEIGHT * weights[0])
-                                .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * weights[2])
-                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * weights[3]), 3.1F)
+                                .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * Math.max(weights[2], 0.1F))
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * Math.max(weights[3], 0.1F))
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.3F * Math.max(weights[2], 0.1F))
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 0.1F * Math.max(weights[5], 0.05F)), 3.1F)
                         .entry(Select.<EntityPattern>random()
                                 .entry(EntityPatterns.SPIDER_T1_ANY, SPIDER_T1_WEIGHT * weights[0])
-                                .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * weights[2]), 0.7F)
+                                .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * Math.max(weights[2], 0.1F)), 0.7F)
                         .entry(EntityPatterns.SKELETON_T1_ANY, 0.8F), weight * 0.8333333F)
                 .entry(Select.<EntityPattern>random()
                         .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 4F)
-                        .entry(EntityPatterns.THROWER_T1, 1.1F * weights[4])
-                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
-                        .entry(EntityPatterns.ENDERMAN_T1, 0.15F * weights[4])
-                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.7F * weights[3]), weight * 0.1666667F);
+                        .entry(EntityPatterns.THROWER_T1, 1.1F * Math.max(weights[4], 0.1F))
+                        .entry(EntityPatterns.THROWER_T2, 0.2F * Math.max(weights[5], 0.05F))
+                        .entry(EntityPatterns.BURROWER, 0.12F)
+                        .entry(EntityPatterns.IMP_T1, 0.35F)
+                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * Math.max(weights[5], 0.03F))
+                        .entry(EntityPatterns.ENDERMAN_T1, 0.15F * Math.max(weights[4], 0.05F))
+                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.7F * Math.max(weights[3], 0.1F)), weight * 0.1666667F);
     }
 
     private Select.PoolBuilder<EntityPattern, Float> generateSteadyPool(float tierLevel) {
@@ -112,17 +117,23 @@ public class WaveBuilder {
                 .entry(Select.<EntityPattern>random()
                         .entry(Select.<EntityPattern>random()
                                 .entry(EntityPatterns.ZOMBIE_T1_ANY, ZOMBIE_T1_WEIGHT * weights[0])
-                                .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * weights[2])
-                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * weights[3]), 3.1F)
+                                .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, ZOMBIE_T2_WEIGHT * Math.max(weights[2], 0.1F))
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, ZOMBIE_T1_WEIGHT * Math.max(weights[3], 0.1F))
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.3F * Math.max(weights[2], 0.1F))
+                                .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 0.1F * Math.max(weights[5], 0.05F)), 3.1F)
                         .entry(Select.<EntityPattern>random()
                                 .entry(EntityPatterns.SPIDER_T1_ANY, SPIDER_T1_WEIGHT * weights[0])
-                                .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * weights[2]), 0.7F)
+                                .entry(EntityPatterns.SPIDER_T2_ANY, SPIDER_T2_WEIGHT * Math.max(weights[2], 0.1F)), 0.7F)
                         .entry(EntityPatterns.SKELETON_T1_ANY, 0.8F), 9F)
                 .entry(Select.<EntityPattern>random()
                         .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 3F)
-                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * weights[5])
-                        .entry(EntityPatterns.ENDERMAN_T1, 0.12F * weights[4])
-                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F * weights[3]), 1F);
+                        .entry(EntityPatterns.THROWER_T1, 0.5F * Math.max(weights[4], 0.1F))
+                        .entry(EntityPatterns.THROWER_T2, 0.12F * Math.max(weights[5], 0.05F))
+                        .entry(EntityPatterns.BURROWER, 0.08F)
+                        .entry(EntityPatterns.IMP_T1, 0.25F)
+                        .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * Math.max(weights[5], 0.03F))
+                        .entry(EntityPatterns.ENDERMAN_T1, 0.12F * Math.max(weights[4], 0.05F))
+                        .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F * Math.max(weights[3], 0.1F)), 1F);
     }
 
     @Nullable

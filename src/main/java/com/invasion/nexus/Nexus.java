@@ -79,6 +79,7 @@ public class Nexus implements ControllableNexusAccess {
     private long waveDelay;
 
     private boolean continuousAttack;
+    private int continuousAttackCount;
 
     private boolean activated;
     private boolean discarded;
@@ -243,6 +244,14 @@ public class Nexus implements ControllableNexusAccess {
     @Override
     public int getCurrentWave() {
         return currentWave;
+    }
+
+    @Override
+    public int getChargedCreeperChancePercent() {
+        return mode == Mode.CONTINUOUS
+                ? Math.clamp(continuousAttackCount, 1, 100)
+                : ControllableNexusAccess.super
+                        .getChargedCreeperChancePercent();
     }
 
     @Override
@@ -624,6 +633,7 @@ public class Nexus implements ControllableNexusAccess {
                     float difficulty = 1 + powerLevel / 4500;
                     float tierLevel = 1 + powerLevel / 4500;
                     Wave wave = waveBuilder.generateWave(difficulty, tierLevel, WAVE_DURATION);
+                    continuousAttackCount++;
                     mobsLeftInWave = (lastMobsLeftInWave = mobsToKillInWave = (int) (wave.getTotalMobAmount() * 0.8F));
                     waveSpawner.beginNextWave(wave);
                     continuousAttack = true;
@@ -846,6 +856,7 @@ public class Nexus implements ControllableNexusAccess {
         nextAttackTime = compound.getIntOr("nextAttackTime", 0);
         daysToAttack = compound.getIntOr("daysToAttack", 0);
         continuousAttack = compound.getBooleanOr("continuousAttack", false);
+        continuousAttackCount = compound.getIntOr("continuousAttackCount", 0);
         activated = compound.getBooleanOr("activated", false);
         paused = compound.getBooleanOr("paused", false);
         mobsLeftInWave = compound.getIntOr("mobsLeftInWave", 0);
@@ -874,6 +885,7 @@ public class Nexus implements ControllableNexusAccess {
         compound.putInt("nextAttackTime", nextAttackTime);
         compound.putInt("daysToAttack", daysToAttack);
         compound.putBoolean("continuousAttack", continuousAttack);
+        compound.putInt("continuousAttackCount", continuousAttackCount);
         compound.putBoolean("activated", isActive());
         compound.putBoolean("paused", paused);
         compound.putInt("mobsLeftInWave", mobsLeftInWave);
