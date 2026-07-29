@@ -17,9 +17,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
-import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
@@ -49,9 +47,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int ladderColumnZ;
     private int ladderExitY;
     private boolean holdingAtLadderTop;
-    @Nullable
-    private BlockPos ladderDismountTarget;
-
     @Nullable
     private Entity followingEntity;
     private Vec3 lastFollowingEntityPos = Vec3.ZERO;
@@ -372,7 +367,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     private void beginLadderClimb(BlockPos ladderPos) {
         climbingLadder = true;
-        ladderDismountTarget = null;
         gravityBeforeLadder = mob.isNoGravity();
         ladderColumnX = ladderPos.getX();
         ladderColumnZ = ladderPos.getZ();
@@ -403,11 +397,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             return;
         }
 
-        if (ladderDismountTarget != null) {
-            dismountLadder();
-            return;
-        }
-
         // Own all movement while climbing. Centering the mob in the ladder
         // cell and disabling gravity prevents sideways knockback and the
         // between-tick slide that made the previous implementation fall. The
@@ -431,81 +420,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 holdingAtLadderTop = true;
                 holdAtLadderTop(targetX, targetZ);
             } else {
-                ladderDismountTarget = findLadderDismountTarget();
-                if (ladderDismountTarget == null) {
-                    finishLadderClimb();
-                } else {
-                    dismountLadder();
-                }
+                finishLadderClimb();
             }
         }
-    }
-
-    @Nullable
-    private BlockPos findLadderDismountTarget() {
-        if (getPath() != null && !getPath().isDone()) {
-            BlockPos nextNode = getPath().getNextNodePos();
-            if (isSafeLadderDismount(nextNode)) {
-                return nextNode.immutable();
-            }
-        }
-
-        BlockPos ladderTop = new BlockPos(ladderColumnX, ladderExitY - 1, ladderColumnZ);
-        BlockState ladderState = mob.level().getBlockState(ladderTop);
-        if (ladderState.is(Blocks.LADDER)) {
-            BlockPos supportSide = ladderTop.relative(
-                    ladderState.getValue(LadderBlock.FACING).getOpposite()).above();
-            if (isSafeLadderDismount(supportSide)) {
-                return supportSide.immutable();
-            }
-        }
-
-        for (Direction direction : Direction.Plane.HORIZONTAL) {
-            BlockPos candidate = ladderTop.relative(direction).above();
-            if (isSafeLadderDismount(candidate)) {
-                return candidate.immutable();
-            }
-        }
-        return null;
-    }
-
-    private boolean isSafeLadderDismount(BlockPos pos) {
-        if (pos.getY() != ladderExitY
-                || Math.abs(pos.getX() - ladderColumnX) > 1
-                || Math.abs(pos.getZ() - ladderColumnZ) > 1
-                || (pos.getX() == ladderColumnX && pos.getZ() == ladderColumnZ)) {
-            return false;
-        }
-        return mob.level().getBlockState(pos.below())
-                        .isCollisionShapeFullBlock(mob.level(), pos.below())
-                && mob.level().getBlockState(pos).getCollisionShape(mob.level(), pos).isEmpty()
-                && mob.level().getBlockState(pos.above())
-                        .getCollisionShape(mob.level(), pos.above()).isEmpty();
-    }
-
-    private void dismountLadder() {
-        double targetX = ladderDismountTarget.getX() + 0.5D;
-        double targetZ = ladderDismountTarget.getZ() + 0.5D;
-        double deltaX = targetX - mob.getX();
-        double deltaZ = targetZ - mob.getZ();
-        double distance = Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
-
-        mob.setPos(mob.getX(), ladderExitY + 0.001D, mob.getZ());
-        mob.setXxa(0);
-        mob.setZza(0);
-        mob.fallDistance = 0;
-        mob.setShiftKeyDown(false);
-        mob.setJumping(false);
-
-        if (distance <= 0.12D) {
-            mob.setPos(targetX, ladderExitY + 0.001D, targetZ);
-            mob.setDeltaMovement(0, 0, 0);
-            finishLadderClimb();
-            return;
-        }
-
-        double speed = Math.min(0.16D, distance);
-        mob.setDeltaMovement(deltaX / distance * speed, 0, deltaZ / distance * speed);
     }
 
     private boolean shouldHoldAtLadderTop() {
@@ -553,7 +470,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         }
         climbingLadder = false;
         holdingAtLadderTop = false;
-        ladderDismountTarget = null;
         mob.setNoGravity(gravityBeforeLadder);
         mob.fallDistance = 0;
     }
@@ -690,10 +606,18 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private void holdAtLastBridgeTarget() {
         double targetX = lastCompletedBridgeTarget.getX() + 0.5D;
         double targetZ = lastCompletedBridgeTarget.getZ() + 0.5D;
+        double verticalDistance =
+                Math.abs(mob.getY() - lastCompletedBridgeTarget.getY());
         if (Mth.square(mob.getX() - targetX)
-                + Mth.square(mob.getZ() - targetZ) < 1.0D) {
-            mob.setPos(targetX, lastCompletedBridgeTarget.getY(), targetZ);
+                        + Mth.square(mob.getZ() - targetZ) >= 1.0D
+                || verticalDistance >= 1.25D) {
+            return;
         }
+
+        // A completed bridge endpoint can remain horizontally below a later
+        // ladder tower. Never snap a mob standing on the upper platform back
+        // to that stale endpoint.
+        mob.setPos(targetX, lastCompletedBridgeTarget.getY(), targetZ);
         stopHorizontalMovement();
         mob.fallDistance = 0;
     }
