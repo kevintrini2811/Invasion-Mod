@@ -431,7 +431,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     public boolean tryStartTowerBuild() {
-        if (buildingTower || towerBuildCooldown > 0 || !hasNexus()) {
+        if (buildingTower || towerBuildCooldown > 0 || !hasNexus()
+                || !isStandingOnSolidGround()) {
             return false;
         }
 
@@ -485,6 +486,19 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             towerBuildPosition = null;
         }
         return accepted;
+    }
+
+    private boolean isStandingOnSolidGround() {
+        if (!onGround() || onClimbable()
+                || isInWater() || isInLava()
+                || !level().getBlockState(blockPosition())
+                        .getFluidState().isEmpty()) {
+            return false;
+        }
+
+        BlockPos floorPos = blockPosition().below();
+        return level().getBlockState(floorPos)
+                .isCollisionShapeFullBlock(level(), floorPos);
     }
 
     private boolean isTowerBuildInterrupted() {
