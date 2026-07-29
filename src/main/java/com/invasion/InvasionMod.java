@@ -1,6 +1,7 @@
 package com.invasion;
 
 import com.invasion.nexus.wave.EntityPatterns;
+import com.invasion.compat.AsyncCompatibility;
 import com.invasion.util.ChatUtils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
@@ -68,12 +69,15 @@ public class InvasionMod implements ModInitializer {
             ChatUtils.setServer(server);
             LOGGER.debug("ChatUtils: Server gesetzt.");
         });
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            SERVER = server;
+            AsyncCompatibility.registerSynchronizedEntities();
+        });
 
         ServerLifecycleEvents.SERVER_STOPPED.register((MinecraftServer server) -> {
             ChatUtils.clearServer();
             LOGGER.debug("ChatUtils: Server gelöscht.");
         });
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> SERVER = server);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 WorldNexusStorage.of((ServerLevel)handler.player.level()).onPlayerJoined(handler.player));
         ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
