@@ -25,6 +25,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class IMMobNavigation extends GroundPathNavigation implements Navigation {
     static final int MAX_WAIT_TIME = 2000;
+    private static final int ENGINEER_BRIDGE_WAIT_TIME = 200;
     private Goal currentGoal = Goal.NONE;
     private Goal prevGoal = Goal.NONE;
 
@@ -159,6 +160,10 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                     result,
                     mob.blockPosition()
             );
+            if (result != Status.SUCCESS) {
+                continuingEngineerBridge = false;
+                lastCompletedBridgeTarget = null;
+            }
         }
         completedTaskNodeIndex = activeTaskNodeIndex;
         activeTaskNodeIndex = -1;
@@ -210,6 +215,20 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
         if (mob instanceof Stunnable l && l.isStunned()) {
             return;
+        }
+
+        if (waitingForNotify == 1
+                && continuingEngineerBridge
+                && mob instanceof PigmanEngineerEntity engineer) {
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] build timed out: entity={}, path={}, node={}, pos={}",
+                    mob.getId(),
+                    path == null ? 0 : System.identityHashCode(path),
+                    activeTaskNodeIndex,
+                    mob.blockPosition()
+            );
+            engineer.cancelStalledTerrainTask(Status.OUT_OF_RANGE);
+            stop();
         }
 
         if (haltingTicks > 0 || waitingForNotify > 0) {
@@ -647,7 +666,10 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 activeTaskNodeIndex = nodeIndex;
-                waitingForNotify = MAX_WAIT_TIME;
+                waitingForNotify = action.getType() == PathAction.Type.BRIDGE
+                        && mob instanceof PigmanEngineerEntity
+                        ? ENGINEER_BRIDGE_WAIT_TIME
+                        : MAX_WAIT_TIME;
             } else {
                 lastActionResult = Status.SUCCESS;
                 completedTaskNodeIndex = nodeIndex;

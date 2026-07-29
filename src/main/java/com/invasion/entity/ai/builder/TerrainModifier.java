@@ -69,6 +69,9 @@ public final class TerrainModifier implements ITerrainModify {
             return false;
         }
         if (isReadyForTask(onFinished)) {
+            if (modList.isEmpty()) {
+                lastStatus = Notifiable.Status.SUCCESS;
+            }
             modList.addAll(entries);
             finishCallback = onFinished == null ? Notifiable.NONE : onFinished;
             blockChangeCallback = onBlockChanged == null ? Notifiable.NONE : onBlockChanged;
@@ -122,6 +125,11 @@ public final class TerrainModifier implements ITerrainModify {
         finishCallback = Notifiable.NONE;
         blockChangeCallback = Notifiable.NONE;
         callback.notifyTask(lastStatus);
+    }
+
+    public void cancelTask(Notifiable.Status status) {
+        lastStatus = status;
+        cancelTask();
     }
 
     private Notifiable.Status changeBlock(ModifyBlockEntry entry) {

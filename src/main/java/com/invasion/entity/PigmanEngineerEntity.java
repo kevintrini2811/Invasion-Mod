@@ -257,6 +257,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
+    public void cancelStalledTerrainTask(Notifiable.Status status) {
+        terrainModifier.cancelTask(status);
+    }
+
     public boolean tryStartTowerBuild() {
         if (buildingTower || towerBuildCooldown > 0 || !hasNexus()) {
             return false;
