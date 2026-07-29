@@ -42,6 +42,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.level.ServerLevel;
@@ -151,14 +152,31 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
             wolf.setNexus(getNexus());
             wolf.setHealth(wolf.getMaxHealth());
 
+            BlockPos nexusPos = center.pos();
             Optional<Vec3> respawnPoint = BlockPos
-                    .withinManhattanStream(center.pos(), 5, 3, 5)
+                    .betweenClosedStream(
+                            new BlockPos(
+                                    nexusPos.getX() - 5,
+                                    world.getMinY(),
+                                    nexusPos.getZ() - 5),
+                            new BlockPos(
+                                    nexusPos.getX() + 5,
+                                    world.getMaxY() - 2,
+                                    nexusPos.getZ() + 5))
                     .sorted(java.util.Comparator.comparingDouble(
-                            center.pos()::distSqr))
+                            nexusPos::distSqr))
                     .map(ground -> getWolfRespawnPoint(
                             world, wolf, ground))
                     .flatMap(Optional::stream)
                     .findFirst();
+
+            if (respawnPoint.isEmpty()) {
+                BlockPos surface = world.getHeightmapPos(
+                        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                        nexusPos);
+                respawnPoint = getWolfRespawnPoint(
+                        world, wolf, surface.below());
+            }
 
             if (respawnPoint.isPresent()) {
                 wolf.setPos(respawnPoint.get());
