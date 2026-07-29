@@ -165,11 +165,20 @@ public class InvasionCommand {
 
 	private static int status(CommandSourceStack source) {
 	    handleWithNexus(source, nexus -> {
-	        source.sendSuccess(() -> Component.literal("Nexus status: ").withStyle(ChatFormatting.GREEN).append(Component.literal("" + nexus.isActive()).withStyle(ChatFormatting.DARK_GREEN)), false);
+            int totalMobs = nexus.getMobsToKillInWave();
+            int defeatedMobs = Math.min(totalMobs,
+                    Math.max(0, totalMobs - nexus.getMobsLeftInWave()));
+            source.sendSuccess(() -> Component.translatable(
+                    "invmod.message.command.invasion_status",
+                    nexus.isActive(),
+                    nexus.getCurrentWave(),
+                    defeatedMobs,
+                    totalMobs,
+                    nexus.getHealthPercent()).withStyle(ChatFormatting.GREEN), false);
 	    });
 
 	    return 0;
-    }
+	}
     private static int pause(CommandSourceStack source) {
         ControllableNexusAccess nexus =
                 WorldNexusStorage.of(source.getLevel()).getNexus().orElse(null);

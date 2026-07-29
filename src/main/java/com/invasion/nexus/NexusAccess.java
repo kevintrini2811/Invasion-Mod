@@ -34,6 +34,18 @@ public interface NexusAccess {
 
     int getCurrentWave();
 
+    default int getMobsLeftInWave() {
+        return 0;
+    }
+
+    default int getMobsToKillInWave() {
+        return 0;
+    }
+
+    default int getHealthPercent() {
+        return 0;
+    }
+
     Level getWorld();
 
     AttackerAI getAttackerAI();
