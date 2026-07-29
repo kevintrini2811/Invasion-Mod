@@ -70,14 +70,18 @@ public class InvasionCommand {
     }
 
     private static int start(CommandSourceStack source, int startingWave) {
-        var nexus = WorldNexusStorage.of(source.getLevel()).getNexus();
-        if (nexus.isEmpty()) {
+        WorldNexusStorage storage = WorldNexusStorage.of(source.getLevel());
+        ControllableNexusAccess activeNexus = storage.getNexus().orElse(null);
+        if (activeNexus == null) {
+            activeNexus = storage.getNearestNexus(
+                    BlockPos.containing(source.getPosition())).orElse(null);
+        }
+        if (activeNexus == null) {
             source.sendFailure(Component.translatable(
                     "invmod.message.command.place_nexus").withStyle(ChatFormatting.RED));
             return 0;
         }
 
-        ControllableNexusAccess activeNexus = nexus.get();
         if (activeNexus.isActive()) {
             source.sendFailure(Component.translatable(
                     "invmod.message.command.invasion_already_active").withStyle(ChatFormatting.RED));
