@@ -1,5 +1,6 @@
 package com.invasion.item;
 
+import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.IMWolfEntity;
@@ -93,6 +94,9 @@ class StrangeBoneItem extends Item {
 
         if (!wolf.level().addFreshEntity(newWolf)) {
             return InteractionResult.FAIL;
+        }
+        if (!wolf.isTame()) {
+            newWolf.tame(user);
         }
         wolf.discard();
         stack.consume(1, user);
