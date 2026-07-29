@@ -17,6 +17,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
@@ -265,6 +266,13 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
 	@Override
     protected void followThePath() {
+        if (isTargetingLadder()) {
+            stopHorizontalMovement();
+            mob.setNoAi(true);
+            stop();
+            return;
+        }
+
 	    mob.setShiftKeyDown(false);
 	    if (mob instanceof NexusEntity e) {
             e.setIsHoldingIntoLadder(false);
@@ -327,6 +335,19 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             handlePathAction(currentAction);
 	    }
 	}
+
+    private boolean isTargetingLadder() {
+        if (getPath() == null || getPath().isDone()) {
+            return false;
+        }
+        PathAction action = getCurrentWorkingAction();
+        if (action.getType() == PathAction.Type.LADDER) {
+            return true;
+        }
+        BlockPos nodePos = getPath().getNextNodePos();
+        return mob.level().getBlockState(nodePos).is(Blocks.LADDER)
+                || mob.level().getBlockState(nodePos.below()).is(Blocks.LADDER);
+    }
 
     private void logEngineerBridgeTransition(PathAction action, int nodeIndex) {
         if (!(mob instanceof PigmanEngineerEntity)
