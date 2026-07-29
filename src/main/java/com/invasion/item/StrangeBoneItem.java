@@ -1,5 +1,6 @@
 package com.invasion.item;
 
+import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.IMWolfEntity;
@@ -94,13 +95,17 @@ class StrangeBoneItem extends Item {
             return InteractionResult.FAIL;
         }
         newWolf.restoreFrom(wolf);
-        if (!wolf.isTame()) {
-            newWolf.tame(user);
-        }
+        // restoreFrom also copies the original UUID. The old wolf still
+        // exists while the replacement is added, so the server rejects the
+        // duplicate unless the replacement receives its own identity.
+        newWolf.setUUID(UUID.randomUUID());
         newWolf.setNexus(nexus);
 
         if (!wolf.level().addFreshEntity(newWolf)) {
             return InteractionResult.FAIL;
+        }
+        if (!wolf.isTame()) {
+            newWolf.tame(user);
         }
         wolf.discard();
         stack.consume(1, user);
