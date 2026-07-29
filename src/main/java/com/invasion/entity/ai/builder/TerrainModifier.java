@@ -114,10 +114,14 @@ public final class TerrainModifier implements ITerrainModify {
     }
 
     public void cancelTask() {
+        Notifiable callback = finishCallback;
         entryIndex = 0;
         timer = 0;
         modList.clear();
-        finishCallback.notifyTask(lastStatus);
+        nextEntry = null;
+        finishCallback = Notifiable.NONE;
+        blockChangeCallback = Notifiable.NONE;
+        callback.notifyTask(lastStatus);
     }
 
     private Notifiable.Status changeBlock(ModifyBlockEntry entry) {
