@@ -30,6 +30,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.server.level.ServerLevel;
@@ -74,6 +75,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        goalSelector.removeAllGoals(goal -> goal instanceof FollowOwnerGoal);
         targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, true));
     }
 
@@ -157,31 +159,8 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
             wolf.setNexus(getNexus());
             wolf.setHealth(wolf.getMaxHealth());
 
-            BlockPos nexusPos = center.pos();
-            Optional<Vec3> respawnPoint = BlockPos
-                    .betweenClosedStream(
-                            new BlockPos(
-                                    nexusPos.getX() - 5,
-                                    world.getMinY(),
-                                    nexusPos.getZ() - 5),
-                            new BlockPos(
-                                    nexusPos.getX() + 5,
-                                    world.getMaxY() - 2,
-                                    nexusPos.getZ() + 5))
-                    .sorted(java.util.Comparator.comparingDouble(
-                            nexusPos::distSqr))
-                    .map(ground -> getWolfRespawnPoint(
-                            world, wolf, ground))
-                    .flatMap(Optional::stream)
-                    .findFirst();
-
-            if (respawnPoint.isEmpty()) {
-                BlockPos surface = world.getHeightmapPos(
-                        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                        nexusPos);
-                respawnPoint = getWolfRespawnPoint(
-                        world, wolf, surface.below());
-            }
+            Optional<Vec3> respawnPoint = findWolfPositionAtNexus(
+                    world, wolf, center.pos());
 
             if (respawnPoint.isPresent()) {
                 wolf.setPos(respawnPoint.get());
@@ -201,6 +180,34 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         }).isPresent();
     }
 
+    private Optional<Vec3> findWolfPositionAtNexus(
+            ServerLevel world, IMWolfEntity wolf, BlockPos nexusPos) {
+        Optional<Vec3> position = BlockPos
+                    .betweenClosedStream(
+                            new BlockPos(
+                                    nexusPos.getX() - 5,
+                                    world.getMinY(),
+                                    nexusPos.getZ() - 5),
+                            new BlockPos(
+                                    nexusPos.getX() + 5,
+                                    world.getMaxY() - 2,
+                                    nexusPos.getZ() + 5))
+                    .sorted(java.util.Comparator.comparingDouble(
+                            nexusPos::distSqr))
+                    .map(ground -> getWolfRespawnPoint(
+                            world, wolf, ground))
+                    .flatMap(Optional::stream)
+                    .findFirst();
+
+        if (position.isPresent()) {
+            return position;
+        }
+        BlockPos surface = world.getHeightmapPos(
+                Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                nexusPos);
+        return getWolfRespawnPoint(world, wolf, surface.below());
+    }
+
     private Optional<Vec3> getWolfRespawnPoint(
             ServerLevel world, IMWolfEntity wolf, BlockPos ground) {
         var groundShape = world.getBlockState(ground)
@@ -213,13 +220,14 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                 ground.getX() + 0.5D,
                 ground.getY() + groundShape.max(Direction.Axis.Y),
                 ground.getZ() + 0.5D);
-        wolf.setPos(position);
+        var targetBox = wolf.getBoundingBox().move(
+                position.subtract(wolf.position()));
 
         // Other mobs crowding the Nexus must not prevent a bound wolf from
         // returning. Block collision still guarantees enough physical space;
         // ordinary entity pushing separates overlapping mobs afterwards.
         return world.noBlockCollision(
-                        wolf, wolf.getBoundingBox(), false)
+                        wolf, targetBox, false)
                 ? Optional.of(position)
                 : Optional.empty();
     }
@@ -228,15 +236,24 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (stack.is(InvItems.STRANGE_BONE) && isOwnedBy(player)) {
-            if (!level().isClientSide()) {
-                NexusAccess newNexus = IHasNexus.findNexus(level(), blockPosition());
-                if (newNexus != null && newNexus != getNexus()) {
-                    setNexus(newNexus);
+            if (level().isClientSide()) {
+                return InteractionResult.SUCCESS;
+            }
+            if (level() instanceof ServerLevel world
+                    && hasNexus()
+                    && getNexus().isActive()) {
+                Optional<Vec3> destination = findWolfPositionAtNexus(
+                        world, this, getNexus().getOrigin());
+                if (destination.isPresent()) {
+                    Vec3 pos = destination.get();
+                    getNavigation().stop();
+                    setTarget(null);
+                    teleportTo(pos.x, pos.y, pos.z);
                     stack.consume(1, player);
-                    setHealth(25);
+                    return InteractionResult.SUCCESS_SERVER;
                 }
             }
-            return InteractionResult.SUCCESS;
+            return InteractionResult.FAIL;
         }
         return super.mobInteract(player, hand);
     }
