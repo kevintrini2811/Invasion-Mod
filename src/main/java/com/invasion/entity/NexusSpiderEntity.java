@@ -228,7 +228,7 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
             entityData = new NexusSpiderData(new AgeableMob.AgeableMobGroupData(true));
 
             if ((world.getDifficulty() == Difficulty.HARD && random.nextFloat() < 0.1F * difficulty.getSpecialMultiplier())
-                    || (hasNexus() && getNexus().getCurrentWave() > 5)) {
+                    || (hasNexus() && getNexus().getProgressionLevel() > 5)) {
                 ((NexusSpiderData)entityData).setRandomEffect(random);
             }
         }
@@ -243,7 +243,7 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
         super.finalizeSpawn(world, difficulty, spawnReason, entityData);
 
         if (hasNexus()) {
-            AttributeUtil.applyNexusWaveComplications(this, world, getNexus().getCurrentWave(), difficulty, spawnReason);
+            AttributeUtil.applyNexusWaveComplications(this, world, getNexus().getProgressionLevel(), difficulty, spawnReason);
         }
 
         return entityData;

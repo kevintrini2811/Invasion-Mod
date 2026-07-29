@@ -89,11 +89,11 @@ public class AttackerAI {
     }
 
     private int getScaffoldLimit() {
-        return 2 + nexus.getCurrentWave() / 2;
+        return 2 + nexus.getProgressionLevel() / 2;
     }
 
     public int getScaffoldSpacing() {
-        return 90 / (nexus.getCurrentWave() + 10);
+        return 90 / (nexus.getProgressionLevel() + 10);
     }
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {

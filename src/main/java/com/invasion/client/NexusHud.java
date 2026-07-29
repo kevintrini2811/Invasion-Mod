@@ -37,7 +37,7 @@ public final class NexusHud {
         }
 
         Font font = Minecraft.getInstance().font;
-        Component wave = Component.literal("Wave " + state.wave());
+        Component wave = Component.literal((state.continuous() ? "Attack " : "Wave ") + state.wave());
         Component mobs = Component.literal(state.defeatedMobs() + "/" + state.totalMobs() + " mobs");
         Component nexus = Component.literal(state.nexusHealthPercent() + "% Nexus");
         int waveWidth = font.width(wave);

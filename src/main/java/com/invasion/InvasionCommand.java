@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.block.NexusBlockEntity;
 import com.invasion.nexus.ControllableNexusAccess;
+import com.invasion.nexus.Mode;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.test.Tester;
 import com.mojang.brigadier.CommandDispatcher;
@@ -200,9 +201,11 @@ public class InvasionCommand {
             int defeatedMobs = Math.min(totalMobs,
                     Math.max(0, totalMobs - nexus.getMobsLeftInWave()));
             source.sendSuccess(() -> Component.translatable(
-                    "invmod.message.command.invasion_status",
+                    nexus.getMode() == Mode.CONTINUOUS
+                            ? "invmod.message.command.continuous_status"
+                            : "invmod.message.command.invasion_status",
                     nexus.isActive(),
-                    nexus.getCurrentWave(),
+                    nexus.getProgressionLevel(),
                     defeatedMobs,
                     totalMobs,
                     nexus.getHealthPercent()).withStyle(ChatFormatting.GREEN), false);

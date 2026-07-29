@@ -247,6 +247,11 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     @Override
+    public int getProgressionLevel() {
+        return mode == Mode.CONTINUOUS ? continuousAttackCount : currentWave;
+    }
+
+    @Override
     public int getChargedCreeperChancePercent() {
         return mode == Mode.CONTINUOUS
                 ? Math.clamp(continuousAttackCount, 1, 100)
@@ -488,7 +493,8 @@ public class Nexus implements ControllableNexusAccess {
         int total = Math.max(0, mobsToKillInWave);
         int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
         int healthPercent = getHealthPercent();
-        return new NexusHudPayload(true, currentWave, defeated, total, healthPercent);
+        return new NexusHudPayload(true, mode == Mode.CONTINUOUS,
+                getProgressionLevel(), defeated, total, healthPercent);
     }
 
     private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {

@@ -118,6 +118,7 @@
     "invmod.message.command.invasion_start_failed": "Die Invasion konnte nicht gestartet werden.",
     "invmod.message.command.invasion_started": "%s hat die Invasion bei Welle %s gestartet.",
     "invmod.message.command.invasion_status": "Aktiv: %s | Welle: %s | Mobs: %s/%s | Nexus: %s%%",
+    "invmod.message.command.continuous_status": "Aktiv: %s | Angriff: %s | Mobs: %s/%s | Nexus: %s%%",
     "invmod.message.command.no_invasion_to_pause": "Es ist keine Invasion aktiv. Es geschieht nichts.",
     "invmod.message.command.invasion_paused": "Invasion erfolgreich pausiert.",
     "invmod.message.command.invasion_already_paused": "Die Invasion ist bereits pausiert. Es wurde nichts verändert.",

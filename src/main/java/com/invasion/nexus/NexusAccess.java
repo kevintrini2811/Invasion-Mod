@@ -34,12 +34,16 @@ public interface NexusAccess {
 
     int getCurrentWave();
 
+    default int getProgressionLevel() {
+        return getCurrentWave();
+    }
+
     default int getChargedCreeperChancePercent() {
-        return Math.clamp(getCurrentWave() - 9, 0, 100);
+        return Math.clamp(getProgressionLevel() - 9, 0, 100);
     }
 
     default int getRandomEquipmentChancePercent() {
-        return Math.clamp(getCurrentWave() - 1, 0, 100);
+        return Math.clamp(getProgressionLevel() - 1, 0, 100);
     }
 
     default int getMobsLeftInWave() {
