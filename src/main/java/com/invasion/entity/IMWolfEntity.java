@@ -1,7 +1,7 @@
 package com.invasion.entity;
 
-import java.util.Comparator;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -27,7 +27,6 @@ import com.invasion.InvasionMod;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
-import com.invasion.nexus.Mode;
 
 public class IMWolfEntity extends Wolf implements IHasNexus {
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
@@ -124,15 +123,16 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                     .findAny();
 
             if (respawnPoint.isPresent()) {
-                wolf.restoreFrom(this);
-                wolf.setNexus(getNexus());
                 wolf.setPos(respawnPoint.get());
                 wolf.setRot(0, 0);
-                wolf.heal(60.0F);
+                if (!world.addFreshEntity(wolf)) {
+                    InvasionMod.LOGGER.warn(
+                            "Failed to add respawned wolf at Nexus");
+                    return false;
+                }
                 if (!isRemoved()) {
                     discard();
                 }
-                level().addFreshEntity(wolf);
                 return true;
             }
             InvasionMod.LOGGER.warn("No respawn spot for wolf");
