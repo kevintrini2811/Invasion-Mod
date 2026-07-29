@@ -308,10 +308,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             return;
         }
 
-        // Finishing the terrain job does not mean that the engineer has
-        // reached its path node. This matters especially for ladder towers:
-        // vanilla's generous waypoint tolerance can advance the path while
-        // the engineer is still standing below the newly placed ladder.
+        // Finishing a terrain job does not necessarily mean that the engineer
+        // has reached its actionable path node.
         if (currentAction != PathAction.NONE
                 && completedTaskNodeIndex == nodeIndex
                 && !hasReachedCompletedActionNode(
@@ -367,12 +365,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         if (action.getType() == PathAction.Type.BRIDGE) {
             return horizontalDistanceSqr < 0.09D
                     && Math.abs(mob.getY() - nodePos.getY()) < 0.6D;
-        }
-
-        if (action.getType() == PathAction.Type.TOWER
-                || action.getType() == PathAction.Type.LADDER) {
-            return horizontalDistanceSqr < 0.36D
-                    && mob.getY() >= nodePos.getY() - 0.1D;
         }
 
         return horizontalDistanceSqr < 0.36D

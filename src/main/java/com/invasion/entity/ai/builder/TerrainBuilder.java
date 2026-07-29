@@ -3,22 +3,15 @@ package com.invasion.entity.ai.builder;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
-import com.invasion.entity.pathfinding.ClimberUtil;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.PathingUtil;
-import com.invasion.nexus.ai.scaffold.Scaffold;
-import com.invasion.util.math.PosUtils;
 
 public class TerrainBuilder implements ITerrainBuild {
-    private static final float LADDER_COST = 25;
     private static final float PLANKS_COST = 45;
     private static final float COBBLE_COST = 65;
     private final float DIG_COST = 35;
@@ -38,204 +31,6 @@ public class TerrainBuilder implements ITerrainBuild {
     public float getBuildRate() {
         return this.buildRate;
     }
-
-    @Override
-    public Stream<ModifyBlockEntry> askBuildScaffoldLayer(BlockPos pos) {
-        @Nullable
-        Scaffold scaffold = mob.getNexus().getAttackerAI().getScaffolds().getAt(pos);
-        if (scaffold == null) {
-            return Stream.empty();
-        }
-
-        int height = pos.getY() - scaffold.getNode().bottom();
-        Direction offset = scaffold.getNode().orientation();
-        BlockPos.MutableBlockPos mutable = pos.mutable();
-
-        Level world = mob.asEntity().level();
-        BlockState block = world.getBlockState(mutable.set(pos).move(offset).move(Direction.DOWN));
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-
-        // NEU: Ladder-State mit richtigem Facing
-        BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, offset.getOpposite());
-
-
-        // Unterste Ebene direkt über Boden / Einstieg
-        if (height == 1) {
-            // Block vor der Leiter (Boden) mit Planks auffüllen
-            if (!block.isCollisionShapeFullBlock(world, mutable)) {
-                builder.add(new ModifyBlockEntry(
-                        mutable.immutable(),
-                        Blocks.OAK_PLANKS.defaultBlockState(),
-                        (int) (PLANKS_COST / buildRate)
-                ));
-            }
-
-            // Leiter unterhalb der aktuellen Position setzen,
-            // aber nur wenn da überhaupt eine Leiter dran halten kann
-            mutable.set(pos).move(Direction.DOWN);
-            if (world.isEmptyBlock(mutable)
-                    && ClimberUtil.canPositionSupportLadder(world, mutable, offset)) {
-                builder.add(new ModifyBlockEntry(
-                        mutable.immutable(),
-                        ladderState,
-                        (int) (LADDER_COST / buildRate)
-                ));
-            }
-        }
-
-        // Block vor der Leiter (Scaffold-Wand) auf dieser Höhe schließen
-        mutable.set(pos).move(offset);
-        if (!world.getBlockState(mutable).isCollisionShapeFullBlock(world, mutable)) {
-            builder.add(new ModifyBlockEntry(
-                    mutable.immutable(),
-                    Blocks.OAK_PLANKS.defaultBlockState(),
-                    (int) (PLANKS_COST / buildRate)
-            ));
-        }
-
-        // Leiter auf der aktuellen Scaffold-Position
-        mutable.set(pos);
-        if (!world.getBlockState(mutable).is(Blocks.LADDER)
-                && ClimberUtil.canPositionSupportLadder(world, mutable, offset)) {
-            builder.add(new ModifyBlockEntry(
-                    mutable.immutable(),
-                    ladderState,
-                    (int) (LADDER_COST / buildRate)
-            ));
-        }
-
-        // Plattform-Layer: Ring aus Planks um die Leiter herum
-        if (scaffold.isPlatformLayer(height)) {
-            for (Vec3i i : PosUtils.OFFSET_RING) {
-                if (!i.equals(offset.getUnitVec3i())) {
-                    mutable.set(pos).move(i);
-                    if (!world.getBlockState(mutable).isCollisionShapeFullBlock(world, mutable)) {
-                        builder.add(new ModifyBlockEntry(
-                                mutable.immutable(),
-                                Blocks.OAK_PLANKS.defaultBlockState(),
-                                (int) (PLANKS_COST / buildRate)
-                        ));
-                    }
-                }
-            }
-        }
-
-        return builder.build();
-    }
-
-    @Override
-    public Stream<ModifyBlockEntry> askBuildLadderTower(BlockPos basePos, Direction orientation, int layersToBuild) {
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        Level world = mob.asEntity().level();
-
-        if (!orientation.getAxis().isHorizontal()) {
-            orientation = mob.asEntity().getDirection();
-        }
-
-        BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation);
-        int height = Math.max(1, Math.min(layersToBuild, 32));
-        BlockPos towerBase = basePos.relative(orientation.getOpposite());
-
-        // Build the column beside the engineer, beginning at foot level. The
-        // chosen orientation points from the column towards the engineer, so
-        // every ladder is placed on the side of the tower facing the builder.
-        for (int i = 0; i < height; i++) {
-            BlockPos supportPos = towerBase.above(i);
-            if (PathingUtil.isAirOrReplaceable(world.getBlockState(supportPos))) {
-                builder.add(new ModifyBlockEntry(
-                        supportPos,
-                        Blocks.OAK_PLANKS.defaultBlockState(),
-                        (int) (PLANKS_COST / buildRate)
-                ));
-            }
-        }
-
-        for (int i = 0; i <= height; i++) {
-            BlockPos ladderPos = basePos.above(i);
-            if (PathingUtil.isAirOrReplaceable(world.getBlockState(ladderPos))) {
-                builder.add(new ModifyBlockEntry(
-                        ladderPos,
-                        ladderState,
-                        (int) (LADDER_COST / buildRate)
-                ));
-            }
-        }
-
-        // Cap the column with a 3x3 deck. The tile occupied by the top ladder
-        // remains open so the engineer can climb through and step onto it.
-        BlockPos platformCenter = towerBase.above(height);
-        BlockPos ladderOpening = basePos.above(height);
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos platformPos = platformCenter.offset(x, 0, z);
-                if (!platformPos.equals(ladderOpening)
-                        && PathingUtil.isAirOrReplaceable(
-                                world.getBlockState(platformPos))) {
-                    builder.add(new ModifyBlockEntry(
-                            platformPos,
-                            Blocks.OAK_PLANKS.defaultBlockState(),
-                            (int) (PLANKS_COST / buildRate)
-                    ));
-                }
-            }
-        }
-
-        return builder.build();
-    }
-
-
-    public Stream<ModifyBlockEntry> askBuildLadderShaftDown(BlockPos basePos, Direction orientation, int depth) {
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        Level world = mob.asEntity().level();
-
-        // Orientierung sicherstellen
-        if (!orientation.getAxis().isHorizontal()) {
-            orientation = mob.asEntity().getDirection();
-        }
-
-        BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation);
-
-        BlockPos.MutableBlockPos mutable = basePos.mutable();
-
-        // Tiefe begrenzen
-        int depthClamped = Math.max(1, Math.min(depth, 32));
-
-        for (int i = 1; i <= depthClamped; i++) {
-            // Leiter-Position nach unten
-            mutable.set(basePos).move(Direction.DOWN, i);
-            BlockPos ladderPos = mutable.immutable();
-
-            // Support-Block hinter der Leiter
-            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
-            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
-                builder.add(new ModifyBlockEntry(
-                        supportPos,
-                        Blocks.OAK_PLANKS.defaultBlockState(),
-                        (int) (PLANKS_COST / buildRate)
-                ));
-            }
-
-            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
-                builder.add(new ModifyBlockEntry(
-                        ladderPos,
-                        ladderState,
-                        (int) (LADDER_COST / buildRate)
-                ));
-            }
-        }
-
-        return builder.build();
-    }
-
-
-
-
-
-
-
 
 /**
      * Hilfsfunktion, falls du so etwas noch nicht hast:
@@ -376,49 +171,6 @@ public class TerrainBuilder implements ITerrainBuild {
         return builder.build();
     }
 
-
-
-    @Override
-    public Stream<ModifyBlockEntry> askBuildLadder(BlockPos pos, Direction orientation) {
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        Level world = mob.asEntity().level();
-        BlockPos.MutableBlockPos mutable = pos.mutable();
-
-        // Leiter nach vorn ausgerichtet
-        BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation);
-
-        // Wir bauen pauschal 4 Blöcke hoch (kannst du später erhöhen)
-        int height = 4;
-
-        for (int i = 0; i < height; i++) {
-            // Position der Leiter
-            mutable.set(pos).move(Direction.UP, i);
-            BlockPos ladderPos = mutable.immutable();
-
-            // Block HINTER der Leiter (Support)
-            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
-
-            // Support immer aus Planks setzen, wenn nicht voll
-            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
-                builder.add(new ModifyBlockEntry(
-                        supportPos,
-                        Blocks.OAK_PLANKS.defaultBlockState(),
-                        (int) (PLANKS_COST / buildRate)
-                ));
-            }
-
-            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
-                builder.add(new ModifyBlockEntry(
-                        ladderPos,
-                        ladderState,
-                        (int) (LADDER_COST / buildRate)
-                ));
-            }
-        }
-
-        return builder.build();
-    }
 
 
     @Override
