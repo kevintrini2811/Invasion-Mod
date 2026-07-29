@@ -52,6 +52,7 @@
   "item.invmod.zombie_pigman_brute_spawn_egg": "IM Pigman Zombie Brute Spawn Egg",
     "item.invmod.spider_spawn_egg": "IM Spider Spawn Egg",
     "item.invmod.jumping_spider_spawn_egg": "IM Jumping Spider Spawn Egg",
+    "item.invmod.cave_spider_spawn_egg": "IM Cave Spider Spawn Egg",
     "item.invmod.mother_spider_spawn_egg": "IM Mother Spider Spawn Egg",
 
     "entity.invmod.zombie": "IM Zombie",
@@ -63,6 +64,7 @@
     "entity.invmod.skeleton": "IM Skeleton",
     "entity.invmod.spider": "IM Spider",
     "entity.invmod.jumping_spider": "IM Jumping Spider",
+    "entity.invmod.cave_spider": "IM Cave Spider",
     "entity.invmod.queen_spider": "IM Mother Spider",
     "entity.invmod.pigman_engineer": "IM Pigman Engineer",
     "entity.invmod.thrower": "IM Thrower",

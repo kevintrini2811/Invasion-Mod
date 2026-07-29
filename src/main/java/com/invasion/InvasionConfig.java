@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.IMCreeperEntity;
+import com.invasion.entity.IMCaveSpiderEntity;
 import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.ImpEnitty;
@@ -37,6 +38,7 @@ public class InvasionConfig extends Config {
         m.put("IMSkeleton-T1", 20);
         m.put("IMSpider-T1-Spider", 18);
         m.put("IMSpider-T1-Baby-Spider", 3);
+        m.put("IMSpider-T1-Cave-Spider", 12);
         m.put("IMSpider-T2-Jumping-Spider", 18);
         m.put("IMSpider-T2-Mother-Spider", 23);
         m.put("IMThrower-T1", 50);
@@ -104,6 +106,8 @@ public class InvasionConfig extends Config {
             healthKey = "IMZombie-T" + zombie.getTier();
         } else if (mob instanceof ThrowerEntity thrower) {
             healthKey = "IMThrower-T" + thrower.getTier();
+        } else if (mob instanceof IMCaveSpiderEntity) {
+            healthKey = "IMSpider-T1-Cave-Spider";
         } else if (mob instanceof QueenSpiderEntity) {
             healthKey = "IMSpider-T2-Mother-Spider";
         } else if (mob instanceof JumpingSpiderEntity) {

@@ -26,6 +26,9 @@ public final class InvRenderers {
                         Identifier.withDefaultNamespace("textures/entity/spider/spider.png")));
         EntityRendererRegistry.register(InvEntities.JUMPING_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/jumping_spider.png")));
+        EntityRendererRegistry.register(InvEntities.CAVE_SPIDER,
+                context -> new TexturedSpiderRenderer<>(context,
+                        Identifier.withDefaultNamespace("textures/entity/spider/cave_spider.png")));
         EntityRendererRegistry.register(InvEntities.QUEEN_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/mother_spider.png")));
         EntityRendererRegistry.register(InvEntities.PIGMAN_ENGINEER,

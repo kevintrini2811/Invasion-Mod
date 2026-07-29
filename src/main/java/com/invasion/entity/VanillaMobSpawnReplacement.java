@@ -78,6 +78,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.CREEPER, nexus);
         } else if (mob.getType() == EntityTypes.SPIDER) {
             convert(mob, InvEntities.SPIDER, nexus);
+        } else if (mob.getType() == EntityTypes.CAVE_SPIDER) {
+            convert(mob, InvEntities.CAVE_SPIDER, nexus);
         } else if (mob.getType() == EntityTypes.ENDERMAN) {
             convert(mob, InvEntities.ENDERMAN, nexus);
         }
@@ -88,6 +90,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.SKELETON
                 || type == EntityTypes.CREEPER
                 || type == EntityTypes.SPIDER
+                || type == EntityTypes.CAVE_SPIDER
                 || type == EntityTypes.ENDERMAN;
     }
 

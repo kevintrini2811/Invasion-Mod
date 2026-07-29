@@ -77,6 +77,7 @@ public interface InvItems {
 
     Item SPIDER_SPAWN_EGG = register("spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.SPIDER, 0x504A3E, 0xA4121C));
     Item JUMPING_SPIDER_SPAWN_EGG = register("jumping_spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.JUMPING_SPIDER, 0x444167, 0x0A0328));
+    Item CAVE_SPIDER_SPAWN_EGG = register("cave_spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.CAVE_SPIDER, 0x0C424E, 0xA80E0E));
     Item MOTHER_SPIDER_SPAWN_EGG = register("mother_spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.QUEEN_SPIDER, 0x444167, 0x0A0328));
 
     Item CREEPER_SPAWN_EGG = register("creeper_spawn_egg", p -> createSpawnEgg(p, InvEntities.CREEPER, 0x238F1F, 0xA5AAA6));

@@ -92,12 +92,16 @@ public interface EntityPatterns {
     EntityPattern ZOMBIE_PIGMAN_T2_ANY = register("zombie_pigman_t2_any", new EntityPattern.Builder(InvEntities.ZOMBIE_PIGMAN).addTier(2, 1).addFlavour(0, 1));
     EntityPattern ZOMBIE_PIGMAN_T3_ANY = register("zombie_pigman_t3_any", new EntityPattern.Builder(InvEntities.ZOMBIE_PIGMAN).addTier(3, 1).addFlavour(0, 1));
 
-    EntityPattern SPIDER_T1_ANY = register("spider_t1_any", new EntityPattern.Builder(InvEntities.SPIDER), 0.5F);
+    EntityPattern CAVE_SPIDER_T1 = register("cave_spider_t1", new EntityPattern.Builder(InvEntities.CAVE_SPIDER), 0.35F);
+    EntityPattern SPIDER_T1_ANY = register("spider_t1_any", new EntityPattern.Builder(InvEntities.SPIDER)
+            .addType(InvEntities.CAVE_SPIDER, 0.35F), 0.5F);
     EntityPattern SPIDER_T2_ANY = register("spider_t2_any", new EntityPattern.Builder(InvEntities.SPIDER)
             .addType(InvEntities.JUMPING_SPIDER, 1)
+            .addType(InvEntities.CAVE_SPIDER, 0.5F)
             .addType(InvEntities.QUEEN_SPIDER, 0.5F));
     EntityPattern SPIDER_T3_ANY = register("spider_t3_any", new EntityPattern.Builder(InvEntities.JUMPING_SPIDER)
             .addType(InvEntities.SPIDER, 0.5F)
+            .addType(InvEntities.CAVE_SPIDER, 0.35F)
             .addType(InvEntities.QUEEN_SPIDER, 1));
 
     EntityPattern PIGMAN_ENGINEER_T1_ANY = register("pigman_engineer_t1_any", new EntityPattern.Builder(InvEntities.PIGMAN_ENGINEER).addTier(1, 1));
