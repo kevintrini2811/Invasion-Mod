@@ -55,7 +55,10 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
 public class IMWolfEntity extends Wolf implements IHasNexus {
+    private static final double BASE_ATTACK_DAMAGE = 4.0D;
+    private static final double TAMED_BASE_HEALTH = 25.0D;
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
+    private int appliedWave = -1;
 
     public IMWolfEntity(EntityType<IMWolfEntity> type, Level world) {
         this(type, world, null);
@@ -106,10 +109,41 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
+    public void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
+        updateWaveAttributes();
+    }
+
+    private void updateWaveAttributes() {
+        int wave = hasNexus() ? Math.max(0, getNexus().getCurrentWave()) : 0;
+        double desiredHealth = (isTame() ? TAMED_BASE_HEALTH : 8.0D) + wave;
+        double desiredDamage = BASE_ATTACK_DAMAGE + wave;
+        var maxHealth = getAttribute(Attributes.MAX_HEALTH);
+        var attackDamage = getAttribute(Attributes.ATTACK_DAMAGE);
+
+        if (appliedWave == wave
+                && maxHealth.getBaseValue() == desiredHealth
+                && attackDamage.getBaseValue() == desiredDamage) {
+            return;
+        }
+
+        float missingHealth = getMaxHealth() - getHealth();
+        maxHealth.setBaseValue(desiredHealth);
+        attackDamage.setBaseValue(desiredDamage);
+        if (isAlive()) {
+            setHealth(Math.max(
+                    1.0F, (float) desiredHealth - missingHealth));
+        }
+        appliedWave = wave;
+    }
+
+    @Override
     protected void applyTamingSideEffects() {
         super.applyTamingSideEffects();
         getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3);
-        getAttribute(Attributes.MAX_HEALTH).setBaseValue(isTame() ? 25 : 8);
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(
+                isTame() ? TAMED_BASE_HEALTH : 8);
+        appliedWave = -1;
         if (getHealth() > getMaxHealth()) {
             setHealth(getMaxHealth());
         }
