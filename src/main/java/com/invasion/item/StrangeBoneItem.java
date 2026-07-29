@@ -67,6 +67,9 @@ class StrangeBoneItem extends Item {
         if (entity.level().isClientSide || !(entity instanceof Wolf wolf && wolf.isTame()) || entity instanceof IMWolfEntity) {
             return InteractionResult.PASS;
         }
+        if (wolf.isTame() && !wolf.isOwnedBy(user)) {
+            return InteractionResult.FAIL;
+        }
 
         @Nullable
         NexusAccess nexus = IHasNexus.findNexus(entity.level(), entity.blockPosition());
@@ -80,9 +83,11 @@ class StrangeBoneItem extends Item {
         IMWolfEntity newWolf = wolf.convertTo(InvEntities.WOLF, true);
         newWolf.setNexus(nexus);
 
-        wolf.level().addFreshEntity(newWolf);
+        if (!wolf.level().addFreshEntity(newWolf)) {
+            return InteractionResult.FAIL;
+        }
         wolf.discard();
-        stack.shrink(1);
+        stack.consume(1, user);
         return InteractionResult.SUCCESS;
     }
 }
