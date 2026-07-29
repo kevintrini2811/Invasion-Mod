@@ -140,6 +140,29 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         }).isPresent();
     }
 
+    private Optional<Vec3> getWolfRespawnPoint(
+            ServerLevel world, IMWolfEntity wolf, BlockPos ground) {
+        var groundShape = world.getBlockState(ground)
+                .getCollisionShape(world, ground);
+        if (groundShape.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Vec3 position = new Vec3(
+                ground.getX() + 0.5D,
+                ground.getY() + groundShape.max(Direction.Axis.Y),
+                ground.getZ() + 0.5D);
+        wolf.setPos(position);
+
+        // Other mobs crowding the Nexus must not prevent a bound wolf from
+        // returning. Block collision still guarantees enough physical space;
+        // ordinary entity pushing separates overlapping mobs afterwards.
+        return world.noBlockCollision(
+                        wolf, wolf.getBoundingBox(), false)
+                ? Optional.of(position)
+                : Optional.empty();
+    }
+
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
