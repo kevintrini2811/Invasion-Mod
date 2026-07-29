@@ -72,7 +72,6 @@
 
     "invmod.message.nexus.hpat": "Nexus is at %s HP!",
     "invmod.message.nexus.stableagain": "Nexus rift stable again!",
-    "invmod.message.nexus.unleashingenergy": "Unleashing tapped energy...",
     "invmod.message.nexus.stabilizedto": "Nexus rift stabilized to %s.",
     "invmod.message.nexus.alreadyactivated": "Can't activate Nexus when already under attack!",
     "invmod.message.nexus.listboundplayers": "Bound player(s): %s ",
