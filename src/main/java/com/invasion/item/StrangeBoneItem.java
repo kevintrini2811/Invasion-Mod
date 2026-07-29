@@ -65,8 +65,13 @@ class StrangeBoneItem extends Item {
 
     @Override
     public InteractionResult interactLivingEntity(ItemStack stack, Player user, LivingEntity entity, InteractionHand hand) {
-        if (entity.level().isClientSide() || !(entity instanceof Wolf wolf && wolf.isTame()) || entity instanceof IMWolfEntity) {
+        if (entity.level().isClientSide()
+                || !(entity instanceof Wolf wolf)
+                || entity instanceof IMWolfEntity) {
             return InteractionResult.PASS;
+        }
+        if (wolf.isTame() && !wolf.isOwnedBy(user)) {
+            return InteractionResult.FAIL;
         }
 
         @Nullable
@@ -83,11 +88,16 @@ class StrangeBoneItem extends Item {
             return InteractionResult.FAIL;
         }
         newWolf.restoreFrom(wolf);
+        if (!wolf.isTame()) {
+            newWolf.tame(user);
+        }
         newWolf.setNexus(nexus);
 
-        wolf.level().addFreshEntity(newWolf);
+        if (!wolf.level().addFreshEntity(newWolf)) {
+            return InteractionResult.FAIL;
+        }
         wolf.discard();
-        stack.shrink(1);
+        stack.consume(1, user);
         return InteractionResult.SUCCESS;
     }
 }
