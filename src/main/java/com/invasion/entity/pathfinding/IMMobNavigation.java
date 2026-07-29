@@ -46,6 +46,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int ladderColumnX;
     private int ladderColumnZ;
     private int ladderExitY;
+    private boolean holdingAtLadderTop;
 
     @Nullable
     private Entity followingEntity;
@@ -388,6 +389,15 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         double targetX = ladderColumnX + 0.5D;
         double targetZ = ladderColumnZ + 0.5D;
 
+        if (holdingAtLadderTop) {
+            if (!shouldHoldAtLadderTop()) {
+                finishLadderClimb();
+                return;
+            }
+            holdAtLadderTop(targetX, targetZ);
+            return;
+        }
+
         // Own all movement while climbing. Centering the mob in the ladder
         // cell and disabling gravity prevents sideways knockback and the
         // between-tick slide that made the previous implementation fall. The
@@ -404,11 +414,33 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         advanceReachedLadderNodes();
 
         if (mob.getY() >= ladderExitY - 0.05D) {
-            mob.setPos(targetX, ladderExitY, targetZ);
+            mob.setPos(targetX, ladderExitY - 0.05D, targetZ);
             mob.setDeltaMovement(0, 0, 0);
             advanceReachedLadderNodes();
-            finishLadderClimb();
+            if (shouldHoldAtLadderTop()) {
+                holdingAtLadderTop = true;
+                holdAtLadderTop(targetX, targetZ);
+            } else {
+                finishLadderClimb();
+            }
         }
+    }
+
+    private boolean shouldHoldAtLadderTop() {
+        return getAIGoal() == Goal.BREAK_NEXUS
+                && mob instanceof NexusEntity nexusMob
+                && nexusMob.hasNexus()
+                && nexusMob.findDistanceToNexus() <= 4;
+    }
+
+    private void holdAtLadderTop(double targetX, double targetZ) {
+        mob.setPos(targetX, ladderExitY - 0.05D, targetZ);
+        mob.setDeltaMovement(0, 0, 0);
+        mob.setXxa(0);
+        mob.setZza(0);
+        mob.fallDistance = 0;
+        mob.setShiftKeyDown(true);
+        mob.setJumping(false);
     }
 
     private void advanceReachedLadderNodes() {
@@ -438,13 +470,16 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             return;
         }
         climbingLadder = false;
+        holdingAtLadderTop = false;
         mob.setNoGravity(gravityBeforeLadder);
         mob.fallDistance = 0;
     }
 
     @Override
     public void stop() {
-        finishLadderClimb();
+        if (!holdingAtLadderTop || !shouldHoldAtLadderTop()) {
+            finishLadderClimb();
+        }
         super.stop();
     }
 
