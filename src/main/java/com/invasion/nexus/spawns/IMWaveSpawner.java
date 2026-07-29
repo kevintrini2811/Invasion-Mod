@@ -310,6 +310,7 @@ public class IMWaveSpawner implements Spawner {
 			return false;
 		}
 
+		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 		Mob mob = mobConstruct.createMob(nexus);
 		equipRandomWaveWeapon(mob);
 		equipRandomWaveArmor(mob);
@@ -364,6 +365,24 @@ public class IMWaveSpawner implements Spawner {
         }
 		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mob.getName().getString() + "' after " + spawnTries + " tries");
 		return false;
+	}
+
+	private EntityConstruct replaceWithRareWaveVariant(
+			EntityConstruct construct) {
+		if (nexus.getCurrentWave() >= 10
+				&& construct.entityType() == InvEntities.CREEPER
+				&& construct.tier() == 1
+				&& getRandom().nextInt(100) == 0) {
+			return new EntityConstruct(
+					construct.entityType(),
+					construct.texture(),
+					2,
+					construct.flavour(),
+					construct.scaling(),
+					construct.minAngle(),
+					construct.maxAngle());
+		}
+		return construct;
 	}
 
 	private void equipRandomWaveWeapon(Mob mob) {
