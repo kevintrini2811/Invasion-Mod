@@ -3,6 +3,7 @@ package com.invasion.entity;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -154,16 +155,9 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                     .withinManhattanStream(center.pos(), 5, 3, 5)
                     .sorted(java.util.Comparator.comparingDouble(
                             center.pos()::distSqr))
-                    .map(Vec3::atBottomCenterOf)
-                    .filter(pos -> {
-                        wolf.setPos(pos);
-                        BlockPos feet = BlockPos.containing(pos);
-                        BlockPos ground = feet.below();
-                        return world.getBlockState(ground)
-                                        .isCollisionShapeFullBlock(
-                                                world, ground)
-                                && world.noCollision(wolf);
-                    })
+                    .map(ground -> getWolfRespawnPoint(
+                            world, wolf, ground))
+                    .flatMap(Optional::stream)
                     .findFirst();
 
             if (respawnPoint.isPresent()) {
@@ -182,6 +176,29 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
             InvasionMod.LOGGER.warn("No respawn spot for wolf");
             return false;
         }).isPresent();
+    }
+
+    private Optional<Vec3> getWolfRespawnPoint(
+            ServerLevel world, IMWolfEntity wolf, BlockPos ground) {
+        var groundShape = world.getBlockState(ground)
+                .getCollisionShape(world, ground);
+        if (groundShape.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Vec3 position = new Vec3(
+                ground.getX() + 0.5D,
+                ground.getY() + groundShape.max(Direction.Axis.Y),
+                ground.getZ() + 0.5D);
+        wolf.setPos(position);
+
+        // Other mobs crowding the Nexus must not prevent a bound wolf from
+        // returning. Block collision still guarantees enough physical space;
+        // ordinary entity pushing separates overlapping mobs afterwards.
+        return world.noBlockCollision(
+                        wolf, wolf.getBoundingBox(), false)
+                ? Optional.of(position)
+                : Optional.empty();
     }
 
     @Override
