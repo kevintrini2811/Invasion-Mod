@@ -12,7 +12,11 @@ import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -92,6 +96,15 @@ public class ImpEnitty extends IMMobEntity
     }
 
     @Override
+    public boolean hurtServer(
+            ServerLevel serverLevel, DamageSource source, float damage) {
+        if (source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypes.LAVA)) {
+            return false;
+        }
+        return super.hurtServer(serverLevel, source, damage);
+    }
+
+    @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
         return isUsableWeapon(stack)
                 && !isUsableWeapon(getMainHandItem());
@@ -118,6 +131,12 @@ public class ImpEnitty extends IMMobEntity
     @Override
     public void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
+        if (isOnFire()
+                && !isInLava()
+                && world.getBlockStates(getBoundingBox().deflate(0.001D))
+                        .noneMatch(state -> state.is(BlockTags.FIRE))) {
+            clearFire();
+        }
         if (tickCount % 5 != 0 || isUsableWeapon(getMainHandItem())) {
             return;
         }
@@ -162,6 +181,7 @@ public class ImpEnitty extends IMMobEntity
                         ? SoundEvents.CROSSBOW_SHOOT
                         : SoundEvents.SKELETON_SHOOT,
                 1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
+        projectile.igniteForSeconds(100);
         level().addFreshEntity(projectile);
     }
 }
