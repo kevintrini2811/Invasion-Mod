@@ -373,11 +373,7 @@ public class Nexus implements ControllableNexusAccess {
         }
 
         hp = Math.max(0, hp - amount);
-        int healthPercent = (int)Math.ceil(hp * 100.0D / MAX_HEALTH);
-        Component healthMessage = Component.translatable("invmod.message.nexus.hpat",
-                healthPercent + "%").withStyle(ChatFormatting.DARK_RED);
-        boundPlayers.sendMessageIncludingNearby(healthMessage,
-                boundingBoxToRadius != null ? boundingBoxToRadius : computeSpawnArea());
+        updateWaveProgressHud();
         boundPlayers.playSoundForBoundPlayers(SoundEvents.BLAZE_HURT);
 
         if (hp <= 0) {
@@ -436,7 +432,7 @@ public class Nexus implements ControllableNexusAccess {
         int total = Math.max(0, mobsToKillInWave);
         int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
         int healthPercent = Math.max(0, Math.min(100, hp * 100 / MAX_HEALTH));
-        return new NexusHudPayload(true, defeated, total, healthPercent);
+        return new NexusHudPayload(true, currentWave, defeated, total, healthPercent);
     }
 
     private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {
@@ -535,7 +531,6 @@ public class Nexus implements ControllableNexusAccess {
                 nexusItemStacks.generateFlux(1);
                 if (waveSpawner.isWaveComplete()) {
                     if (waveDelayTimer == -1L) {
-                        boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.wave.complete", "" + ChatFormatting.DARK_GREEN + currentWave);
                         boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_CHIME);
                         waveDelayTimer = 0L;
                         waveDelay = waveSpawner.getWaveRestTime();
@@ -544,7 +539,6 @@ public class Nexus implements ControllableNexusAccess {
                         waveDelayTimer += elapsed;
                         if (waveDelayTimer > waveDelay) {
                             currentWave += 1;
-                            boundPlayers.sendWarning("invmod.message.wave.begin", "" + ChatFormatting.DARK_RED + currentWave);
                             waveSpawner.beginNextWave(currentWave);
                             initializeWaveProgress();
                             waveDelayTimer = -1L;

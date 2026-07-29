@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 public final class NexusHud {
+    private static final int BLUE = 0xFF5555FF;
     private static final int GREEN = 0xFF55FF55;
     private static final int RED = 0xFFFF5555;
     private static final String SEPARATOR = "  ";
@@ -36,14 +37,18 @@ public final class NexusHud {
         }
 
         Font font = Minecraft.getInstance().font;
+        Component wave = Component.literal("Wave " + state.wave());
         Component mobs = Component.literal(state.defeatedMobs() + "/" + state.totalMobs() + " mobs");
         Component nexus = Component.literal(state.nexusHealthPercent() + "% Nexus");
+        int waveWidth = font.width(wave);
         int mobsWidth = font.width(mobs);
         int separatorWidth = font.width(SEPARATOR);
-        int totalWidth = mobsWidth + separatorWidth + font.width(nexus);
+        int totalWidth = waveWidth + separatorWidth + mobsWidth + separatorWidth + font.width(nexus);
         int x = (graphics.guiWidth() - totalWidth) / 2;
 
-        graphics.text(font, mobs, x, 8, GREEN, true);
-        graphics.text(font, nexus, x + mobsWidth + separatorWidth, 8, RED, true);
+        graphics.text(font, wave, x, 8, BLUE, true);
+        int mobsX = x + waveWidth + separatorWidth;
+        graphics.text(font, mobs, mobsX, 8, GREEN, true);
+        graphics.text(font, nexus, mobsX + mobsWidth + separatorWidth, 8, RED, true);
     }
 }
