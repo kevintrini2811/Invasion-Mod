@@ -45,6 +45,7 @@
     "entity.invmod.skeleton": "IM Skeleton",
     "entity.invmod.spider": "IM Spider",
     "entity.invmod.jumping_spider": "IM Jumping Spider",
+    "entity.invmod.cave_spider": "IM Cave Spider",
     "entity.invmod.queen_spider": "IM Mother Spider",
     "entity.invmod.pigman_engineer": "IM Pigman Engineer",
     "entity.invmod.thrower": "IM Thrower",

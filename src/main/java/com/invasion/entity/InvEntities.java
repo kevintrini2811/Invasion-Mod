@@ -28,6 +28,8 @@ public interface InvEntities {
             .sized(1.4F, 0.9F).eyeHeight(0.65F).passengerAttachments(0.765F).clientTrackingRange(8));
     EntityType<JumpingSpiderEntity> JUMPING_SPIDER = register("jumping_spider", EntityType.Builder.<JumpingSpiderEntity>of(JumpingSpiderEntity::new, MobCategory.MONSTER)
             .sized(1.4F, 0.9F).eyeHeight(0.65F).passengerAttachments(0.765F).clientTrackingRange(8));
+    EntityType<IMCaveSpiderEntity> CAVE_SPIDER = register("cave_spider", EntityType.Builder.<IMCaveSpiderEntity>of(IMCaveSpiderEntity::new, MobCategory.MONSTER)
+            .sized(0.7F, 0.5F).eyeHeight(0.45F).clientTrackingRange(8));
     EntityType<QueenSpiderEntity> QUEEN_SPIDER = register("queen_spider", EntityType.Builder.<QueenSpiderEntity>of(QueenSpiderEntity::new, MobCategory.MONSTER)
             .sized(2.8F, 1.8F).eyeHeight(0.65F).passengerAttachments(0.765F).clientTrackingRange(8));
 

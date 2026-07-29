@@ -31,6 +31,7 @@
     "entity.invmod.skeleton": "IM Skelett",
     "entity.invmod.spider": "IM Spinne",
     "entity.invmod.jumping_spider": "IM Sprungspinne",
+    "entity.invmod.cave_spider": "IM Höhlenspinne",
     "entity.invmod.queen_spider": "IM Mutterspinne",
     "entity.invmod.pigman_engineer": "IM Zombie Pigman-Ingenieur",
     "entity.invmod.thrower": "IM Werfer",
