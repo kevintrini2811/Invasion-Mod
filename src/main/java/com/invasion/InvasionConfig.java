@@ -41,6 +41,7 @@ public class InvasionConfig extends Config {
         m.put("IMSpider-T1-Cave-Spider", 12);
         m.put("IMSpider-T1-Baby-Cave-Spider", 3);
         m.put("IMSpider-T2-Jumping-Spider", 18);
+        m.put("IMSpider-T2-Baby-Jumping-Spider", 3);
         m.put("IMSpider-T2-Mother-Spider", 23);
         m.put("IMThrower-T1", 50);
         m.put("IMThrower-T2", 70);
@@ -114,7 +115,9 @@ public class InvasionConfig extends Config {
         } else if (mob instanceof QueenSpiderEntity) {
             healthKey = "IMSpider-T2-Mother-Spider";
         } else if (mob instanceof JumpingSpiderEntity) {
-            healthKey = "IMSpider-T2-Jumping-Spider";
+            healthKey = mob.asEntity().isBaby()
+                    ? "IMSpider-T2-Baby-Jumping-Spider"
+                    : "IMSpider-T2-Jumping-Spider";
         } else if (mob instanceof NexusSpiderEntity spider) {
             healthKey = spider.isBaby() ? "IMSpider-T1-Baby-Spider" : "IMSpider-T1-Spider";
         } else if (mob instanceof PigmanEngineerEntity) {
