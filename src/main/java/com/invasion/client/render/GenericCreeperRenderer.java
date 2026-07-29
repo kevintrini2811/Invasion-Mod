@@ -6,6 +6,7 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.monster.creeper.CreeperModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.CreeperPowerLayer;
 import net.minecraft.client.renderer.entity.state.CreeperRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -17,6 +18,7 @@ public final class GenericCreeperRenderer
 
     public GenericCreeperRenderer(EntityRendererProvider.Context context) {
         super(context, new CreeperModel(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);
+        addLayer(new CreeperPowerLayer(this, context.getModelSet()));
     }
 
     @Override
