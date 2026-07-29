@@ -507,7 +507,6 @@ public class IMWaveSpawner implements Spawner {
 
         // existende Aggro resetten
         mob.setTarget(null);
-        mob.setLastHurtByPlayer((java.util.UUID) null, 0);
         mob.setLastHurtByMob(null);
     }
 
