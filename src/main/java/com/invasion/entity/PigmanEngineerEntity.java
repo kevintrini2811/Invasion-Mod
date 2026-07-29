@@ -2,6 +2,7 @@ package com.invasion.entity;
 
 import com.invasion.Notifiable;
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
+import com.invasion.entity.ai.builder.TerrainBuilder;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
@@ -14,6 +15,7 @@ import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -60,8 +62,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 2.8F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
+    private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
 
 
 
@@ -186,23 +189,45 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             return beginBridgeAction(pos, asker);
         }
 
-        if (action.getType() == PathAction.Type.TOWER
-                || action.getType() == PathAction.Type.SCAFFOLD
-                || action.getType() == PathAction.Type.LADDER) {
-            return beginBuildUpAction();
+        if (action.getType() == PathAction.Type.TOWER) {
+            return beginTowerAction(action, asker);
+        }
+
+        if (action.getType() == PathAction.Type.SCAFFOLD) {
+            return terrainModifier.submitJob(
+                    pos, asker, terrainBuilder::askBuildScaffoldLayer);
+        }
+
+        if (action.getType() == PathAction.Type.LADDER) {
+            Direction orientation = getBuildOrientation(action);
+            return terrainModifier.submitJob(
+                    pos, asker,
+                    buildPos -> terrainBuilder.askBuildLadder(
+                            buildPos, orientation));
         }
 
         return false;
     }
 
-    private boolean beginBuildUpAction() {
+    private boolean beginTowerAction(PathAction action, Notifiable asker) {
         var movement = getDeltaMovement();
         setXxa(0);
         setZza(0);
         setSpeed(0);
         setDeltaMovement(0, Math.min(movement.y, 0), 0);
-        setNoAi(true);
-        return false;
+
+        Direction orientation = getBuildOrientation(action);
+        return terrainModifier.submitJob(
+                blockPosition(), asker,
+                basePos -> terrainBuilder.askBuildLadderTower(
+                        basePos, orientation, 3));
+    }
+
+    private Direction getBuildOrientation(PathAction action) {
+        Direction orientation = action.getOrientation();
+        return orientation != null && orientation.getAxis().isHorizontal()
+                ? orientation
+                : getDirection();
     }
 
     private boolean beginBridgeAction(BlockPos feetPos, Notifiable asker) {

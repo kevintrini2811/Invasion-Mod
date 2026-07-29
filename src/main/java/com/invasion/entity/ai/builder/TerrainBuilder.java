@@ -135,30 +135,14 @@ public class TerrainBuilder implements ITerrainBuild {
 
         BlockState ladderState = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, orientation);
+        int height = Math.max(1, Math.min(layersToBuild, 32));
+        BlockPos towerBase = basePos.relative(orientation.getOpposite());
 
-        BlockPos bottomLadderPos = basePos.below();
-        BlockPos floorCenter = bottomLadderPos.below();
-
-        // Ebene 0 from engineer.txt: a complete 3x3 floor below the engineer.
-        // Existing blocks are part of the plan and are not replaced.
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos floorPos = floorCenter.offset(x, 0, z);
-                if (PathingUtil.isAirOrReplaceable(world.getBlockState(floorPos))) {
-                    builder.add(new ModifyBlockEntry(
-                            floorPos,
-                            Blocks.OAK_PLANKS.defaultBlockState(),
-                            (int) (PLANKS_COST / buildRate)
-                    ));
-                }
-            }
-        }
-
-        // Ebenen 1-3: the three support blocks behind the engineer/ladder
-        // centre. All blocks are queued before any ladder is placed.
-        for (int i = 0; i < 3; i++) {
-            BlockPos supportPos = bottomLadderPos.above(i)
-                    .relative(orientation.getOpposite());
+        // Build the column beside the engineer, beginning at foot level. The
+        // chosen orientation points from the column towards the engineer, so
+        // every ladder is placed on the side of the tower facing the builder.
+        for (int i = 0; i < height; i++) {
+            BlockPos supportPos = towerBase.above(i);
             if (PathingUtil.isAirOrReplaceable(world.getBlockState(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
@@ -168,16 +152,33 @@ public class TerrainBuilder implements ITerrainBuild {
             }
         }
 
-        // Final state from engineer.txt: ladders share the engineer's centre
-        // column on levels 1 and 2 and continue through level 3.
-        for (int i = 0; i < 3; i++) {
-            BlockPos ladderPos = bottomLadderPos.above(i);
+        for (int i = 0; i <= height; i++) {
+            BlockPos ladderPos = basePos.above(i);
             if (PathingUtil.isAirOrReplaceable(world.getBlockState(ladderPos))) {
                 builder.add(new ModifyBlockEntry(
                         ladderPos,
                         ladderState,
                         (int) (LADDER_COST / buildRate)
                 ));
+            }
+        }
+
+        // Cap the column with a 3x3 deck. The tile occupied by the top ladder
+        // remains open so the engineer can climb through and step onto it.
+        BlockPos platformCenter = towerBase.above(height);
+        BlockPos ladderOpening = basePos.above(height);
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos platformPos = platformCenter.offset(x, 0, z);
+                if (!platformPos.equals(ladderOpening)
+                        && PathingUtil.isAirOrReplaceable(
+                                world.getBlockState(platformPos))) {
+                    builder.add(new ModifyBlockEntry(
+                            platformPos,
+                            Blocks.OAK_PLANKS.defaultBlockState(),
+                            (int) (PLANKS_COST / buildRate)
+                    ));
+                }
             }
         }
 
