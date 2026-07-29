@@ -313,6 +313,19 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     @Override
+    public boolean hurtServer(
+            ServerLevel serverLevel, DamageSource source, float damage) {
+        boolean damaged = super.hurtServer(serverLevel, source, damage);
+        if (damaged && buildingTower) {
+            // Keep the queued structure and current block timer intact. The
+            // engineer resumes exactly where it stopped after reacting to the
+            // hit for two seconds.
+            towerBuildPauseTicks = Math.max(towerBuildPauseTicks, 40);
+        }
+        return damaged;
+    }
+
+    @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot.isArmor()
@@ -446,10 +459,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         stopHorizontalMovementForTower();
         buildingTower = true;
+        towerBuildPauseTicks = 0;
         boolean accepted = terrainModifier.requestTask(
                 entries,
                 status -> {
                     buildingTower = false;
+                    towerBuildPauseTicks = 0;
                     towerBuildCooldown = status == Notifiable.Status.SUCCESS
                             ? 20
                             : 80;
