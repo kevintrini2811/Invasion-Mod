@@ -182,8 +182,19 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide() && flammability >= 20 && isOnFire()) {
-            doFireball();
+        if (!level().isClientSide() && isTar() && isOnFire()) {
+            // Tar keeps burning until it actually enters water. Refreshing a
+            // short duration here prevents the normal fire timer from
+            // expiring while still allowing water to clear it first.
+            igniteForTicks(20);
+            spreadTarFire();
+        }
+    }
+
+    @Override
+    public void clearFire() {
+        if (!isTar() || isInWater()) {
+            super.clearFire();
         }
     }
     @Override
@@ -440,7 +451,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
             setAttackStrength(5);
             selfDamage = 3;
             maxSelfDamage = 9;
-            flammability = 30;
+            flammability = 1;
             getNavigatorNew().setCanDestroyBlocks(true);
         }
 
@@ -481,7 +492,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     protected void sunlightDamageTick() {
         if (isTar()) {
-            hurt(damageSources().generic(), 3);
+            igniteForSeconds(8);
         } else {
             super.sunlightDamageTick();
         }
@@ -511,7 +522,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         return SoundEvents.ZOMBIE_DEATH;
     }
 
-    private void doFireball() {
+    private void spreadTarFire() {
         for (BlockPos pos : BlockPos.withinManhattan(blockPosition(), 2, 2, 2)) {
             var state = level().getBlockState(pos);
             if (state.isAir() || state.ignitedByLava()) {
@@ -521,8 +532,9 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
         List<Entity> entities = level().getEntities(this, getBoundingBox().inflate(1.5, 1.5, 1.5));
         for (int el = entities.size() - 1; el >= 0; el--) {
-            entities.get(el).igniteForSeconds(8);
+            // Refresh nearby entities for as long as the Tar Zombie burns
+            // instead of applying one fixed eight-second ignition.
+            entities.get(el).igniteForTicks(20);
         }
-        hurt(damageSources().inFire(), 500);
     }
 }
