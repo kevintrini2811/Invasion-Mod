@@ -3,7 +3,6 @@ package com.invasion.client;
 import com.invasion.InvasionMod;
 import com.invasion.InvScreenHandlers;
 import com.invasion.client.render.InvRenderers;
-import com.invasion.client.render.animation.AnimationLoader;
 import com.invasion.client.screen.NexusScreen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;

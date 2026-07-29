@@ -18,11 +18,6 @@ public interface InvSounds {
     SoundEvent ENTITY_BOULDER_LAND = register("entity.boulder.land");
 
     SoundEvent ENTITY_LIGHTNING_ZAP = register("entity.lightning.zap");
-    SoundEvent ENTITY_VULTURE_SQUAWK = register("entity.vulture.squawk");
-    SoundEvent ENTITY_VULTURE_DEATH = register("entity.vulture.death");
-    SoundEvent ENTITY_VULTURE_HISS = register("entity.vulture.hiss");
-    SoundEvent ENTITY_VULTURE_SCREECH = register("entity.vulture.screech");
-    SoundEvent ENTITY_VULTURE_LONG_SCREECH = register("entity.vulture.long_screech");
     SoundEvent ENTITY_SPIDER_EGG_HATCH = register("entity.spider_egg.hatch");
     SoundEvent ENTITY_BIG_ZOMBIE_AMBIENT = register("entity.big_zombie.ambient");
 

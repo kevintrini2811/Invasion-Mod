@@ -6,7 +6,6 @@ import com.invasion.InvasionMod;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
@@ -66,12 +65,6 @@ public interface InvEntities {
                     .sized(0.5F, 0.5F).clientTrackingRange(4).updateInterval(20));
     EntityType<EntityIMPrimedTNT> TNT = register("tnt", EntityType.Builder.<EntityIMPrimedTNT>of(EntityIMPrimedTNT::new, MobCategory.MISC)
             .fireImmune().sized(0.98F, 0.98F).eyeHeight(0.15F).clientTrackingRange(10).updateInterval(10));
-
-    EntityType<VultureEntity> BIRD = register("bird", EntityType.Builder.<VultureEntity>of(VultureEntity::new, MobCategory.MONSTER)
-            .sized(1, 1).clientTrackingRange(10).updateInterval(10));
-    EntityType<EntityIMGiantBird> VULTURE = register("vulture", EntityType.Builder.<EntityIMGiantBird>of(EntityIMGiantBird::new, MobCategory.MONSTER)
-            .attach(EntityAttachment.VEHICLE, 0, -0.2F, 0)
-            .sized(1.9F, 2.8F).clientTrackingRange(10).updateInterval(10));
 
     private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
         return Registry.register(BuiltInRegistries.ENTITY_TYPE, InvasionMod.id(name), builder.build(name));

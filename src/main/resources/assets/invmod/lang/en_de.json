@@ -33,7 +33,6 @@
     "entity.invmod.jumping_spider": "IM Sprungspinne",
     "entity.invmod.queen_spider": "IM Mutterspinne",
     "entity.invmod.pigman_engineer": "IM Zombie Pigman-Ingenieur",
-    "entity.invmod.bird": "WIP-IM Vogel",
     "entity.invmod.thrower": "IM Werfer",
     "entity.invmod.thrower.big": "IM Big Thrower",
     "entity.invmod.burrower": "IM Gräber",
@@ -97,10 +96,5 @@
     "invmod.subtitle.thrower_rages": "Werfer wütet",
     "invmod.subtitle.boulder_lands": "Felsbrocken schlägt auf",
     "invmod.subtitle.spider_egg_hatches": "Spinnenei schlüpft",
-    "invmod.subtitle.vulture_death": "Geier stirbt",
-    "invmod.subtitle.vulture_hiss": "Geier faucht",
-    "invmod.subtitle.vulture_long_screech": "Geier ruft",
-    "invmod.subtitle.vulture_screech": "Geier kreischt",
-    "invmod.subtitle.vulture_squawk": "Geier krächzt",
     "invmod.subtitle.lightning_zaps": "Blitz knistert"
 }

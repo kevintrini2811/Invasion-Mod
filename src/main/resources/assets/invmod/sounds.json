@@ -65,46 +65,6 @@
       { "name": "invmod:spider_egg_hatch/egghatch2" }
     ]
   },
-  "entity.vulture.death": {
-    "category": "hostile",
-    "subtitle": "invmod.subtitle.vulture_death",
-    "sounds": [
-      { "name": "invmod:vulture_death/v_death1" }
-    ]
-  },
-  "entity.vulture.hiss": {
-    "category": "hostile",
-    "subtitle": "invmod.subtitle.vulture_hiss",
-    "sounds": [
-      { "name": "invmod:vulture_hiss/v_hiss1" }
-    ]
-  },
-  "entity.vulture.long_screech": {
-    "category": "hostile",
-    "subtitle": "invmod.subtitle.vulture_long_screech",
-    "sounds": [
-      { "name": "invmod:vulture_long_screech/v_longscreech1" }
-    ]
-  },
-  "entity.vulture.screech": {
-    "category": "hostile",
-    "subtitle": "invmod.subtitle.vulture_screech",
-    "sounds": [
-      { "name": "invmod:vulture_screech/v_screech1" },
-      { "name": "invmod:vulture_screech/v_screech2" },
-      { "name": "invmod:vulture_screech/v_screech3" }
-    ]
-  },
-  "entity.vulture.squawk": {
-    "category": "hostile",
-    "subtitle": "invmod.subtitle.vulture_squawk",
-    "sounds": [
-      { "name": "invmod:vulture_squawk/v_squawk1" },
-      { "name": "invmod:vulture_squawk/v_squawk2" },
-      { "name": "invmod:vulture_squawk/v_squawk3" },
-      { "name": "invmod:vulture_squawk/v_squawk4" }
-    ]
-  },
   "entity.lightning.zap": {
     "category": "hostile",
     "subtitle": "invmod.subtitle.lightning_zaps",

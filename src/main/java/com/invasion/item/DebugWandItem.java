@@ -4,7 +4,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
-import com.invasion.entity.VultureEntity;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.IMSkeletonEntity;
