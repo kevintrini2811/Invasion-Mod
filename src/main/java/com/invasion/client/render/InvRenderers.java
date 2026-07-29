@@ -50,7 +50,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.BIRD,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/vulture.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.VULTURE,
-                context -> new GenericHumanoidMobRenderer<>(context, texture("entity/vulture.png"), 0.9F));
+                VultureRenderer::new);
     }
 
     private static Identifier texture(String path) {
