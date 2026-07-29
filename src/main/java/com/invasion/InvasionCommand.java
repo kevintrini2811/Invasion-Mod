@@ -29,6 +29,10 @@ public class InvasionCommand {
                 .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
                 .then(Commands.literal("continue").executes(context -> continueInvasion(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
+                .then(Commands.literal("set")
+                        .then(Commands.argument("wave", IntegerArgumentType.integer(1))
+                                .executes(context -> setWave(context.getSource(),
+                                        IntegerArgumentType.getInteger(context, "wave")))))
                 .then(Commands.literal("start")
                         .executes(context -> start(context.getSource(), 1))
                         .then(Commands.argument("wave", IntegerArgumentType.integer(1))
@@ -224,6 +228,36 @@ public class InvasionCommand {
         nexus.togglePause();
         source.sendSuccess(() -> Component.translatable(
                 "invmod.message.command.invasion_continued")
+                .withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    private static int setWave(CommandSourceStack source, int wave) {
+        ControllableNexusAccess nexus =
+                WorldNexusStorage.of(source.getLevel()).getNexus().orElse(null);
+        if (nexus == null || !nexus.isActive()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_invasion_to_set")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        if (nexus.getCurrentWave() == wave) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.wave_already_set", wave)
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        if (!nexus.setWave(wave)) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.wave_set_failed", wave)
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        source.sendSuccess(() -> Component.translatable(
+                "invmod.message.command.wave_set", wave)
                 .withStyle(ChatFormatting.GREEN), true);
         return 1;
     }

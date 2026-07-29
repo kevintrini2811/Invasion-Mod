@@ -383,6 +383,30 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     @Override
+    public boolean setWave(int wave) {
+        if (wave < 1
+                || !activated
+                || (mode != Mode.STARTED && mode != Mode.WAITING)) {
+            return false;
+        }
+
+        try {
+            killAllMobs();
+            waveSpawner.stop();
+            currentWave = wave;
+            waveSpawner.beginNextWave(currentWave);
+            initializeWaveProgress();
+            waveDelayTimer = -1L;
+            nexusLevel = Math.max(nexusLevel, currentWave);
+            updateWaveProgressHud();
+            return true;
+        } catch (WaveSpawnerException e) {
+            InvasionMod.LOGGER.error("Unable to set invasion wave to {}", wave, e);
+            return false;
+        }
+    }
+
+    @Override
     public void damage(DamageSource source, int amount) {
         hp -= amount;
         if (hp <= 0) {

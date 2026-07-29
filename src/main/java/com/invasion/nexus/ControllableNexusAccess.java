@@ -8,6 +8,10 @@ public interface ControllableNexusAccess extends NexusAccess {
 
     boolean setSpawnRadius(int radius);
 
+    default boolean setWave(int wave) {
+        return false;
+    }
+
     /**
      * Schaltet den Pause-Zustand um.
      * @return true, wenn danach PAUSIERT ist; false, wenn danach wieder läuft.
