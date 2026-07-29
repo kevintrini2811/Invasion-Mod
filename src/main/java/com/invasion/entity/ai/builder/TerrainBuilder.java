@@ -3,22 +3,15 @@ package com.invasion.entity.ai.builder;
 import java.util.stream.Stream;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
-import com.invasion.entity.pathfinding.ClimberUtil;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 import com.invasion.entity.pathfinding.PathingUtil;
-import com.invasion.nexus.ai.scaffold.Scaffold;
-import com.invasion.util.math.PosUtils;
 
 public class TerrainBuilder implements ITerrainBuild {
-    private static final float LADDER_COST = 25;
     private static final float PLANKS_COST = 45;
     private static final float COBBLE_COST = 65;
     private final float DIG_COST = 35;
@@ -376,49 +369,6 @@ public class TerrainBuilder implements ITerrainBuild {
         return builder.build();
     }
 
-
-
-    @Override
-    public Stream<ModifyBlockEntry> askBuildLadder(BlockPos pos, Direction orientation) {
-        Stream.Builder<ModifyBlockEntry> builder = Stream.builder();
-        Level world = mob.asEntity().level();
-        BlockPos.MutableBlockPos mutable = pos.mutable();
-
-        // Leiter nach vorn ausgerichtet
-        BlockState ladderState = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, orientation);
-
-        // Wir bauen pauschal 4 Blöcke hoch (kannst du später erhöhen)
-        int height = 4;
-
-        for (int i = 0; i < height; i++) {
-            // Position der Leiter
-            mutable.set(pos).move(Direction.UP, i);
-            BlockPos ladderPos = mutable.immutable();
-
-            // Block HINTER der Leiter (Support)
-            BlockPos supportPos = ladderPos.relative(orientation.getOpposite());
-
-            // Support immer aus Planks setzen, wenn nicht voll
-            if (!world.getBlockState(supportPos).isCollisionShapeFullBlock(world, mutable.set(supportPos))) {
-                builder.add(new ModifyBlockEntry(
-                        supportPos,
-                        Blocks.OAK_PLANKS.defaultBlockState(),
-                        (int) (PLANKS_COST / buildRate)
-                ));
-            }
-
-            if (!world.getBlockState(ladderPos).is(Blocks.LADDER)) {
-                builder.add(new ModifyBlockEntry(
-                        ladderPos,
-                        ladderState,
-                        (int) (LADDER_COST / buildRate)
-                ));
-            }
-        }
-
-        return builder.build();
-    }
 
 
     @Override
