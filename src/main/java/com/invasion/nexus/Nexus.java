@@ -390,7 +390,7 @@ public class Nexus implements ControllableNexusAccess {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
             mobsLeftInWave--;
-            if (mobsToKillInWave > 0) {
+            if (mobsToKillInWave > 0 && mobsLeftInWave >= 0) {
                 boundPlayers.sendMessageIncludingNearby(createWaveProgressMessage(),
                         boundingBoxToRadius != null ? boundingBoxToRadius : computeSpawnArea());
             }
