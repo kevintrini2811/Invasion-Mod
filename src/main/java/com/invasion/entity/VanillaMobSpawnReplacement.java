@@ -77,6 +77,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.CREEPER, nexus);
         } else if (mob.getType() == EntityTypes.SPIDER) {
             convert(mob, InvEntities.SPIDER, nexus);
+        } else if (mob.getType() == EntityTypes.ENDERMAN) {
+            convert(mob, InvEntities.ENDERMAN, nexus);
         }
     }
 
@@ -84,7 +86,8 @@ public final class VanillaMobSpawnReplacement {
         return type == EntityTypes.ZOMBIE
                 || type == EntityTypes.SKELETON
                 || type == EntityTypes.CREEPER
-                || type == EntityTypes.SPIDER;
+                || type == EntityTypes.SPIDER
+                || type == EntityTypes.ENDERMAN;
     }
 
     private static <T extends Mob & NexusEntity> void convert(
