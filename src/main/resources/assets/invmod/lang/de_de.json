@@ -112,6 +112,10 @@
 
     "invmod.message.command.nexus_selected": "Nexus für /invasion-Befehle ausgewählt.",
     "invmod.message.command.other_nexus_active": "Ein anderer Nexus ist bereits aktiv.",
+    "invmod.message.command.place_nexus": "Platziere zuerst einen Nexus, bevor du eine Invasion startest.",
+    "invmod.message.command.invasion_already_active": "Es ist bereits eine Invasion aktiv. Es wurde nichts verändert.",
+    "invmod.message.command.invasion_start_failed": "Die Invasion konnte nicht gestartet werden.",
+    "invmod.message.command.invasion_started": "%s hat die Invasion bei Welle %s gestartet.",
     "invmod.message.command.no_invasion_to_pause": "Es läuft gerade keine Invasion, die pausiert oder fortgesetzt werden könnte.",
     "invmod.message.command.invasion_paused": "%s hat die Invasion pausiert.",
     "invmod.message.command.invasion_resumed": "%s hat die Invasion fortgesetzt.",

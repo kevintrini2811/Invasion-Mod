@@ -28,7 +28,10 @@ public class InvasionCommand {
                 .then(Commands.literal("help").executes(context -> help(dispatcher, context.getSource())))
                 .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
-                .then(Commands.literal("start").then(Commands.argument("wave", IntegerArgumentType.integer(1)).executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
+                .then(Commands.literal("start")
+                        .executes(context -> start(context.getSource(), 1))
+                        .then(Commands.argument("wave", IntegerArgumentType.integer(1))
+                                .executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
                 .then(Commands.literal("stop").executes(context -> stop(context.getSource())))
                 .then(Commands.literal("radius")
                         .then(Commands.literal("get").executes(context -> getRadius(context.getSource())))
@@ -67,11 +70,30 @@ public class InvasionCommand {
     }
 
     private static int start(CommandSourceStack source, int startingWave) {
-        handleWithNexus(source, nexus -> {
-            nexus.start(startingWave);
-            source.getServer().sendSystemMessage(Component.literal(source.getTextName() + " has started the invasion!").withStyle(ChatFormatting.YELLOW));
-        });
-        return 0;
+        var nexus = WorldNexusStorage.of(source.getLevel()).getNexus();
+        if (nexus.isEmpty()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.place_nexus").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        ControllableNexusAccess activeNexus = nexus.get();
+        if (activeNexus.isActive()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.invasion_already_active").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        if (!activeNexus.start(startingWave)) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.invasion_start_failed").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        source.getServer().sendSystemMessage(Component.translatable(
+                "invmod.message.command.invasion_started",
+                source.getDisplayName(), startingWave).withStyle(ChatFormatting.YELLOW));
+        return 1;
     }
 
     private static int stop(CommandSourceStack source) {
