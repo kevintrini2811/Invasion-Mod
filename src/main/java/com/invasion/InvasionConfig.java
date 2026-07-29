@@ -13,7 +13,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
-import com.invasion.entity.EntityIMGiantBird;
 import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.IMCreeperEntity;
@@ -33,7 +32,6 @@ import com.invasion.nexus.wave.pool.Select;
 public class InvasionConfig extends Config {
     private static final Map<String, Integer> DEFAULT_MOB_HEALTHS = Util.make(new HashMap<>(), m -> {
         m.put("IMCreeper-T1", 20);
-        m.put("IMVulture-T1", 20);
         m.put("IMImp-T1", 20);
         m.put("IMPigManEngineer-T1", 20);
         m.put("IMSkeleton-T1", 20);
@@ -120,8 +118,6 @@ public class InvasionConfig extends Config {
             healthKey = "IMCreeper-T1";
         } else if (mob instanceof ImpEnitty) {
             healthKey = "IMImp-T1";
-        } else if (mob instanceof EntityIMGiantBird) {
-            healthKey = "IMVulture-T1";
         } else if (mob instanceof IMEndermanEntity) {
             healthKey = "IMEnderman-T1";
         } else {

@@ -47,10 +47,6 @@ public final class InvRenderers {
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/test.png"), 0.25F));
         EntityRendererRegistry.register(InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
         EntityRendererRegistry.register(InvEntities.CREEPER, GenericCreeperRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BIRD,
-                context -> new GenericHumanoidMobRenderer<>(context, texture("entity/vulture.png"), 0.5F));
-        EntityRendererRegistry.register(InvEntities.VULTURE,
-                VultureRenderer::new);
     }
 
     private static Identifier texture(String path) {

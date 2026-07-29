@@ -91,9 +91,6 @@ public interface InvItems {
     Item TIER_TWO_ZOMBIE_PIGMAN_SPAWN_EGG = register("tier_two_pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 2)));
     Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
 
-    Item BIRD_SPAWN_EGG = register("bird_spawn_egg", p -> createSpawnEgg(p, InvEntities.BIRD, 0x2B2B2B, 0xEA7EDC));
-    Item VULTURE_SPAWN_EGG = register("vulture_spawn_egg", p -> createSpawnEgg(p, InvEntities.VULTURE, 0x2B2B2B, 0x7C5B40));
-
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
                 DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, data.copyTag())), type);

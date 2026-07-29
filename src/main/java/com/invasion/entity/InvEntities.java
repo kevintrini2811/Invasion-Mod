@@ -12,7 +12,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
@@ -73,12 +72,6 @@ public interface InvEntities {
     EntityType<EntityIMPrimedTNT> TNT = register("tnt", EntityType.Builder.<EntityIMPrimedTNT>of(EntityIMPrimedTNT::new, MobCategory.MISC)
             .fireImmune().sized(0.98F, 0.98F).eyeHeight(0.15F).clientTrackingRange(10).updateInterval(10));
 
-    EntityType<VultureEntity> BIRD = register("bird", EntityType.Builder.<VultureEntity>of(VultureEntity::new, MobCategory.MONSTER)
-            .sized(1, 1).clientTrackingRange(10).updateInterval(10));
-    EntityType<EntityIMGiantBird> VULTURE = register("vulture", EntityType.Builder.<EntityIMGiantBird>of(EntityIMGiantBird::new, MobCategory.MONSTER)
-            .attach(EntityAttachment.VEHICLE, 0, -0.2F, 0)
-            .sized(1.9F, 2.8F).clientTrackingRange(10).updateInterval(10));
-
     private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
         var id = InvasionMod.id(name);
         var key = ResourceKey.create(Registries.ENTITY_TYPE, id);
@@ -105,8 +98,6 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(WOLF, IMWolfEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPIDER_EGG, SpiderEggEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPAWN_PROXY, Mob.createMobAttributes());
-        FabricDefaultAttributeRegistry.register(BIRD, VultureEntity.createBirdAttributes());
-        FabricDefaultAttributeRegistry.register(VULTURE, EntityIMGiantBird.createVultureAttributes());
 
         InvasionConfig config = InvasionMod.getConfig();
 

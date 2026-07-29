@@ -4,7 +4,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
-import com.invasion.entity.VultureEntity;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.IMSkeletonEntity;
@@ -55,10 +54,6 @@ class DebugWandItem extends Item {
         }
 
         BlockPos pos = context.getClickedPos().relative(context.getClickedFace());
-        VultureEntity bird = InvEntities.VULTURE.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
-        bird.setNexus(nexus);
-        bird.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
-
         Zombie zombie2 = new Zombie(world);
         zombie2.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 

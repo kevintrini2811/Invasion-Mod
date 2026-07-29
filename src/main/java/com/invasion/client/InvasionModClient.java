@@ -2,14 +2,11 @@ package com.invasion.client;
 
 import com.invasion.InvScreenHandlers;
 import com.invasion.client.render.InvRenderers;
-import com.invasion.client.render.animation.AnimationLoader;
 import com.invasion.client.screen.NexusScreen;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.server.packs.PackType;
 
 public class InvasionModClient implements ClientModInitializer {
 
@@ -25,7 +22,6 @@ public class InvasionModClient implements ClientModInitializer {
 
         MenuScreens.register(InvScreenHandlers.NEXUS, NexusScreen::new);
 
-        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(AnimationLoader.INSTANCE);
     }
 
 }
