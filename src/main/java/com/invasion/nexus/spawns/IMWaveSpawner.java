@@ -27,6 +27,7 @@ import com.invasion.InvasionMod;
 import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.ImpEnitty;
+import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.PigmanEngineerEntity;
@@ -371,7 +372,8 @@ public class IMWaveSpawner implements Spawner {
 			EntityConstruct construct) {
 		if (nexus.getCurrentWave() >= 10
 				&& construct.entityType() == InvEntities.CREEPER
-				&& construct.tier() == 1) {
+				&& construct.tier() == 1
+				&& IMCreeperEntity.rollChargedVariant(getRandom())) {
 			return new EntityConstruct(
 					construct.entityType(),
 					construct.texture(),

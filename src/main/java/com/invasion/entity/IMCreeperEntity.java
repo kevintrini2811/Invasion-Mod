@@ -24,14 +24,18 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
@@ -49,6 +53,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
@@ -58,6 +63,8 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.Vec3;
 
 public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
+    private static final int CHARGED_CHANCE_PERCENT = 100;
+
     private static final Item[] CLASSIC_MUSIC_DISCS = {
             Items.MUSIC_DISC_13, Items.MUSIC_DISC_CAT, Items.MUSIC_DISC_BLOCKS,
             Items.MUSIC_DISC_CHIRP, Items.MUSIC_DISC_FAR, Items.MUSIC_DISC_MALL,
@@ -90,6 +97,23 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Creeper.createAttributes().add(Attributes.MOVEMENT_SPEED, 0.21);
+    }
+
+    public static boolean rollChargedVariant(RandomSource random) {
+        return CHARGED_CHANCE_PERCENT >= 100
+                || random.nextInt(100) < CHARGED_CHANCE_PERCENT;
+    }
+
+    @Override
+    public SpawnGroupData finalizeSpawn(
+            ServerLevelAccessor world, DifficultyInstance difficulty,
+            EntitySpawnReason spawnReason, @Nullable SpawnGroupData data) {
+        data = super.finalizeSpawn(world, difficulty, spawnReason, data);
+        if (spawnReason == EntitySpawnReason.SPAWN_ITEM_USE
+                && rollChargedVariant(getRandom())) {
+            setTier(2);
+        }
+        return data;
     }
 
     @Override
