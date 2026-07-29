@@ -9,6 +9,7 @@ import com.invasion.entity.ai.FlyingMoveControl;
 import com.invasion.entity.ai.MoveState;
 import com.invasion.entity.pathfinding.FlyingNavigation;
 import com.invasion.entity.pathfinding.Navigation;
+import com.invasion.entity.pathfinding.PathNavigateAdapter;
 import com.invasion.entity.pathfinding.PathCreator;
 import com.invasion.util.math.MathUtil;
 import net.minecraft.core.BlockPos;
@@ -19,6 +20,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.control.BodyRotationControl;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -81,6 +83,11 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
     protected Navigation createIMNavigation() {
 	    return new FlyingNavigation(this, new PathCreator(800, 200));
 	}
+
+    @Override
+    protected PathNavigation createNavigation(Level world) {
+        return new PathNavigateAdapter(this, world, createIMNavigation());
+    }
 
     @Override
     protected BodyRotationControl createBodyControl() {
