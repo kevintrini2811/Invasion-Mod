@@ -322,7 +322,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     public void setFuseSpeed(int speed) {
-        entityData.set(FUSE_SPEED, commitToExplode ? 1 : speed);
+        entityData.set(
+                FUSE_SPEED,
+                commitToExplode || manuallyIgnited ? 1 : speed);
     }
 
 
