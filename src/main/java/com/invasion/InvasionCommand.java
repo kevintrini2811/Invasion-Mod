@@ -8,11 +8,10 @@ import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.RangeArgument;
-import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.network.chat.Component;
-import com.invasion.entity.ElectricityBoltEntity;
+import com.invasion.block.InvBlockEntities;
+import com.invasion.block.NexusBlockEntity;
 import com.invasion.nexus.ControllableNexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.test.Tester;
@@ -41,9 +40,7 @@ public class InvasionCommand {
                 .then(Commands.literal("radius")
                         .then(Commands.literal("get").executes(context -> getRadius(context.getSource())))
                         .then(Commands.literal("set").then(Commands.argument("radius", IntegerArgumentType.integer(32, 128)).executes(context -> setRadius(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
-                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource(), Vec3i.ZERO))
-                    .then(Commands.argument("offset", BlockPosArgument.blockPos()).executes(context -> bolt(context.getSource(), BlockPosArgument.getBlockPos(context, "offset"))))
-                ));
+                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource()))));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> addTestCommands(LiteralArgumentBuilder<CommandSourceStack> builder) {
