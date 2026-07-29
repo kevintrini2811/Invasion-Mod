@@ -399,6 +399,11 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     @Override
+    public boolean getBurnsInDay() {
+        return isTar();
+    }
+
+    @Override
     protected Component getTypeName() {
         if (isTar()) {
             return Component.translatable(getType().getDescriptionId() + ".tar");
