@@ -23,6 +23,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -254,8 +255,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new AttackNexusGoal<>(this));
+        goalSelector.addGoal(1, new MobMeleeAttackGoal(this, 1, false));
         goalSelector.addGoal(2, new GoToNexusGoal(this));
-        goalSelector.addGoal(3, new MobMeleeAttackGoal(this, 1, false));
         goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 7));
         goalSelector.addGoal(9, new LookAtPlayerGoal(this, IMCreeperEntity.class, 12));
@@ -317,10 +318,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             ServerLevel serverLevel, DamageSource source, float damage) {
         boolean damaged = super.hurtServer(serverLevel, source, damage);
         if (damaged && buildingTower) {
-            // Keep the queued structure and current block timer intact. The
-            // engineer resumes exactly where it stopped after reacting to the
-            // hit for two seconds.
-            towerBuildPauseTicks = Math.max(towerBuildPauseTicks, 40);
+            if (source.getEntity() instanceof LivingEntity attacker
+                    && attacker.isAlive()) {
+                setTarget(attacker);
+            }
         }
         return damaged;
     }
@@ -459,12 +460,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         stopHorizontalMovementForTower();
         buildingTower = true;
-        towerBuildPauseTicks = 0;
+        towerBuildPosition = basePos;
         boolean accepted = terrainModifier.requestTask(
                 entries,
                 status -> {
                     buildingTower = false;
-                    towerBuildPauseTicks = 0;
+                    towerBuildPosition = null;
                     towerBuildCooldown = status == Notifiable.Status.SUCCESS
                             ? 20
                             : 80;
@@ -477,8 +478,35 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 null);
         if (!accepted) {
             buildingTower = false;
+            towerBuildPosition = null;
         }
         return accepted;
+    }
+
+    private boolean isTowerBuildInterrupted() {
+        return getTarget() != null || !isAtTowerBuildPosition();
+    }
+
+    private boolean isAtTowerBuildPosition() {
+        if (towerBuildPosition == null) {
+            return true;
+        }
+        double targetX = towerBuildPosition.getX() + 0.5D;
+        double targetZ = towerBuildPosition.getZ() + 0.5D;
+        double deltaX = getX() - targetX;
+        double deltaZ = getZ() - targetZ;
+        return deltaX * deltaX + deltaZ * deltaZ < 0.16D
+                && Math.abs(getY() - towerBuildPosition.getY()) < 0.75D;
+    }
+
+    private void returnToTowerBuildPosition() {
+        if (getTarget() != null || towerBuildPosition == null
+                || isAtTowerBuildPosition()) {
+            return;
+        }
+        if (getNavigation() instanceof BuilderIMMobNavigation navigation) {
+            navigation.returnToTowerBuild(towerBuildPosition);
+        }
     }
 
     private boolean canBuildTowerAt(BlockPos ladderBase, BlockPos towerBase) {

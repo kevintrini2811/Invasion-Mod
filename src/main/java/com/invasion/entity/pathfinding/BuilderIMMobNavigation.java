@@ -18,6 +18,7 @@ import com.invasion.entity.pathfinding.path.PathAction;
  * supported: bridging traversable gaps.
  */
 public class BuilderIMMobNavigation extends IMMobNavigation {
+    private boolean acceptingTowerReturnPath;
 
     public <T extends Mob & NexusEntity> BuilderIMMobNavigation(T entity) {
         super(entity);
@@ -40,10 +41,25 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
     @Override
     public boolean moveTo(net.minecraft.world.level.pathfinder.Path path, double speed) {
         if (mob instanceof PigmanEngineerEntity engineer
-                && engineer.isBuildingTower()) {
+                && engineer.isBuildingTower()
+                && engineer.getTarget() == null
+                && !acceptingTowerReturnPath) {
             return false;
         }
         return super.moveTo(path, speed);
+    }
+
+    public void returnToTowerBuild(BlockPos buildPosition) {
+        acceptingTowerReturnPath = true;
+        try {
+            moveTo(
+                    buildPosition.getX() + 0.5D,
+                    buildPosition.getY(),
+                    buildPosition.getZ() + 0.5D,
+                    1);
+        } finally {
+            acceptingTowerReturnPath = false;
+        }
     }
 
     public void resumeAfterTowerBuild() {
