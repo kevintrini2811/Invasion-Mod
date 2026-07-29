@@ -68,6 +68,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private boolean buildingTower;
     private int towerBuildCooldown;
+    private int towerBuildPauseTicks;
 
 
 
@@ -144,7 +145,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public void customServerAiStep(ServerLevel serverLevel) {
         super.customServerAiStep(serverLevel);
-        terrainModifier.onUpdate();
+        if (buildingTower && towerBuildPauseTicks > 0) {
+            towerBuildPauseTicks--;
+        } else {
+            terrainModifier.onUpdate();
+        }
         towerBuildCooldown = Math.max(0, towerBuildCooldown - 1);
 
         if (tickCount % 5 == 0) {
@@ -158,6 +163,19 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
 
+    }
+
+    @Override
+    public boolean hurtServer(
+            ServerLevel serverLevel, DamageSource source, float damage) {
+        boolean damaged = super.hurtServer(serverLevel, source, damage);
+        if (damaged && buildingTower) {
+            // Keep the queued structure and current block timer intact. The
+            // engineer resumes exactly where it stopped after reacting to the
+            // hit for two seconds.
+            towerBuildPauseTicks = Math.max(towerBuildPauseTicks, 40);
+        }
+        return damaged;
     }
 
     @Override
@@ -175,7 +193,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     protected void updateAnimation() {
-        if (!level().isClientSide() && terrainModifier.isBusy()) {
+        if (!level().isClientSide()
+                && terrainModifier.isBusy()
+                && (!buildingTower || towerBuildPauseTicks == 0)) {
             swing(InteractionHand.MAIN_HAND);
             PathAction currentAction = getNavigatorNew().getCurrentWorkingAction();
             if (currentAction == PathAction.NONE) {
@@ -270,10 +290,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         stopHorizontalMovementForTower();
         buildingTower = true;
+        towerBuildPauseTicks = 0;
         boolean accepted = terrainModifier.requestTask(
                 entries,
                 status -> {
                     buildingTower = false;
+                    towerBuildPauseTicks = 0;
                     towerBuildCooldown = status == Notifiable.Status.SUCCESS
                             ? 20
                             : 80;
