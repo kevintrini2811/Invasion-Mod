@@ -245,6 +245,21 @@ public class Nexus implements ControllableNexusAccess {
         return currentWave;
     }
 
+    @Override
+    public int getMobsLeftInWave() {
+        return Math.max(0, mobsLeftInWave);
+    }
+
+    @Override
+    public int getMobsToKillInWave() {
+        return Math.max(0, mobsToKillInWave);
+    }
+
+    @Override
+    public int getHealthPercent() {
+        return Math.max(0, Math.min(100, hp * 100 / MAX_HEALTH));
+    }
+
     public void onPlayerJoined(ServerPlayer player) {
         if (mode.isActive()) {
             sendWaveProgressHud(player, createHudPayload());
@@ -431,7 +446,7 @@ public class Nexus implements ControllableNexusAccess {
         }
         int total = Math.max(0, mobsToKillInWave);
         int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
-        int healthPercent = Math.max(0, Math.min(100, hp * 100 / MAX_HEALTH));
+        int healthPercent = getHealthPercent();
         return new NexusHudPayload(true, currentWave, defeated, total, healthPercent);
     }
 
