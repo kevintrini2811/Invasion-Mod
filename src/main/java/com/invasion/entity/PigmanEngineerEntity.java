@@ -412,26 +412,33 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
 
-        // Phase 3: a 3x3 platform footprint above the column. The ladder cell
-        // remains open as the only way through the deck.
+        // Phase 3: build the platform centre first so the exit ladder has
+        // support. Placing the ladder immediately afterwards guarantees that
+        // the climbable column reaches through the platform before the
+        // remaining deck blocks are filled in.
         BlockPos platformCenter = towerBase.above(3);
         BlockPos ladderOpening = ladderBase.above(3);
+        if (level().getBlockState(platformCenter).canBeReplaced()) {
+            entries.add(new ModifyBlockEntry(
+                    platformCenter, planks, TOWER_PLANK_BUILD_TIME));
+        }
+        if (!level().getBlockState(ladderOpening).is(Blocks.LADDER)) {
+            entries.add(new ModifyBlockEntry(
+                    ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
+        }
+
+        // Phase 4: complete the 3x3 platform footprint. The ladder cell stays
+        // open as the only way through the deck.
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 BlockPos platformPos = platformCenter.offset(x, 0, z);
-                if (!platformPos.equals(ladderOpening)
+                if (!platformPos.equals(platformCenter)
+                        && !platformPos.equals(ladderOpening)
                         && level().getBlockState(platformPos).canBeReplaced()) {
                     entries.add(new ModifyBlockEntry(
                             platformPos, planks, TOWER_PLANK_BUILD_TIME));
                 }
             }
-        }
-
-        // The exit ladder is placed last because it is supported by the new
-        // platform centre block.
-        if (!level().getBlockState(ladderOpening).is(Blocks.LADDER)) {
-            entries.add(new ModifyBlockEntry(
-                    ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
         }
         return entries;
     }
