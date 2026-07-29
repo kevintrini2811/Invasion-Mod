@@ -39,6 +39,7 @@ public class InvasionConfig extends Config {
         m.put("IMSpider-T1-Spider", 18);
         m.put("IMSpider-T1-Baby-Spider", 3);
         m.put("IMSpider-T1-Cave-Spider", 12);
+        m.put("IMSpider-T1-Baby-Cave-Spider", 3);
         m.put("IMSpider-T2-Jumping-Spider", 18);
         m.put("IMSpider-T2-Mother-Spider", 23);
         m.put("IMThrower-T1", 50);
@@ -107,7 +108,9 @@ public class InvasionConfig extends Config {
         } else if (mob instanceof ThrowerEntity thrower) {
             healthKey = "IMThrower-T" + thrower.getTier();
         } else if (mob instanceof IMCaveSpiderEntity) {
-            healthKey = "IMSpider-T1-Cave-Spider";
+            healthKey = mob.asEntity().isBaby()
+                    ? "IMSpider-T1-Baby-Cave-Spider"
+                    : "IMSpider-T1-Cave-Spider";
         } else if (mob instanceof QueenSpiderEntity) {
             healthKey = "IMSpider-T2-Mother-Spider";
         } else if (mob instanceof JumpingSpiderEntity) {
