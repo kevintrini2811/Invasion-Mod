@@ -121,6 +121,9 @@
     "invmod.message.command.no_invasion_to_pause": "No invasion is active. Nothing happened.",
     "invmod.message.command.invasion_paused": "Invasion successfully paused.",
     "invmod.message.command.invasion_already_paused": "The invasion is already paused. Nothing changed.",
+    "invmod.message.command.no_invasion_to_continue": "No invasion is active. Nothing happened.",
+    "invmod.message.command.invasion_already_running": "The invasion is already running. Nothing changed.",
+    "invmod.message.command.invasion_continued": "Invasion successfully continued.",
     "invmod.message.command.invasion_resumed": "%s resumed the invasion.",
 
     "invmod.message.bone.nonearbynexus1": "The wolf doesn't like this Strange Bone.",

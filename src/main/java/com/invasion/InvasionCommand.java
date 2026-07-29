@@ -27,6 +27,7 @@ public class InvasionCommand {
         return addTestCommands(Commands.literal("invasion")
                 .then(Commands.literal("help").executes(context -> help(dispatcher, context.getSource())))
                 .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
+                .then(Commands.literal("continue").executes(context -> continueInvasion(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
                 .then(Commands.literal("start")
                         .executes(context -> start(context.getSource(), 1))
@@ -200,6 +201,30 @@ public class InvasionCommand {
         source.sendSuccess(() -> Component.translatable(
                 "invmod.message.command.invasion_paused")
                 .withStyle(ChatFormatting.GOLD), true);
+        return 1;
+    }
+
+    private static int continueInvasion(CommandSourceStack source) {
+        ControllableNexusAccess nexus =
+                WorldNexusStorage.of(source.getLevel()).getNexus().orElse(null);
+        if (nexus == null || !nexus.isActive()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_invasion_to_continue")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        if (!nexus.isPaused()) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.invasion_already_running")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        nexus.togglePause();
+        source.sendSuccess(() -> Component.translatable(
+                "invmod.message.command.invasion_continued")
+                .withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
