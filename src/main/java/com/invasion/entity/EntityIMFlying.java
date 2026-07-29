@@ -66,6 +66,7 @@ public abstract class EntityIMFlying extends EntityIMLiving implements Animatabl
         builder.define(THRUST_EFFORT, 1F);
         builder.define(FLY_STATE, FlyState.GROUNDED.ordinal());
         builder.define(MOVE_STATE, MoveState.STANDING.ordinal());
+        builder.define(ANGLES, 0);
     }
 
     public Vector3fc getTargetPos() {
