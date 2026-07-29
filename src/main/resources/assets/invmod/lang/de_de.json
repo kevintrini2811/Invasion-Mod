@@ -128,6 +128,8 @@
     "invmod.message.command.wave_already_set": "Die Invasion befindet sich bereits in Welle %s. Es wurde nichts verändert.",
     "invmod.message.command.wave_set_failed": "Die Invasionswelle konnte nicht auf %s gesetzt werden.",
     "invmod.message.command.wave_set": "Invasionswelle erfolgreich auf %s gesetzt.",
+    "invmod.message.command.no_invasion_to_stop": "Es ist keine Invasion aktiv. Es geschieht nichts.",
+    "invmod.message.command.invasion_stopped": "Invasion erfolgreich beendet.",
     "invmod.message.command.invasion_resumed": "%s hat die Invasion fortgesetzt.",
 
     "invmod.message.bone.nonearbynexus1": "Der Wolf mag diesen Seltsamen Knochen nicht.",

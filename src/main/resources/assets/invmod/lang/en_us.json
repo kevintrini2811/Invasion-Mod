@@ -129,6 +129,8 @@
     "invmod.message.command.wave_already_set": "The invasion is already on wave %s. Nothing changed.",
     "invmod.message.command.wave_set_failed": "The invasion wave could not be set to %s.",
     "invmod.message.command.wave_set": "Invasion wave successfully set to %s.",
+    "invmod.message.command.no_invasion_to_stop": "No invasion is active. Nothing happened.",
+    "invmod.message.command.invasion_stopped": "Invasion successfully stopped.",
     "invmod.message.command.invasion_resumed": "%s resumed the invasion.",
 
     "invmod.message.bone.nonearbynexus1": "The wolf doesn't like this Strange Bone.",
