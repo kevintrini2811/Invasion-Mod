@@ -41,6 +41,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     private int haltingTicks;
     private int stuckTime;
+    private boolean climbingLadder;
+    private boolean gravityBeforeLadder;
 
     @Nullable
     private Entity followingEntity;
@@ -185,6 +187,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public void tick() {
+        if (climbingLadder && (getPath() == null || getPath().isDone())) {
+            finishLadderClimb();
+        }
         if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
             // Bridge construction owns movement until solid ground is
             // reached. Combat targets otherwise replace the bridge path and
@@ -266,12 +271,12 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
 	@Override
     protected void followThePath() {
-        if (isTargetingLadder()) {
-            stopHorizontalMovement();
-            mob.setNoAi(true);
-            stop();
+        BlockPos ladderPos = getTargetedLadder();
+        if (ladderPos != null) {
+            climbLadder(ladderPos);
             return;
         }
+        finishLadderClimb();
 
 	    mob.setShiftKeyDown(false);
 	    if (mob instanceof NexusEntity e) {
@@ -336,17 +341,64 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 	    }
 	}
 
-    private boolean isTargetingLadder() {
+    @Nullable
+    private BlockPos getTargetedLadder() {
         if (getPath() == null || getPath().isDone()) {
-            return false;
-        }
-        PathAction action = getCurrentWorkingAction();
-        if (action.getType() == PathAction.Type.LADDER) {
-            return true;
+            return null;
         }
         BlockPos nodePos = getPath().getNextNodePos();
-        return mob.level().getBlockState(nodePos).is(Blocks.LADDER)
-                || mob.level().getBlockState(nodePos.below()).is(Blocks.LADDER);
+        if (mob.level().getBlockState(nodePos).is(Blocks.LADDER)) {
+            return nodePos;
+        }
+        if (mob.level().getBlockState(nodePos.below()).is(Blocks.LADDER)) {
+            return nodePos.below();
+        }
+        return null;
+    }
+
+    private void climbLadder(BlockPos ladderPos) {
+        if (!climbingLadder) {
+            climbingLadder = true;
+            gravityBeforeLadder = mob.isNoGravity();
+            mob.setNoGravity(true);
+        }
+
+        BlockPos nodePos = getPath().getNextNodePos();
+        double targetX = ladderPos.getX() + 0.5D;
+        double targetZ = ladderPos.getZ() + 0.5D;
+        double targetY = nodePos.getY();
+
+        // Own all movement while climbing. Centering the mob in the ladder
+        // cell and disabling gravity prevents sideways knockback and the
+        // between-tick slide that made the previous implementation fall.
+        mob.setPos(targetX, mob.getY(), targetZ);
+        mob.setDeltaMovement(0, 0.2D, 0);
+        mob.setXxa(0);
+        mob.setZza(0);
+        mob.fallDistance = 0;
+        mob.setShiftKeyDown(false);
+        mob.setJumping(false);
+
+        if (mob.getY() >= targetY - 0.05D) {
+            mob.setPos(targetX, targetY, targetZ);
+            mob.setDeltaMovement(0, 0, 0);
+            getPath().setNextNodeIndex(getPath().getNextNodeIndex() + 1);
+        }
+    }
+
+    private void finishLadderClimb() {
+        if (!climbingLadder) {
+            return;
+        }
+        climbingLadder = false;
+        mob.setNoGravity(gravityBeforeLadder);
+        mob.fallDistance = 0;
+    }
+
+    @Override
+    public void stop() {
+        finishLadderClimb();
+        super.stop();
     }
 
     private void logEngineerBridgeTransition(PathAction action, int nodeIndex) {
