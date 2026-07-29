@@ -5,7 +5,6 @@ import com.invasion.entity.InvEntities;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
-import net.minecraft.client.renderer.entity.WolfRenderer;
 import net.minecraft.resources.Identifier;
 
 /**
@@ -39,7 +38,8 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.BOULDER, BoulderProjectileRenderer::new);
         EntityRendererRegistry.register(InvEntities.SKELETON_ARROW, SkeletonArrowRenderer::new);
         EntityRendererRegistry.register(InvEntities.TNT, TntProjectileRenderer::new);
-        EntityRendererRegistry.register(InvEntities.WOLF, WolfRenderer::new);
+        EntityRendererRegistry.register(InvEntities.WOLF,
+                IMWolfRenderer::new);
         EntityRendererRegistry.register(InvEntities.TRAP, TrapRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOLT, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.SFX, NoopRenderer::new);
