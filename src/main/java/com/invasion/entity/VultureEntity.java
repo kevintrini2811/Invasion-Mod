@@ -62,6 +62,7 @@ public class VultureEntity extends EntityIMFlying {
         super.defineSynchedData(builder);
         builder.define(TIER, 1);
         builder.define(CLAWS_FORWARD, false);
+        builder.define(BEAK_DOWN, false);
         builder.define(ATTACKING_WITH_WINGS, false);
     }
 
