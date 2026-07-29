@@ -122,6 +122,14 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                     }).sorted(Comparator.comparingDouble(pos -> center.pos().distToLowCornerSqr(pos.x, pos.y, pos.z)))
                     .findAny();
 
+            if (respawnPoint.isEmpty()) {
+                BlockPos surface = world.getHeightmapPos(
+                        Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                        nexusPos);
+                respawnPoint = getWolfRespawnPoint(
+                        world, wolf, surface.below());
+            }
+
             if (respawnPoint.isPresent()) {
                 wolf.setPos(respawnPoint.get());
                 wolf.setRot(0, 0);
