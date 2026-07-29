@@ -1,7 +1,7 @@
 package com.invasion.entity;
 
-import java.util.Comparator;
 import java.util.Optional;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.ParticleTypes;
@@ -50,7 +50,6 @@ import com.invasion.InvasionMod;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
-import com.invasion.nexus.Mode;
 
 public class IMWolfEntity extends Wolf implements IHasNexus {
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
@@ -133,29 +132,51 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     public boolean respawnAtNexus() {
-        if (level().isClientSide() || !hasNexus() || getNexus().getMode() == Mode.STOPPED) {
+        if (!(level() instanceof ServerLevel world)
+                || !hasNexus()
+                || !getNexus().isActive()) {
             return false;
         }
 
         return nexus.getPos().filter(center -> {
-            IMWolfEntity wolf = InvEntities.WOLF.create(level(), EntitySpawnReason.EVENT);
-            Optional<Vec3> respawnPoint = BlockPos.withinManhattanStream(center.pos(), 5, 3, 5).map(Vec3::atBottomCenterOf)
+            IMWolfEntity wolf = InvEntities.WOLF.create(
+                    world, EntitySpawnReason.EVENT);
+            if (wolf == null) {
+                return false;
+            }
+
+            wolf.restoreFrom(this);
+            wolf.setUUID(UUID.randomUUID());
+            wolf.setNexus(getNexus());
+            wolf.setHealth(wolf.getMaxHealth());
+
+            Optional<Vec3> respawnPoint = BlockPos
+                    .withinManhattanStream(center.pos(), 5, 3, 5)
+                    .sorted(java.util.Comparator.comparingDouble(
+                            center.pos()::distSqr))
+                    .map(Vec3::atBottomCenterOf)
                     .filter(pos -> {
                         wolf.setPos(pos);
-                        return wolf.checkSpawnRules(level(), EntitySpawnReason.MOB_SUMMONED);
-                    }).sorted(Comparator.comparingDouble(pos -> center.pos().distToLowCornerSqr(pos.x, pos.y, pos.z)))
-                    .findAny();
+                        BlockPos feet = BlockPos.containing(pos);
+                        BlockPos ground = feet.below();
+                        return world.getBlockState(ground)
+                                        .isCollisionShapeFullBlock(
+                                                world, ground)
+                                && world.noCollision(wolf);
+                    })
+                    .findFirst();
 
             if (respawnPoint.isPresent()) {
-                wolf.restoreFrom(this);
-                wolf.setNexus(getNexus());
                 wolf.setPos(respawnPoint.get());
                 wolf.setRot(0, 0);
-                wolf.heal(60.0F);
+                if (!world.addFreshEntity(wolf)) {
+                    InvasionMod.LOGGER.warn(
+                            "Failed to add respawned wolf at Nexus");
+                    return false;
+                }
                 if (!isRemoved()) {
                     discard();
                 }
-                level().addFreshEntity(wolf);
                 return true;
             }
             InvasionMod.LOGGER.warn("No respawn spot for wolf");
