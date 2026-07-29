@@ -115,7 +115,9 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
 
     public void tick(ServerLevel world, BlockPos pos, BlockState state) {
-
+        // Register a newly placed Nexus without requiring the player to open
+        // or right-click it before commands can find it.
+        getNexus();
     }
 
     public void discard() {

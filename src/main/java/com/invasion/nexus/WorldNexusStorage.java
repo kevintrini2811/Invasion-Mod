@@ -118,6 +118,12 @@ public class WorldNexusStorage extends SavedData {
         return activeNexus.map(instances::get);
     }
 
+    public synchronized Optional<? extends ControllableNexusAccess> getNearestNexus(BlockPos pos) {
+        return instances.values().stream()
+                .min(java.util.Comparator.comparingDouble(
+                        nexus -> nexus.getOrigin().distSqr(pos)));
+    }
+
     public synchronized void onPlayerJoined(ServerPlayer player) {
         instances.values().forEach(nexus -> nexus.onPlayerJoined(player));
     }
