@@ -676,6 +676,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         if (continuingEngineerBridge
                 && mob instanceof NexusEntity nexusMob
                 && nexusMob.hasNexus()
+                && path != null
                 && path.getTarget() != null
                 && path.getTarget().distManhattan(nexusMob.getNexus().getOrigin()) > 2) {
             return false;
