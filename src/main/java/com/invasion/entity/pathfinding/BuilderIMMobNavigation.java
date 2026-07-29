@@ -9,6 +9,7 @@ import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.PathType;
 
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
 
@@ -20,6 +21,41 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
     public <T extends Mob & NexusEntity> BuilderIMMobNavigation(T entity) {
         super(entity);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (mob instanceof PigmanEngineerEntity engineer
+                && !engineer.isBuildingTower()
+                && engineer.hasNexus()
+                && getAIGoal() == Goal.BREAK_NEXUS
+                && isDone()
+                && engineer.getNexus().getOrigin().getY()
+                        - engineer.blockPosition().getY() >= 2) {
+            engineer.tryStartTowerBuild();
+        }
+    }
+
+    @Override
+    public boolean moveTo(net.minecraft.world.level.pathfinder.Path path, double speed) {
+        if (mob instanceof PigmanEngineerEntity engineer
+                && engineer.isBuildingTower()) {
+            return false;
+        }
+        return super.moveTo(path, speed);
+    }
+
+    public void resumeAfterTowerBuild() {
+        if (!nexusEntityHasTarget()) {
+            return;
+        }
+        BlockPos target = ((NexusEntity) mob).getNexus().getOrigin();
+        moveTo(target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D, 1);
+    }
+
+    private boolean nexusEntityHasTarget() {
+        return mob instanceof NexusEntity nexusMob && nexusMob.hasNexus();
     }
 
     @Override

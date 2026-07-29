@@ -14,6 +14,7 @@ import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
 import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.item.InvItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -41,6 +42,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 
@@ -49,6 +51,8 @@ import java.util.List;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private static final int BRIDGE_PLANK_BUILD_TIME = 45;
+    private static final int TOWER_PLANK_BUILD_TIME = 45;
+    private static final int TOWER_LADDER_BUILD_TIME = 25;
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
@@ -60,8 +64,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 2.8F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
+    private boolean buildingTower;
+    private int towerBuildCooldown;
 
 
 
@@ -139,6 +145,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public void customServerAiStep(ServerLevel serverLevel) {
         super.customServerAiStep(serverLevel);
         terrainModifier.onUpdate();
+        towerBuildCooldown = Math.max(0, towerBuildCooldown - 1);
 
         if (tickCount % 5 == 0) {
             for (ItemEntity item : serverLevel.getEntitiesOfClass(
@@ -229,13 +236,174 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
     }
 
+    public boolean tryStartTowerBuild() {
+        if (buildingTower || towerBuildCooldown > 0 || !hasNexus()) {
+            return false;
+        }
+
+        BlockPos nexusPos = getNexus().getOrigin();
+        BlockPos basePos = blockPosition();
+        int deltaX = nexusPos.getX() - basePos.getX();
+        int deltaZ = nexusPos.getZ() - basePos.getZ();
+        Direction towardNexus;
+        if (Math.abs(deltaX) >= Math.abs(deltaZ) && deltaX != 0) {
+            towardNexus = deltaX > 0 ? Direction.EAST : Direction.WEST;
+        } else if (deltaZ != 0) {
+            towardNexus = deltaZ > 0 ? Direction.SOUTH : Direction.NORTH;
+        } else {
+            towardNexus = getDirection();
+        }
+
+        Direction ladderFacing = towardNexus.getOpposite();
+        BlockPos towerBase = basePos.relative(towardNexus);
+        if (!canBuildTowerAt(basePos, towerBase)) {
+            towerBuildCooldown = 40;
+            return false;
+        }
+
+        List<ModifyBlockEntry> entries = createTowerPlan(
+                basePos, towerBase, ladderFacing);
+        if (entries.isEmpty()) {
+            towerBuildCooldown = 40;
+            return false;
+        }
+
+        stopHorizontalMovementForTower();
+        buildingTower = true;
+        boolean accepted = terrainModifier.requestTask(
+                entries,
+                status -> {
+                    buildingTower = false;
+                    towerBuildCooldown = status == Notifiable.Status.SUCCESS
+                            ? 20
+                            : 80;
+                    if (status == Notifiable.Status.SUCCESS
+                            && getNavigation()
+                                    instanceof BuilderIMMobNavigation navigation) {
+                        navigation.resumeAfterTowerBuild();
+                    }
+                },
+                null);
+        if (!accepted) {
+            buildingTower = false;
+        }
+        return accepted;
+    }
+
+    private boolean canBuildTowerAt(BlockPos ladderBase, BlockPos towerBase) {
+        for (int height = 0; height < 3; height++) {
+            BlockPos supportPos = towerBase.above(height);
+            BlockState support = level().getBlockState(supportPos);
+            if (!support.isCollisionShapeFullBlock(level(), supportPos)
+                    && !support.canBeReplaced()) {
+                return false;
+            }
+
+            BlockState ladderSpace =
+                    level().getBlockState(ladderBase.above(height));
+            if (!ladderSpace.is(Blocks.LADDER)
+                    && !ladderSpace.canBeReplaced()) {
+                return false;
+            }
+        }
+
+        BlockPos platformCenter = towerBase.above(3);
+        BlockPos ladderOpening = ladderBase.above(3);
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos platformPos = platformCenter.offset(x, 0, z);
+                if (platformPos.equals(ladderOpening)) {
+                    continue;
+                }
+                BlockState platformState = level().getBlockState(platformPos);
+                if (!platformState.isCollisionShapeFullBlock(
+                                level(), platformPos)
+                        && !platformState.canBeReplaced()) {
+                    return false;
+                }
+            }
+        }
+        BlockState exitSpace = level().getBlockState(ladderOpening);
+        if (!exitSpace.is(Blocks.LADDER) && !exitSpace.canBeReplaced()) {
+            return false;
+        }
+        return true;
+    }
+
+    private List<ModifyBlockEntry> createTowerPlan(
+            BlockPos ladderBase,
+            BlockPos towerBase,
+            Direction ladderFacing) {
+        List<ModifyBlockEntry> entries = new ArrayList<>(15);
+        BlockState planks = Blocks.OAK_PLANKS.defaultBlockState();
+        BlockState ladder = Blocks.LADDER.defaultBlockState()
+                .setValue(LadderBlock.FACING, ladderFacing);
+
+        // Phase 1: three solid support blocks, accepting existing full blocks.
+        for (int height = 0; height < 3; height++) {
+            BlockPos supportPos = towerBase.above(height);
+            if (!level().getBlockState(supportPos)
+                    .isCollisionShapeFullBlock(level(), supportPos)) {
+                entries.add(new ModifyBlockEntry(
+                        supportPos, planks, TOWER_PLANK_BUILD_TIME));
+            }
+        }
+
+        // Phase 2: ladders on the side of the column facing the engineer.
+        for (int height = 0; height < 3; height++) {
+            BlockPos ladderPos = ladderBase.above(height);
+            if (!level().getBlockState(ladderPos).is(Blocks.LADDER)) {
+                entries.add(new ModifyBlockEntry(
+                        ladderPos, ladder, TOWER_LADDER_BUILD_TIME));
+            }
+        }
+
+        // Phase 3: a 3x3 platform footprint above the column. The ladder cell
+        // remains open as the only way through the deck.
+        BlockPos platformCenter = towerBase.above(3);
+        BlockPos ladderOpening = ladderBase.above(3);
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos platformPos = platformCenter.offset(x, 0, z);
+                if (!platformPos.equals(ladderOpening)
+                        && level().getBlockState(platformPos).canBeReplaced()) {
+                    entries.add(new ModifyBlockEntry(
+                            platformPos, planks, TOWER_PLANK_BUILD_TIME));
+                }
+            }
+        }
+
+        // The exit ladder is placed last because it is supported by the new
+        // platform centre block.
+        if (!level().getBlockState(ladderOpening).is(Blocks.LADDER)) {
+            entries.add(new ModifyBlockEntry(
+                    ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
+        }
+        return entries;
+    }
+
+    private void stopHorizontalMovementForTower() {
+        var movement = getDeltaMovement();
+        setXxa(0);
+        setZza(0);
+        setSpeed(0);
+        setDeltaMovement(0, Math.min(movement.y, 0), 0);
+        getMoveControl().setWantedPosition(getX(), getY(), getZ(), 0);
+    }
+
+    public boolean isBuildingTower() {
+        return buildingTower;
+    }
+
 
 
 
 
     @Override
     public void onPathSet() {
-        terrainModifier.cancelTask();
+        if (!buildingTower) {
+            terrainModifier.cancelTask();
+        }
     }
 
     @Override
