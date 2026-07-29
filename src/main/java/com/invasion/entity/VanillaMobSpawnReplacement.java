@@ -15,6 +15,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -121,6 +122,9 @@ public final class VanillaMobSpawnReplacement {
             converted.setPersistenceRequired();
         }
         converted.setNexus(nexus);
+        double reducedMaxHealth = converted.getMaxHealth() * 0.5D;
+        converted.getAttribute(Attributes.MAX_HEALTH).setBaseValue(reducedMaxHealth);
+        converted.setHealth((float)reducedMaxHealth);
         if (converted instanceof EntityIMLiving imMob) {
             // Nexus-bound wave mobs are intentionally persistent, but natural
             // replacements must still occupy a slot in Minecraft's monster cap.
