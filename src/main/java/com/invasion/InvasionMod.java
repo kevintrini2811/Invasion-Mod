@@ -3,8 +3,11 @@ package com.invasion;
 import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.util.ChatUtils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableSource;
 import net.minecraft.resources.Identifier;
@@ -21,6 +24,7 @@ import com.invasion.entity.InvEntities;
 import com.invasion.entity.VanillaMobSpawnReplacement;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.WorldNexusStorage;
+import com.invasion.network.NexusHudPayload;
 import com.invasion.particle.InvParticles;
 
 import net.fabricmc.api.ModInitializer;
@@ -51,6 +55,7 @@ public class InvasionMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        PayloadTypeRegistry.clientboundPlay().register(NexusHudPayload.TYPE, NexusHudPayload.CODEC);
         CONFIG.loadConfig(FabricLoader.getInstance().getConfigDir().resolve("invasion_config.cfg").toFile());
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {
             dispatcher.register(InvasionCommand.create(dispatcher, registries));
@@ -71,6 +76,12 @@ public class InvasionMod implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> SERVER = server);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
                 WorldNexusStorage.of((ServerLevel)handler.player.level()).onPlayerJoined(handler.player));
+        ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
+            if (ServerPlayNetworking.canSend(player, NexusHudPayload.TYPE)) {
+                ServerPlayNetworking.send(player, NexusHudPayload.hidden());
+            }
+            WorldNexusStorage.of(destination).onPlayerJoined(player);
+        });
         InvBlocks.bootstrap();
         InvItems.bootstrap();
         InvSounds.boostrap();

@@ -8,13 +8,11 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
-import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity.RemovalReason;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,6 +37,8 @@ import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
+import com.invasion.network.NexusHudPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 public class Nexus implements ControllableNexusAccess {
     private static final int INITIAL_SPAWN_RADIUS = 52;
@@ -92,7 +92,7 @@ public class Nexus implements ControllableNexusAccess {
     private final Participants boundPlayers = new Participants(this);
     private final Combatants mobList;
     private final AttackerAI attackerAI = new AttackerAI(this);
-    private final ServerBossEvent waveProgressHud;
+    private NexusHudPayload lastHudPayload = NexusHudPayload.hidden();
 
     private final InvasionConfig config = InvasionMod.getConfig();
 
@@ -156,12 +156,6 @@ public class Nexus implements ControllableNexusAccess {
         this.world = world;
         this.storage = storage;
         this.pos = pos;
-        waveProgressHud = new ServerBossEvent(
-                uuid,
-                createWaveProgressMessage(),
-                BossEvent.BossBarColor.GREEN,
-                BossEvent.BossBarOverlay.PROGRESS);
-        waveProgressHud.setVisible(false);
         mobList = new Combatants(this);
         boundingBoxToRadius = computeSpawnArea();
         nexusItemStacks.setChangeListener(storage::setDirty);
@@ -252,10 +246,10 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     public void onPlayerJoined(ServerPlayer player) {
-        if (!mode.isActive() || !boundPlayers.reconnect(player)) {
-            return;
+        if (mode.isActive()) {
+            sendWaveProgressHud(player, createHudPayload());
         }
-        waveProgressHud.addPlayer(player);
+        boundPlayers.reconnect(player);
     }
 
     public void tick() {
@@ -311,8 +305,7 @@ public class Nexus implements ControllableNexusAccess {
         currentWave = 0;
         activated = false;
         paused = false;
-        waveProgressHud.removeAllPlayers();
-        waveProgressHud.setVisible(false);
+        updateWaveProgressHud();
 
         if (killEnemies) {
             killAllMobs();
@@ -424,36 +417,31 @@ public class Nexus implements ControllableNexusAccess {
     public void registerMobClose() {
     }
 
-    private Component createWaveProgressMessage() {
-        int total = Math.max(0, mobsToKillInWave);
-        int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
-        int progressPercent = total == 0 ? 0 : defeated * 100 / total;
-        return Component.translatable(
-                "invmod.message.wave.progress",
-                currentWave, defeated, total, progressPercent + "%")
-                .withStyle(ChatFormatting.GREEN);
-    }
-
     private void updateWaveProgressHud() {
-        if (!mode.isActive()) {
-            waveProgressHud.removeAllPlayers();
-            waveProgressHud.setVisible(false);
+        NexusHudPayload payload = createHudPayload();
+        if (payload.equals(lastHudPayload)) {
             return;
         }
 
+        lastHudPayload = payload;
+        for (ServerPlayer player : world.players()) {
+            sendWaveProgressHud(player, payload);
+        }
+    }
+
+    private NexusHudPayload createHudPayload() {
+        if (!mode.isActive()) {
+            return NexusHudPayload.hidden();
+        }
         int total = Math.max(0, mobsToKillInWave);
         int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
-        waveProgressHud.setName(createWaveProgressMessage());
-        waveProgressHud.setProgress(total == 0 ? 0 : (float) defeated / total);
-        waveProgressHud.setVisible(true);
+        int healthPercent = Math.max(0, Math.min(100, hp * 100 / MAX_HEALTH));
+        return new NexusHudPayload(true, defeated, total, healthPercent);
+    }
 
-        for (ServerPlayer player : List.copyOf(waveProgressHud.getPlayers())) {
-            if (player.level() != world) {
-                waveProgressHud.removePlayer(player);
-            }
-        }
-        for (ServerPlayer player : world.players()) {
-            waveProgressHud.addPlayer(player);
+    private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {
+        if (ServerPlayNetworking.canSend(player, NexusHudPayload.TYPE)) {
+            ServerPlayNetworking.send(player, payload);
         }
     }
 

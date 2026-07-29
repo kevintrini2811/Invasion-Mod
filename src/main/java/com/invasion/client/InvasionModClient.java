@@ -6,6 +6,8 @@ import com.invasion.client.render.animation.AnimationLoader;
 import com.invasion.client.screen.NexusScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.server.packs.PackType;
 
@@ -13,6 +15,12 @@ public class InvasionModClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(
+                com.invasion.network.NexusHudPayload.TYPE,
+                (payload, context) -> context.client().execute(() -> NexusHud.update(payload)));
+        ClientPlayConnectionEvents.DISCONNECT.register(
+                (handler, client) -> NexusHud.update(com.invasion.network.NexusHudPayload.hidden()));
+        NexusHud.bootstrap();
         InvRenderers.bootstrap();
 
         MenuScreens.register(InvScreenHandlers.NEXUS, NexusScreen::new);
