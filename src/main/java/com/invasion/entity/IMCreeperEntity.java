@@ -22,14 +22,15 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.DifficultyInstance;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -49,9 +50,9 @@ import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
@@ -69,6 +70,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
 
     private boolean explosionDeath;
     private boolean commitToExplode;
+    private boolean manuallyIgnited;
 
     private Direction explodeDirection = Direction.UP;
     @Nullable
@@ -83,21 +85,10 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         return Creeper.createAttributes().add(Attributes.MOVEMENT_SPEED, 0.21);
     }
 
-    public static boolean rollChargedVariant(RandomSource random) {
-        return CHARGED_CHANCE_PERCENT >= 100
-                || random.nextInt(100) < CHARGED_CHANCE_PERCENT;
-    }
-
-    @Override
-    public SpawnGroupData finalizeSpawn(
-            ServerLevelAccessor world, DifficultyInstance difficulty,
-            EntitySpawnReason spawnReason, @Nullable SpawnGroupData data) {
-        data = super.finalizeSpawn(world, difficulty, spawnReason, data);
-        if (spawnReason == EntitySpawnReason.SPAWN_ITEM_USE
-                && rollChargedVariant(getRandom())) {
-            setTier(2);
-        }
-        return data;
+    public static boolean rollChargedVariant(
+            RandomSource random, int wave) {
+        int chancePercent = Mth.clamp(wave - 9, 1, 100);
+        return random.nextInt(100) < chancePercent;
     }
 
     @Override
@@ -160,6 +151,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         } else if (isAlive()) {
             tickNexusFuse();
             tickStationaryFuse();
+            if (manuallyIgnited) {
+                setFuseSpeed(1);
+            }
             this.lastFuseTime = currentFuseTime;
             int speed = getFuseSpeed();
 
@@ -292,6 +286,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, Powera
         super.addAdditionalSaveData(nbt);
         nbt.putShort("Fuse", (short)fuseTime);
         nbt.putInt("stationaryTicks", stationaryTicks);
+        nbt.putBoolean("ignited", manuallyIgnited);
     }
 
     @Override

@@ -373,7 +373,8 @@ public class IMWaveSpawner implements Spawner {
 		if (nexus.getCurrentWave() >= 10
 				&& construct.entityType() == InvEntities.CREEPER
 				&& construct.tier() == 1
-				&& IMCreeperEntity.rollChargedVariant(getRandom())) {
+				&& IMCreeperEntity.rollChargedVariant(
+						getRandom(), nexus.getCurrentWave())) {
 			return new EntityConstruct(
 					construct.entityType(),
 					construct.texture(),
