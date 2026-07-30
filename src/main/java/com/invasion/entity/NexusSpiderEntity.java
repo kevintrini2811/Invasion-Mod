@@ -113,7 +113,7 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
         targetSelector.addGoal(1, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
         targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
         targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(
-                this, Villager.class, this::getAggroRange, true));
+                this, AbstractVillager.class, this::getAggroRange, true));
         //targetSelector.add(3, new NoNexusPathGoal(this, new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F)));
         targetSelector.addGoal(4, new HurtByTargetGoal(this));
     }

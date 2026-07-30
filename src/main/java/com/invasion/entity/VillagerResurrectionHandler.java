@@ -5,7 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
 
 public final class VillagerResurrectionHandler {
     private VillagerResurrectionHandler() {
@@ -17,7 +17,7 @@ public final class VillagerResurrectionHandler {
     }
 
     private static void afterDeath(Entity victim, DamageSource source) {
-        if (!(victim instanceof Villager villager)
+        if (!(victim instanceof AbstractVillager villager)
                 || !(villager.level() instanceof ServerLevel world)
                 || !(source.getEntity() instanceof NexusEntity killer)) {
             return;
