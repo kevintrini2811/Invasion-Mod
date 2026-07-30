@@ -30,9 +30,11 @@ import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.IMCreeperEntity;
+import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
+import com.invasion.entity.NexusSpiderEntity;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
@@ -502,8 +504,11 @@ public class IMWaveSpawner implements Spawner {
 	private void equipRandomWaveArmor(Mob mob) {
 		boolean canWearWaveArmor = mob instanceof IMSkeletonEntity
 				|| mob instanceof PigmanEngineerEntity
-				|| mob instanceof EntityIMZombie zombie && !zombie.isBrute()
-				|| mob instanceof EntityIMZombiePigman pigman && !pigman.isBrute();
+				|| mob instanceof EntityIMZombie
+				|| mob instanceof EntityIMZombiePigman
+				|| mob instanceof IMCreeperEntity
+				|| mob instanceof NexusSpiderEntity
+				|| mob instanceof IMEndermanEntity;
 		if (!canWearWaveArmor) {
 			return;
 		}
@@ -516,7 +521,14 @@ public class IMWaveSpawner implements Spawner {
 		List<Item> availableArmor = new ArrayList<>();
 		for (Item armor : randomWaveArmor) {
 			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
-			if (slot.isArmor() && mob.getItemBySlot(slot).isEmpty()) {
+			boolean helmetOnly = mob instanceof IMCreeperEntity
+					|| mob instanceof NexusSpiderEntity
+					|| mob instanceof IMEndermanEntity
+					|| mob instanceof EntityIMZombie zombie && zombie.isBrute()
+					|| mob instanceof EntityIMZombiePigman pigman && pigman.isBrute();
+			if (slot.isArmor()
+					&& (!helmetOnly || slot == EquipmentSlot.HEAD)
+					&& mob.getItemBySlot(slot).isEmpty()) {
 				availableArmor.add(armor);
 			}
 		}

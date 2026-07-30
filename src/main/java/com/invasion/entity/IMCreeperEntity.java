@@ -34,6 +34,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -92,6 +93,15 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     public IMCreeperEntity(EntityType<IMCreeperEntity> type, Level world) {
         super(type, world);
+        setCanPickUpLoot(true);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot == EquipmentSlot.HEAD
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
     public static AttributeSupplier.Builder createAttributes() {

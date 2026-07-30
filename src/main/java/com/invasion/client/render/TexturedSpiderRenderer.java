@@ -7,6 +7,7 @@ import net.minecraft.client.model.monster.spider.SpiderModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EquipmentSlot;
 
 public final class TexturedSpiderRenderer<T extends NexusSpiderEntity>
         extends MobRenderer<T, InvasionSpiderRenderState, SpiderModel> {
@@ -15,6 +16,8 @@ public final class TexturedSpiderRenderer<T extends NexusSpiderEntity>
     public TexturedSpiderRenderer(EntityRendererProvider.Context context, Identifier texture) {
         super(context, new SpiderModel(context.bakeLayer(ModelLayers.SPIDER)), 0.8F);
         this.texture = texture;
+        addLayer(new HeadArmorLayer<>(
+                this, context, state -> state.headEquipment));
     }
 
     @Override
@@ -26,6 +29,7 @@ public final class TexturedSpiderRenderer<T extends NexusSpiderEntity>
     public void extractRenderState(T entity, InvasionSpiderRenderState state, float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         state.invasionScale = entity.scaleAmount();
+        state.headEquipment = entity.getItemBySlot(EquipmentSlot.HEAD);
     }
 
     @Override

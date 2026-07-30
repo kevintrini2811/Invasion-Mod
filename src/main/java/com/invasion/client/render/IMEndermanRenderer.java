@@ -23,6 +23,8 @@ public final class IMEndermanRenderer
         blockModelResolver = context.getBlockModelResolver();
         addLayer(new EnderEyesLayer(this));
         addLayer(new CarriedBlockLayer(this));
+        addLayer(new HeadArmorLayer<>(
+                this, context, state -> state.headEquipment));
     }
 
     @Override

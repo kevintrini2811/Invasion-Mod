@@ -30,6 +30,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.AgeableMob.AgeableMobGroupData;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
@@ -48,6 +49,7 @@ import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
@@ -75,7 +77,16 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
     public NexusSpiderEntity(EntityType<? extends NexusSpiderEntity> type, Level world) {
         super(type, world);
         moveControl = new IMSpiderMoveControl(this);
+        setCanPickUpLoot(true);
         resetHealth();
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot == EquipmentSlot.HEAD
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
