@@ -44,7 +44,14 @@ public final class IMDrownedEntity extends EntityIMZombie
 
     public static AttributeSupplier.Builder createAttributes() {
         return EntityIMZombie.createTierT1V0Attributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.17D)
                 .add(Attributes.STEP_HEIGHT, 1.0D);
+    }
+
+    @Override
+    protected void initTieredAttributes() {
+        super.initTieredAttributes();
+        setBaseMovementSpeed(0.17D);
     }
 
     @Override
