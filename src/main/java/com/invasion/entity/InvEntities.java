@@ -15,6 +15,12 @@ import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 public interface InvEntities {
     EntityType<IMSkeletonEntity> SKELETON = register("skeleton", EntityType.Builder.<IMSkeletonEntity>of(IMSkeletonEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.99F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMBoggedEntity> BOGGED = register(
+            "bogged",
+            EntityType.Builder.<IMBoggedEntity>of(
+                            IMBoggedEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.99F).eyeHeight(1.74F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMWitherSkeletonEntity> WITHER_SKELETON = register(
             "wither_skeleton",
             EntityType.Builder.<IMWitherSkeletonEntity>of(
