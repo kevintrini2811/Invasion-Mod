@@ -32,6 +32,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int waitingForNotify;
     private int activeTaskNodeIndex = -1;
     private int completedTaskNodeIndex = -1;
+    private int completedBridgeMoveTicks;
     private Status lastActionResult = Status.SUCCESS;
     private boolean continuingEngineerBridge;
     @Nullable
@@ -173,6 +174,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         }
         completedTaskNodeIndex = activeTaskNodeIndex;
         activeTaskNodeIndex = -1;
+        completedBridgeMoveTicks = 0;
         // Time spent deliberately standing still for a terrain job must not
         // trigger the goal's stuck-path recovery immediately afterwards.
         stuckTime = 0;
@@ -339,12 +341,25 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             BlockPos moveTarget = getCompletedActionMoveTarget(
                     currentAction, getPath().getNextNodePos());
             if (!captureCompletedBridgeTarget(moveTarget)) {
+                if (++completedBridgeMoveTicks >= 20 * 3) {
+                    InvasionMod.LOGGER.warn(
+                            "[EngineerBridge] failed to enter completed bridge step; repathing: entity={}, path={}, node={}, target={}, pos={}",
+                            mob.getId(),
+                            System.identityHashCode(getPath()),
+                            nodeIndex,
+                            moveTarget,
+                            mob.blockPosition()
+                    );
+                    abandonStalledBridgePath();
+                    return;
+                }
                 moveToCompletedBridgeTarget(moveTarget);
                 return;
             }
 
             // End this bridge step without letting vanilla immediately start
             // moving towards the next, still unsupported path node.
+            completedBridgeMoveTicks = 0;
             stopHorizontalMovement();
             lastCompletedBridgeTarget = moveTarget;
             getPath().setNextNodeIndex(nodeIndex + 1);
@@ -609,6 +624,17 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         );
     }
 
+    private void abandonStalledBridgePath() {
+        continuingEngineerBridge = false;
+        lastCompletedBridgeTarget = null;
+        activeTaskNodeIndex = -1;
+        completedTaskNodeIndex = -1;
+        completedBridgeMoveTicks = 0;
+        lastActionResult = Status.OUT_OF_RANGE;
+        stop();
+        stuckTime = 0;
+    }
+
     private void moveToCompletedActionNode(BlockPos nodePos) {
         mob.fallDistance = 0;
         mob.getMoveControl().setWantedPosition(
@@ -740,6 +766,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 }
                 activeTaskNodeIndex = -1;
                 completedTaskNodeIndex = -1;
+                completedBridgeMoveTicks = 0;
                 PathingDebugger.sendPathToClients(mob, currentPath, 0.5F);
             }
         }
