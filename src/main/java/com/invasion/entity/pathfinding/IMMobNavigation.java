@@ -33,6 +33,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int activeTaskNodeIndex = -1;
     private int completedTaskNodeIndex = -1;
     private int completedBridgeMoveTicks;
+    private int engineerTaskStartTick = -1;
+    private int engineerIdleTicks;
+    private Vec3 lastEngineerProgressPos = Vec3.ZERO;
     private Status lastActionResult = Status.SUCCESS;
     private boolean continuingEngineerBridge;
     @Nullable
@@ -152,6 +155,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 	@Override
     public void notifyTask(Status result) {
 	    waitingForNotify = 0;
+        engineerTaskStartTick = -1;
+        engineerIdleTicks = 0;
+        lastEngineerProgressPos = mob.position();
         lastActionResult = result;
         if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
             InvasionMod.LOGGER.warn(
@@ -203,6 +209,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         // actively owns a ladder climb, so recover any orphaned state.
         if (!climbingLadder && !overridingGravityForLadder && mob.isNoGravity()) {
             mob.setNoGravity(false);
+        }
+        if (mob instanceof PigmanEngineerEntity engineer) {
+            tickEngineerRecovery(engineer);
         }
         if (climbingLadder) {
             climbLadder();
@@ -390,6 +399,54 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             handlePathAction(currentAction);
 	    }
 	}
+
+    private void tickEngineerRecovery(PigmanEngineerEntity engineer) {
+        if (waitingForNotify > 0
+                && engineerTaskStartTick >= 0
+                && mob.tickCount - engineerTaskStartTick >= 20 * 12) {
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] terrain task exceeded absolute timeout; repathing: entity={}, path={}, node={}, pos={}",
+                    mob.getId(),
+                    path == null ? 0 : System.identityHashCode(path),
+                    activeTaskNodeIndex,
+                    mob.blockPosition()
+            );
+            engineer.cancelStalledTerrainTask(Status.OUT_OF_RANGE);
+            abandonStalledBridgePath();
+            return;
+        }
+
+        Vec3 currentPos = mob.position();
+        if (currentPos.distanceToSqr(lastEngineerProgressPos) > 0.01D) {
+            lastEngineerProgressPos = currentPos;
+            engineerIdleTicks = 0;
+            return;
+        }
+
+        boolean shouldMakeProgress =
+                waitingForNotify == 0
+                        && !engineer.isBuildingTower()
+                        && !climbingLadder
+                        && engineer.hasNexus()
+                        && engineer.findDistanceToNexus() > 4;
+        if (!shouldMakeProgress) {
+            engineerIdleTicks = 0;
+            lastEngineerProgressPos = currentPos;
+            return;
+        }
+
+        if (++engineerIdleTicks >= 20 * 5) {
+            InvasionMod.LOGGER.warn(
+                    "[EngineerBridge] engineer made no movement progress; repathing: entity={}, path={}, node={}, pos={}",
+                    mob.getId(),
+                    path == null ? 0 : System.identityHashCode(path),
+                    path == null ? -1 : path.getNextNodeIndex(),
+                    mob.blockPosition()
+            );
+            abandonStalledBridgePath();
+            lastEngineerProgressPos = currentPos;
+        }
+    }
 
     @Nullable
     private BlockPos getTargetedLadder() {
@@ -625,6 +682,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         activeTaskNodeIndex = -1;
         completedTaskNodeIndex = -1;
         completedBridgeMoveTicks = 0;
+        engineerTaskStartTick = -1;
+        engineerIdleTicks = 0;
         lastActionResult = Status.OUT_OF_RANGE;
         stop();
         stuckTime = 0;
@@ -701,6 +760,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             InvasionMod.LOGGER.debug("Handling path action {}", action);
             if (mob instanceof NexusEntity e && e.handlePathAction(getPath().getNextNodePos(), action, this)) {
                 activeTaskNodeIndex = nodeIndex;
+                engineerTaskStartTick = mob.tickCount;
                 waitingForNotify = action.getType() == PathAction.Type.BRIDGE
                         && mob instanceof PigmanEngineerEntity
                         ? ENGINEER_BRIDGE_WAIT_TIME
