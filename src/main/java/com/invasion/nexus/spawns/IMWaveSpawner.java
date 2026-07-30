@@ -3,10 +3,12 @@ package com.invasion.nexus.spawns;
 import com.invasion.nexus.wave.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -14,7 +16,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.Nullable;
@@ -22,71 +23,19 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.InvasionMod;
 import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
+import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
 import com.invasion.entity.PigmanEngineerEntity;
-import com.invasion.item.InvItems;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.NexusAccess;
 
 public class IMWaveSpawner implements Spawner {
 	private static final int MAX_SPAWN_TRIES = 20;
-	private static final List<Item> RANDOM_WAVE_WEAPONS = List.of(
-			Items.WOODEN_SWORD,
-			Items.STONE_SWORD,
-			Items.IRON_SWORD,
-			Items.GOLDEN_SWORD,
-			Items.DIAMOND_SWORD,
-			Items.NETHERITE_SWORD,
-			Items.WOODEN_AXE,
-			Items.STONE_AXE,
-			Items.IRON_AXE,
-			Items.GOLDEN_AXE,
-			Items.DIAMOND_AXE,
-			Items.NETHERITE_AXE,
-			Items.TRIDENT,
-			Items.MACE,
-			Items.BOW,
-			Items.CROSSBOW,
-			InvItems.INFUSED_SWORD,
-			InvItems.SEARING_BOW);
-	private static final List<Item> RANDOM_RANGED_WAVE_WEAPONS = List.of(
-			Items.BOW,
-			Items.CROSSBOW,
-			InvItems.SEARING_BOW);
-	private static final List<Item> RANDOM_MELEE_WAVE_WEAPONS =
-			RANDOM_WAVE_WEAPONS.stream()
-					.filter(item -> !RANDOM_RANGED_WAVE_WEAPONS.contains(item))
-					.toList();
-	private static final List<Item> RANDOM_WAVE_ARMOR = List.of(
-			Items.LEATHER_HELMET,
-			Items.LEATHER_CHESTPLATE,
-			Items.LEATHER_LEGGINGS,
-			Items.LEATHER_BOOTS,
-			Items.CHAINMAIL_HELMET,
-			Items.CHAINMAIL_CHESTPLATE,
-			Items.CHAINMAIL_LEGGINGS,
-			Items.CHAINMAIL_BOOTS,
-			Items.IRON_HELMET,
-			Items.IRON_CHESTPLATE,
-			Items.IRON_LEGGINGS,
-			Items.IRON_BOOTS,
-			Items.GOLDEN_HELMET,
-			Items.GOLDEN_CHESTPLATE,
-			Items.GOLDEN_LEGGINGS,
-			Items.GOLDEN_BOOTS,
-			Items.DIAMOND_HELMET,
-			Items.DIAMOND_CHESTPLATE,
-			Items.DIAMOND_LEGGINGS,
-			Items.DIAMOND_BOOTS,
-			Items.NETHERITE_HELMET,
-			Items.NETHERITE_CHESTPLATE,
-			Items.NETHERITE_LEGGINGS,
-			Items.NETHERITE_BOOTS);
 	public static final int MIN_SPAWN_RADIUS = 8;
 	private static final int NORMAL_SPAWN_HEIGHT = 30;
 	private static final int MIN_SPAWN_POINTS_TO_KEEP = 15;
@@ -97,6 +46,10 @@ public class IMWaveSpawner implements Spawner {
 	private SpawnPointContainer spawnPointContainer = new SpawnPointContainer();
 
 	private final NexusAccess nexus;
+	private final List<Item> randomMeleeWaveWeapons;
+	private final List<Item> randomRangedWaveWeapons;
+	private final List<Item> randomWaveWeapons;
+	private final List<Item> randomWaveArmor;
 
 	@Nullable
 	private Wave currentWave;
@@ -113,6 +66,25 @@ public class IMWaveSpawner implements Spawner {
 	public IMWaveSpawner(NexusAccess nexus, int radius) {
 		this.nexus = nexus;
 		this.spawnRadius = radius;
+		randomMeleeWaveWeapons = findRegisteredItems(
+				EquipmentUtil::isMeleeWeapon);
+		randomRangedWaveWeapons = findRegisteredItems(
+				EquipmentUtil::isRangedWeapon);
+		randomWaveWeapons = Stream.concat(
+						randomMeleeWaveWeapons.stream(),
+						randomRangedWaveWeapons.stream())
+				.distinct()
+				.toList();
+		randomWaveArmor = findRegisteredItems(
+				EquipmentUtil::isHumanoidArmor);
+	}
+
+	private static List<Item> findRegisteredItems(
+			java.util.function.Predicate<net.minecraft.world.item.ItemStack>
+					predicate) {
+		return BuiltInRegistries.ITEM.stream()
+				.filter(item -> predicate.test(item.getDefaultInstance()))
+				.toList();
 	}
 
     @Override
@@ -367,8 +339,14 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 		List<Item> weaponPool = getRandom().nextBoolean()
-				? RANDOM_MELEE_WAVE_WEAPONS
-				: RANDOM_RANGED_WAVE_WEAPONS;
+				? randomMeleeWaveWeapons
+				: randomRangedWaveWeapons;
+		if (weaponPool.isEmpty()) {
+			weaponPool = randomWaveWeapons;
+		}
+		if (weaponPool.isEmpty()) {
+			return;
+		}
 		Item weapon = weaponPool.get(getRandom().nextInt(weaponPool.size()));
 		mob.setItemSlot(EquipmentSlot.MAINHAND, weapon.getDefaultInstance());
 	}
@@ -397,8 +375,11 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		Item weapon = RANDOM_WAVE_WEAPONS.get(
-				getRandom().nextInt(RANDOM_WAVE_WEAPONS.size()));
+		if (randomWaveWeapons.isEmpty()) {
+			return;
+		}
+		Item weapon = randomWaveWeapons.get(
+				getRandom().nextInt(randomWaveWeapons.size()));
 		mob.setItemSlot(
 				net.minecraft.world.entity.EquipmentSlot.MAINHAND,
 				weapon.getDefaultInstance());
@@ -419,9 +400,9 @@ public class IMWaveSpawner implements Spawner {
 		}
 
 		List<Item> availableArmor = new ArrayList<>();
-		for (Item armor : RANDOM_WAVE_ARMOR) {
+		for (Item armor : randomWaveArmor) {
 			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
-			if (mob.getItemBySlot(slot).isEmpty()) {
+			if (slot.isArmor() && mob.getItemBySlot(slot).isEmpty()) {
 				availableArmor.add(armor);
 			}
 		}

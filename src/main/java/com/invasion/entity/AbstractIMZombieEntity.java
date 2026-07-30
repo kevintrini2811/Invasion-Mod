@@ -1,6 +1,5 @@
 package com.invasion.entity;
 
-import com.invasion.item.InvItems;
 import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
@@ -9,7 +8,6 @@ import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.ai.scaffold.ScaffoldView;
 import com.invasion.util.math.PosUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -79,21 +77,12 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     private static boolean isUsableWeapon(ItemStack stack) {
-        return stack.is(ItemTags.SWORDS)
-                || stack.is(ItemTags.AXES)
-                || stack.is(Items.TRIDENT)
-                || stack.is(Items.MACE)
-                || stack.is(InvItems.INFUSED_SWORD)
-                || stack.is(Items.BOW)
-                || stack.is(InvItems.SEARING_BOW)
-                || stack.is(Items.CROSSBOW);
+        return EquipmentUtil.isWeapon(stack);
     }
 
     public final boolean isHoldingRangedWeapon() {
-        ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
-        return heldItem.is(Items.BOW)
-                || heldItem.is(InvItems.SEARING_BOW)
-                || heldItem.is(Items.CROSSBOW);
+        return EquipmentUtil.isRangedWeapon(
+                getItemBySlot(EquipmentSlot.MAINHAND));
     }
 
     protected final void addWeaponCombatGoals(double meleeSpeed) {

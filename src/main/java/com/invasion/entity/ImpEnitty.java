@@ -1,6 +1,5 @@
 package com.invasion.entity;
 
-import com.invasion.item.InvItems;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
@@ -14,7 +13,6 @@ import com.invasion.entity.ai.goal.target.RetaliateGoal;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
-import net.minecraft.tags.ItemTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
@@ -112,21 +110,11 @@ public class ImpEnitty extends IMMobEntity
     }
 
     private static boolean isUsableWeapon(ItemStack stack) {
-        return stack.is(ItemTags.SWORDS)
-                || stack.is(ItemTags.AXES)
-                || stack.is(Items.TRIDENT)
-                || stack.is(Items.MACE)
-                || stack.is(InvItems.INFUSED_SWORD)
-                || stack.is(Items.BOW)
-                || stack.is(InvItems.SEARING_BOW)
-                || stack.is(Items.CROSSBOW);
+        return EquipmentUtil.isWeapon(stack);
     }
 
     private boolean isHoldingRangedWeapon() {
-        ItemStack heldItem = getMainHandItem();
-        return heldItem.is(Items.BOW)
-                || heldItem.is(InvItems.SEARING_BOW)
-                || heldItem.is(Items.CROSSBOW);
+        return EquipmentUtil.isRangedWeapon(getMainHandItem());
     }
 
     @Override

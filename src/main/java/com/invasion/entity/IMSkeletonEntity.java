@@ -102,7 +102,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
 
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
-        ItemStack bow = getItemInHand(ProjectileUtil.getWeaponHoldingHand(this, Items.BOW));
+        ItemStack bow = getMainHandItem();
         ItemStack arrow = getProjectile(bow);
         AbstractArrow projectile = createArrowProjectile(arrow, pullProgress, bow);
         double dX = target.getX() - getX();
