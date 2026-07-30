@@ -152,6 +152,9 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
     @Override
     public void setBaby(boolean baby) {
+        if (baby && isBrute()) {
+            baby = false;
+        }
         entityData.set(BABY, baby);
         if (!level().isClientSide()) {
             AttributeUtil.toggleAttribute(
