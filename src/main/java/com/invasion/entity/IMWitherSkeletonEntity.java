@@ -3,6 +3,7 @@ package com.invasion.entity;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
@@ -27,10 +28,12 @@ import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
+public final class IMWitherSkeletonEntity extends IMSkeletonEntity
+        implements Miner {
     public IMWitherSkeletonEntity(
             EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);
+        getNavigatorNew().setCanDestroyBlocks(true);
     }
 
     public boolean isHoldingRangedWeapon() {
@@ -63,6 +66,7 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(2, new PredicatedGoal(
                 new SkeletonAttackNexusGoal<>(this),
                 this::isHoldingRangedWeapon));
