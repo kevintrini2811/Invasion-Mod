@@ -74,7 +74,7 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
                         ? CubeListBuilder.create().texOffs(0, 16).addBox(
                                 -2, 0, -2, 4, 12, 4, dilation)
                         : slot == EquipmentSlot.FEET
-                        ? CubeListBuilder.create().texOffs(0, 22).addBox(
+                        ? CubeListBuilder.create().texOffs(0, 16).addBox(
                                 -2, 6, -2, 4, 6, 4, dilation)
                         : CubeListBuilder.create(),
                 PartPose.offset(-2, 12, 0));
@@ -83,7 +83,7 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
                         ? CubeListBuilder.create().texOffs(0, 16).mirror().addBox(
                                 -2, 0, -2, 4, 12, 4, dilation)
                         : slot == EquipmentSlot.FEET
-                        ? CubeListBuilder.create().texOffs(0, 22).mirror().addBox(
+                        ? CubeListBuilder.create().texOffs(0, 16).mirror().addBox(
                                 -2, 6, -2, 4, 6, 4, dilation)
                         : CubeListBuilder.create(),
                 PartPose.offset(2, 12, 0));
