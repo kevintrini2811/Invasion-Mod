@@ -18,6 +18,7 @@ import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.IMCaveSpiderEntity;
 import com.invasion.entity.IMEndermanEntity;
+import com.invasion.entity.IMZombifiedPiglinEntity;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.JumpingSpiderEntity;
@@ -103,7 +104,9 @@ public class InvasionConfig extends Config {
     public int getHealth(Combatant<?> mob) {
         String healthKey;
         int healthMultiplier = 1;
-        if (mob instanceof EntityIMZombiePigman pigman) {
+        if (mob instanceof IMZombifiedPiglinEntity piglin) {
+            healthKey = "IMZombiePigman-T" + piglin.getTier();
+        } else if (mob instanceof EntityIMZombiePigman pigman) {
             healthKey = "IMZombiePigman-T" + pigman.getTier();
         } else if (mob instanceof EntityIMZombie zombie) {
             healthKey = "IMZombie-T" + zombie.getTier();

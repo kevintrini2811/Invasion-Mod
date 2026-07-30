@@ -5,10 +5,17 @@ import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.item.InvItems;
+import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
+import com.invasion.nexus.NexusAccess;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
@@ -17,6 +24,7 @@ import net.minecraft.world.entity.animal.golem.AbstractGolem;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -27,11 +35,16 @@ import net.minecraft.world.level.storage.ValueOutput;
  */
 public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
         implements NexusEntity {
+    private static final EntityDataAccessor<Integer> TIER =
+            SynchedEntityData.defineId(
+                    IMZombifiedPiglinEntity.class,
+                    EntityDataSerializers.INT);
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
 
     public IMZombifiedPiglinEntity(
             EntityType<? extends ZombifiedPiglin> type, Level level) {
         super(type, level);
+        applyTierAttributes();
         resetHealth();
     }
 
@@ -42,6 +55,50 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     @Override
     protected PathNavigation createNavigation(Level level) {
         return new IMMobNavigation(this);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TIER, 1);
+    }
+
+    public int getTier() {
+        return entityData.get(TIER);
+    }
+
+    @Override
+    public void onSpawned(
+            @Nullable NexusAccess nexus, EntityConstruct spawnConditions) {
+        setNexus(nexus);
+        entityData.set(TIER, Math.clamp(spawnConditions.tier(), 1, 2));
+        applyTierAttributes();
+        if (getTier() == 2) {
+            equipTierTwoArmor();
+        }
+        resetHealth();
+    }
+
+    private void applyTierAttributes() {
+        boolean tierTwo = getTier() == 2;
+        getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                .setBaseValue(tierTwo ? 0.35D : 0.25D);
+        getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE)
+                .setBaseValue(tierTwo ? 12D : 8D);
+    }
+
+    private void equipTierTwoArmor() {
+        equipGoldArmor(EquipmentSlot.HEAD, Items.GOLDEN_HELMET);
+        equipGoldArmor(EquipmentSlot.CHEST, Items.GOLDEN_CHESTPLATE);
+        equipGoldArmor(EquipmentSlot.LEGS, Items.GOLDEN_LEGGINGS);
+        equipGoldArmor(EquipmentSlot.FEET, Items.GOLDEN_BOOTS);
+    }
+
+    private void equipGoldArmor(
+            EquipmentSlot slot, net.minecraft.world.item.Item item) {
+        if (getItemBySlot(slot).isEmpty() && getRandom().nextInt(5) == 1) {
+            setItemSlot(slot, item.getDefaultInstance());
+        }
     }
 
     @Override
@@ -72,12 +129,15 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     @Override
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
+        output.putInt("tier", getTier());
         nexus.writeNbt(output);
     }
 
     @Override
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
+        entityData.set(TIER, Math.clamp(input.getIntOr("tier", 1), 1, 2));
+        applyTierAttributes();
         nexus.readNbt(input);
     }
 
