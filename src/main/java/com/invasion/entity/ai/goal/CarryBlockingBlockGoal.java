@@ -10,7 +10,12 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.GrowingPlantBlock;
+import net.minecraft.world.level.block.SnowLayerBlock;
+import net.minecraft.world.level.block.VegetationBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
@@ -19,7 +24,6 @@ public final class CarryBlockingBlockGoal extends Goal {
     private final IMEndermanEntity mob;
     private BlockPos target;
     private BlockState expectedState;
-    private int pickupTime;
 
     public CarryBlockingBlockGoal(IMEndermanEntity mob) {
         this.mob = mob;
@@ -39,7 +43,7 @@ public final class CarryBlockingBlockGoal extends Goal {
         Optional<BlockPos> obstacle = BlockPos.betweenClosedStream(
                 mob.getDimensions(mob.getPose()).makeBoundingBox(
                                 com.invasion.util.math.PosUtils.bottomCenter(next)))
-                .filter(pos -> !mob.level().getBlockState(pos).isAir())
+                .filter(pos -> canCarry(mob.level().getBlockState(pos)))
                 .map(BlockPos::immutable)
                 .min(Comparator.comparingDouble(pos ->
                         mob.distanceToSqr(com.invasion.util.math.PosUtils.center(pos))));
@@ -48,7 +52,28 @@ public final class CarryBlockingBlockGoal extends Goal {
         }
         target = obstacle.get();
         expectedState = mob.level().getBlockState(target);
-        return !expectedState.isAir();
+        return canCarry(expectedState);
+    }
+
+    private static boolean canCarry(BlockState state) {
+        if (state.isAir()) {
+            return false;
+        }
+        if (state.getBlock() instanceof SnowLayerBlock) {
+            return state.getValue(SnowLayerBlock.LAYERS)
+                    == SnowLayerBlock.MAX_HEIGHT;
+        }
+        return !(state.getBlock() instanceof VegetationBlock)
+                && !(state.getBlock() instanceof GrowingPlantBlock)
+                && !state.is(BlockTags.REPLACEABLE_BY_TREES)
+                && !state.is(BlockTags.CROPS)
+                && !state.is(BlockTags.FLOWERS)
+                && !state.is(Blocks.CACTUS)
+                && !state.is(Blocks.SUGAR_CANE)
+                && !state.is(Blocks.BAMBOO)
+                && !state.is(Blocks.BAMBOO_SAPLING)
+                && !state.is(Blocks.CHORUS_PLANT)
+                && !state.is(Blocks.CHORUS_FLOWER);
     }
 
     private BlockPos findNextProbePosition() {
@@ -81,28 +106,24 @@ public final class CarryBlockingBlockGoal extends Goal {
 
     @Override
     public void start() {
-        pickupTime = 20;
         mob.getNavigation().stop();
+        mob.getLookControl().setLookAt(
+                com.invasion.util.math.PosUtils.center(target));
+        mob.swing(InteractionHand.MAIN_HAND);
+        if (mob.level().getBlockState(target) != expectedState) {
+            return;
+        }
+        int flags = Block.UPDATE_NEIGHBORS
+                | Block.UPDATE_CLIENTS
+                | Block.UPDATE_SUPPRESS_DROPS;
+        if (mob.level().setBlock(
+                target, Blocks.AIR.defaultBlockState(), flags)) {
+            mob.setCarriedBlock(expectedState);
+        }
     }
 
     @Override
     public boolean canContinueToUse() {
-        return !mob.isCarryingBlock() && target != null && pickupTime > 0
-                && mob.level().getBlockState(target) == expectedState
-                && mob.distanceToSqr(com.invasion.util.math.PosUtils.center(target)) <= 9;
-    }
-
-    @Override
-    public void tick() {
-        mob.getLookControl().setLookAt(com.invasion.util.math.PosUtils.center(target));
-        if (pickupTime % 5 == 0) {
-            mob.swing(InteractionHand.MAIN_HAND);
-        }
-        if (--pickupTime == 0 && mob.level().getBlockState(target) == expectedState) {
-            int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS;
-            if (mob.level().setBlock(target, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), flags)) {
-                mob.setCarriedBlock(expectedState);
-            }
-        }
+        return false;
     }
 }
