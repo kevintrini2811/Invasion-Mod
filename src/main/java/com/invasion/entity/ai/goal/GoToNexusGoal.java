@@ -19,6 +19,7 @@ import com.invasion.nexus.NexusAccess;
 
 public class GoToNexusGoal extends Goal {
     private static final int STUCK_REPATH_TIMEOUT = 20 * 10;
+    private static final int ENGINEER_MAX_REPATH_DELAY = 20 * 3;
 
     private PathfinderMob mob;
     private final NexusEntity nexusEntity;
@@ -64,15 +65,20 @@ public class GoToNexusGoal extends Goal {
                 Path path = mob.getNavigation().createPath(target, 1);
                 if (path != null) {
                     mob.setTarget(null);
-                    mob.getNavigation().moveTo(path, distance > 2000 ? 2 : 1);
-                    pathSet = true;
+                    pathSet = mob.getNavigation().moveTo(
+                            path, distance > 2000 ? 2 : 1);
                 }
 
             }
 
             if (!pathSet || (navigation.getLastPathDistanceToTarget() > 3 && lastPathRequestPos.isPresent() && mob.blockPosition().closerThan(lastPathRequestPos.get(), 3.5))) {
                 pathFailedCount++;
-                pathRequestTimer = 40 * pathFailedCount + mob.getRandom().nextInt(10);
+                int retryDelay =
+                        40 * Math.min(pathFailedCount, 25)
+                                + mob.getRandom().nextInt(10);
+                pathRequestTimer = mob instanceof PigmanEngineerEntity
+                        ? Math.min(retryDelay, ENGINEER_MAX_REPATH_DELAY)
+                        : retryDelay;
             } else {
                 pathFailedCount = 0;
                 pathRequestTimer = 20;
