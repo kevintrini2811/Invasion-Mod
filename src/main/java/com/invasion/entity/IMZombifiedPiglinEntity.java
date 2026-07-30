@@ -94,7 +94,6 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     private void equipTierTwoArmor() {
-        equipGoldArmor(EquipmentSlot.HEAD, Items.GOLDEN_HELMET);
         equipGoldArmor(EquipmentSlot.CHEST, Items.GOLDEN_CHESTPLATE);
         equipGoldArmor(EquipmentSlot.LEGS, Items.GOLDEN_LEGGINGS);
         equipGoldArmor(EquipmentSlot.FEET, Items.GOLDEN_BOOTS);
@@ -142,9 +141,15 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
                     EquipmentSlot.MAINHAND);
         }
         return slot.isArmor()
+                && slot != EquipmentSlot.HEAD
                 && isEquippableInSlot(stack, slot)
                 && canReplaceCurrentItem(
                         stack, getItemBySlot(slot), slot);
+    }
+
+    @Override
+    public boolean canUseSlot(EquipmentSlot slot) {
+        return slot != EquipmentSlot.HEAD && super.canUseSlot(slot);
     }
 
     @Override
@@ -182,6 +187,7 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
         super.readAdditionalSaveData(input);
         entityData.set(TIER, Math.clamp(input.getIntOr("tier", 1), 1, 2));
         applyTierAttributes();
+        setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
         nexus.readNbt(input);
     }
 
