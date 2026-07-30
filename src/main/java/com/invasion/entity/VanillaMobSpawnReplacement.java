@@ -23,6 +23,7 @@ import net.minecraft.world.entity.monster.skeleton.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.zombie.Husk;
+import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -83,6 +84,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityTypes.DROWNED) {
             convert(mob, InvEntities.DROWNED, nexus);
+        } else if (mob.getType() == EntityTypes.ZOMBIFIED_PIGLIN) {
+            convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
         } else if (mob.getType() == EntityTypes.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (mob.getType() == EntityTypes.BOGGED) {
@@ -110,6 +113,7 @@ public final class VanillaMobSpawnReplacement {
         return type == EntityTypes.ZOMBIE
                 || type == EntityTypes.HUSK
                 || type == EntityTypes.DROWNED
+                || type == EntityTypes.ZOMBIFIED_PIGLIN
                 || type == EntityTypes.SKELETON
                 || type == EntityTypes.BOGGED
                 || type == EntityTypes.PARCHED
@@ -160,6 +164,17 @@ public final class VanillaMobSpawnReplacement {
                 converted.setItemSlot(
                         slot, source.getItemBySlot(slot).copy());
             }
+        }
+        if (source instanceof ZombifiedPiglin piglin
+                && converted instanceof IMZombifiedPiglinEntity imPiglin) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                converted.setItemSlot(
+                        slot, source.getItemBySlot(slot).copy());
+            }
+            imPiglin.setPersistentAngerEndTime(
+                    piglin.getPersistentAngerEndTime());
+            imPiglin.setPersistentAngerTarget(
+                    piglin.getPersistentAngerTarget());
         }
         if (source instanceof Bogged bogged
                 && converted instanceof IMBoggedEntity imBogged) {

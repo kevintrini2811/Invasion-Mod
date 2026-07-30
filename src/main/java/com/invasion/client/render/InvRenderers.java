@@ -23,6 +23,8 @@ import com.invasion.item.InvItems;
 import com.invasion.particle.InvParticles;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
+import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
+import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;

@@ -418,6 +418,19 @@ public class IMWaveSpawner implements Spawner {
 
 	private EntityConstruct replaceWithRareWaveVariant(
 			EntityConstruct construct) {
+		if (construct.entityType() == InvEntities.ZOMBIE_PIGMAN
+				&& construct.tier() != 3
+				&& getRandom().nextBoolean()) {
+			return new EntityConstruct(
+					InvEntities.ZOMBIFIED_PIGLIN,
+					construct.texture(),
+					construct.tier(),
+					construct.flavour(),
+					construct.scaling(),
+					construct.minAngle(),
+					construct.maxAngle());
+		}
+
 		int witherSkeletonChance = nexus.getWitherSkeletonChancePercent();
 		if (witherSkeletonChance > 0
 				&& construct.entityType() == InvEntities.SKELETON
