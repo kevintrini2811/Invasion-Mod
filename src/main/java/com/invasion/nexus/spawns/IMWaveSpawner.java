@@ -543,7 +543,11 @@ public class IMWaveSpawner implements Spawner {
 			boolean bruteArmorSlot =
 					mob instanceof EntityIMZombie zombie && zombie.isBrute()
 					|| mob instanceof EntityIMZombiePigman pigman && pigman.isBrute();
+			boolean disallowHelmet =
+					mob instanceof IMZombifiedPiglinEntity
+					&& slot == EquipmentSlot.HEAD;
 			if (slot.isArmor()
+					&& !disallowHelmet
 					&& (!helmetOnly || slot == EquipmentSlot.HEAD)
 					&& (!bruteArmorSlot
 							|| slot == EquipmentSlot.HEAD

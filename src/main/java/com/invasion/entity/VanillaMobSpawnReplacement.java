@@ -168,8 +168,10 @@ public final class VanillaMobSpawnReplacement {
         if (source instanceof ZombifiedPiglin piglin
                 && converted instanceof IMZombifiedPiglinEntity imPiglin) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
-                converted.setItemSlot(
-                        slot, source.getItemBySlot(slot).copy());
+                if (slot != EquipmentSlot.HEAD) {
+                    converted.setItemSlot(
+                            slot, source.getItemBySlot(slot).copy());
+                }
             }
             imPiglin.setPersistentAngerEndTime(
                     piglin.getPersistentAngerEndTime());
