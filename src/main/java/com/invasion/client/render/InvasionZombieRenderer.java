@@ -60,7 +60,8 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 this, context,
                 state -> state.brute
                         ? state.headEquipment
-                        : ItemStack.EMPTY));
+                        : ItemStack.EMPTY,
+                0.0F, 0.0F, 0.9F));
     }
 
     @Override
