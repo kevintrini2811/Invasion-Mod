@@ -58,9 +58,15 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 this, normalArmor, babyArmor, context, false));
 
         HumanoidModel<InvasionZombieRenderState> outer =
-                new LargeZombieModel(LargeZombieModel.createBodyLayer(new CubeDeformation(1.0F)).bakeRoot());
+                new LargeZombieModel(
+                        LargeZombieModel.createBodyLayer(
+                                new CubeDeformation(1.0F)).bakeRoot(),
+                        false);
         HumanoidModel<InvasionZombieRenderState> inner =
-                new LargeZombieModel(LargeZombieModel.createBodyLayer(new CubeDeformation(0.5F)).bakeRoot());
+                new LargeZombieModel(
+                        LargeZombieModel.createBodyLayer(
+                                new CubeDeformation(0.5F)).bakeRoot(),
+                        false);
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> bruteArmor =
                 new ArmorModelSet<>(outer, outer, inner, outer);
         addLayer(new VariantArmorLayer(

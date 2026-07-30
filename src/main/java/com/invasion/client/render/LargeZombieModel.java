@@ -13,16 +13,23 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderState> {
     private static final String LEGACY_HAT = "legacy_hat";
     private final ModelPart legacyHat;
+    private final boolean renderLegacyHat;
 
     public LargeZombieModel(ModelPart root) {
+        this(root, true);
+    }
+
+    public LargeZombieModel(ModelPart root, boolean renderLegacyHat) {
         super(root);
         legacyHat = root.getChild(LEGACY_HAT);
+        this.renderLegacyHat = renderLegacyHat;
     }
 
     @Override
     public void setupAnim(InvasionZombieRenderState state) {
         super.setupAnim(state);
         legacyHat.loadPose(head.storePose());
+        legacyHat.visible = renderLegacyHat;
     }
 
     public static LayerDefinition createBodyLayer() {
