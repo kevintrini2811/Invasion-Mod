@@ -6,6 +6,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import com.invasion.nexus.Combatant;
 
 public final class VillagerResurrectionHandler {
     private VillagerResurrectionHandler() {
@@ -19,7 +20,8 @@ public final class VillagerResurrectionHandler {
     private static void afterDeath(Entity victim, DamageSource source) {
         if (!(victim instanceof AbstractVillager villager)
                 || !(villager.level() instanceof ServerLevel world)
-                || !(source.getEntity() instanceof NexusEntity killer)) {
+                || !(source.getEntity() instanceof Combatant<?> killer)
+                || !killer.hasNexus()) {
             return;
         }
 
