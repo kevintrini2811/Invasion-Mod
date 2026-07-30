@@ -523,11 +523,16 @@ public class IMWaveSpawner implements Spawner {
 			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
 			boolean helmetOnly = mob instanceof IMCreeperEntity
 					|| mob instanceof NexusSpiderEntity
-					|| mob instanceof IMEndermanEntity
-					|| mob instanceof EntityIMZombie zombie && zombie.isBrute()
+					|| mob instanceof IMEndermanEntity;
+			boolean bruteArmorSlot =
+					mob instanceof EntityIMZombie zombie && zombie.isBrute()
 					|| mob instanceof EntityIMZombiePigman pigman && pigman.isBrute();
 			if (slot.isArmor()
 					&& (!helmetOnly || slot == EquipmentSlot.HEAD)
+					&& (!bruteArmorSlot
+							|| slot == EquipmentSlot.HEAD
+							|| slot == EquipmentSlot.LEGS
+							|| slot == EquipmentSlot.FEET)
 					&& mob.getItemBySlot(slot).isEmpty()) {
 				availableArmor.add(armor);
 			}

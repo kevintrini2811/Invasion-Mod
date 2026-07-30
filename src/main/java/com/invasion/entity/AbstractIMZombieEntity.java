@@ -68,7 +68,10 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
             return !isUsableWeapon(heldItem);
         }
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
-        if (isBrute() && slot != EquipmentSlot.HEAD) {
+        if (isBrute()
+                && slot != EquipmentSlot.HEAD
+                && slot != EquipmentSlot.LEGS
+                && slot != EquipmentSlot.FEET) {
             return false;
         }
         return slot.isArmor()
