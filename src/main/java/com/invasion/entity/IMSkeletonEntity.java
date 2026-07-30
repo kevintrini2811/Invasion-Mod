@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.sounds.SoundEvent;
@@ -36,7 +37,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
-public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, RangedNexusAttacker {
+public class IMSkeletonEntity extends IMMobEntity
+        implements RangedAttackMob, RangedNexusAttacker, Miner {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
@@ -54,6 +56,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
         super(type, world);
         setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
         setCanPickUpLoot(true);
+        getNavigatorNew().setCanDestroyBlocks(true);
     }
 
     public static AttributeSupplier.Builder createIMSkeletonAttributes() {
@@ -64,6 +67,7 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new EntityAIKillWithArrow<>(
                 this, LivingEntity.class, 65, 16F));
         goalSelector.addGoal(2, new SkeletonAttackNexusGoal<>(this));
@@ -77,6 +81,11 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
 
         targetSelector.addGoal(0, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
         targetSelector.addGoal(1, new HurtByTargetGoal(this));
+    }
+
+    @Override
+    public float getDiggingSpeedMultiplier() {
+        return 0.75F;
     }
 
     @Override

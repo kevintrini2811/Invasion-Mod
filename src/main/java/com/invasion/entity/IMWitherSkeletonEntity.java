@@ -28,8 +28,7 @@ import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-public final class IMWitherSkeletonEntity extends IMSkeletonEntity
-        implements Miner {
+public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
     public IMWitherSkeletonEntity(
             EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);
@@ -38,6 +37,11 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity
 
     public boolean isHoldingRangedWeapon() {
         return EquipmentUtil.isRangedWeapon(getMainHandItem());
+    }
+
+    @Override
+    public float getDiggingSpeedMultiplier() {
+        return 1.0F;
     }
 
     @Override
