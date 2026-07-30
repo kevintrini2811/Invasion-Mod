@@ -2,7 +2,6 @@ package com.invasion.nexus.spawns;
 
 import com.invasion.InvasionMod;
 import com.invasion.util.math.PolarAngle;
-import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -30,14 +29,8 @@ public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements Pol
     }
 
     public boolean trySpawnEntity(ServerLevel world, Mob entity) {
-        return trySpawnEntity(world, entity, mob -> {});
-    }
-
-    public boolean trySpawnEntity(
-            ServerLevel world, Mob entity, Consumer<Mob> afterFinalize) {
         if (isValidFor(world, entity)) {
             entity.finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.STRUCTURE, null);
-            afterFinalize.accept(entity);
             world.addFreshEntityWithPassengers(entity);
             return true;
         }
