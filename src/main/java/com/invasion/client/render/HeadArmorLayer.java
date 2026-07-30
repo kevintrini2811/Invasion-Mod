@@ -21,16 +21,29 @@ public final class HeadArmorLayer<
     private final HeadArmorModel<S> armorModel;
     private final EquipmentLayerRenderer equipmentRenderer;
     private final Function<S, ItemStack> helmet;
+    private final float offsetY;
+    private final float offsetZ;
 
     public HeadArmorLayer(
             RenderLayerParent<S, M> parent,
             net.minecraft.client.renderer.entity.EntityRendererProvider.Context context,
             Function<S, ItemStack> helmet) {
+        this(parent, context, helmet, 0.0F, 0.0F);
+    }
+
+    public HeadArmorLayer(
+            RenderLayerParent<S, M> parent,
+            net.minecraft.client.renderer.entity.EntityRendererProvider.Context context,
+            Function<S, ItemStack> helmet,
+            float offsetY,
+            float offsetZ) {
         super(parent);
         armorModel = new HeadArmorModel<>(
                 HeadArmorModel.createBodyLayer().bakeRoot());
         equipmentRenderer = context.getEquipmentRenderer();
         this.helmet = helmet;
+        this.offsetY = offsetY;
+        this.offsetZ = offsetZ;
     }
 
     @Override
@@ -49,6 +62,8 @@ public final class HeadArmorLayer<
         armorModel.resetPose();
         armorModel.head.loadPose(
                 getParentModel().root().getChild("head").storePose());
+        armorModel.head.y += offsetY;
+        armorModel.head.z += offsetZ;
         armorModel.head.setInitialPose(armorModel.head.storePose());
 
         equipmentRenderer.renderLayers(

@@ -17,7 +17,8 @@ public final class TexturedSpiderRenderer<T extends NexusSpiderEntity>
         super(context, new SpiderModel(context.bakeLayer(ModelLayers.SPIDER)), 0.8F);
         this.texture = texture;
         addLayer(new HeadArmorLayer<>(
-                this, context, state -> state.headEquipment));
+                this, context, state -> state.headEquipment,
+                4.0F, -4.0F));
     }
 
     @Override

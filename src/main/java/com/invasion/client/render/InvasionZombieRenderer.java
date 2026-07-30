@@ -7,7 +7,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.monster.zombie.BabyZombieModel;
 import net.minecraft.client.model.monster.zombie.ZombieModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -17,6 +16,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
 
 public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         extends HumanoidMobRenderer<T, InvasionZombieRenderState, HumanoidModel<InvasionZombieRenderState>> {
@@ -56,21 +56,11 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 HumanoidModel::new);
         addLayer(new VariantArmorLayer(
                 this, normalArmor, babyArmor, context, false));
-
-        HumanoidModel<InvasionZombieRenderState> outer =
-                new LargeZombieModel(
-                        LargeZombieModel.createBodyLayer(
-                                new CubeDeformation(1.0F)).bakeRoot(),
-                        false);
-        HumanoidModel<InvasionZombieRenderState> inner =
-                new LargeZombieModel(
-                        LargeZombieModel.createBodyLayer(
-                                new CubeDeformation(0.5F)).bakeRoot(),
-                        false);
-        ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> bruteArmor =
-                new ArmorModelSet<>(outer, outer, inner, outer);
-        addLayer(new VariantArmorLayer(
-                this, bruteArmor, bruteArmor, context, true));
+        addLayer(new HeadArmorLayer<>(
+                this, context,
+                state -> state.brute
+                        ? state.headEquipment
+                        : ItemStack.EMPTY));
     }
 
     @Override
