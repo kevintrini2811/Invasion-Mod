@@ -414,7 +414,7 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void applyBabyZombieVariant(Mob mob) {
-		if (!(mob instanceof EntityIMZombie zombie)) {
+		if (!(mob instanceof EntityIMZombie zombie) || zombie.isBrute()) {
 			return;
 		}
 
