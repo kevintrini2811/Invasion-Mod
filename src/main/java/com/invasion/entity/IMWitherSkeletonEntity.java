@@ -22,6 +22,9 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
@@ -42,6 +45,19 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
                     new MobEffectInstance(MobEffects.WITHER, 200), this);
         }
         return hit;
+    }
+
+    @Override
+    protected AbstractArrow createArrowProjectile(
+            ItemStack arrowStack, float damageModifier,
+            ItemStack shotFrom) {
+        AbstractArrow projectile = super.createArrowProjectile(
+                arrowStack, damageModifier, shotFrom);
+        if (projectile instanceof Arrow arrow) {
+            arrow.addEffect(
+                    new MobEffectInstance(MobEffects.WITHER, 200));
+        }
+        return projectile;
     }
 
     @Override
