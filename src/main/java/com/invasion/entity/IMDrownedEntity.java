@@ -38,7 +38,7 @@ public final class IMDrownedEntity extends EntityIMZombie
             EntityType<? extends EntityIMZombie> type, Level world) {
         super(type, world);
         moveControl = new SmoothSwimmingMoveControl<>(
-                this, 85, 10, 0.02F, 0.1F, true);
+                this, 85, 10, 1.0F, 1.0F, true);
         setPathfindingMalus(PathType.WATER, 0.0F);
     }
 
