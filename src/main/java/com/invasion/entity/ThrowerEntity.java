@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
@@ -112,8 +113,8 @@ public class ThrowerEntity extends TieredIMMobEntity {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
-        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 55, 60.0F, 1.0F), () -> getTier() == 1));
-        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, Player.class, 60, 90.0F, 1.5F), () -> getTier() == 2));
+        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, LivingEntity.class, 55, 60.0F, 1.0F), () -> getTier() == 1));
+        goalSelector.addGoal(1, new PredicatedGoal(new ThrowerKillEntityGoal<>(this, LivingEntity.class, 60, 90.0F, 1.5F), () -> getTier() == 2));
         goalSelector.addGoal(2, new AttackNexusGoal<>(this));
         goalSelector.addGoal(3, new ThrowBoulderGoal(this, 3));
         goalSelector.addGoal(4, new GoToNexusGoal(this));

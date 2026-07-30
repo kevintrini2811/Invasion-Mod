@@ -90,7 +90,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         // like melee zombies. A high-priority player-shooting goal otherwise
         // makes them follow remembered players even without line of sight.
         goalSelector.addGoal(6, new PredicatedGoal(
-                new EntityAIKillWithArrow<>(this, Player.class, 65, 16F),
+                new EntityAIKillWithArrow<>(
+                        this, LivingEntity.class, 65, 16F),
                 this::isHoldingRangedWeapon));
         goalSelector.addGoal(2, new PredicatedGoal(
                 new SkeletonAttackNexusGoal<>(this),

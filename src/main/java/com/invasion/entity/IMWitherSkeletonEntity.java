@@ -53,7 +53,8 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
         goalSelector.addGoal(3, new AttackNexusGoal<>(this));
         goalSelector.addGoal(4, new GoToNexusGoal(this));
         goalSelector.addGoal(5, new PredicatedGoal(
-                new EntityAIKillWithArrow<>(this, Player.class, 65, 16F),
+                new EntityAIKillWithArrow<>(
+                        this, LivingEntity.class, 65, 16F),
                 this::isHoldingRangedWeapon));
         goalSelector.addGoal(5, new PredicatedGoal(
                 new MobMeleeAttackGoal(this, 1.2D, false),

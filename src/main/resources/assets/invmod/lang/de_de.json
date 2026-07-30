@@ -22,6 +22,7 @@
   "item.invmod.debug_wand": "Debug-Stab",
   "item.invmod.nexus_core": "Nexus-Kern",
   "item.invmod.zombie_spawn_egg": "IM Zombie-Spawn-Ei",
+  "item.invmod.zombie_villager_spawn_egg": "IM Zombie-Dorfbewohner-Spawn-Ei",
   "item.invmod.armed_zombie_spawn_egg": "IM Bewaffneter Zombie-Spawn-Ei",
   "item.invmod.tier_two_zombie_spawn_egg": "IM Zombie Stufe 2-Spawn-Ei",
   "item.invmod.tier_two_armed_zombie_spawn_egg": "IM Bewaffneter Zombie Stufe 2-Spawn-Ei",
@@ -56,6 +57,7 @@
   "itemGroup.invmod.invasion_mod": "Invasion Mod",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.zombie_villager": "IM Zombie-Dorfbewohner",
     "entity.invmod.zombie.brute": "IM Zombie Brute",
     "entity.invmod.zombie.tar": "IM Tar Zombie",
     "entity.invmod.zombie.pigman": "IM Pigman Zombie",

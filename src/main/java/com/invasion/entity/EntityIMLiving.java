@@ -5,6 +5,7 @@ import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.entity.pathfinding.IMNavigation;
 import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.entity.pathfinding.PathCreator;
+import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.particle.InvParticles;
 import com.invasion.item.InvItems;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.storage.ValueInput;
@@ -35,6 +37,8 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     public EntityIMLiving(EntityType<? extends EntityIMLiving> type, Level world) {
         super(type, world);
         moveControl = new ClimbableMoveControl(this);
+        targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(
+                this, Villager.class, this::getAggroRange, true));
         resetHealth();
     }
 

@@ -33,6 +33,7 @@
   "item.invmod.debug_wand": "Debug Wand",
   "item.invmod.nexus_core": "Nexus Core",
   "item.invmod.zombie_spawn_egg": "IM Zombie Spawn Egg",
+  "item.invmod.zombie_villager_spawn_egg": "IM Zombie Villager Spawn Egg",
   "item.invmod.armed_zombie_spawn_egg": "IM Armed Zombie Spawn Egg",
   "item.invmod.tier_two_zombie_spawn_egg": "IM Tier 2 Zombie Spawn Egg",
   "item.invmod.tier_two_armed_zombie_spawn_egg": "IM Tier 2 Armed Zombie Spawn Egg",
@@ -57,6 +58,7 @@
     "item.invmod.mother_spider_spawn_egg": "IM Mother Spider Spawn Egg",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.zombie_villager": "IM Zombie Villager",
     "entity.invmod.zombie.brute": "IM Zombie Brute",
     "entity.invmod.zombie.tar": "IM Tar Zombie",
     "entity.invmod.zombie.pigman": "IM Pigman Zombie",

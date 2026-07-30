@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.VanillaMobSpawnReplacement;
+import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.network.NexusHudPayload;
@@ -87,6 +88,7 @@ public class InvasionMod implements ModInitializer {
         InvSounds.boostrap();
         InvEntities.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
+        VillagerResurrectionHandler.bootstrap();
         InvParticles.bootstrap();
         InvScreenHandlers.bootstrap();
     }

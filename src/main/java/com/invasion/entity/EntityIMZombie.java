@@ -40,7 +40,6 @@ import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
@@ -163,7 +162,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
                 .add(Attributes.ATTACK_DAMAGE, 18.0);
     }
 
-    public EntityIMZombie(EntityType<EntityIMZombie> type, Level world) {
+    public EntityIMZombie(
+            EntityType<? extends EntityIMZombie> type, Level world) {
         super(type, world, 2F);
     }
 
@@ -229,7 +229,6 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         targetSelector.addGoal(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false), () -> getTier() != 3));
         targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
         targetSelector.addGoal(3, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F), () -> getTier() != 3 && NoNexusPathGoal.isLostPathToNexus(this)));
-        targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, AbstractVillager.class, this::getAggroRange, true));
         targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, IronGolem.class, this::getAggroRange, true));
     }
 

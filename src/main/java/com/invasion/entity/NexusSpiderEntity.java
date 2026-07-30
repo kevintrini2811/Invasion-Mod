@@ -44,6 +44,7 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.entity.npc.villager.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.Items;
@@ -114,6 +115,8 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
         targetSelector.addGoal(0, new RetaliateGoal(this));
         targetSelector.addGoal(1, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getSenseRange, false));
         targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
+        targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(
+                this, Villager.class, this::getAggroRange, true));
         //targetSelector.add(3, new NoNexusPathGoal(this, new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F)));
         targetSelector.addGoal(4, new HurtByTargetGoal(this));
     }

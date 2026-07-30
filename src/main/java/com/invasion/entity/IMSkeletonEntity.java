@@ -64,7 +64,8 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
-        goalSelector.addGoal(1, new EntityAIKillWithArrow<>(this, Player.class, 65, 16F));
+        goalSelector.addGoal(1, new EntityAIKillWithArrow<>(
+                this, LivingEntity.class, 65, 16F));
         goalSelector.addGoal(2, new SkeletonAttackNexusGoal<>(this));
         // goalSelector.add(1, new EntityAIRallyBehindEntity(this, EntityIMCreeper.class, 4.0F));
         goalSelector.addGoal(3, new AttackNexusGoal<>(this));

@@ -18,6 +18,9 @@ public final class InvRenderers {
     public static void bootstrap() {
         EntityRendererRegistry.register(InvEntities.ZOMBIE,
                 context -> new InvasionZombieRenderer<>(context, false));
+        EntityRendererRegistry.register(
+                InvEntities.ZOMBIE_VILLAGER,
+                IMZombieVillagerRenderer::new);
         EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
