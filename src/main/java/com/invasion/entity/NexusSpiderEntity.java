@@ -9,6 +9,7 @@ import com.invasion.item.InvItems;
 import com.invasion.entity.ai.IMSpiderMoveControl;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.RallyBehindLeaderGoal;
 import com.invasion.entity.ai.goal.ProvideSupportGoal;
@@ -53,7 +54,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
-public class NexusSpiderEntity extends Spider implements NexusEntity, MountableEntity, Stunnable {
+public class NexusSpiderEntity extends Spider
+        implements NexusEntity, MountableEntity, Stunnable, Miner {
     private static final AttributeModifier BABY_SPEED_BONUS = AttributeUtil.addToBase(InvasionMod.id("baby_speed"), 0.05F);
     private static final AttributeModifier BABY_ATTACK_BONUS = AttributeUtil.addToBase(InvasionMod.id("baby_attack"), -2F);
 
@@ -78,6 +80,7 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
         super(type, world);
         moveControl = new IMSpiderMoveControl(this);
         setCanPickUpLoot(true);
+        getNavigatorNew().setCanDestroyBlocks(true);
         resetHealth();
     }
 
@@ -112,6 +115,7 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new MobMeleeAttackGoal(this, 1.3F, false));
         goalSelector.addGoal(1, new RallyBehindLeaderGoal<>(this, IMCreeperEntity.class, 4));
         goalSelector.addGoal(2, new AttackNexusGoal<>(this));
@@ -134,6 +138,11 @@ public class NexusSpiderEntity extends Spider implements NexusEntity, MountableE
 
     protected void initExtraGoals() {
 
+    }
+
+    @Override
+    public float getDiggingSpeedMultiplier() {
+        return 0.5F;
     }
 
     @Override

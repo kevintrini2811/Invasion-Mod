@@ -87,7 +87,11 @@ public class MineBlockGoal extends Goal {
             mob.swing(InteractionHand.MAIN_HAND);
             mob.getLookControl().setLookAt(com.invasion.util.math.PosUtils.center(pos));
 
-            float speed = getDiggingSpeed(mob, breakingState, pos) * 10;
+            float speedMultiplier = mob instanceof Miner miner
+                    ? miner.getDiggingSpeedMultiplier()
+                    : 1.0F;
+            float speed = getDiggingSpeed(mob, breakingState, pos)
+                    * speedMultiplier * 10;
             breakProgress += speed;
             if (breakProgress >= 10) {
                 mob.level().destroyBlockProgress(mob.getId(), pos, -1);
