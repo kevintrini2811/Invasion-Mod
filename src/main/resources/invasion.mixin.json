@@ -6,8 +6,7 @@
     "compatibilityLevel": "JAVA_16",
     "mixins": [
       "EntityMixin",
-      "PathNodeMixin",
-      "MobEntityAccessor"
+      "PathNodeMixin"
     ],
     "client": []
 }

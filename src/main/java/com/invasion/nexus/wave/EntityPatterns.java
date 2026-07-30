@@ -9,7 +9,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
-import org.jetbrains.annotations.Nullable;
 
 public interface EntityPatterns {
     Map<ResourceLocation, PatternType> REGISTRY = new HashMap<>();
