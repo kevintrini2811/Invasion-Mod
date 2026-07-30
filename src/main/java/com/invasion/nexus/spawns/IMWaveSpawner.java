@@ -299,11 +299,10 @@ public class IMWaveSpawner implements Spawner {
 			}
 
             if (spawnPoint.trySpawnEntity(
-                    (ServerLevel) nexus.getWorld(),
-                    mob,
-                    this::applyBabyZombieVariant)) {
+                    (ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
 
+                applyBabyZombieVariant(mob);
                 markAsInvasionAlly(mob);
                 if (mob instanceof EntityIMZombie zombie) {
                     InvasionMod.LOGGER.info(
