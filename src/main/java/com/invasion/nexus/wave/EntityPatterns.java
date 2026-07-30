@@ -3,84 +3,12 @@ package com.invasion.nexus.wave;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
-import org.jetbrains.annotations.Nullable;
 
 public interface EntityPatterns {
     Map<Identifier, PatternType> REGISTRY = new HashMap<>();
-
-    // ================================
-    // EXTERNE MOBS AUS ANDEREN MODS
-    // ================================
-
-    // ===== Mutant Monsters (Fuzs) =====
-
-    EntityPattern Gigant = registerExternal(
-            "giant",
-            "minecraft",
-            "giant",
-            0.3F
-    );
-
-    /**
-     * Registriert ein EntityPattern für einen Mob aus einer anderen Mod, falls vorhanden.
-     * Gibt null zurück, wenn die Entity-ID nicht existiert.
-     */
-
-    @SuppressWarnings("unchecked")
-    private static EntityPattern registerExternal(String name, String modid, String entityName, float spawnWeight) {
-        Identifier entityId = Identifier.fromNamespaceAndPath(modid, entityName);
-
-        // Versuchen, den Typ direkt zu holen
-        EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(entityId)
-                .map(net.minecraft.core.Holder.Reference::value)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown entity type: " + entityId));
-
-        Identifier resolvedId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        InvasionMod.LOGGER.debug("[EntityPatterns] registerExternal {} -> resolvedId={}", entityId, resolvedId);
-
-        // Wenn der Registry-Eintrag wirklich nicht existiert (d. h. wir kriegen NICHT unsere gewünschte ID zurück)
-        if (!entityId.equals(resolvedId)) {
-            InvasionMod.LOGGER.warn("[EntityPatterns] Mod-Mob {} nicht gefunden (resolvedId={})), Pattern '{}' wird auf null gesetzt.",
-                    entityId, resolvedId, name);
-            return null;
-        }
-
-        EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
-        InvasionMod.LOGGER.debug("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
-                entityId, name, spawnWeight);
-
-        return register(name, new EntityPattern.Builder(mobType), spawnWeight);
-    }
-
-    public static boolean isExternalInvasionMob(EntityType<?> type) {
-        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        if (id == null) return false;
-
-        // Mutant Monsters
-        if (id.getNamespace().equals("mutantmonsters")) {
-            return true;
-        }
-
-        // Vanilla Giant als “externer” Invasions-Mob
-        if (id.getNamespace().equals("minecraft") && id.getPath().equals("giant")) {
-            return true;
-        }
-
-        // später weitere externe Mods hier ergänzen
-        return false;
-    }
-
-
-
-    // ================================
-    // INTERNE INVASION-MOBS (DEINE)
-    // ================================
 
     EntityPattern ZOMBIE_T1_ANY = register("zombie_t1_any", new EntityPattern.Builder(InvEntities.ZOMBIE).addTier(1, 1).addFlavour(0, 3).addFlavour(1, 1), 1);
     EntityPattern ZOMBIE_T2_ANY_BASIC = register("zombie_t2_any_basic", new EntityPattern.Builder(InvEntities.ZOMBIE).addTier(2, 1).addFlavour(0, 2).addFlavour(1, 1).addFlavour(2, 0.4F), 1);
@@ -146,75 +74,4 @@ public interface EntityPatterns {
             return InvasionMod.getConfig().getPropertyValueFloat("nm-spawnpool1-slot-" + id + "-weight", defaultSpawnWeight);
         }
     }
-    // ================================================
-    // Lazy Getter für Mutant Monsters (sicher bei Load)
-    // ================================================
-
-
-    @Nullable
-    static EntityPattern getMutantZombie() {
-        return MutantPatterns.MUTANT_ZOMBIE;
-    }
-
-    @Nullable
-    static EntityPattern getMutantCreeper() {
-        return MutantPatterns.MUTANT_CREEPER;
-    }
-
-    @Nullable
-    static EntityPattern getMutantSkeleton() {
-        return MutantPatterns.MUTANT_SKELETON;
-    }
-
-    @Nullable
-    static EntityPattern getMutantEnderman() {
-        return MutantPatterns.MUTANT_ENDERMAN;
-    }
-
-    @Nullable
-    static EntityPattern getSpiderPig() {
-        return MutantPatterns.SPIDER_PIG;
-    }
-
-    // ================================================
-    // Innere Klasse, die Mutanten erst später lädt
-    // ================================================
-    final class MutantPatterns {
-
-        static final @Nullable EntityPattern MUTANT_ZOMBIE;
-        static final @Nullable EntityPattern MUTANT_CREEPER;
-        static final @Nullable EntityPattern MUTANT_SKELETON;
-        static final @Nullable EntityPattern MUTANT_ENDERMAN;
-        static final @Nullable EntityPattern SPIDER_PIG;
-
-        static {
-            MUTANT_ZOMBIE = create("mutant_zombie", "mutantmonsters", "mutant_zombie", 0.5F);
-            MUTANT_CREEPER = create("mutant_creeper", "mutantmonsters", "mutant_creeper", 0.4F);
-            MUTANT_SKELETON = create("mutant_skeleton", "mutantmonsters", "mutant_skeleton", 0.4F);
-            MUTANT_ENDERMAN = create("mutant_enderman", "mutantmonsters", "mutant_enderman", 0.3F);
-            SPIDER_PIG = create("spider_pig", "mutantmonsters", "spider_pig", 0.3F);
-        }
-
-        @SuppressWarnings("unchecked")
-        private static @Nullable EntityPattern create(String name, String modid, String entityName, float spawnWeight) {
-            Identifier entityId = Identifier.fromNamespaceAndPath(modid, entityName);
-
-            var opt = BuiltInRegistries.ENTITY_TYPE.getOptional(entityId);
-            if (opt.isEmpty()) {
-                InvasionMod.LOGGER.warn("[EntityPatterns] Mod-Mob {} nicht gefunden, Pattern '{}' bleibt null.", entityId, name);
-                return null;
-            }
-
-            EntityType<?> type = opt.get();
-            EntityType<? extends Mob> mobType = (EntityType<? extends Mob>) type;
-
-            InvasionMod.LOGGER.debug("[EntityPatterns] Externen Mob {} als Pattern '{}' registriert (weight={})",
-                    entityId, name, spawnWeight);
-
-            return EntityPatterns.register(name, new EntityPattern.Builder(mobType), spawnWeight);
-        }
-
-        private MutantPatterns() {}
-    }
-
 }

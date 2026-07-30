@@ -5,8 +5,7 @@
     "compatibilityLevel": "JAVA_25",
     "mixins": [
       "EntityMixin",
-      "PathNodeMixin",
-      "MobEntityAccessor"
+      "PathNodeMixin"
     ],
     "client": [
       "AgeableMobRendererAccessor"

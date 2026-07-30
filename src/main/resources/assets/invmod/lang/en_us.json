@@ -109,7 +109,6 @@
     "invmod.message.wave.group": "A group of mobs has gathered...",
     "invmod.message.wave.groupsmall": "A small group of mobs has gathered...",
     "invmod.message.wave.grouplarge": "A large number of mobs is slipping through the Nexus rift!",
-    "invmod.message.wave.mutant_spawned": "A mutant has spawned: %s",
 
     "invmod.message.command.nexus_selected": "Nexus selected for /invasion commands.",
     "invmod.message.command.other_nexus_active": "Another Nexus is already active.",

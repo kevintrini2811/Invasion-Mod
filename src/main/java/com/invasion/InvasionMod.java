@@ -1,9 +1,7 @@
 package com.invasion;
 
-import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.util.ChatUtils;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -14,8 +12,6 @@ import net.fabricmc.fabric.api.loot.v3.LootTableSource;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.item.ItemEntity;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,18 +89,5 @@ public class InvasionMod implements ModInitializer {
         VanillaMobSpawnReplacement.bootstrap();
         InvParticles.bootstrap();
         InvScreenHandlers.bootstrap();
-        // Keine Drops von Invasions-Mobs (inkl. Mutant Monsters & Giant)
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            // Nur Serverwelt
-            if (!(entity.level() instanceof ServerLevel world)) return;
-            if (!(entity instanceof Mob mob)) return;
-            if (!EntityPatterns.isExternalInvasionMob(mob.getType())) return;
-
-            // Alle Item-Entities in der Nähe des toten Mobs sofort entfernen
-            var box = mob.getBoundingBox().inflate(3.0);
-            world.getEntitiesOfClass(ItemEntity.class, box, item -> true)
-                    .forEach(ItemEntity::discard);
-        });
-
     }
 }

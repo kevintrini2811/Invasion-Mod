@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Random;
 
 import com.invasion.InvasionMod;
-import com.invasion.util.ChatUtils;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.wave.pool.Select;
@@ -172,16 +171,6 @@ public class WaveBuilder {
                     .entry(EntityPatterns.IMP_T1, 2F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.2F);
 
-            // Spider Pig über Lazy-Getter
-            var spiderPig = EntityPatterns.getSpiderPig();
-            if (spiderPig != null) {
-                entry.entry(spiderPig, 1F);
-            }
-
-            // Giant bleibt wie gehabt (Vanilla, kein Lazy nötig)
-            if (EntityPatterns.Gigant != null)
-                entry.entry(EntityPatterns.Gigant, 0.08F);
-
             entry.end((int) (timeScale * 30000))
                     .amount((int) (mobScale * 8))
                     .granularity(2000)
@@ -191,50 +180,8 @@ public class WaveBuilder {
             builder.entry(entry);
         }
 
-        // === NEUER ENTRY: Garantiert genau 1 Mutant-Mob pro Extended-Wave ===
-        announce.accept("Phase 2 gestartet: Ein Mutant erscheint!");
-        {
-            var mutantEntry = WaveEntry.random();
-            int available = 0;
-
-            var mutantZombie   = EntityPatterns.getMutantZombie();
-            var mutantSkeleton = EntityPatterns.getMutantSkeleton();
-            var mutantCreeper  = EntityPatterns.getMutantCreeper();
-            var mutantEnderman = EntityPatterns.getMutantEnderman();
-
-            if (mutantZombie != null) {
-                mutantEntry.entry(mutantZombie, 3F);
-                available++;
-            }
-            if (mutantSkeleton != null) {
-                mutantEntry.entry(mutantSkeleton, 2F);
-                available++;
-            }
-            if (mutantCreeper != null) {
-                mutantEntry.entry(mutantCreeper, 1.5F);
-                available++;
-            }
-            if (mutantEnderman != null) {
-                mutantEntry.entry(mutantEnderman, 1F);
-                available++;
-            }
-
-            //ChatUtils.broadcastGlobal("LOG: " + available + " available Mutant-Patterns", Formatting.DARK_RED);
-
-            if (available > 0) {
-                mutantEntry
-                        .begin((int) (timeScale * 40000))
-                        .end((int)   (timeScale * 60000))
-                        .amount(1)               // genau 1 Mutant
-                        .granularity(500)
-                        .angle(45)
-                        .minSpawns(1);
-                builder.entry(mutantEntry);
-            }
-        }
-
-        // ENTRY 3: Mittelteil – Spider, Engineer etc.
-        announce.accept("Phase 3 gestartet: Spezialisten greifen an!");
+        // ENTRY 2: Mittelteil – Spider, Engineer etc.
+        announce.accept("Phase 2 gestartet: Spezialisten greifen an!");
         var midPool = WaveEntry.random()
                 .entry(EntityPatterns.SPIDER_T2_ANY, 2F)
                 .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F)
@@ -248,8 +195,8 @@ public class WaveBuilder {
                         .granularity(500)
         );
 
-        // ENTRY 4: kurzer Burst (~65–67s)
-        announce.accept("Phase 4 gestartet: Starker Angriff!");
+        // ENTRY 3: kurzer Burst (~65–67s)
+        announce.accept("Phase 3 gestartet: Starker Angriff!");
         builder.entry(
                 WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 1.5F)
@@ -273,8 +220,8 @@ public class WaveBuilder {
                         .minSpawns(3)
         );
 
-        // ENTRY 5: kurzer Burst (~95–97s)
-        announce.accept("Phase 5 gestartet: Finale Angriffswelle!");
+        // ENTRY 4: kurzer Burst (~95–97s)
+        announce.accept("Phase 4 gestartet: Finale Angriffswelle!");
         builder.entry(
                 WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 2F)

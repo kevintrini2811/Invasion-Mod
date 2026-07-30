@@ -1,9 +1,6 @@
 package com.invasion.nexus.spawns;
 
-import com.invasion.entity.ai.goal.ExternalAttackNexusGoal;
-import com.invasion.mixin.MobEntityAccessor;
 import com.invasion.nexus.wave.*;
-import com.invasion.util.ChatUtils;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -18,7 +15,6 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.Nullable;
@@ -200,39 +196,6 @@ public class IMWaveSpawner implements Spawner {
 
     public void stop() {
         active = false;
-        killExternalInvasionMobs();
-    }
-
-    /**
-     * Killt alle externen Invasions-Mobs (Mutant Monsters, Giant, etc.) in der Nähe des Nexus,
-     * wenn die Invasion endet oder der Nexus zerstört wurde.
-     */
-    private void killExternalInvasionMobs() {
-        if (!(nexus.getWorld() instanceof ServerLevel world)) {
-            return;
-        }
-
-        // Bereich um den Nexus, in dem wir nach Zusatzmobs suchen
-        BlockPos origin = nexus.getOrigin();
-        double radius = this.spawnRadius + 32; // etwas größer als Spawnradius
-        AABB searchBox = new AABB(
-                origin.getX() - radius, origin.getY() - radius, origin.getZ() - radius,
-                origin.getX() + radius, origin.getY() + radius, origin.getZ() + radius
-        );
-
-        List<Mob> mobs = world.getEntitiesOfClass(
-                Mob.class,
-                searchBox,
-                mob -> EntityPatterns.isExternalInvasionMob(mob.getType())
-        );
-
-        for (Mob mob : mobs) {
-            // "sterben" lassen – entweder kill() oder discard()
-            //mob.kill();        // versucht normalen Tod (Death-Events etc.)
-            mob.discard();  // Alternative: einfach verschwinden lassen
-        }
-
-        InvasionMod.LOGGER.debug("Killed {} external invasion mobs after nexus end.", mobs.size());
     }
 
 
@@ -338,22 +301,7 @@ public class IMWaveSpawner implements Spawner {
             if (spawnPoint.trySpawnEntity((ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
 
-                // ➜ HIER: nach erfolgreichem Spawn ins Team packen
-                if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
-                    MobEntityAccessor accessor = (MobEntityAccessor)(Object)mob;
-                    accessor.getGoalSelector().addGoal(2, new ExternalAttackNexusGoal(mob, nexus));
-                    mob.setPersistenceRequired();
-
-                }
-
                 markAsInvasionAlly(mob);
-                if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
-                    ChatUtils.broadcastGlobal(
-                            net.minecraft.network.chat.Component.translatable(
-                                    "invmod.message.wave.mutant_spawned",
-                                    mob.getDisplayName()),
-                            ChatFormatting.DARK_RED);
-                }
                 if (debugMode) {
                     InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave()
                             + "  Mob: " + mob.getName().getString()

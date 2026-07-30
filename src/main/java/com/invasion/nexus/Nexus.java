@@ -33,7 +33,6 @@ import com.invasion.entity.SpawnProxyEntity;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.ai.AttackerAI;
 import com.invasion.nexus.spawns.IMWaveSpawner;
-import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
@@ -371,8 +370,7 @@ public class Nexus implements ControllableNexusAccess {
     private void setInvasionMobsPaused(boolean pause) {
         AABB area = boundingBoxToRadius != null ? boundingBoxToRadius : computeSpawnArea();
         for (Mob mob : getWorld().getEntitiesOfClass(Mob.class, area, entity ->
-                (entity instanceof Combatant<?> combatant && combatant.getNexus() == this)
-                        || EntityPatterns.isExternalInvasionMob(entity.getType()))) {
+                entity instanceof Combatant<?> combatant && combatant.getNexus() == this)) {
             mob.setNoAi(pause);
         }
     }

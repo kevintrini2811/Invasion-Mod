@@ -108,7 +108,6 @@
     "invmod.message.wave.group": "Eine Gruppe Monster hat sich versammelt...",
     "invmod.message.wave.groupsmall": "Eine kleine Gruppe Monster hat sich versammelt...",
     "invmod.message.wave.grouplarge": "Eine große Gruppe Monster hat sich versammelt...",
-    "invmod.message.wave.mutant_spawned": "Ein Mutant ist gespawnt: %s",
 
     "invmod.message.command.nexus_selected": "Nexus für /invasion-Befehle ausgewählt.",
     "invmod.message.command.other_nexus_active": "Ein anderer Nexus ist bereits aktiv.",
