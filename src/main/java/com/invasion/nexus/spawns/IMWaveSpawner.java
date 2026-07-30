@@ -276,7 +276,6 @@ public class IMWaveSpawner implements Spawner {
 
 		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 		Mob mob = mobConstruct.createMob(nexus);
-		applyBabyZombieVariant(mob);
 		equipRandomWaveWeapon(mob);
 		equipRandomWaveArmor(mob);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
@@ -299,7 +298,10 @@ public class IMWaveSpawner implements Spawner {
 				return true;
 			}
 
-            if (spawnPoint.trySpawnEntity((ServerLevel) nexus.getWorld(), mob)) {
+            if (spawnPoint.trySpawnEntity(
+                    (ServerLevel) nexus.getWorld(),
+                    mob,
+                    this::applyBabyZombieVariant)) {
                 successfulSpawns++;
 
                 markAsInvasionAlly(mob);
