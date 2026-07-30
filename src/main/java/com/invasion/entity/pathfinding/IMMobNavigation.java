@@ -44,6 +44,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int stuckTime;
     private boolean climbingLadder;
     private boolean gravityBeforeLadder;
+    private boolean overridingGravityForLadder;
     private int ladderColumnX;
     private int ladderColumnZ;
     private int ladderExitY;
@@ -195,6 +196,12 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public void tick() {
+        // Older ladder navigation could leave or persist no-gravity after an
+        // interrupted climb. Ground mobs only use it while this navigator
+        // actively owns a ladder climb, so recover any orphaned state.
+        if (!climbingLadder && !overridingGravityForLadder && mob.isNoGravity()) {
+            mob.setNoGravity(false);
+        }
         if (climbingLadder) {
             climbLadder();
             return;
@@ -387,6 +394,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private void beginLadderClimb(BlockPos ladderPos) {
         climbingLadder = true;
         gravityBeforeLadder = mob.isNoGravity();
+        overridingGravityForLadder = true;
         ladderColumnX = ladderPos.getX();
         ladderColumnZ = ladderPos.getZ();
 
@@ -484,20 +492,21 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     }
 
     private void finishLadderClimb() {
-        if (!climbingLadder) {
+        if (!climbingLadder && !overridingGravityForLadder) {
             return;
         }
         climbingLadder = false;
         holdingAtLadderTop = false;
-        mob.setNoGravity(gravityBeforeLadder);
+        if (overridingGravityForLadder) {
+            mob.setNoGravity(gravityBeforeLadder);
+            overridingGravityForLadder = false;
+        }
         mob.fallDistance = 0;
     }
 
     @Override
     public void stop() {
-        if (!holdingAtLadderTop || !shouldHoldAtLadderTop()) {
-            finishLadderClimb();
-        }
+        finishLadderClimb();
         super.stop();
     }
 

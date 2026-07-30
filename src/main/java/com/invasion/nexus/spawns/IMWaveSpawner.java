@@ -304,17 +304,6 @@ public class IMWaveSpawner implements Spawner {
 
                 applyBabyZombieVariant(mob);
                 markAsInvasionAlly(mob);
-                if (mob instanceof EntityIMZombie zombie) {
-                    InvasionMod.LOGGER.info(
-                            "[BabyZombieDebug] Spawned uuid={} progression={} tier={} flavour={} baby={} movementSpeed={}",
-                            zombie.getUUID(),
-                            nexus.getProgressionLevel(),
-                            zombie.getTier(),
-                            zombie.getFlavour(),
-                            zombie.isBaby(),
-                            zombie.getAttributeValue(
-                                    net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED));
-                }
                 if (debugMode) {
                     InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave()
                             + "  Mob: " + mob.getName().getString()
@@ -354,23 +343,10 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		int progression = nexus.getProgressionLevel();
 		int chancePercent = nexus.getBabyZombieChancePercent();
-		int roll = getRandom().nextInt(100);
-		boolean selected = roll < chancePercent;
-		if (selected) {
+		if (getRandom().nextInt(100) < chancePercent) {
 			zombie.setBaby(true);
 		}
-
-		InvasionMod.LOGGER.info(
-				"[BabyZombieDebug] Rolled uuid={} progression={} chance={} roll={} selected={} tier={} flavour={}",
-				zombie.getUUID(),
-				progression,
-				chancePercent,
-				roll,
-				selected,
-				zombie.getTier(),
-				zombie.getFlavour());
 	}
 
 	private void equipRandomWaveWeapon(Mob mob) {
