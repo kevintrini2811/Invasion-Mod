@@ -342,7 +342,7 @@ public class IMWaveSpawner implements Spawner {
 			relevantVariants.add(InvEntities.ZOMBIE_VILLAGER);
 		}
 
-		int chance = relevantVariants.isEmpty() ? 1 : 75;
+		int chance = relevantVariants.isEmpty() ? 3 : 75;
 		if (getRandom().nextInt(100) >= chance) {
 			return construct;
 		}
