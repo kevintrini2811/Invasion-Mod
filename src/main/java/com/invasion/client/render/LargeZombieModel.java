@@ -70,15 +70,21 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
         root.addOrReplaceChild(PartNames.LEFT_ARM, CubeListBuilder.create(),
                 PartPose.offset(6, 2, 0));
         root.addOrReplaceChild(PartNames.RIGHT_LEG,
-                slot == EquipmentSlot.LEGS || slot == EquipmentSlot.FEET
+                slot == EquipmentSlot.LEGS
                         ? CubeListBuilder.create().texOffs(0, 16).addBox(
                                 -2, 0, -2, 4, 12, 4, dilation)
+                        : slot == EquipmentSlot.FEET
+                        ? CubeListBuilder.create().texOffs(0, 22).addBox(
+                                -2, 6, -2, 4, 6, 4, dilation)
                         : CubeListBuilder.create(),
                 PartPose.offset(-2, 12, 0));
         root.addOrReplaceChild(PartNames.LEFT_LEG,
-                slot == EquipmentSlot.LEGS || slot == EquipmentSlot.FEET
+                slot == EquipmentSlot.LEGS
                         ? CubeListBuilder.create().texOffs(0, 16).mirror().addBox(
                                 -2, 0, -2, 4, 12, 4, dilation)
+                        : slot == EquipmentSlot.FEET
+                        ? CubeListBuilder.create().texOffs(0, 22).mirror().addBox(
+                                -2, 6, -2, 4, 6, 4, dilation)
                         : CubeListBuilder.create(),
                 PartPose.offset(2, 12, 0));
         return LayerDefinition.create(data, 64, 64);
