@@ -7,34 +7,41 @@ import net.minecraft.client.model.monster.creeper.CreeperModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.CreeperPowerLayer;
-import net.minecraft.client.renderer.entity.state.CreeperRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EquipmentSlot;
 
 public final class GenericCreeperRenderer
-        extends MobRenderer<IMCreeperEntity, CreeperRenderState, CreeperModel> {
+        extends MobRenderer<IMCreeperEntity, InvasionCreeperRenderState, CreeperModel> {
     private static final Identifier TEXTURE =
             Identifier.withDefaultNamespace("textures/entity/creeper/creeper.png");
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public GenericCreeperRenderer(EntityRendererProvider.Context context) {
         super(context, new CreeperModel(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);
-        addLayer(new CreeperPowerLayer(this, context.getModelSet()));
+        addLayer((net.minecraft.client.renderer.entity.layers.RenderLayer)
+                new CreeperPowerLayer(
+                        (net.minecraft.client.renderer.entity.RenderLayerParent) this,
+                        context.getModelSet()));
+        addLayer(new HeadArmorLayer<>(
+                this, context, state -> state.headEquipment));
     }
 
     @Override
-    public CreeperRenderState createRenderState() {
-        return new CreeperRenderState();
+    public InvasionCreeperRenderState createRenderState() {
+        return new InvasionCreeperRenderState();
     }
 
     @Override
-    public void extractRenderState(IMCreeperEntity entity, CreeperRenderState state, float tickDelta) {
+    public void extractRenderState(IMCreeperEntity entity, InvasionCreeperRenderState state, float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         state.swelling = entity.getClientFuseTime(tickDelta);
         state.isPowered = entity.isPowered();
+        state.headEquipment = entity.getItemBySlot(EquipmentSlot.HEAD);
     }
 
     @Override
-    protected void scale(CreeperRenderState state, PoseStack poseStack) {
+    protected void scale(InvasionCreeperRenderState state, PoseStack poseStack) {
         float swelling = state.swelling;
         float pulse = 1.0F + Mth.sin(swelling * 100.0F) * swelling * 0.01F;
         swelling = Mth.clamp(swelling, 0.0F, 1.0F);
@@ -46,7 +53,7 @@ public final class GenericCreeperRenderer
     }
 
     @Override
-    public Identifier getTextureLocation(CreeperRenderState state) {
+    public Identifier getTextureLocation(InvasionCreeperRenderState state) {
         return TEXTURE;
     }
 }

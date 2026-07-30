@@ -23,6 +23,7 @@ import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -54,6 +55,15 @@ public final class IMEndermanEntity extends IMMobEntity {
         getNavigatorNew().setCanDestroyBlocks(true);
         setPathfindingMalus(PathType.WATER, -1);
         setPathfindingMalus(PathType.WATER_BORDER, -1);
+        setCanPickUpLoot(true);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot == EquipmentSlot.HEAD
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
