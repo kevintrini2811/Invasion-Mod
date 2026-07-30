@@ -23,6 +23,7 @@
     "item.invmod.debug_wand": "Debug-Stab",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.drowned": "IM Ertrunkener",
     "entity.invmod.zombie_villager": "IM Zombie-Dorfbewohner",
     "entity.invmod.zombie.brute": "IM Zombie Brute",
     "entity.invmod.zombie.tar": "IM Tar Zombie",

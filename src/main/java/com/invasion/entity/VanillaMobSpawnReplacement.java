@@ -13,10 +13,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.skeleton.Bogged;
+import net.minecraft.world.entity.monster.zombie.Drowned;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -73,6 +75,8 @@ public final class VanillaMobSpawnReplacement {
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
         if (mob.getType() == EntityTypes.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
+        } else if (mob.getType() == EntityTypes.DROWNED) {
+            convert(mob, InvEntities.DROWNED, nexus);
         } else if (mob.getType() == EntityTypes.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (mob.getType() == EntityTypes.BOGGED) {
@@ -96,6 +100,7 @@ public final class VanillaMobSpawnReplacement {
 
     private static boolean isReplaceableType(EntityType<?> type) {
         return type == EntityTypes.ZOMBIE
+                || type == EntityTypes.DROWNED
                 || type == EntityTypes.SKELETON
                 || type == EntityTypes.BOGGED
                 || type == EntityTypes.PARCHED
@@ -131,6 +136,13 @@ public final class VanillaMobSpawnReplacement {
         converted.setCustomNameVisible(source.isCustomNameVisible());
         converted.setNoAi(source.isNoAi());
         converted.setCanPickUpLoot(source.canPickUpLoot());
+        if (source instanceof Drowned
+                && converted instanceof IMDrownedEntity) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                converted.setItemSlot(
+                        slot, source.getItemBySlot(slot).copy());
+            }
+        }
         if (source instanceof Bogged bogged
                 && converted instanceof IMBoggedEntity imBogged) {
             imBogged.setSheared(bogged.isSheared());
