@@ -1,6 +1,7 @@
 package com.invasion.client.render;
 
 import com.invasion.entity.IMWitherSkeletonEntity;
+import com.invasion.entity.EquipmentUtil;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.monster.skeleton.SkeletonModel;
@@ -11,7 +12,6 @@ import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.item.Items;
 
 public final class InvWitherSkeletonRenderer extends
         HumanoidMobRenderer<IMWitherSkeletonEntity, SkeletonRenderState,
@@ -45,7 +45,8 @@ public final class InvWitherSkeletonRenderer extends
             float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         state.isAggressive = entity.isAggressive();
-        state.isHoldingBow = entity.getMainHandItem().is(Items.BOW);
+        state.isHoldingBow =
+                EquipmentUtil.isRangedWeapon(entity.getMainHandItem());
     }
 
     @Override
@@ -53,7 +54,7 @@ public final class InvWitherSkeletonRenderer extends
             IMWitherSkeletonEntity entity, HumanoidArm arm) {
         if (arm == entity.getMainArm()
                 && entity.isAggressive()
-                && entity.getMainHandItem().is(Items.BOW)) {
+                && EquipmentUtil.isRangedWeapon(entity.getMainHandItem())) {
             return HumanoidModel.ArmPose.BOW_AND_ARROW;
         }
         return super.getArmPose(entity, arm);

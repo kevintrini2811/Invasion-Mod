@@ -1,6 +1,5 @@
 package com.invasion.entity;
 
-import com.invasion.item.InvItems;
 import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
@@ -54,21 +53,12 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     private static boolean isUsableWeapon(ItemStack stack) {
-        return stack.is(ItemTags.SWORDS)
-                || stack.is(ItemTags.AXES)
-                || stack.is(Items.TRIDENT)
-                || stack.is(Items.MACE)
-                || stack.is(InvItems.INFUSED_SWORD)
-                || stack.is(Items.BOW)
-                || stack.is(InvItems.SEARING_BOW)
-                || stack.is(Items.CROSSBOW);
+        return EquipmentUtil.isWeapon(stack);
     }
 
     public final boolean isHoldingRangedWeapon() {
-        ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
-        return heldItem.is(Items.BOW)
-                || heldItem.is(InvItems.SEARING_BOW)
-                || heldItem.is(Items.CROSSBOW);
+        return EquipmentUtil.isRangedWeapon(
+                getItemBySlot(EquipmentSlot.MAINHAND));
     }
 
     protected final void addWeaponCombatGoals(double meleeSpeed) {

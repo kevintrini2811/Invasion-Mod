@@ -7,7 +7,6 @@ import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
-import com.invasion.item.InvItems;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.server.level.ServerLevel;
@@ -23,7 +22,6 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 
 public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
@@ -33,9 +31,7 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
     }
 
     public boolean isHoldingRangedWeapon() {
-        return getMainHandItem().is(Items.BOW)
-                || getMainHandItem().is(Items.CROSSBOW)
-                || getMainHandItem().is(InvItems.SEARING_BOW);
+        return EquipmentUtil.isRangedWeapon(getMainHandItem());
     }
 
     @Override
