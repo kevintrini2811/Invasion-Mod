@@ -270,14 +270,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
 
         BlockPos current = blockPosition();
-        BlockPos nexus = getNexus().getOrigin();
-        List<Direction> directions = new ArrayList<>(
-                Direction.Plane.HORIZONTAL.stream().toList());
-        directions.sort(Comparator.comparingInt(direction ->
-                -direction.getStepX() * (nexus.getX() - current.getX())
-                - direction.getStepZ() * (nexus.getZ() - current.getZ())));
-
-        for (Direction direction : directions) {
+        for (Direction direction : directionsTowardNexus(current)) {
             for (int yOffset : new int[] {0, 1, -1}) {
                 BlockPos target = current.relative(direction).above(yOffset);
                 BlockPos floor = target.below();
@@ -301,7 +294,49 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
 
-        return tryStartTowerBuild();
+        return false;
+    }
+
+    /**
+     * Builds one supported escape step when an engineer is isolated on a
+     * platform and therefore cannot take the safe walking recovery above.
+     */
+    public boolean tryBridgeMissingPath(Notifiable asker) {
+        if (!hasNexus() || buildingTower || terrainModifier.isBusy()) {
+            return false;
+        }
+
+        BlockPos current = blockPosition();
+        for (Direction direction : directionsTowardNexus(current)) {
+            BlockPos target = current.relative(direction);
+            BlockPos floor = target.below();
+            BlockState floorState = level().getBlockState(floor);
+            if ((!floorState.isAir()
+                            && floorState.getFluidState().isEmpty())
+                    || !level().noCollision(
+                            this,
+                            getBoundingBox().move(
+                                    target.getX() + 0.5D - getX(),
+                                    target.getY() - getY(),
+                                    target.getZ() + 0.5D - getZ()))) {
+                continue;
+            }
+
+            if (beginBridgeAction(target, asker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<Direction> directionsTowardNexus(BlockPos current) {
+        BlockPos nexus = getNexus().getOrigin();
+        List<Direction> directions = new ArrayList<>(
+                Direction.Plane.HORIZONTAL.stream().toList());
+        directions.sort(Comparator.comparingInt(direction ->
+                -direction.getStepX() * (nexus.getX() - current.getX())
+                - direction.getStepZ() * (nexus.getZ() - current.getZ())));
+        return directions;
     }
 
     public boolean tryStartTowerBuild() {

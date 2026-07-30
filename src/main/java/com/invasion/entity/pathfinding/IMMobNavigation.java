@@ -449,14 +449,27 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             abandonStalledBridgePath();
             if (missingPath && ++engineerMissingPathRecoveries >= 3) {
                 boolean escaped = engineer.tryEscapeMissingPath();
+                boolean bridged = false;
+                boolean towerStarted = false;
+                if (!escaped) {
+                    bridged = engineer.tryBridgeMissingPath(this);
+                    if (bridged) {
+                        waitingForNotify = ENGINEER_BRIDGE_WAIT_TIME;
+                        engineerTaskStartTick = mob.tickCount;
+                    } else {
+                        towerStarted = engineer.tryStartTowerBuild();
+                    }
+                }
                 InvasionMod.LOGGER.warn(
-                        "[EngineerBridge] escalating missing-path recovery: entity={}, attempt={}, escaped={}, pos={}",
+                        "[EngineerBridge] escalating missing-path recovery: entity={}, attempt={}, escaped={}, bridged={}, tower={}, pos={}",
                         mob.getId(),
                         engineerMissingPathRecoveries,
                         escaped,
+                        bridged,
+                        towerStarted,
                         mob.blockPosition()
                 );
-                if (escaped) {
+                if (escaped || bridged || towerStarted) {
                     engineerMissingPathRecoveries = 0;
                 }
             } else if (!missingPath) {
