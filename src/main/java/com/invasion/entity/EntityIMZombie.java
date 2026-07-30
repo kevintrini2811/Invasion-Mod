@@ -212,7 +212,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new PredicatedGoal(new FloatGoal(this), () -> getTier() != 2 || getFlavour() != 2));
+        goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new AttackNexusGoal<>(this));
         goalSelector.addGoal(3, new ProvideSupportGoal(this, 4, true));
