@@ -52,6 +52,7 @@
     "entity.invmod.trap": "IM Falle",
     "entity.invmod.imp": "IM Kobold",
     "entity.invmod.enderman": "IM Enderman",
+    "entity.invmod.phantom": "IM Phantom",
     "entity.invmod.sfx": "IM Effekt",
     "entity.invmod.spawn_proxy": "IM Spawn-Platzhalter",
     "entity.invmod.bolt": "IM Nexus-Blitz",
