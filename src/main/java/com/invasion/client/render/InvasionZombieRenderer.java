@@ -7,6 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.monster.zombie.BabyZombieModel;
 import net.minecraft.client.model.monster.zombie.ZombieModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -16,6 +17,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 
 public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
@@ -62,6 +64,23 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                         ? state.headEquipment
                         : ItemStack.EMPTY,
                 0.0F, 0.0F, 0.7F));
+
+        HumanoidModel<InvasionZombieRenderState> emptyHead =
+                new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
+                        new CubeDeformation(1.0F), EquipmentSlot.CHEST).bakeRoot());
+        HumanoidModel<InvasionZombieRenderState> emptyChest =
+                new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
+                        new CubeDeformation(1.0F), EquipmentSlot.CHEST).bakeRoot());
+        HumanoidModel<InvasionZombieRenderState> leggings =
+                new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
+                        new CubeDeformation(0.5F), EquipmentSlot.LEGS).bakeRoot());
+        HumanoidModel<InvasionZombieRenderState> boots =
+                new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
+                        new CubeDeformation(1.0F), EquipmentSlot.FEET).bakeRoot());
+        ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> bruteArmor =
+                new ArmorModelSet<>(emptyHead, emptyChest, leggings, boots);
+        addLayer(new VariantArmorLayer(
+                this, bruteArmor, bruteArmor, context, true));
     }
 
     @Override
