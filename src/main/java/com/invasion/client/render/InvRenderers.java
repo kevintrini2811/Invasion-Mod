@@ -26,6 +26,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOGGED, InvBoggedRenderer::new);
         EntityRendererRegistry.register(InvEntities.PARCHED, InvParchedRenderer::new);
+        EntityRendererRegistry.register(InvEntities.STRAY, InvStrayRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.WITHER_SKELETON,
                 InvWitherSkeletonRenderer::new);
