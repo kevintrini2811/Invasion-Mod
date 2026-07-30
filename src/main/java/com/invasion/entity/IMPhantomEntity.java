@@ -1,11 +1,13 @@
 package com.invasion.entity;
 
 import java.util.EnumSet;
+import java.util.UUID;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.mixin.PhantomAccessor;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
@@ -13,10 +15,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.golem.AbstractGolem;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
@@ -35,6 +38,9 @@ public final class IMPhantomEntity extends Phantom
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     private HasAiGoals.Goal aiGoal = HasAiGoals.Goal.NONE;
     private HasAiGoals.Goal previousAiGoal = HasAiGoals.Goal.NONE;
+    @Nullable
+    private UUID temporarilyUnreachableTarget;
+    private int unreachableTargetCooldown;
 
     public IMPhantomEntity(
             EntityType<? extends Phantom> type, Level level) {
@@ -59,12 +65,9 @@ public final class IMPhantomEntity extends Phantom
         goalSelector.addGoal(1, new FlyToNexusGoal());
         goalSelector.addGoal(2, new IdleCircleGoal());
 
-        targetSelector.addGoal(1,
-                new NearestAttackableTargetGoal<>(this, Player.class, true));
-        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
-                this, AbstractVillager.class, true));
-        targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                this, IronGolem.class, true));
+        targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
+                this, LivingEntity.class, 10, true, false,
+                (candidate, world) -> isPlayerAlly(candidate, world)));
     }
 
     @Override
@@ -137,6 +140,43 @@ public final class IMPhantomEntity extends Phantom
         return hasNexus() || super.requiresCustomPersistence();
     }
 
+    @Override
+    protected void customServerAiStep(ServerLevel level) {
+        if (!hasNexus()) {
+            WorldNexusStorage.of(level).getNexus()
+                    .filter(NexusAccess::isActive)
+                    .ifPresent(this::setNexus);
+        }
+        if (unreachableTargetCooldown > 0
+                && --unreachableTargetCooldown == 0) {
+            temporarilyUnreachableTarget = null;
+        }
+        super.customServerAiStep(level);
+    }
+
+    private boolean isPlayerAlly(
+            LivingEntity candidate, ServerLevel world) {
+        if (candidate == this
+                || temporarilyUnreachableTarget != null
+                        && temporarilyUnreachableTarget.equals(
+                                candidate.getUUID())) {
+            return false;
+        }
+        if (candidate instanceof Player) {
+            return true;
+        }
+        if (candidate instanceof AbstractVillager
+                || candidate instanceof AbstractGolem) {
+            return true;
+        }
+        if (candidate instanceof OwnableEntity ownable
+                && ownable.getRootOwner() instanceof Player) {
+            return true;
+        }
+        return world.players().stream()
+                .anyMatch(player -> candidate.isAlliedTo(player));
+    }
+
     private final class FlyToNexusGoal
             extends net.minecraft.world.entity.ai.goal.Goal {
         private int attackCooldown;
@@ -200,6 +240,8 @@ public final class IMPhantomEntity extends Phantom
     private final class SwoopAtTargetGoal
             extends net.minecraft.world.entity.ai.goal.Goal {
         private int retreatTicks;
+        private int stalledTicks;
+        private double closestDistanceSquared;
 
         private SwoopAtTargetGoal() {
             setFlags(EnumSet.of(
@@ -225,6 +267,8 @@ public final class IMPhantomEntity extends Phantom
         @Override
         public void start() {
             retreatTicks = 0;
+            stalledTicks = 0;
+            closestDistanceSquared = Double.MAX_VALUE;
             transitionAIGoal(HasAiGoals.Goal.SWOOP);
         }
 
@@ -235,8 +279,21 @@ public final class IMPhantomEntity extends Phantom
                 return;
             }
 
+            double distanceSquared = distanceToSqr(target);
+            if (distanceSquared + 1D < closestDistanceSquared) {
+                closestDistanceSquared = distanceSquared;
+                stalledTicks = 0;
+            } else if (++stalledTicks >= 100) {
+                temporarilyUnreachableTarget = target.getUUID();
+                unreachableTargetCooldown = 20 * 15;
+                setTarget(null);
+                return;
+            }
+
             if (retreatTicks > 0) {
                 retreatTicks--;
+                stalledTicks = 0;
+                closestDistanceSquared = Double.MAX_VALUE;
                 setFlightTarget(new Vec3(
                         target.getX(),
                         target.getY() + 8D,
