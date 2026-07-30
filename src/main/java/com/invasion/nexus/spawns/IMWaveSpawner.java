@@ -276,6 +276,7 @@ public class IMWaveSpawner implements Spawner {
 
 		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 		Mob mob = mobConstruct.createMob(nexus);
+		applyBabyZombieVariant(mob);
 		equipRandomWaveWeapon(mob);
 		equipRandomWaveArmor(mob);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
@@ -334,6 +335,14 @@ public class IMWaveSpawner implements Spawner {
 					construct.maxAngle());
 		}
 		return construct;
+	}
+
+	private void applyBabyZombieVariant(Mob mob) {
+		if (mob instanceof EntityIMZombie zombie
+				&& getRandom().nextInt(100)
+						< nexus.getBabyZombieChancePercent()) {
+			zombie.setBaby(true);
+		}
 	}
 
 	private void equipRandomWaveWeapon(Mob mob) {
