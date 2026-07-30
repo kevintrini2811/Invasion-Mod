@@ -19,6 +19,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.Nullable;
@@ -280,8 +281,11 @@ public class IMWaveSpawner implements Spawner {
 			}
 
 			EntityConstruct spawnConstruct =
-					replaceZombieWithEnvironmentalVariant(
-							mobConstruct,
+					replaceSkeletonWithEnvironmentalVariant(
+							replaceZombieWithEnvironmentalVariant(
+									mobConstruct,
+									(ServerLevel) nexus.getWorld(),
+									spawnPoint.pos()),
 							(ServerLevel) nexus.getWorld(),
 							spawnPoint.pos());
 			Mob mob = spawnConstruct.createMob(nexus);
@@ -346,6 +350,54 @@ public class IMWaveSpawner implements Spawner {
 				case 0 -> InvEntities.ZOMBIE_VILLAGER;
 				case 1 -> InvEntities.DROWNED;
 				default -> InvEntities.HUSK;
+			};
+		} else {
+			replacement = relevantVariants.get(
+					getRandom().nextInt(relevantVariants.size()));
+		}
+
+		return new EntityConstruct(
+				replacement,
+				construct.texture(),
+				construct.tier(),
+				construct.flavour(),
+				construct.scaling(),
+				construct.minAngle(),
+				construct.maxAngle());
+	}
+
+	private EntityConstruct replaceSkeletonWithEnvironmentalVariant(
+			EntityConstruct construct, ServerLevel world, BlockPos pos) {
+		if (construct.entityType() != InvEntities.SKELETON) {
+			return construct;
+		}
+
+		List<EntityType<? extends Mob>> relevantVariants =
+				new ArrayList<>(3);
+		var biome = world.getBiome(pos);
+		if (biome.is(Biomes.SWAMP)
+				|| biome.is(Biomes.MANGROVE_SWAMP)) {
+			relevantVariants.add(InvEntities.BOGGED);
+		}
+		if (biome.is(Biomes.DESERT)) {
+			relevantVariants.add(InvEntities.PARCHED);
+		}
+		if (biome.is(Biomes.SNOWY_PLAINS)
+				|| biome.is(Biomes.ICE_SPIKES)) {
+			relevantVariants.add(InvEntities.STRAY);
+		}
+
+		int chance = relevantVariants.isEmpty() ? 1 : 75;
+		if (getRandom().nextInt(100) >= chance) {
+			return construct;
+		}
+
+		EntityType<? extends Mob> replacement;
+		if (relevantVariants.isEmpty()) {
+			replacement = switch (getRandom().nextInt(3)) {
+				case 0 -> InvEntities.BOGGED;
+				case 1 -> InvEntities.PARCHED;
+				default -> InvEntities.STRAY;
 			};
 		} else {
 			replacement = relevantVariants.get(
