@@ -10,6 +10,8 @@ import com.invasion.entity.ai.goal.ProvideSupportGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.ai.goal.target.RetaliateGoal;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
@@ -36,9 +38,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseFireBlock;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.gamerules.GameRules;
 
 public class ImpEnitty extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker {
+    private static final int BLOCK_IGNITION_COOLDOWN = 40;
+    private int nextBlockIgnitionTick;
+
     public ImpEnitty(EntityType<ImpEnitty> type, Level world) {
         super(type, world);
         getNavigatorNew().getActor().setCanClimb(true);
@@ -126,6 +134,11 @@ public class ImpEnitty extends IMMobEntity
                         .noneMatch(state -> state.is(BlockTags.FIRE))) {
             clearFire();
         }
+        if (tickCount >= nextBlockIgnitionTick
+                && world.getGameRules().get(GameRules.MOB_GRIEFING)
+                && tryIgniteNearbyBlock(world)) {
+            nextBlockIgnitionTick = tickCount + BLOCK_IGNITION_COOLDOWN;
+        }
         if (tickCount % 5 != 0 || isUsableWeapon(getMainHandItem())) {
             return;
         }
@@ -139,6 +152,36 @@ public class ImpEnitty extends IMMobEntity
                 break;
             }
         }
+    }
+
+    private boolean tryIgniteNearbyBlock(ServerLevel world) {
+        for (BlockPos fuelPos : BlockPos.withinManhattan(
+                blockPosition(), 2, 1, 2)) {
+            if (!world.getBlockState(fuelPos).ignitedByLava()) {
+                continue;
+            }
+            int firstDirection = getRandom().nextInt(Direction.values().length);
+            for (int offset = 0; offset < Direction.values().length; offset++) {
+                Direction direction = Direction.values()[
+                        (firstDirection + offset) % Direction.values().length];
+                BlockPos firePos = fuelPos.relative(direction);
+                if (!world.isEmptyBlock(firePos)) {
+                    continue;
+                }
+                var fireState = BaseFireBlock.getState(world, firePos);
+                if (!fireState.canSurvive(world, firePos)) {
+                    continue;
+                }
+                world.setBlockAndUpdate(firePos, fireState);
+                world.gameEvent(this, GameEvent.BLOCK_PLACE, firePos);
+                playSound(
+                        SoundEvents.FLINTANDSTEEL_USE,
+                        1.0F,
+                        0.8F + getRandom().nextFloat() * 0.4F);
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
