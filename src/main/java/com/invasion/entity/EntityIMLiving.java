@@ -19,7 +19,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.storage.ValueInput;
@@ -38,7 +38,7 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
         super(type, world);
         moveControl = new ClimbableMoveControl(this);
         targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(
-                this, Villager.class, this::getAggroRange, true));
+                this, AbstractVillager.class, this::getAggroRange, true));
         resetHealth();
     }
 
