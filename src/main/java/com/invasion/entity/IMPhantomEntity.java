@@ -6,6 +6,7 @@ import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.mixin.PhantomAccessor;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -18,6 +19,7 @@ import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A Nexus-bound phantom which retains vanilla phantom flight, size scaling,
@@ -45,7 +47,7 @@ public final class IMPhantomEntity extends Phantom
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        goalSelector.addGoal(1, new FlyToNexusGoal());
+        goalSelector.addGoal(0, new FlyToNexusGoal());
     }
 
     @Override
@@ -166,11 +168,11 @@ public final class IMPhantomEntity extends Phantom
             }
 
             transitionAIGoal(HasAiGoals.Goal.GOTO_ENTITY);
-            getMoveControl().setWantedPosition(
+            ((PhantomAccessor)(Object)IMPhantomEntity.this)
+                    .invasion$setMoveTargetPoint(new Vec3(
                     nexusPos.getX() + 0.5D,
                     nexusPos.getY() + 3.5D,
-                    nexusPos.getZ() + 0.5D,
-                    1.0D);
+                    nexusPos.getZ() + 0.5D));
         }
 
         @Override
