@@ -71,14 +71,12 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         HumanoidModel<InvasionZombieRenderState> emptyChest =
                 new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
                         new CubeDeformation(1.0F), EquipmentSlot.CHEST).bakeRoot());
-        HumanoidModel<InvasionZombieRenderState> leggings =
-                new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
-                        new CubeDeformation(0.5F), EquipmentSlot.LEGS).bakeRoot());
-        HumanoidModel<InvasionZombieRenderState> boots =
-                new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
-                        new CubeDeformation(0.5F), EquipmentSlot.FEET).bakeRoot());
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> bruteArmor =
-                new ArmorModelSet<>(emptyHead, emptyChest, leggings, boots);
+                new ArmorModelSet<>(
+                        emptyHead,
+                        emptyChest,
+                        normalArmor.legs(),
+                        normalArmor.feet());
         addLayer(new VariantArmorLayer(
                 this, bruteArmor, bruteArmor, context, true));
     }
