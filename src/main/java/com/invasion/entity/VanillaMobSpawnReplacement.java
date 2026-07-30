@@ -19,6 +19,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.skeleton.Bogged;
 import net.minecraft.world.entity.monster.zombie.Drowned;
+import net.minecraft.world.entity.monster.zombie.Husk;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -75,6 +76,8 @@ public final class VanillaMobSpawnReplacement {
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
         if (mob.getType() == EntityTypes.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
+        } else if (mob.getType() == EntityTypes.HUSK) {
+            convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityTypes.DROWNED) {
             convert(mob, InvEntities.DROWNED, nexus);
         } else if (mob.getType() == EntityTypes.SKELETON) {
@@ -100,6 +103,7 @@ public final class VanillaMobSpawnReplacement {
 
     private static boolean isReplaceableType(EntityType<?> type) {
         return type == EntityTypes.ZOMBIE
+                || type == EntityTypes.HUSK
                 || type == EntityTypes.DROWNED
                 || type == EntityTypes.SKELETON
                 || type == EntityTypes.BOGGED
@@ -138,6 +142,13 @@ public final class VanillaMobSpawnReplacement {
         converted.setCanPickUpLoot(source.canPickUpLoot());
         if (source instanceof Drowned
                 && converted instanceof IMDrownedEntity) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                converted.setItemSlot(
+                        slot, source.getItemBySlot(slot).copy());
+            }
+        }
+        if (source instanceof Husk
+                && converted instanceof IMHuskEntity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
                 converted.setItemSlot(
                         slot, source.getItemBySlot(slot).copy());

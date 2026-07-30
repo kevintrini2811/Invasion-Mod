@@ -47,6 +47,13 @@ public interface InvEntities {
                     .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMHuskEntity> HUSK = register(
+            "husk",
+            EntityType.Builder.<IMHuskEntity>of(
+                            IMHuskEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F).eyeHeight(1.74F)
+                    .passengerAttachments(2.0125F).ridingOffset(-0.7F)
+                    .clientTrackingRange(8));
     EntityType<IMDrownedEntity> DROWNED = register(
             "drowned",
             EntityType.Builder.<IMDrownedEntity>of(
@@ -133,6 +140,8 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(
                 WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
+        FabricDefaultAttributeRegistry.register(
+                HUSK, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(
                 DROWNED, IMDrownedEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(

@@ -22,6 +22,7 @@
   "item.invmod.debug_wand": "Debug-Stab",
   "item.invmod.nexus_core": "Nexus-Kern",
   "item.invmod.zombie_spawn_egg": "IM Zombie-Spawn-Ei",
+  "item.invmod.husk_spawn_egg": "IM Wüstenzombie-Spawn-Ei",
   "item.invmod.drowned_spawn_egg": "IM Ertrunkener-Spawn-Ei",
   "item.invmod.zombie_villager_spawn_egg": "IM Zombie-Dorfbewohner-Spawn-Ei",
   "item.invmod.armed_zombie_spawn_egg": "IM Bewaffneter Zombie-Spawn-Ei",
@@ -61,6 +62,7 @@
   "itemGroup.invmod.invasion_mod": "Invasion Mod",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.husk": "IM Wüstenzombie",
     "entity.invmod.drowned": "IM Ertrunkener",
     "entity.invmod.zombie_villager": "IM Zombie-Dorfbewohner",
     "entity.invmod.zombie.brute": "IM Zombie Brute",
