@@ -8,6 +8,10 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.state.BlockState;
 
 public interface Miner extends NexusEntity {
+    default float getDiggingSpeedMultiplier() {
+        return 1.0F;
+    }
+
     default float getMaxSelfDamage() {
         return 6;
     }
