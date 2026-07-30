@@ -34,6 +34,7 @@ import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
+import com.invasion.entity.IMZombifiedPiglinEntity;
 import com.invasion.entity.NexusSpiderEntity;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.nexus.Combatant;
@@ -494,6 +495,7 @@ public class IMWaveSpawner implements Spawner {
 	private void equipRandomWaveWeapon(Mob mob) {
 		if (!(mob instanceof EntityIMZombie
 				|| mob instanceof EntityIMZombiePigman
+				|| mob instanceof IMZombifiedPiglinEntity
 				|| mob instanceof ImpEnitty)
 				|| !mob.getMainHandItem().isEmpty()) {
 			return;
@@ -519,6 +521,7 @@ public class IMWaveSpawner implements Spawner {
 				|| mob instanceof PigmanEngineerEntity
 				|| mob instanceof EntityIMZombie
 				|| mob instanceof EntityIMZombiePigman
+				|| mob instanceof IMZombifiedPiglinEntity
 				|| mob instanceof IMCreeperEntity
 				|| mob instanceof NexusSpiderEntity
 				|| mob instanceof IMEndermanEntity;
