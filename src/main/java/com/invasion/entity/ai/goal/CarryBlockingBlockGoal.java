@@ -65,6 +65,7 @@ public final class CarryBlockingBlockGoal extends Goal {
         }
         return !(state.getBlock() instanceof VegetationBlock)
                 && !(state.getBlock() instanceof GrowingPlantBlock)
+                && !state.is(BlockTags.CLIMBABLE)
                 && !state.is(BlockTags.REPLACEABLE_BY_TREES)
                 && !state.is(BlockTags.CROPS)
                 && !state.is(BlockTags.FLOWERS)
