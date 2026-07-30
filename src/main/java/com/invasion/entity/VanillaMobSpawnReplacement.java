@@ -79,6 +79,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.BOGGED, nexus);
         } else if (mob.getType() == EntityTypes.PARCHED) {
             convert(mob, InvEntities.PARCHED, nexus);
+        } else if (mob.getType() == EntityTypes.STRAY) {
+            convert(mob, InvEntities.STRAY, nexus);
         } else if (mob.getType() == EntityTypes.WITHER_SKELETON) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
         } else if (mob.getType() == EntityTypes.CREEPER) {
@@ -97,6 +99,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.SKELETON
                 || type == EntityTypes.BOGGED
                 || type == EntityTypes.PARCHED
+                || type == EntityTypes.STRAY
                 || type == EntityTypes.WITHER_SKELETON
                 || type == EntityTypes.CREEPER
                 || type == EntityTypes.SPIDER
