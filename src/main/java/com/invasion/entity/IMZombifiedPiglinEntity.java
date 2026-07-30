@@ -22,6 +22,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
@@ -144,6 +145,21 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
                 && isEquippableInSlot(stack, slot)
                 && canReplaceCurrentItem(
                         stack, getItemBySlot(slot), slot);
+    }
+
+    @Override
+    protected void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
+        if (tickCount % 5 != 0) {
+            return;
+        }
+        for (ItemEntity item : world.getEntitiesOfClass(
+                ItemEntity.class,
+                getBoundingBox().inflate(1.25D),
+                candidate -> !candidate.hasPickUpDelay()
+                        && wantsToPickUp(world, candidate.getItem()))) {
+            pickUpItem(world, item);
+        }
     }
 
     @Override
