@@ -3,8 +3,6 @@ package com.invasion.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.function.Function;
 import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer;
@@ -20,7 +18,7 @@ import net.minecraft.world.item.equipment.Equippable;
 public final class HeadArmorLayer<
         S extends LivingEntityRenderState,
         M extends EntityModel<? super S>> extends RenderLayer<S, M> {
-    private final HumanoidModel<?> armorModel;
+    private final HeadArmorModel<S> armorModel;
     private final EquipmentLayerRenderer equipmentRenderer;
     private final Function<S, ItemStack> helmet;
 
@@ -29,9 +27,8 @@ public final class HeadArmorLayer<
             net.minecraft.client.renderer.entity.EntityRendererProvider.Context context,
             Function<S, ItemStack> helmet) {
         super(parent);
-        armorModel = new HumanoidModel<>(
-                context.bakeLayer(
-                        ModelLayers.PLAYER_ARMOR.get(EquipmentSlot.HEAD)));
+        armorModel = new HeadArmorModel<>(
+                HeadArmorModel.createBodyLayer().bakeRoot());
         equipmentRenderer = context.getEquipmentRenderer();
         this.helmet = helmet;
     }
@@ -50,12 +47,9 @@ public final class HeadArmorLayer<
         }
 
         armorModel.resetPose();
-        armorModel.allParts().forEach(part -> part.visible = false);
-        armorModel.head.visible = true;
-        armorModel.hat.visible = true;
         armorModel.head.loadPose(
                 getParentModel().root().getChild("head").storePose());
-        armorModel.hat.loadPose(armorModel.head.storePose());
+        armorModel.head.setInitialPose(armorModel.head.storePose());
 
         equipmentRenderer.renderLayers(
                 EquipmentClientInfo.LayerType.HUMANOID,
