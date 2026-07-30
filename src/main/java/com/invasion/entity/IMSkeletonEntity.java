@@ -49,7 +49,8 @@ public class IMSkeletonEntity extends IMMobEntity implements RangedAttackMob, Ra
         }
     }
 
-    public IMSkeletonEntity(EntityType<IMSkeletonEntity> type, Level world) {
+    public IMSkeletonEntity(
+            EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);
         setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
         setCanPickUpLoot(true);

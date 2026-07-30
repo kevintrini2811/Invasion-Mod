@@ -50,6 +50,10 @@ public interface NexusAccess {
         return Math.clamp(getProgressionLevel() - 2, 0, 20);
     }
 
+    default int getWitherSkeletonChancePercent() {
+        return Math.clamp(getProgressionLevel() - 7, 0, 100);
+    }
+
     default int getMobsLeftInWave() {
         return 0;
     }

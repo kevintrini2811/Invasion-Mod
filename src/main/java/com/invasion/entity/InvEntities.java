@@ -21,6 +21,12 @@ import net.minecraft.world.phys.Vec3;
 public interface InvEntities {
     EntityType<IMSkeletonEntity> SKELETON = register("skeleton", EntityType.Builder.<IMSkeletonEntity>of(IMSkeletonEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.99F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMWitherSkeletonEntity> WITHER_SKELETON = register(
+            "wither_skeleton",
+            EntityType.Builder.<IMWitherSkeletonEntity>of(
+                            IMWitherSkeletonEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(0.7F, 2.4F).eyeHeight(2.1F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<EntityIMZombiePigman> ZOMBIE_PIGMAN = register("zombie_pigman", EntityType.Builder.<EntityIMZombiePigman>of(EntityIMZombiePigman::new, MobCategory.MONSTER)
@@ -86,6 +92,8 @@ public interface InvEntities {
 
     static void bootstrap() {
         FabricDefaultAttributeRegistry.register(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
+        FabricDefaultAttributeRegistry.register(
+                WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes());
         FabricDefaultAttributeRegistry.register(PIGMAN_ENGINEER, PigmanEngineerEntity.createAttributes());

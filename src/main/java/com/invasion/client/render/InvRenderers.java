@@ -21,6 +21,9 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
+        EntityRendererRegistry.register(
+                InvEntities.WITHER_SKELETON,
+                InvWitherSkeletonRenderer::new);
         EntityRendererRegistry.register(InvEntities.SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
                         Identifier.withDefaultNamespace("textures/entity/spider/spider.png")));

@@ -62,6 +62,7 @@
     "entity.invmod.zombie_pigman": "IM Zombie Pigman",
     "entity.invmod.zombie_pigman.brute": "IM Zombie Pigman Brute",
     "entity.invmod.skeleton": "IM Skeleton",
+    "entity.invmod.wither_skeleton": "IM Wither Skeleton",
     "entity.invmod.spider": "IM Spider",
     "entity.invmod.jumping_spider": "IM Jumping Spider",
     "entity.invmod.cave_spider": "IM Cave Spider",
