@@ -78,6 +78,9 @@ public interface InvItems {
     Item TAR_ZOMBIE_SPAWN_EGG = register("tar_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x3A4225, 0x191C13, NexusEntity.createVariant(2, 2)));
     Item ZOMBIE_BRUTE_SPAWN_EGG = register("zombie_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x3A4225, 0x191C13, NexusEntity.createVariant(0, 3)));
     Item SKELETON_SPAWN_EGG = register("skeleton_spawn_egg", p -> createSpawnEgg(p, InvEntities.SKELETON, 0x9B9B9B, 0x797979));
+    Item BOGGED_SPAWN_EGG = register(
+            "bogged_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.BOGGED, 0x8A9C72, 0x314D1F));
     Item WITHER_SKELETON_SPAWN_EGG = register("wither_skeleton_spawn_egg", p -> createSpawnEgg(p, InvEntities.WITHER_SKELETON, 0x141414, 0x474D4D));
 
     Item SPIDER_SPAWN_EGG = register("spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.SPIDER, 0x504A3E, 0xA4121C));

@@ -16,6 +16,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.skeleton.Bogged;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -74,6 +75,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.ZOMBIE, nexus);
         } else if (mob.getType() == EntityTypes.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
+        } else if (mob.getType() == EntityTypes.BOGGED) {
+            convert(mob, InvEntities.BOGGED, nexus);
         } else if (mob.getType() == EntityTypes.WITHER_SKELETON) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
         } else if (mob.getType() == EntityTypes.CREEPER) {
@@ -90,6 +93,7 @@ public final class VanillaMobSpawnReplacement {
     private static boolean isReplaceableType(EntityType<?> type) {
         return type == EntityTypes.ZOMBIE
                 || type == EntityTypes.SKELETON
+                || type == EntityTypes.BOGGED
                 || type == EntityTypes.WITHER_SKELETON
                 || type == EntityTypes.CREEPER
                 || type == EntityTypes.SPIDER
@@ -121,6 +125,10 @@ public final class VanillaMobSpawnReplacement {
         converted.setCustomNameVisible(source.isCustomNameVisible());
         converted.setNoAi(source.isNoAi());
         converted.setCanPickUpLoot(source.canPickUpLoot());
+        if (source instanceof Bogged bogged
+                && converted instanceof IMBoggedEntity imBogged) {
+            imBogged.setSheared(bogged.isSheared());
+        }
         if (converted instanceof AbstractIMZombieEntity) {
             converted.setCanPickUpLoot(true);
         }

@@ -21,6 +21,12 @@ import net.minecraft.world.phys.Vec3;
 public interface InvEntities {
     EntityType<IMSkeletonEntity> SKELETON = register("skeleton", EntityType.Builder.<IMSkeletonEntity>of(IMSkeletonEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.99F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMBoggedEntity> BOGGED = register(
+            "bogged",
+            EntityType.Builder.<IMBoggedEntity>of(
+                            IMBoggedEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.99F).eyeHeight(1.74F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMWitherSkeletonEntity> WITHER_SKELETON = register(
             "wither_skeleton",
             EntityType.Builder.<IMWitherSkeletonEntity>of(
@@ -99,6 +105,8 @@ public interface InvEntities {
 
     static void bootstrap() {
         FabricDefaultAttributeRegistry.register(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
+        FabricDefaultAttributeRegistry.register(
+                BOGGED, IMBoggedEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(
                 WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
