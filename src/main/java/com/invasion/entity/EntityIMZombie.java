@@ -6,6 +6,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -46,6 +49,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
@@ -74,6 +79,12 @@ import com.invasion.nexus.NexusAccess;
 public class EntityIMZombie extends AbstractIMZombieEntity {
     private static final float TERRAIN_REACH = 3.0F;
     private static final double TERRAIN_REACH_SQR = TERRAIN_REACH * TERRAIN_REACH;
+    private static final EntityDataAccessor<Boolean> BABY =
+            SynchedEntityData.defineId(
+                    EntityIMZombie.class, EntityDataSerializers.BOOLEAN);
+    private static final net.minecraft.world.entity.ai.attributes.AttributeModifier
+            BABY_SPEED_BONUS = AttributeUtil.addPercentage(
+                    InvasionMod.id("baby_zombie_speed"), 50);
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
@@ -154,6 +165,49 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
     public EntityIMZombie(EntityType<EntityIMZombie> type, Level world) {
         super(type, world, 2F);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(BABY, false);
+    }
+
+    @Override
+    public boolean isBaby() {
+        return entityData.get(BABY);
+    }
+
+    @Override
+    public void setBaby(boolean baby) {
+        entityData.set(BABY, baby);
+        if (!level().isClientSide()) {
+            AttributeUtil.toggleAttribute(
+                    this,
+                    Attributes.MOVEMENT_SPEED,
+                    BABY_SPEED_BONUS,
+                    baby);
+        }
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
+        super.onSyncedDataUpdated(data);
+        if (data == BABY) {
+            refreshDimensions();
+        }
+    }
+
+    @Override
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putBoolean("isBaby", isBaby());
+    }
+
+    @Override
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        setBaby(input.getBooleanOr("isBaby", false));
     }
 
     @Override
