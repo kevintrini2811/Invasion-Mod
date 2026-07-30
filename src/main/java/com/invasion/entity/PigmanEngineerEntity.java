@@ -270,9 +270,25 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
 
         BlockPos current = blockPosition();
-        for (Direction direction : directionsTowardNexus(current)) {
-            for (int yOffset : new int[] {0, 1, -1}) {
-                BlockPos target = current.relative(direction).above(yOffset);
+        BlockPos nexus = getNexus().getOrigin();
+        List<BlockPos> candidates = new ArrayList<>();
+        for (int radius = 1; radius <= 3; radius++) {
+            for (int xOffset = -radius; xOffset <= radius; xOffset++) {
+                for (int zOffset = -radius; zOffset <= radius; zOffset++) {
+                    if (Math.max(Math.abs(xOffset), Math.abs(zOffset)) != radius) {
+                        continue;
+                    }
+                    for (int yOffset : new int[] {0, 1, -1, 2}) {
+                        candidates.add(current.offset(xOffset, yOffset, zOffset));
+                    }
+                }
+            }
+        }
+        candidates.sort(Comparator
+                .comparingDouble((BlockPos pos) -> pos.distSqr(nexus))
+                .thenComparingInt(pos -> pos.distManhattan(current)));
+
+        for (BlockPos target : candidates) {
                 BlockPos floor = target.below();
                 if (!level().getBlockState(floor)
                                 .isCollisionShapeFullBlock(level(), floor)
@@ -285,13 +301,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                     continue;
                 }
 
-                getMoveControl().setWantedPosition(
-                        target.getX() + 0.5D,
-                        target.getY(),
-                        target.getZ() + 0.5D,
-                        1.0D);
-                return true;
-            }
+            setPos(target.getX() + 0.5D, target.getY(), target.getZ() + 0.5D);
+            setDeltaMovement(0, 0, 0);
+            fallDistance = 0;
+            getNavigation().stop();
+            return true;
         }
 
         return false;
