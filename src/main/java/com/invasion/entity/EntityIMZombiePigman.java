@@ -102,7 +102,6 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
         targetSelector.addGoal(1, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, false), () -> getTier() != 3));
         targetSelector.addGoal(2, new CustomRangeActiveTargetGoal<>(this, Player.class, this::getAggroRange, true));
         targetSelector.addGoal(3, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F), () -> getTier() != 3 && NoNexusPathGoal.isLostPathToNexus(this)));
-        targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, AbstractVillager.class, this::getAggroRange, true));
         targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, IronGolem.class, this::getAggroRange, true));
         targetSelector.addGoal(5, new HurtByTargetGoal(this));
     }
