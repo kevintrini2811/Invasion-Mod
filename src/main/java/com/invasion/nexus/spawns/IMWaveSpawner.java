@@ -9,11 +9,14 @@ import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.BiomeTags;
+import net.minecraft.tags.StructureTags;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.scores.PlayerTeam;
@@ -256,9 +259,6 @@ public class IMWaveSpawner implements Spawner {
 		}
 
 		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
-		Mob mob = mobConstruct.createMob(nexus);
-		equipRandomWaveWeapon(mob);
-		equipRandomWaveArmor(mob);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (int j = 0; j < spawnTries; j++) {
@@ -273,11 +273,20 @@ public class IMWaveSpawner implements Spawner {
 			if (!permitSpawns) {
 				successfulSpawns++;
 				if (debugMode) {
-				    InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave() / 1000 + "  Type: " + mob + "  Coords: " + spawnPoint + "  Specified: " + angle);
+				    InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave() / 1000 + "  Type: " + mobConstruct.entityType() + "  Coords: " + spawnPoint + "  Specified: " + angle);
 				}
 
 				return true;
 			}
+
+			EntityConstruct spawnConstruct =
+					replaceZombieWithEnvironmentalVariant(
+							mobConstruct,
+							(ServerLevel) nexus.getWorld(),
+							spawnPoint.pos());
+			Mob mob = spawnConstruct.createMob(nexus);
+			equipRandomWaveWeapon(mob);
+			equipRandomWaveArmor(mob);
 
             if (spawnPoint.trySpawnEntity(
                     (ServerLevel) nexus.getWorld(), mob)) {
@@ -294,10 +303,63 @@ public class IMWaveSpawner implements Spawner {
                 }
 
                 return true;
-            }
-        }
-		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mob.getName().getString() + "' after " + spawnTries + " tries");
+			}
+		}
+		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mobConstruct.entityType().getDescription().getString() + "' after " + spawnTries + " tries");
 		return false;
+	}
+
+	private EntityConstruct replaceZombieWithEnvironmentalVariant(
+			EntityConstruct construct, ServerLevel world, BlockPos pos) {
+		if (construct.entityType() != InvEntities.ZOMBIE
+				|| construct.tier() == 3
+				|| construct.tier() == 2
+						&& (construct.flavour() == 2
+								|| construct.flavour() == 3)) {
+			return construct;
+		}
+
+		List<EntityType<? extends Mob>> relevantVariants =
+				new ArrayList<>(3);
+		var biome = world.getBiome(pos);
+		if (biome.is(BiomeTags.IS_OCEAN)
+				|| biome.is(BiomeTags.IS_RIVER)) {
+			relevantVariants.add(InvEntities.DROWNED);
+		}
+		if (biome.is(BiomeTags.HAS_DESERT_PYRAMID)) {
+			relevantVariants.add(InvEntities.HUSK);
+		}
+		if (world.structureManager()
+				.getStructureWithPieceAt(pos, StructureTags.VILLAGE)
+				.isValid()) {
+			relevantVariants.add(InvEntities.ZOMBIE_VILLAGER);
+		}
+
+		int chance = relevantVariants.isEmpty() ? 1 : 75;
+		if (getRandom().nextInt(100) >= chance) {
+			return construct;
+		}
+
+		EntityType<? extends Mob> replacement;
+		if (relevantVariants.isEmpty()) {
+			replacement = switch (getRandom().nextInt(3)) {
+				case 0 -> InvEntities.ZOMBIE_VILLAGER;
+				case 1 -> InvEntities.DROWNED;
+				default -> InvEntities.HUSK;
+			};
+		} else {
+			replacement = relevantVariants.get(
+					getRandom().nextInt(relevantVariants.size()));
+		}
+
+		return new EntityConstruct(
+				replacement,
+				construct.texture(),
+				construct.tier(),
+				construct.flavour(),
+				construct.scaling(),
+				construct.minAngle(),
+				construct.maxAngle());
 	}
 
 	private EntityConstruct replaceWithRareWaveVariant(
