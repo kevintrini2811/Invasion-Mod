@@ -2,6 +2,7 @@ package com.invasion.entity;
 
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.GoToNexusGoal;
+import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.item.InvItems;
@@ -24,8 +25,10 @@ import net.minecraft.world.entity.animal.golem.AbstractGolem;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
@@ -34,7 +37,7 @@ import net.minecraft.world.level.storage.ValueOutput;
  * immunity, equipment, baby dimensions, sounds and spawn behaviour.
  */
 public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
-        implements NexusEntity {
+        implements NexusEntity, Miner {
     private static final EntityDataAccessor<Integer> TIER =
             SynchedEntityData.defineId(
                     IMZombifiedPiglinEntity.class,
@@ -44,6 +47,8 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     public IMZombifiedPiglinEntity(
             EntityType<? extends ZombifiedPiglin> type, Level level) {
         super(type, level);
+        setCanPickUpLoot(true);
+        getNavigatorNew().setCanDestroyBlocks(true);
         applyTierAttributes();
         resetHealth();
     }
@@ -104,6 +109,7 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new AttackNexusGoal<>(this));
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.2D, false));
         goalSelector.addGoal(5, new GoToNexusGoal(this));
@@ -124,6 +130,28 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     @Override
     public PathfinderMob asEntity() {
         return this;
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        if (EquipmentUtil.isMeleeWeapon(stack)) {
+            return canReplaceCurrentItem(
+                    stack, getItemBySlot(EquipmentSlot.MAINHAND),
+                    EquipmentSlot.MAINHAND);
+        }
+        return slot.isArmor()
+                && isEquippableInSlot(stack, slot)
+                && canReplaceCurrentItem(
+                        stack, getItemBySlot(slot), slot);
+    }
+
+    @Override
+    public boolean checkSpawnObstruction(LevelReader world) {
+        // SpawnPoint performs the complete block/entity collision check after
+        // positioning. Vanilla's additional entity-obstruction test rejects
+        // crowded invasion batches before that authoritative check can run.
+        return !world.containsAnyLiquid(getBoundingBox());
     }
 
     @Override
