@@ -12,10 +12,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -47,7 +52,19 @@ public final class IMPhantomEntity extends Phantom
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        goalSelector.addGoal(0, new FlyToNexusGoal());
+        goalSelector.removeAllGoals(goal -> true);
+        targetSelector.removeAllGoals(goal -> true);
+
+        goalSelector.addGoal(0, new SwoopAtTargetGoal());
+        goalSelector.addGoal(1, new FlyToNexusGoal());
+        goalSelector.addGoal(2, new IdleCircleGoal());
+
+        targetSelector.addGoal(1,
+                new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
+                this, AbstractVillager.class, true));
+        targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                this, IronGolem.class, true));
     }
 
     @Override
@@ -168,8 +185,7 @@ public final class IMPhantomEntity extends Phantom
             }
 
             transitionAIGoal(HasAiGoals.Goal.GOTO_ENTITY);
-            ((PhantomAccessor)(Object)IMPhantomEntity.this)
-                    .invasion$setMoveTargetPoint(new Vec3(
+            setFlightTarget(new Vec3(
                     nexusPos.getX() + 0.5D,
                     nexusPos.getY() + 3.5D,
                     nexusPos.getZ() + 0.5D));
@@ -179,5 +195,106 @@ public final class IMPhantomEntity extends Phantom
         public void stop() {
             transitionAIGoal(HasAiGoals.Goal.NONE);
         }
+    }
+
+    private final class SwoopAtTargetGoal
+            extends net.minecraft.world.entity.ai.goal.Goal {
+        private int retreatTicks;
+
+        private SwoopAtTargetGoal() {
+            setFlags(EnumSet.of(
+                    net.minecraft.world.entity.ai.goal.Goal.Flag.MOVE));
+        }
+
+        @Override
+        public boolean canUse() {
+            LivingEntity target = getTarget();
+            return target != null && target.isAlive();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return canUse();
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void start() {
+            retreatTicks = 0;
+            transitionAIGoal(HasAiGoals.Goal.SWOOP);
+        }
+
+        @Override
+        public void tick() {
+            LivingEntity target = getTarget();
+            if (target == null) {
+                return;
+            }
+
+            if (retreatTicks > 0) {
+                retreatTicks--;
+                setFlightTarget(new Vec3(
+                        target.getX(),
+                        target.getY() + 8D,
+                        target.getZ()));
+                return;
+            }
+
+            setFlightTarget(new Vec3(
+                    target.getX(), target.getY(0.5D), target.getZ()));
+            if (getBoundingBox().inflate(0.2D)
+                    .intersects(target.getBoundingBox())) {
+                doHurtTarget((ServerLevel)level(), target);
+                level().levelEvent(1039, blockPosition(), 0);
+                retreatTicks = 40;
+            }
+        }
+
+        @Override
+        public void stop() {
+            transitionAIGoal(HasAiGoals.Goal.NONE);
+        }
+    }
+
+    private final class IdleCircleGoal
+            extends net.minecraft.world.entity.ai.goal.Goal {
+        private float angle;
+
+        private IdleCircleGoal() {
+            setFlags(EnumSet.of(
+                    net.minecraft.world.entity.ai.goal.Goal.Flag.MOVE));
+        }
+
+        @Override
+        public boolean canUse() {
+            return getTarget() == null && !hasNexus();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return canUse();
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void tick() {
+            angle += 0.05F;
+            setFlightTarget(new Vec3(
+                    getX() + Math.cos(angle) * 8D,
+                    getY() + Math.sin(angle * 0.5F) * 2D,
+                    getZ() + Math.sin(angle) * 8D));
+        }
+    }
+
+    private void setFlightTarget(Vec3 target) {
+        ((PhantomAccessor)(Object)this).invasion$setMoveTargetPoint(target);
     }
 }
