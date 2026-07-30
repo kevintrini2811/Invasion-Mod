@@ -8,6 +8,7 @@ import java.util.List;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.monster.zombie.BabyZombieModel;
 import net.minecraft.client.model.monster.zombie.ZombieModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
@@ -37,14 +38,24 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
     private final boolean pigman;
 
     public InvasionZombieRenderer(EntityRendererProvider.Context context, boolean pigman) {
-        super(context, new ZombieModel<>(context.bakeLayer(ModelLayers.ZOMBIE)), 0.5F);
+        super(
+                context,
+                new ZombieModel<>(context.bakeLayer(ModelLayers.ZOMBIE)),
+                new BabyZombieModel<>(
+                        context.bakeLayer(ModelLayers.ZOMBIE_BABY)),
+                0.5F);
         normalModel = model;
         bruteModel = new LargeZombieModel(LargeZombieModel.createBodyLayer().bakeRoot());
         this.pigman = pigman;
 
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> normalArmor = ArmorModelSet.bake(
                 ModelLayers.ZOMBIE_ARMOR, context.getModelSet(), HumanoidModel::new);
-        addLayer(new VariantArmorLayer(this, normalArmor, context, false));
+        ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> babyArmor = ArmorModelSet.bake(
+                ModelLayers.ZOMBIE_BABY_ARMOR,
+                context.getModelSet(),
+                HumanoidModel::new);
+        addLayer(new VariantArmorLayer(
+                this, normalArmor, babyArmor, context, false));
 
         HumanoidModel<InvasionZombieRenderState> outer =
                 new LargeZombieModel(LargeZombieModel.createBodyLayer(new CubeDeformation(1.0F)).bakeRoot());
@@ -52,7 +63,8 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 new LargeZombieModel(LargeZombieModel.createBodyLayer(new CubeDeformation(0.5F)).bakeRoot());
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> bruteArmor =
                 new ArmorModelSet<>(outer, outer, inner, outer);
-        addLayer(new VariantArmorLayer(this, bruteArmor, context, true));
+        addLayer(new VariantArmorLayer(
+                this, bruteArmor, bruteArmor, context, true));
     }
 
     @Override
@@ -104,17 +116,23 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
 
         VariantArmorLayer(
                 InvasionZombieRenderer<T> parent,
-                ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> armor,
+                ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> adultArmor,
+                ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> babyArmor,
                 EntityRendererProvider.Context context,
                 boolean bruteLayer) {
-            super(parent, armor, context.getEquipmentRenderer());
+            super(
+                    parent,
+                    adultArmor,
+                    babyArmor,
+                    context.getEquipmentRenderer());
             this.bruteLayer = bruteLayer;
         }
 
         @Override
         public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light,
                 InvasionZombieRenderState state, float yRot, float xRot) {
-            if (state.brute == bruteLayer) {
+            boolean usesBruteModel = state.brute && !state.isBaby;
+            if (usesBruteModel == bruteLayer) {
                 super.submit(poseStack, collector, light, state, yRot, xRot);
             }
         }
