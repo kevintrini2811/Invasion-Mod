@@ -68,6 +68,9 @@ public interface InvItems {
     Item NEXUS_CORE = register("nexus_core", p -> new BlockItem(InvBlocks.NEXUS_CORE, p));
 
     Item ZOMBIE_SPAWN_EGG = register("zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x6B753F, 0x281B0A, NexusEntity.createVariant(0, 1)));
+    Item DROWNED_SPAWN_EGG = register(
+            "drowned_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.DROWNED, 0x4A6C6D, 0x8F9A6D));
     Item ZOMBIE_VILLAGER_SPAWN_EGG = register(
             "zombie_villager_spawn_egg",
             p -> createSpawnEgg(
