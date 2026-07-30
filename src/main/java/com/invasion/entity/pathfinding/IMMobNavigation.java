@@ -35,6 +35,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private int completedBridgeMoveTicks;
     private int engineerTaskStartTick = -1;
     private int engineerIdleTicks;
+    private int engineerMissingPathRecoveries;
     private Vec3 lastEngineerProgressPos = Vec3.ZERO;
     private Status lastActionResult = Status.SUCCESS;
     private boolean continuingEngineerBridge;
@@ -420,6 +421,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         if (currentPos.distanceToSqr(lastEngineerProgressPos) > 0.01D) {
             lastEngineerProgressPos = currentPos;
             engineerIdleTicks = 0;
+            engineerMissingPathRecoveries = 0;
             return;
         }
 
@@ -436,6 +438,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         }
 
         if (++engineerIdleTicks >= 20 * 5) {
+            boolean missingPath = path == null;
             InvasionMod.LOGGER.warn(
                     "[EngineerBridge] engineer made no movement progress; repathing: entity={}, path={}, node={}, pos={}",
                     mob.getId(),
@@ -444,6 +447,21 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                     mob.blockPosition()
             );
             abandonStalledBridgePath();
+            if (missingPath && ++engineerMissingPathRecoveries >= 3) {
+                boolean escaped = engineer.tryEscapeMissingPath();
+                InvasionMod.LOGGER.warn(
+                        "[EngineerBridge] escalating missing-path recovery: entity={}, attempt={}, escaped={}, pos={}",
+                        mob.getId(),
+                        engineerMissingPathRecoveries,
+                        escaped,
+                        mob.blockPosition()
+                );
+                if (escaped) {
+                    engineerMissingPathRecoveries = 0;
+                }
+            } else if (!missingPath) {
+                engineerMissingPathRecoveries = 0;
+            }
             lastEngineerProgressPos = currentPos;
         }
     }

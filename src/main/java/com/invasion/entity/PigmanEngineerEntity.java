@@ -47,6 +47,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
@@ -257,6 +258,50 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     public void cancelStalledTerrainTask(Notifiable.Status status) {
         terrainModifier.cancelTask(status);
+    }
+
+    /**
+     * Leaves a local pathfinding dead spot without walking into unsupported
+     * terrain. Called only after repeated attempts produced no path at all.
+     */
+    public boolean tryEscapeMissingPath() {
+        if (!hasNexus() || buildingTower || terrainModifier.isBusy()) {
+            return false;
+        }
+
+        BlockPos current = blockPosition();
+        BlockPos nexus = getNexus().getOrigin();
+        List<Direction> directions = new ArrayList<>(
+                Direction.Plane.HORIZONTAL.stream().toList());
+        directions.sort(Comparator.comparingInt(direction ->
+                -direction.getStepX() * (nexus.getX() - current.getX())
+                - direction.getStepZ() * (nexus.getZ() - current.getZ())));
+
+        for (Direction direction : directions) {
+            for (int yOffset : new int[] {0, 1, -1}) {
+                BlockPos target = current.relative(direction).above(yOffset);
+                BlockPos floor = target.below();
+                if (!level().getBlockState(floor)
+                                .isCollisionShapeFullBlock(level(), floor)
+                        || !level().noCollision(
+                                this,
+                                getBoundingBox().move(
+                                        target.getX() + 0.5D - getX(),
+                                        target.getY() - getY(),
+                                        target.getZ() + 0.5D - getZ()))) {
+                    continue;
+                }
+
+                getMoveControl().setWantedPosition(
+                        target.getX() + 0.5D,
+                        target.getY(),
+                        target.getZ() + 0.5D,
+                        1.0D);
+                return true;
+            }
+        }
+
+        return tryStartTowerBuild();
     }
 
     public boolean tryStartTowerBuild() {
