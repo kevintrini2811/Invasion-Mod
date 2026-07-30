@@ -102,10 +102,14 @@ public class InvasionConfig extends Config {
 
     public int getHealth(Combatant<?> mob) {
         String healthKey;
+        int healthMultiplier = 1;
         if (mob instanceof EntityIMZombiePigman pigman) {
             healthKey = "IMZombiePigman-T" + pigman.getTier();
         } else if (mob instanceof EntityIMZombie zombie) {
             healthKey = "IMZombie-T" + zombie.getTier();
+            if (zombie.isTar()) {
+                healthMultiplier = 2;
+            }
         } else if (mob instanceof ThrowerEntity thrower) {
             healthKey = "IMThrower-T" + thrower.getTier();
         } else if (mob instanceof IMCaveSpiderEntity) {
@@ -133,7 +137,7 @@ public class InvasionConfig extends Config {
         } else {
             healthKey = mob.getLegacyName();
         }
-        return getHealth(healthKey, !mob.hasNexus());
+        return getHealth(healthKey, !mob.hasNexus()) * healthMultiplier;
     }
 
     public synchronized Select<EntityPattern> getSpawnPool() {

@@ -46,6 +46,10 @@ public interface NexusAccess {
         return Math.clamp(getProgressionLevel() - 1, 0, 100);
     }
 
+    default int getBabyZombieChancePercent() {
+        return Math.clamp(getProgressionLevel() - 2, 0, 20);
+    }
+
     default int getMobsLeftInWave() {
         return 0;
     }
