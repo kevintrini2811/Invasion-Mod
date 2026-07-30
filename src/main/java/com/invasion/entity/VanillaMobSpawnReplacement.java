@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.invasion.nexus.Combatant;
+import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.WorldNexusStorage;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -18,6 +20,7 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.skeleton.Bogged;
+import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.zombie.Husk;
 
@@ -98,6 +101,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.CAVE_SPIDER, nexus);
         } else if (mob.getType() == EntityTypes.ENDERMAN) {
             convert(mob, InvEntities.ENDERMAN, nexus);
+        } else if (mob.getType() == EntityTypes.PHANTOM) {
+            convert(mob, InvEntities.PHANTOM, nexus);
         }
     }
 
@@ -113,10 +118,12 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.CREEPER
                 || type == EntityTypes.SPIDER
                 || type == EntityTypes.CAVE_SPIDER
-                || type == EntityTypes.ENDERMAN;
+                || type == EntityTypes.ENDERMAN
+                || type == EntityTypes.PHANTOM;
     }
 
-    private static <T extends Mob & NexusEntity> void convert(
+    private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
+            void convert(
             Mob source, EntityType<T> targetType,
             com.invasion.nexus.NexusAccess nexus) {
         if (!(source.level() instanceof ServerLevel world)) {
@@ -157,6 +164,10 @@ public final class VanillaMobSpawnReplacement {
         if (source instanceof Bogged bogged
                 && converted instanceof IMBoggedEntity imBogged) {
             imBogged.setSheared(bogged.isSheared());
+        }
+        if (source instanceof Phantom phantom
+                && converted instanceof IMPhantomEntity imPhantom) {
+            imPhantom.setPhantomSize(phantom.getPhantomSize());
         }
         if (converted instanceof AbstractIMZombieEntity) {
             converted.setCanPickUpLoot(true);

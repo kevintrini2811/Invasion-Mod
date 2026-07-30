@@ -106,6 +106,8 @@ public interface InvItems {
     Item BIG_THROWER_SPAWN_EGG = register("big_thrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.THROWER, 0x5303814, 0x632808, NexusEntity.createVariant(0, 2)));
     Item IMP_SPAWN_EGG = register("imp_spawn_egg", p -> createSpawnEgg(p, InvEntities.IMP, 0xB40113, 0xFF0000));
     Item ENDERMAN_SPAWN_EGG = register("enderman_spawn_egg", p -> createSpawnEgg(p, InvEntities.ENDERMAN, 0x161616, 0xE079FA));
+    Item PHANTOM_SPAWN_EGG = register("phantom_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.PHANTOM, 0x43518A, 0x88A3BE));
     Item BURROWER_SPAWN_EGG = register("burrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.BURROWER, 0x44372C, 0x8A735D));
     Item WOLF_SPAWN_EGG = register("wolf_spawn_egg", p -> createSpawnEgg(p, InvEntities.WOLF, 0xD7D3D3, 0xCEAF96));
     Item ZOMBIE_PIGMAN_SPAWN_EGG = register("pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 1)));

@@ -45,6 +45,8 @@ public interface EntityPatterns {
 
     EntityPattern IMP_T1 = register("imp_t1", new EntityPattern.Builder(InvEntities.IMP).addTier(1, 1));
     EntityPattern ENDERMAN_T1 = register("enderman_t1", new EntityPattern.Builder(InvEntities.ENDERMAN).addTier(1, 1));
+    EntityPattern PHANTOM_T1 = register("phantom_t1",
+            new EntityPattern.Builder(InvEntities.PHANTOM).addTier(1, 1));
 
     static EntityPattern register(String name, EntityPattern.Builder builder) {
         return register(name, builder, 0);
