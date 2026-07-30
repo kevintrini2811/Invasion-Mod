@@ -97,7 +97,10 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     protected final void addWeaponCombatGoals(double meleeSpeed) {
-        goalSelector.addGoal(1, new PredicatedGoal(
+        // While assigned to a nexus, ranged zombies must keep advancing just
+        // like melee zombies. A high-priority player-shooting goal otherwise
+        // makes them follow remembered players even without line of sight.
+        goalSelector.addGoal(6, new PredicatedGoal(
                 new EntityAIKillWithArrow<>(this, Player.class, 65, 16F),
                 this::isHoldingRangedWeapon));
         goalSelector.addGoal(2, new PredicatedGoal(
