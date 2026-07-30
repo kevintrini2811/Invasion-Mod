@@ -5,6 +5,8 @@ import com.invasion.entity.InvEntities;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
+import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
+import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.resources.Identifier;
 
@@ -48,6 +50,14 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.IMP, ImpRenderer::new);
         EntityRendererRegistry.register(InvEntities.ENDERMAN, IMEndermanRenderer::new);
         EntityRendererRegistry.register(InvEntities.PHANTOM, PhantomRenderer::new);
+        EntityRendererRegistry.register(
+                InvEntities.ZOMBIFIED_PIGLIN,
+                context -> new ZombifiedPiglinRenderer(
+                        context,
+                        ModelLayers.ZOMBIFIED_PIGLIN,
+                        ModelLayers.ZOMBIFIED_PIGLIN_BABY,
+                        ModelLayers.ZOMBIFIED_PIGLIN_ARMOR,
+                        ModelLayers.ZOMBIFIED_PIGLIN_BABY_ARMOR));
         EntityRendererRegistry.register(InvEntities.THROWER, ThrowerRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER, BurrowerRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER_TAIL, NoopRenderer::new);
