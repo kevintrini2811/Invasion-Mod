@@ -26,6 +26,7 @@ import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMSkeletonEntity;
+import com.invasion.entity.IMWitherSkeletonEntity;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.Combatant;
@@ -53,6 +54,14 @@ public class IMWaveSpawner implements Spawner {
 			Items.CROSSBOW,
 			InvItems.INFUSED_SWORD,
 			InvItems.SEARING_BOW);
+	private static final List<Item> RANDOM_RANGED_WAVE_WEAPONS = List.of(
+			Items.BOW,
+			Items.CROSSBOW,
+			InvItems.SEARING_BOW);
+	private static final List<Item> RANDOM_MELEE_WAVE_WEAPONS =
+			RANDOM_WAVE_WEAPONS.stream()
+					.filter(item -> !RANDOM_RANGED_WAVE_WEAPONS.contains(item))
+					.toList();
 	private static final List<Item> RANDOM_WAVE_ARMOR = List.of(
 			Items.LEATHER_HELMET,
 			Items.LEATHER_CHESTPLATE,
@@ -302,6 +311,7 @@ public class IMWaveSpawner implements Spawner {
                     (ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
 
+                equipWitherSkeletonWeapon(mob);
                 applyBabyZombieVariant(mob);
                 markAsInvasionAlly(mob);
                 if (debugMode) {
@@ -320,6 +330,20 @@ public class IMWaveSpawner implements Spawner {
 
 	private EntityConstruct replaceWithRareWaveVariant(
 			EntityConstruct construct) {
+		int witherSkeletonChance = nexus.getWitherSkeletonChancePercent();
+		if (witherSkeletonChance > 0
+				&& construct.entityType() == InvEntities.SKELETON
+				&& getRandom().nextInt(100) < witherSkeletonChance) {
+			return new EntityConstruct(
+					InvEntities.WITHER_SKELETON,
+					construct.texture(),
+					construct.tier(),
+					construct.flavour(),
+					construct.scaling(),
+					construct.minAngle(),
+					construct.maxAngle());
+		}
+
 		int chargedChance = nexus.getChargedCreeperChancePercent();
 		if (chargedChance > 0
 				&& construct.entityType() == InvEntities.CREEPER
@@ -336,6 +360,17 @@ public class IMWaveSpawner implements Spawner {
 					construct.maxAngle());
 		}
 		return construct;
+	}
+
+	private void equipWitherSkeletonWeapon(Mob mob) {
+		if (!(mob instanceof IMWitherSkeletonEntity)) {
+			return;
+		}
+		List<Item> weaponPool = getRandom().nextBoolean()
+				? RANDOM_MELEE_WAVE_WEAPONS
+				: RANDOM_RANGED_WAVE_WEAPONS;
+		Item weapon = weaponPool.get(getRandom().nextInt(weaponPool.size()));
+		mob.setItemSlot(EquipmentSlot.MAINHAND, weapon.getDefaultInstance());
 	}
 
 	private void applyBabyZombieVariant(Mob mob) {
