@@ -25,6 +25,7 @@ public final class InvRenderers {
                 context -> new InvasionZombieRenderer<>(context, true));
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOGGED, InvBoggedRenderer::new);
+        EntityRendererRegistry.register(InvEntities.PARCHED, InvParchedRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.WITHER_SKELETON,
                 InvWitherSkeletonRenderer::new);

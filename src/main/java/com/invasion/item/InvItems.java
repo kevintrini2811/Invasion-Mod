@@ -81,6 +81,9 @@ public interface InvItems {
     Item BOGGED_SPAWN_EGG = register(
             "bogged_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.BOGGED, 0x8A9C72, 0x314D1F));
+    Item PARCHED_SPAWN_EGG = register(
+            "parched_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.PARCHED, 0xC7A96B, 0x6B4528));
     Item WITHER_SKELETON_SPAWN_EGG = register("wither_skeleton_spawn_egg", p -> createSpawnEgg(p, InvEntities.WITHER_SKELETON, 0x141414, 0x474D4D));
 
     Item SPIDER_SPAWN_EGG = register("spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.SPIDER, 0x504A3E, 0xA4121C));
