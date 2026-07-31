@@ -373,6 +373,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         class NodeMaker extends IMLandPathNodeMaker {
             @Override
             public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
+                // DynamicPathNodeNavigator does not carry a CollisionGetter in
+                // 1.20.1. WalkNodeEvaluator already stores the prepared region.
+                world = level;
                 BlockState state = world.getBlockState(nextNode.asBlockPos());
                 if (!state.isAir() && !state.isPathfindable(world,
                         nextNode.asBlockPos(), PathComputationType.LAND)

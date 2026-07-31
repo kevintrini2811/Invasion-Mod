@@ -291,6 +291,9 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         class NodeMaker extends IMLandPathNodeMaker {
             @Override
             public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
+                // DynamicPathNodeNavigator does not carry a CollisionGetter in
+                // 1.20.1. WalkNodeEvaluator already stores the prepared region.
+                world = level;
                 if (this.mob instanceof AbstractIMZombieEntity entity
                         && AbstractIMZombieEntity.isTar(entity)
                         && nextNode.type == BlockPathTypes.WATER) {
