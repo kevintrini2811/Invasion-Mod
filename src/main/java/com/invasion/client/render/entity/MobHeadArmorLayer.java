@@ -22,15 +22,25 @@ public final class MobHeadArmorLayer<T extends LivingEntity, M extends EntityMod
     private final HumanoidModel<T> armorModel;
     private final Function<T, ModelPart> head;
     private final float scale;
+    private final float offsetY;
+    private final float offsetZ;
 
     public MobHeadArmorLayer(RenderLayerParent<T, M> parent,
             EntityRendererProvider.Context context, Function<T, ModelPart> head,
             float scale) {
+        this(parent, context, head, scale, -0.62F, -0.25F);
+    }
+
+    public MobHeadArmorLayer(RenderLayerParent<T, M> parent,
+            EntityRendererProvider.Context context, Function<T, ModelPart> head,
+            float scale, float offsetY, float offsetZ) {
         super(parent);
         this.armorModel = new HumanoidModel<>(
                 context.bakeLayer(ModelLayers.ZOMBIE_OUTER_ARMOR));
         this.head = head;
         this.scale = scale;
+        this.offsetY = offsetY;
+        this.offsetZ = offsetZ;
     }
 
     @Override
@@ -55,7 +65,7 @@ public final class MobHeadArmorLayer<T extends LivingEntity, M extends EntityMod
         head.apply(entity).translateAndRotate(poseStack);
         // A spider head extends eight model pixels forward from its pivot,
         // whereas humanoid armor is centered on its pivot.
-        poseStack.translate(0.0F, -0.62F, -0.25F);
+        poseStack.translate(0.0F, offsetY, offsetZ);
         poseStack.scale(scale, scale, scale);
         String base = "textures/models/armor/"
                 + armor.getMaterial().getName() + "_layer_1.png";
