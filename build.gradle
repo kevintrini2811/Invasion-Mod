@@ -13,6 +13,9 @@ base {
 
 tasks.named('jar') {
     archiveFileName = "${project.name}-${project.version}-1.20.1neo.jar"
+    manifest {
+        attributes 'MixinConfigs': 'invasion.mixin.json'
+    }
 }
 
 java {

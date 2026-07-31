@@ -61,11 +61,6 @@ public final class VariantMobRenderers {
         }
         @Override public ResourceLocation getTextureLocation(com.invasion.entity.IMSkeletonEntity e) { return texture; }
     }
-    public static final class Bogged extends SkeletonVariant {
-        public Bogged(EntityRendererProvider.Context c) {
-            super(c, "textures/entity/skeleton/bogged.png");
-        }
-    }
     public static final class Stray extends SkeletonVariant {
         public Stray(EntityRendererProvider.Context c) {
             super(c, "textures/entity/skeleton/stray.png");

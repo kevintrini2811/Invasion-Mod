@@ -376,32 +376,20 @@ public class IMWaveSpawner implements Spawner {
 		}
 
 		List<EntityType<? extends Mob>> relevantVariants =
-				new ArrayList<>(3);
+					new ArrayList<>(1);
 		var biome = world.getBiome(pos);
-		if (biome.is(Biomes.SWAMP)
-				|| biome.is(Biomes.MANGROVE_SWAMP)) {
-			relevantVariants.add(InvEntities.BOGGED);
-		}
 		if (biome.is(Biomes.SNOWY_PLAINS)
-				|| biome.is(Biomes.ICE_SPIKES)) {
+					|| biome.is(Biomes.ICE_SPIKES)) {
 			relevantVariants.add(InvEntities.STRAY);
 		}
 
-		int chance = relevantVariants.isEmpty() ? 1 : 75;
-		if (getRandom().nextInt(100) >= chance) {
+		if (relevantVariants.isEmpty()
+				|| getRandom().nextInt(100) >= 75) {
 			return construct;
 		}
 
-		EntityType<? extends Mob> replacement;
-		if (relevantVariants.isEmpty()) {
-			replacement = switch (getRandom().nextInt(2)) {
-				case 0 -> InvEntities.BOGGED;
-				default -> InvEntities.STRAY;
-			};
-		} else {
-			replacement = relevantVariants.get(
-					getRandom().nextInt(relevantVariants.size()));
-		}
+		EntityType<? extends Mob> replacement = relevantVariants.get(
+				getRandom().nextInt(relevantVariants.size()));
 
 		return new EntityConstruct(
 				replacement,

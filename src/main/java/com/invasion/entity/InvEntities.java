@@ -19,12 +19,6 @@ import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 public interface InvEntities {
     EntityType<IMSkeletonEntity> SKELETON = register("skeleton", EntityType.Builder.<IMSkeletonEntity>of(IMSkeletonEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.99F).clientTrackingRange(8));
-    EntityType<IMBoggedEntity> BOGGED = register(
-            "bogged",
-            EntityType.Builder.<IMBoggedEntity>of(
-                            IMBoggedEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.99F)
-                    .clientTrackingRange(8));
     EntityType<IMStrayEntity> STRAY = register(
             "stray",
             EntityType.Builder.<IMStrayEntity>of(
@@ -139,8 +133,6 @@ public interface InvEntities {
 
     static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
-        event.put(
-                BOGGED, IMBoggedEntity.createAttributes().build());
         event.put(
                 STRAY, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(

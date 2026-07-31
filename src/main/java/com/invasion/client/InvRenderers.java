@@ -33,7 +33,6 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIFIED_PIGLIN, VariantMobRenderers.ZombifiedPiglin::new);
         event.registerEntityRenderer(InvEntities.SKELETON, IMSkeletonEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.BOGGED, VariantMobRenderers.Bogged::new);
         event.registerEntityRenderer(InvEntities.STRAY, VariantMobRenderers.Stray::new);
         event.registerEntityRenderer(InvEntities.WITHER_SKELETON, VariantMobRenderers.WitherSkeleton::new);
         event.registerEntityRenderer(InvEntities.SPIDER,

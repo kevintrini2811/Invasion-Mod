@@ -29,7 +29,6 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
         event.registerEntityRenderer(InvEntities.SKELETON, InvSkeletonRenderer::new);
-        event.registerEntityRenderer(InvEntities.BOGGED, InvBoggedRenderer::new);
         event.registerEntityRenderer(InvEntities.PARCHED, InvParchedRenderer::new);
         event.registerEntityRenderer(InvEntities.STRAY, InvStrayRenderer::new);
         event.registerEntityRenderer(

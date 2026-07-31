@@ -7,6 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(Phantom.class)
 public interface PhantomAccessor {
-    @Accessor("moveTargetPoint")
+    @Accessor(value = "f_33097_", remap = false)
     void invasion$setMoveTargetPoint(Vec3 target);
 }
