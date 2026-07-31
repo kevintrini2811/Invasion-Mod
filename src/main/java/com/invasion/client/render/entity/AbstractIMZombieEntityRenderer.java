@@ -51,9 +51,20 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
         normalModel = model;
         bigModel = new BigZombieEntityModel(LargeBipedEntityModel.getTexturedModelData(CubeDeformation.NONE, 0).bakeRoot());
 
+        boolean zombieVillager = bodyLayer.equals(ModelLayers.ZOMBIE_VILLAGER);
+        HumanoidModel<AbstractIMZombieEntity> innerArmor = zombieVillager
+                ? new ZombieEntityModel(ctx.bakeLayer(
+                        ModelLayers.ZOMBIE_VILLAGER_INNER_ARMOR))
+                : new ZombieEntityModel(ctx.bakeLayer(
+                        ModelLayers.ZOMBIE_INNER_ARMOR));
+        HumanoidModel<AbstractIMZombieEntity> outerArmor = zombieVillager
+                ? new ZombieEntityModel(ctx.bakeLayer(
+                        ModelLayers.ZOMBIE_VILLAGER_OUTER_ARMOR))
+                : new ZombieEntityModel(ctx.bakeLayer(
+                        ModelLayers.ZOMBIE_OUTER_ARMOR));
         addLayer(new ArmorFeature(this,
-                new ZombieEntityModel(ctx.bakeLayer(ModelLayers.ZOMBIE_INNER_ARMOR)),
-                new ZombieEntityModel(ctx.bakeLayer(ModelLayers.ZOMBIE_OUTER_ARMOR)),
+                innerArmor,
+                outerArmor,
                 ctx.getModelManager(),
                 false
         ));
