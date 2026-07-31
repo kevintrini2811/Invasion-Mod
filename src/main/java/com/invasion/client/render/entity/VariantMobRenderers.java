@@ -3,9 +3,13 @@ package com.invasion.client.render.entity;
 import java.util.List;
 import com.invasion.entity.AbstractIMZombieEntity;
 import com.invasion.entity.IMCaveSpiderEntity;
+import com.invasion.entity.IMBoggedEntity;
+import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.IMZombifiedPiglinEntity;
 import net.minecraft.client.model.EndermanModel;
+import net.minecraft.client.model.SkeletonModel;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.ZombieModel;
 import net.minecraft.client.model.PiglinModel;
 import net.minecraft.client.model.HumanoidModel;
@@ -61,14 +65,43 @@ public final class VariantMobRenderers {
             super(c);
             this.texture = ResourceLocation.withDefaultNamespace(texture);
         }
+        SkeletonVariant(EntityRendererProvider.Context c, String texture,
+                SkeletonModel<IMSkeletonEntity> model,
+                net.minecraft.client.model.geom.ModelLayerLocation innerArmor,
+                net.minecraft.client.model.geom.ModelLayerLocation outerArmor) {
+            super(c, innerArmor, outerArmor, model);
+            this.texture = ResourceLocation.withDefaultNamespace(texture);
+        }
         @Override public ResourceLocation getTextureLocation(com.invasion.entity.IMSkeletonEntity e) { return texture; }
     }
     public static final class Bogged extends SkeletonVariant {
         public Bogged(EntityRendererProvider.Context c) {
-            super(c, "textures/entity/skeleton/bogged.png");
+            super(c, "textures/entity/skeleton/bogged.png",
+                    new IMBoggedModel(c.bakeLayer(ModelLayers.BOGGED)),
+                    ModelLayers.BOGGED_INNER_ARMOR,
+                    ModelLayers.BOGGED_OUTER_ARMOR);
             addLayer(new SkeletonClothingLayer<>(this, c.getModelSet(),
                     ModelLayers.BOGGED_OUTER_LAYER,
                     ResourceLocation.withDefaultNamespace("textures/entity/skeleton/bogged_overlay.png")));
+        }
+    }
+
+    private static final class IMBoggedModel
+            extends SkeletonModel<IMSkeletonEntity> {
+        private final ModelPart mushrooms;
+
+        IMBoggedModel(ModelPart root) {
+            super(root);
+            mushrooms = root.getChild("head").getChild("mushrooms");
+        }
+
+        @Override
+        public void prepareMobModel(IMSkeletonEntity entity,
+                float limbSwing, float limbSwingAmount, float partialTick) {
+            mushrooms.visible = !(entity instanceof IMBoggedEntity bogged)
+                    || !bogged.isSheared();
+            super.prepareMobModel(
+                    entity, limbSwing, limbSwingAmount, partialTick);
         }
     }
     public static final class Stray extends SkeletonVariant {
