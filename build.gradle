@@ -11,6 +11,10 @@ base {
     archivesName = project.name
 }
 
+tasks.named('jar') {
+    archiveFileName = "${project.name}-${project.version}-neo.jar"
+}
+
 java {
     withSourcesJar()
     toolchain.languageVersion = JavaLanguageVersion.of(25)
