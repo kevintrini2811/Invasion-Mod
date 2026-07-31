@@ -17,8 +17,11 @@ import net.minecraft.util.Mth;
 public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntity, CreeperModel<IMCreeperEntity>> {
     private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper.png");
 
-	public IMCreeperEntityRenderer(EntityRendererProvider.Context context) {
+    public IMCreeperEntityRenderer(EntityRendererProvider.Context context) {
         super(context, new CreeperModel<>(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);
+        addLayer(new MobHeadArmorLayer<>(this, context,
+                creeper -> getModel().root().getChild("head"),
+                1.0F, 0.0F, 0.0F));
     }
 
     @Override
