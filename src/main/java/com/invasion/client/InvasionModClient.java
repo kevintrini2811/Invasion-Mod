@@ -4,8 +4,12 @@ import com.invasion.InvScreenHandlers;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.client.render.InvRenderers;
 import com.invasion.client.screen.NexusScreen;
+import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -17,10 +21,27 @@ public final class InvasionModClient {
     }
 
     public static void register(IEventBus modBus) {
+        modBus.addListener(InvasionModClient::clientSetup);
         modBus.addListener(InvasionModClient::registerRenderers);
         modBus.addListener(InvasionModClient::registerGuiLayers);
         modBus.addListener(InvasionModClient::registerMenuScreens);
         NeoForge.EVENT_BUS.addListener(InvasionModClient::onDisconnect);
+    }
+
+    private static void clientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            ItemProperties.register(InvItems.SEARING_BOW,
+                    ResourceLocation.withDefaultNamespace("pull"),
+                    (stack, level, entity, seed) -> entity == null
+                            || entity.getUseItem() != stack ? 0.0F
+                            : (stack.getUseDuration(entity)
+                                    - entity.getUseItemRemainingTicks()) / 20.0F);
+            ItemProperties.register(InvItems.SEARING_BOW,
+                    ResourceLocation.withDefaultNamespace("pulling"),
+                    (stack, level, entity, seed) -> entity != null
+                            && entity.isUsingItem() && entity.getUseItem() == stack
+                                    ? 1.0F : 0.0F);
+        });
     }
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {

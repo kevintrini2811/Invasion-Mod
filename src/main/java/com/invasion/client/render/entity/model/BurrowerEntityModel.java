@@ -58,7 +58,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
             segments[i + 1] = new PosRotate3D(
                     new Vec3(
                             segment.position().x - entity.getX(),
-                            entity.getY() - segment.position().y,
+                            segment.position().y - entity.getY(),
                             segment.position().z - entity.getZ()).scale(7.27D),
                     segment.rotation());
         }

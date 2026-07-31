@@ -17,7 +17,6 @@ public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity,
 
     @Override
     protected void scale(BurrowerEntity entity, PoseStack matrices, float amount) {
-        matrices.translate(0.0F, 1.0F, 0.0F);
         matrices.scale(2.2F, 2.2F, 2.2F);
     }
 
