@@ -1,3 +1,6 @@
 {
-    "parent": "invmod:item/searing_bow_pulling_1"
+  "parent": "invmod:item/searing_bow",
+  "textures": {
+    "layer0": "invmod:item/searing_bow_pulling_3"
+  }
 }

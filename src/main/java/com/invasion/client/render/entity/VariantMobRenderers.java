@@ -44,7 +44,7 @@ public final class VariantMobRenderers {
         public Drowned(EntityRendererProvider.Context c) {
             super(c, "textures/entity/zombie/drowned.png", ModelLayers.DROWNED);
             addLayer(new HumanoidOuterLayer(this, c, ModelLayers.DROWNED_OUTER_LAYER,
-                    "textures/entity/zombie/drowned_outer_layer.png"));
+                    "textures/entity/zombie/drowned_outer_layer.png", true));
         }
     }
     public static final class ZombieVillager extends ZombieVariant {
@@ -108,9 +108,18 @@ public final class VariantMobRenderers {
         private final ResourceLocation texture;
         HumanoidOuterLayer(AbstractIMZombieEntityRenderer parent, EntityRendererProvider.Context c,
                 net.minecraft.client.model.geom.ModelLayerLocation layer, String texture) {
+            this(parent, c, layer, texture, false);
+        }
+        HumanoidOuterLayer(AbstractIMZombieEntityRenderer parent, EntityRendererProvider.Context c,
+                net.minecraft.client.model.geom.ModelLayerLocation layer, String texture,
+                boolean hideArms) {
             super(parent);
             model = new net.minecraft.client.model.HumanoidModel<>(c.bakeLayer(layer));
             this.texture = ResourceLocation.withDefaultNamespace(texture);
+            if (hideArms) {
+                model.leftArm.visible = false;
+                model.rightArm.visible = false;
+            }
         }
         @Override public void render(PoseStack p, MultiBufferSource b, int light,
                 AbstractIMZombieEntity e, float a, float d, float tick, float age, float yaw, float pitch) {

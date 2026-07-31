@@ -101,6 +101,6 @@ public class ImpEntityModel extends HierarchicalModel<ImpEnitty>
         armPart.translateAndRotate(poseStack);
         poseStack.translate(
                 arm == net.minecraft.world.entity.HumanoidArm.RIGHT ? -0.06F : 0.06F,
-                0.42F, 0.0F);
+                0.08F, 0.0F);
     }
 }
