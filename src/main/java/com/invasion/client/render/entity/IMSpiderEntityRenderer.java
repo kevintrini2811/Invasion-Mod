@@ -36,6 +36,7 @@ public class IMSpiderEntityRenderer<T extends NexusSpiderEntity> extends SpiderR
 
     @Override
     protected void scale(T entity, PoseStack poseStack, float partialTick) {
-        poseStack.scale(scale, scale, scale);
+        float renderedScale = scale * entity.scaleAmount();
+        poseStack.scale(renderedScale, renderedScale, renderedScale);
     }
 }
