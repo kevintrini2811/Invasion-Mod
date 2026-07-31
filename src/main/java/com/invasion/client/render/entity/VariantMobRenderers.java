@@ -23,6 +23,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemDisplayContext;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
+import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.resources.ResourceLocation;
 
 /** Immediate-mode renderers for vanilla-derived invasion variants on 1.21.1. */
@@ -84,6 +86,8 @@ public final class VariantMobRenderers {
         private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/enderman/enderman.png");
         public Enderman(EntityRendererProvider.Context c) {
             super(c, new EndermanModel<>(c.bakeLayer(ModelLayers.ENDERMAN)), 0.5F);
+            addLayer(new EndermanCarriedBlockLayer(this,
+                    c.getBlockRenderDispatcher()));
             addLayer(new HumanoidArmorLayer<>(this,
                     new HumanoidModel<IMEndermanEntity>(
                             c.bakeLayer(ModelLayers.ZOMBIE_INNER_ARMOR)),
@@ -92,6 +96,36 @@ public final class VariantMobRenderers {
                     c.getModelManager()));
         }
         @Override public ResourceLocation getTextureLocation(IMEndermanEntity e) { return TEXTURE; }
+    }
+
+    private static final class EndermanCarriedBlockLayer extends RenderLayer<
+            IMEndermanEntity, EndermanModel<IMEndermanEntity>> {
+        private final BlockRenderDispatcher blockRenderer;
+
+        EndermanCarriedBlockLayer(Enderman parent,
+                BlockRenderDispatcher blockRenderer) {
+            super(parent);
+            this.blockRenderer = blockRenderer;
+        }
+
+        @Override
+        public void render(PoseStack pose, MultiBufferSource buffers,
+                int light, IMEndermanEntity entity, float limbSwing,
+                float limbSwingAmount, float partialTick, float age,
+                float headYaw, float headPitch) {
+            entity.getCarriedBlock().ifPresent(state -> {
+                pose.pushPose();
+                pose.translate(0.0F, 0.6875F, -0.75F);
+                pose.mulPose(Axis.XP.rotationDegrees(20.0F));
+                pose.mulPose(Axis.YP.rotationDegrees(45.0F));
+                pose.translate(0.25F, 0.1875F, 0.25F);
+                pose.scale(-0.5F, -0.5F, 0.5F);
+                pose.mulPose(Axis.YP.rotationDegrees(90.0F));
+                blockRenderer.renderSingleBlock(state, pose, buffers,
+                        light, OverlayTexture.NO_OVERLAY);
+                pose.popPose();
+            });
+        }
     }
 
     private static final class HumanoidOuterLayer extends RenderLayer<
