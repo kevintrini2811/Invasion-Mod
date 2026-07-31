@@ -13,6 +13,7 @@ import com.invasion.client.render.entity.ImpEntityRenderer;
 import com.invasion.client.render.entity.PigmanEngineerEntityRenderer;
 import com.invasion.client.render.entity.ThrowerEntityRenderer;
 import com.invasion.client.render.entity.TntEntityRenderer;
+import com.invasion.client.render.entity.SpiderEggEntityRenderer;
 import com.invasion.client.render.entity.TrapEntityRenderer;
 import com.invasion.client.render.entity.ZombiePigmanEntityRenderer;
 import com.invasion.client.render.entity.VariantMobRenderers;
@@ -41,9 +42,9 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.JUMPING_SPIDER,
                 context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.JUMPER));
         event.registerEntityRenderer(InvEntities.CAVE_SPIDER,
-                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.CAVE, 0.7F));
+                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.CAVE));
         event.registerEntityRenderer(InvEntities.QUEEN_SPIDER,
-                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER, 2.0F));
+                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.IMP, ImpEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMAN, VariantMobRenderers.Enderman::new);
@@ -59,7 +60,8 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.BOLT, ElectricityBoltEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.SFX, NoopRenderer::new);
         event.registerEntityRenderer(InvEntities.SPAWN_PROXY, NoopRenderer::new);
-        event.registerEntityRenderer(InvEntities.SPIDER_EGG, NoopRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.CREEPER, IMCreeperEntityRenderer::new);
     }
 }
