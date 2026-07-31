@@ -7,11 +7,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Vector3f;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class BurrowerRenderer
         extends MobRenderer<BurrowerEntity, BurrowerRenderState, BurrowerModel> {
-    private static final Identifier TEXTURE =
+    private static final ResourceLocation TEXTURE =
             InvasionMod.id("textures/entity/burrower.png");
 
     public BurrowerRenderer(EntityRendererProvider.Context context) {
@@ -59,7 +59,7 @@ public final class BurrowerRenderer
     }
 
     @Override
-    public Identifier getTextureLocation(BurrowerRenderState state) {
+    public ResourceLocation getTextureLocation(BurrowerRenderState state) {
         return TEXTURE;
     }
 }

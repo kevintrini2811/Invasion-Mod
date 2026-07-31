@@ -16,13 +16,13 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 
 public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         extends HumanoidMobRenderer<T, InvasionZombieRenderState, HumanoidModel<InvasionZombieRenderState>> {
-    private static final List<Identifier> ZOMBIE_TEXTURES = List.of(
+    private static final List<ResourceLocation> ZOMBIE_TEXTURES = List.of(
             texture("entity/zombie/old_zombie_t1.png"),
             texture("entity/zombie/zombie_t1.png"),
             texture("entity/zombie/zombie_t2.png"),
@@ -30,7 +30,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
             texture("entity/zombie/zombie_t2a.png"),
             texture("entity/zombie/zombie_tar.png"),
             texture("entity/zombie/zombie_t3.png"));
-    private static final List<Identifier> PIGMAN_TEXTURES = List.of(
+    private static final List<ResourceLocation> PIGMAN_TEXTURES = List.of(
             texture("entity/zombie_pigman/zombie_pigman.png"),
             texture("entity/zombie_pigman/zombie_pigman.png"),
             texture("entity/zombie_pigman/zombie_pigman_t3.png"));
@@ -112,13 +112,13 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
     }
 
     @Override
-    public Identifier getTextureLocation(InvasionZombieRenderState state) {
-        List<Identifier> textures = pigman ? PIGMAN_TEXTURES : ZOMBIE_TEXTURES;
+    public ResourceLocation getTextureLocation(InvasionZombieRenderState state) {
+        List<ResourceLocation> textures = pigman ? PIGMAN_TEXTURES : ZOMBIE_TEXTURES;
         int index = state.textureId;
         return textures.get(index >= 0 && index < textures.size() ? index : 0);
     }
 
-    private static Identifier texture(String path) {
+    private static ResourceLocation texture(String path) {
         return InvasionMod.id("textures/" + path);
     }
 

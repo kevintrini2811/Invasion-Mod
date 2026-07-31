@@ -9,14 +9,14 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.Items;
 
 public final class InvSkeletonRenderer extends
         HumanoidMobRenderer<IMSkeletonEntity, SkeletonRenderState, SkeletonModel<SkeletonRenderState>> {
-    private static final Identifier TEXTURE =
-            Identifier.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
 
     public InvSkeletonRenderer(EntityRendererProvider.Context context) {
         super(context, new SkeletonModel<>(context.bakeLayer(ModelLayers.SKELETON)), 0.5F);
@@ -48,7 +48,7 @@ public final class InvSkeletonRenderer extends
     }
 
     @Override
-    public Identifier getTextureLocation(SkeletonRenderState state) {
+    public ResourceLocation getTextureLocation(SkeletonRenderState state) {
         return TEXTURE;
     }
 }

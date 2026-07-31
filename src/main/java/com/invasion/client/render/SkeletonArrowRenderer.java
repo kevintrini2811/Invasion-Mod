@@ -4,18 +4,18 @@ import com.invasion.entity.SkeletonArrowEntity;
 import net.minecraft.client.renderer.entity.ArrowRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.ArrowRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class SkeletonArrowRenderer extends ArrowRenderer<SkeletonArrowEntity, ArrowRenderState> {
-    private static final Identifier TEXTURE =
-            Identifier.withDefaultNamespace("textures/entity/projectiles/arrow.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.withDefaultNamespace("textures/entity/projectiles/arrow.png");
 
     public SkeletonArrowRenderer(EntityRendererProvider.Context context) {
         super(context);
     }
 
     @Override
-    protected Identifier getTextureLocation(ArrowRenderState state) {
+    protected ResourceLocation getTextureLocation(ArrowRenderState state) {
         return TEXTURE;
     }
 

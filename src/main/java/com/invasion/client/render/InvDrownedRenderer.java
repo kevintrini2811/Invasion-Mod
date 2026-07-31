@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.DrownedOuterLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.ZombieRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.Items;
@@ -21,9 +21,9 @@ import net.minecraft.world.item.Items;
 public final class InvDrownedRenderer extends HumanoidMobRenderer<
         IMDrownedEntity, ZombieRenderState,
         DrownedModel> {
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace(
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/zombie/drowned.png");
-    private static final Identifier BABY_TEXTURE = Identifier.withDefaultNamespace(
+    private static final ResourceLocation BABY_TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/zombie/drowned_baby.png");
 
     public InvDrownedRenderer(EntityRendererProvider.Context context) {
@@ -88,7 +88,7 @@ public final class InvDrownedRenderer extends HumanoidMobRenderer<
     }
 
     @Override
-    public Identifier getTextureLocation(ZombieRenderState state) {
+    public ResourceLocation getTextureLocation(ZombieRenderState state) {
         return state.isBaby ? BABY_TEXTURE : TEXTURE;
     }
 }

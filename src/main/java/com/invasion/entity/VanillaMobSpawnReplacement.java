@@ -12,7 +12,7 @@ import com.invasion.nexus.WorldNexusStorage;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
@@ -141,7 +141,7 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
-        T converted = targetType.create(world, EntitySpawnReason.CONVERSION);
+        T converted = targetType.create(world, MobSpawnType.CONVERSION);
         if (converted == null) {
             return;
         }

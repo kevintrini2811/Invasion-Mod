@@ -251,7 +251,7 @@ public final class IMEndermanEntity extends IMMobEntity {
         super.readAdditionalSaveData(input);
         String id = input.getStringOr("carried_block", "");
         if (!id.isEmpty()) {
-            net.minecraft.resources.Identifier identifier = net.minecraft.resources.Identifier.tryParse(id);
+            net.minecraft.resources.ResourceLocation identifier = net.minecraft.resources.ResourceLocation.tryParse(id);
             if (identifier != null) {
                 BuiltInRegistries.BLOCK.getOptional(identifier)
                         .filter(block -> block != Blocks.AIR)

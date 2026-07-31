@@ -3,8 +3,8 @@ package com.invasion.entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import com.invasion.nexus.Combatant;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -28,7 +28,7 @@ public final class VillagerResurrectionHandler {
         }
 
         IMZombieVillagerEntity zombie = InvEntities.ZOMBIE_VILLAGER.create(
-                world, EntitySpawnReason.CONVERSION);
+                world, MobSpawnType.CONVERSION);
         if (zombie == null) {
             return;
         }

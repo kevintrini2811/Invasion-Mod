@@ -5,10 +5,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.WolfRenderer;
 import net.minecraft.client.renderer.entity.state.WolfRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class IMWolfRenderer extends WolfRenderer {
-    private static final Identifier TEXTURE =
+    private static final ResourceLocation TEXTURE =
             InvasionMod.id("textures/entity/wolf/tame_nexus.png");
 
     public IMWolfRenderer(EntityRendererProvider.Context context) {
@@ -22,7 +22,7 @@ public final class IMWolfRenderer extends WolfRenderer {
     }
 
     @Override
-    public Identifier getTextureLocation(WolfRenderState state) {
+    public ResourceLocation getTextureLocation(WolfRenderState state) {
         return TEXTURE;
     }
 }

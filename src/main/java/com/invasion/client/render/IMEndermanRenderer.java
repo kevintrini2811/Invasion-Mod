@@ -10,12 +10,12 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.CarriedBlockLayer;
 import net.minecraft.client.renderer.entity.layers.EnderEyesLayer;
 import net.minecraft.client.renderer.entity.state.EndermanRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class IMEndermanRenderer
         extends HumanoidMobRenderer<IMEndermanEntity, EndermanRenderState, EndermanModel<EndermanRenderState>> {
-    private static final Identifier TEXTURE =
-            Identifier.withDefaultNamespace("textures/entity/enderman/enderman.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.withDefaultNamespace("textures/entity/enderman/enderman.png");
     private final BlockModelResolver blockModelResolver;
 
     public IMEndermanRenderer(EntityRendererProvider.Context context) {
@@ -42,7 +42,7 @@ public final class IMEndermanRenderer
     }
 
     @Override
-    public Identifier getTextureLocation(EndermanRenderState state) {
+    public ResourceLocation getTextureLocation(EndermanRenderState state) {
         return TEXTURE;
     }
 }
