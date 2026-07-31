@@ -1,11 +1,10 @@
 package com.invasion.nexus.wave.pool;
 
 import java.util.function.Consumer;
-
-import net.minecraft.util.math.random.Random;
+import net.minecraft.util.RandomSource;
 
 public interface Select<T> {
-    T selectNext(Random random);
+    T selectNext(RandomSource random);
 
     default void reset() {
 

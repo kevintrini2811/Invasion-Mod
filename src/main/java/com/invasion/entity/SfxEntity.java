@@ -1,24 +1,24 @@
 package com.invasion.entity;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.DataTracker.Builder;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.world.World;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData.Builder;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.Level;
 
 // TODO: What is this for?
 @Deprecated(since = "unused")
 public class SfxEntity extends Entity {
     private int lifespan;
 
-    public SfxEntity(EntityType<SfxEntity> type, World world) {
+    public SfxEntity(EntityType<SfxEntity> type, Level world) {
         super(type, world);
         this.lifespan = 200;
     }
 
-    public SfxEntity(EntityType<SfxEntity> type, World world, double x, double y, double z) {
+    public SfxEntity(EntityType<SfxEntity> type, Level world, double x, double y, double z) {
         this(type, world);
-        setPosition(x, y, z);
+        setPos(x, y, z);
     }
 
     @Override
@@ -30,18 +30,18 @@ public class SfxEntity extends Entity {
     }
 
     @Override
-    public void handleStatus(byte byte0) {
+    public void handleEntityEvent(byte byte0) {
     }
 
     @Override
-    protected void initDataTracker(Builder builder) {
+    protected void defineSynchedData(Builder builder) {
     }
 
     @Override
-    protected void readCustomDataFromNbt(NbtCompound nbt) {
+    protected void readAdditionalSaveData(CompoundTag nbt) {
     }
 
     @Override
-    protected void writeCustomDataToNbt(NbtCompound nbt) {
+    protected void addAdditionalSaveData(CompoundTag nbt) {
     }
 }

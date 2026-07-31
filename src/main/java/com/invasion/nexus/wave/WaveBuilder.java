@@ -6,10 +6,10 @@ import java.util.Random;
 
 import com.invasion.InvasionMod;
 import com.invasion.util.ChatUtils;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
-
+import com.invasion.nexus.wave.WaveEntry.Builder;
 import com.invasion.nexus.wave.pool.Select;
+import com.invasion.nexus.wave.pool.Select.PoolBuilder;
 
 public class WaveBuilder {
     public static final int WAVES_DEFINED = 11;

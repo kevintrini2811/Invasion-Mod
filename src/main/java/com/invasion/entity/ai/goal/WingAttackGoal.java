@@ -3,8 +3,7 @@ package com.invasion.entity.ai.goal;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.VultureEntity;
-
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 
 public class WingAttackGoal<T extends LivingEntity> extends EntityAIMeleeAttack<T, VultureEntity> {
     private VultureEntity mob;
@@ -30,6 +29,6 @@ public class WingAttackGoal<T extends LivingEntity> extends EntityAIMeleeAttack<
     protected boolean isInStartMeleeRange() {
         @Nullable
         LivingEntity target = mob.getTarget();
-        return target != null && mob.isInRange(target, mob.getWidth() + 3);
+        return target != null && mob.closerThan(target, mob.getBbWidth() + 3);
     }
 }

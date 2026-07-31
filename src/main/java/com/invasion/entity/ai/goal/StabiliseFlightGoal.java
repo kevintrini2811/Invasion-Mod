@@ -3,8 +3,7 @@ package com.invasion.entity.ai.goal;
 import com.invasion.entity.EntityIMFlying;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.pathfinding.FlyingNavigation;
-
-import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.Goal;
 
 public class StabiliseFlightGoal extends Goal {
     private static final int INITIAL_STABILISE_TIME = 50;
@@ -20,12 +19,12 @@ public class StabiliseFlightGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return theEntity.hasGoal(HasAiGoals.Goal.STABILISE);
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         if (time < stabiliseTime) {
             return true;
         }

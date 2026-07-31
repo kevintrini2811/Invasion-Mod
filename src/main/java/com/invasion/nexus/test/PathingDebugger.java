@@ -3,48 +3,46 @@ package com.invasion.nexus.test;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
+import net.minecraft.network.protocol.common.custom.PathfindingDebugPayload;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.Target;
 import org.apache.commons.lang3.stream.IntStreams;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.Debug;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.entity.ai.pathing.TargetPathNode;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.s2c.common.CustomPayloadS2CPacket;
-import net.minecraft.network.packet.s2c.custom.DebugPathCustomPayload;
-import net.minecraft.util.math.BlockPos;
-
 public class PathingDebugger {
 
     public static void sendPathToClients(Entity sender, @Nullable Path path, float scale) {
         if (Debug.DEBUG_PATHFINDING) {
-            sender.getServer().getPlayerManager().sendToAll(new CustomPayloadS2CPacket(new DebugPathCustomPayload(sender.getId(), createDebuggablePath(path), scale)));
+            sender.getServer().getPlayerList().broadcastAll(new ClientboundCustomPayloadPacket(new PathfindingDebugPayload(sender.getId(), createDebuggablePath(path), scale)));
         }
     }
 
     private static Path createDebuggablePath(Path path) {
-        return new Path(List.of(), BlockPos.ORIGIN, false) {
+        return new Path(List.of(), BlockPos.ZERO, false) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override
-            public void toBuf(PacketByteBuf buf) {
-                buf.writeBoolean(path.reachesTarget());
-                buf.writeInt(path.getCurrentNodeIndex());
+            public void writeToStream(FriendlyByteBuf buf) {
+                buf.writeBoolean(path.canReach());
+                buf.writeInt(path.getNextNodeIndex());
                 buf.writeBlockPos(path.getTarget());
 
-                Set<PathNode> open = new HashSet<>();
-                Set<PathNode> closed = new HashSet<>();
-                Set<TargetPathNode> targets = new HashSet<>();
+                Set<Node> open = new HashSet<>();
+                Set<Node> closed = new HashSet<>();
+                Set<Target> targets = new HashSet<>();
 
-                buf.writeCollection(IntStreams.range(path.getLength()).mapToObj(path::getNode).peek(node -> {
-                    ((Set)(node instanceof TargetPathNode ? targets : node.visited ? closed : open)).add(node instanceof TargetPathNode t ? t : node);
-                }).toList(), (bufx, node) -> node.write(bufx));
+                buf.writeCollection(IntStreams.range(path.getNodeCount()).mapToObj(path::getNode).peek(node -> {
+                    ((Set)(node instanceof Target ? targets : node.closed ? closed : open)).add(node instanceof Target t ? t : node);
+                }).toList(), (bufx, node) -> node.writeToStream(bufx));
 
 
-                new Path.DebugNodeInfo(open.toArray(PathNode[]::new), closed.toArray(PathNode[]::new), targets).write(buf);
+                new Path.DebugData(open.toArray(Node[]::new), closed.toArray(Node[]::new), targets).write(buf);
             }
         };
     }

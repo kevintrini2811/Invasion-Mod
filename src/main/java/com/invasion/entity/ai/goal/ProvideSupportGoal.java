@@ -2,13 +2,12 @@ package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.PigmanEngineerEntity;
-
-import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.world.entity.PathfinderMob;
 
 public class ProvideSupportGoal extends FollowEntityGoal<PigmanEngineerEntity> {
     private final boolean canHelp;
 
-    public <E extends PathAwareEntity & NexusEntity> ProvideSupportGoal(E entity, float followDistance, boolean canHelp) {
+    public <E extends PathfinderMob & NexusEntity> ProvideSupportGoal(E entity, float followDistance, boolean canHelp) {
         super(entity, PigmanEngineerEntity.class, followDistance);
         this.canHelp = canHelp;
     }

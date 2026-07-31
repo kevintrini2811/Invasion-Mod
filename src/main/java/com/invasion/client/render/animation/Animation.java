@@ -4,9 +4,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.entity.Entity;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.world.entity.Entity;
 
 public record Animation<T extends Enum<T>>(
         float duration,

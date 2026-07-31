@@ -1,54 +1,69 @@
 package com.invasion;
 
+import com.invasion.block.InvBlocks;
+import com.invasion.compat.AsyncCompatibility;
+import com.invasion.entity.InvEntities;
+import com.invasion.entity.InvEntities.Attributes;
+import com.invasion.item.InvItems;
+import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.wave.EntityPatterns;
+import com.invasion.particle.InvParticles;
 import com.invasion.util.ChatUtils;
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
-import net.fabricmc.fabric.api.loot.v3.LootTableSource;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
-
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.world.scores.Team;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.Mob;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLPaths;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.registries.RegisterEvent;
+import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
+import net.minecraft.world.item.CreativeModeTabs;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.invasion.block.InvBlocks;
-import com.invasion.entity.InvEntities;
-import com.invasion.item.InvItems;
-import com.invasion.nexus.WorldNexusStorage;
-import com.invasion.particle.InvParticles;
-
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.Identifier;
-
-
-
-public class InvasionMod implements ModInitializer {
+@Mod(InvasionMod.MOD_ID)
+public final class InvasionMod {
+    public static final String MOD_ID = "invmod";
     public static final Logger LOGGER = LoggerFactory.getLogger(InvasionMod.class);
     public static MinecraftServer SERVER;
     private static final InvasionConfig CONFIG = new InvasionConfig();
 
-    public static void log(@Nullable String s) {
-        if (InvasionMod.getConfig().enableLog && s != null) {
-            InvasionMod.LOGGER.warn(s);
+    public InvasionMod(IEventBus modBus, ModContainer container) {
+        modBus.addListener(InvasionMod::registerContent);
+        modBus.addListener(InvasionMod::commonSetup);
+        modBus.addListener(Attributes::register);
+        modBus.addListener(InvasionMod::buildCreativeTab);
+
+        NeoForge.EVENT_BUS.addListener(InvasionMod::registerCommands);
+        NeoForge.EVENT_BUS.addListener(InvasionMod::tickLevel);
+        NeoForge.EVENT_BUS.addListener(InvasionMod::serverStarting);
+        NeoForge.EVENT_BUS.addListener(InvasionMod::serverStarted);
+        NeoForge.EVENT_BUS.addListener(InvasionMod::serverStopped);
+        NeoForge.EVENT_BUS.addListener(InvasionMod::livingDeath);
+        NeoForge.EVENT_BUS.addListener(InvasionMod::fuelBurnTime);
+    }
+
+    public static void log(@Nullable String message) {
+        if (CONFIG.enableLog && message != null) {
+            LOGGER.warn(message);
         }
     }
 
@@ -56,63 +71,94 @@ public class InvasionMod implements ModInitializer {
         return CONFIG;
     }
 
-    public static Identifier id(String name) {
-        return Identifier.of("invmod", name);
+    public static ResourceLocation id(String name) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
     }
 
-    @Override
-    public void onInitialize() {
-        CONFIG.loadConfig(FabricLoader.getInstance().getConfigDir().resolve("invasion_config.cfg").toFile());
-        CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {
-            dispatcher.register(InvasionCommand.create(dispatcher, registries));
+    private static void registerContent(RegisterEvent event) {
+        if (event.getRegistryKey().equals(Registries.BLOCK)) {
+            InvBlocks.bootstrap();
+        } else if (event.getRegistryKey().equals(Registries.BLOCK_ENTITY_TYPE)) {
+            com.invasion.block.InvBlockEntities.bootstrap();
+        } else if (event.getRegistryKey().equals(Registries.ENTITY_TYPE)) {
+            InvEntities.bootstrap();
+        } else if (event.getRegistryKey().equals(Registries.ITEM)) {
+            InvItems.bootstrap();
+        } else if (event.getRegistryKey().equals(Registries.CREATIVE_MODE_TAB)) {
+            InvItems.bootstrapCreativeTab();
+        } else if (event.getRegistryKey().equals(Registries.SOUND_EVENT)) {
+            InvSounds.boostrap();
+        } else if (event.getRegistryKey().equals(Registries.PARTICLE_TYPE)) {
+            InvParticles.bootstrap();
+        } else if (event.getRegistryKey().equals(Registries.MENU)) {
+            InvScreenHandlers.bootstrap();
+        }
+    }
+
+    private static void commonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            CONFIG.loadConfig(FMLPaths.CONFIGDIR.get().resolve("invasion_config.cfg").toFile());
+            AsyncCompatibility.registerSynchronizedEntities();
         });
-        ServerTickEvents.START_WORLD_TICK.register(world -> {
-            BountyHunter.of(world).tick();
-            WorldNexusStorage.of(world).tick();
-        });
-        ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
-            ChatUtils.setServer(server);
-            LOGGER.info("ChatUtils: Server gesetzt.");
-        });
+    }
 
-        ServerLifecycleEvents.SERVER_STOPPED.register((MinecraftServer server) -> {
-            ChatUtils.clearServer();
-            LOGGER.info("ChatUtils: Server gelöscht.");
-        });
-        ServerLifecycleEvents.SERVER_STARTING.register(server -> SERVER = server);
-        InvBlocks.bootstrap();
-        InvItems.bootstrap();
-        InvSounds.boostrap();
-        InvEntities.bootstrap();
-        InvParticles.bootstrap();
-        InvScreenHandlers.bootstrap();
-        // Keine Drops von Invasions-Mobs (inkl. Mutant Monsters & Giant)
-        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            // Nur Serverwelt
-            if (!(entity.getWorld() instanceof ServerWorld world)) return;
-            if (!(entity instanceof MobEntity mob)) return;
+    private static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
+            InvItems.SPAWN_EGGS.forEach(event::accept);
+        }
+    }
 
-            boolean isInvasionMob = false;
+    private static void fuelBurnTime(FurnaceFuelBurnTimeEvent event) {
+        if (event.getItemStack().is(InvItems.NEXUS_CATALYST)) {
+            event.setBurnTime(10);
+        } else if (event.getItemStack().is(InvItems.STABLE_NEXUS_CATALYST)) {
+            event.setBurnTime(16);
+        }
+    }
 
-            // 1) Externe Mobs (Mutant Monsters, Giant etc.)
-            if (EntityPatterns.isExternalInvasionMob(mob.getType())) {
-                isInvasionMob = true;
-            } else {
-                // 2) Eigene Invasion-Mobs: über Team "invasion_allies"
-                Scoreboard scoreboard = world.getScoreboard();
-                Team team = scoreboard.getScoreHolderTeam(mob.getNameForScoreboard());
-                if (team != null && "invasion_allies".equals(team.getName())) {
-                    isInvasionMob = true;
-                }
-            }
+    private static void registerCommands(RegisterCommandsEvent event) {
+        event.getDispatcher().register(InvasionCommand.create(event.getDispatcher(), event.getBuildContext()));
+    }
 
-            if (!isInvasionMob) return;
+    private static void tickLevel(LevelTickEvent.Pre event) {
+        if (event.getLevel() instanceof ServerLevel level) {
+            BountyHunter.of(level).tick();
+            WorldNexusStorage.of(level).tick();
+        }
+    }
 
-            // Alle Item-Entities in der Nähe des toten Mobs sofort entfernen
-            var box = mob.getBoundingBox().expand(3.0);
-            world.getEntitiesByClass(ItemEntity.class, box, item -> true)
-                    .forEach(ItemEntity::discard);
-        });
+    private static void serverStarting(ServerStartingEvent event) {
+        SERVER = event.getServer();
+    }
 
+    private static void serverStarted(ServerStartedEvent event) {
+        ChatUtils.setServer(event.getServer());
+        LOGGER.info("ChatUtils: Server gesetzt.");
+    }
+
+    private static void serverStopped(ServerStoppedEvent event) {
+        ChatUtils.clearServer();
+        SERVER = null;
+        LOGGER.info("ChatUtils: Server gelöscht.");
+    }
+
+    private static void livingDeath(LivingDeathEvent event) {
+        if (!(event.getEntity().level() instanceof ServerLevel level)
+                || !(event.getEntity() instanceof Mob mob)) {
+            return;
+        }
+
+        boolean invasionMob = EntityPatterns.isExternalInvasionMob(mob.getType());
+        if (!invasionMob) {
+            Scoreboard scoreboard = level.getScoreboard();
+            Team team = scoreboard.getPlayersTeam(mob.getScoreboardName());
+            invasionMob = team != null && "invasion_allies".equals(team.getName());
+        }
+        if (!invasionMob) {
+            return;
+        }
+
+        level.getEntitiesOfClass(ItemEntity.class, mob.getBoundingBox().inflate(3.0))
+                .forEach(ItemEntity::discard);
     }
 }

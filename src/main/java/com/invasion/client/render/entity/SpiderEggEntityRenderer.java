@@ -3,29 +3,28 @@ package com.invasion.client.render.entity;
 import com.invasion.InvasionMod;
 import com.invasion.client.render.entity.model.EggModel;
 import com.invasion.entity.SpiderEggEntity;
-
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.Identifier;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.resources.ResourceLocation;
 
 public class SpiderEggEntityRenderer extends EntityRenderer<SpiderEggEntity> {
-	private static final Identifier TEXTURE = InvasionMod.id("textures/entity/spider_egg.png");
+	private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/spider_egg.png");
 
-	private final EggModel model = new EggModel(EggModel.getTexturedModelData().createModel());
+	private final EggModel model = new EggModel(EggModel.getTexturedModelData().bakeRoot());
 
-	public SpiderEggEntityRenderer(EntityRendererFactory.Context context) {
+	public SpiderEggEntityRenderer(EntityRendererProvider.Context context) {
 	    super(context);
 	}
 
 	@Override
-    public void render(SpiderEggEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-	    model.render(matrices, vertexConsumers.getBuffer(model.getLayer(getTexture(entity))), light, 0);
+    public void render(SpiderEggEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
+	    model.renderToBuffer(matrices, vertexConsumers.getBuffer(model.renderType(getTextureLocation(entity))), light, 0);
 	}
 
     @Override
-    public Identifier getTexture(SpiderEggEntity entity) {
+    public ResourceLocation getTextureLocation(SpiderEggEntity entity) {
         return TEXTURE;
     }
 }

@@ -7,21 +7,16 @@ import java.util.stream.Stream;
 
 import com.invasion.InvasionMod;
 
-import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 
-public class AnimationLoader implements SimpleSynchronousResourceReloadListener {
-    private static final Identifier ID = InvasionMod.id("animations");
+public class AnimationLoader implements ResourceManagerReloadListener {
+    private static final ResourceLocation ID = InvasionMod.id("animations");
     public static final AnimationLoader INSTANCE = new AnimationLoader();
 
     @Override
-    public Identifier getFabricId() {
-        return ID;
-    }
-
-    @Override
-    public void reload(ResourceManager manager) {
+    public void onResourceManagerReload(ResourceManager manager) {
         AnimationRegistry.instance().clear();
         AnimationRegistry.instance().register("bird_wing_flap", createBirdWingFlap());
         AnimationRegistry.instance().register("bird_run", createBirdRun());

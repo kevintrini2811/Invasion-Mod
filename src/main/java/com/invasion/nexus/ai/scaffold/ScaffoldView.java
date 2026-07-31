@@ -1,7 +1,7 @@
 package com.invasion.nexus.ai.scaffold;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
 
 public interface ScaffoldView {
     int MOB_DENSITY_FLAG = 0x7;
@@ -34,7 +34,7 @@ public interface ScaffoldView {
         setData(pos, getData(pos) | EXT_DATA_SCAFFOLD_METAPOSITION);
     }
 
-    static ScaffoldView of(BlockView view) {
+    static ScaffoldView of(BlockGetter view) {
         return view instanceof ScaffoldView v ? v : DEFAULT;
     }
 }

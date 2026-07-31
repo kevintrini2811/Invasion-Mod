@@ -1,11 +1,11 @@
 package com.invasion.entity.ai.goal.target;
 
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 
-public class RetaliateGoal extends RevengeGoal {
-	public RetaliateGoal(PathAwareEntity entity) {
+public class RetaliateGoal extends HurtByTargetGoal {
+	public RetaliateGoal(PathfinderMob entity) {
 		super(entity);
-		setGroupRevenge();
+		setAlertOthers();
 	}
 }

@@ -1,28 +1,27 @@
 package com.invasion.client.render.entity;
 
 import com.invasion.InvasionMod;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.WolfRenderer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.animal.Wolf;
 
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.WolfEntityRenderer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.passive.WolfEntity;
-import net.minecraft.util.Identifier;
+public class IMWolfEntityRenderer extends WolfRenderer {
+    private static final ResourceLocation TEXTURE = InvasionMod.id("textures/wolf/tame_nexus.png");
 
-public class IMWolfEntityRenderer extends WolfEntityRenderer {
-    private static final Identifier TEXTURE = InvasionMod.id("textures/wolf/tame_nexus.png");
-
-	public IMWolfEntityRenderer(EntityRendererFactory.Context context) {
+	public IMWolfEntityRenderer(EntityRendererProvider.Context context) {
         super(context);
 	}
 
     @Override
-    protected void scale(WolfEntity entity, MatrixStack matrices, float amount) {
+    protected void scale(Wolf entity, PoseStack matrices, float amount) {
         float f = 1.3F;
         matrices.scale(f, (2 + f) / 3F, f);
     }
 
 	@Override
-	public Identifier getTexture(WolfEntity entity) {
+	public ResourceLocation getTextureLocation(Wolf entity) {
 	    // TODO: Wolves have variant textures now
 		return TEXTURE;
 	}

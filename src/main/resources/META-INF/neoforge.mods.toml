@@ -1,0 +1,35 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="invmod"
+version="${version}"
+displayName="Invasion"
+description='''So you think your base is tough, do you?'''
+authors="Lieu, Elsee, UnstoppableN, Doenerstyle, Sollace"
+logoFile="assets/invmod/meta/logo.png"
+
+[[mixins]]
+config="invasion.mixin.json"
+
+[[dependencies.invmod]]
+modId="neoforge"
+type="required"
+versionRange="[${neoVersion},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.invmod]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraftVersion}]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.invmod]]
+modId="jei"
+type="optional"
+versionRange="[19.21,)"
+ordering="AFTER"
+side="CLIENT"

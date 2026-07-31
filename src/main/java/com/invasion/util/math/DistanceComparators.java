@@ -1,16 +1,15 @@
 package com.invasion.util.math;
 
 import java.util.Comparator;
-
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.Vec3;
 
 public interface DistanceComparators {
     static Comparator<Entity> ofComparisonEntities(double x, double y, double z) {
-        return ofComparisonEntities(new Vec3d(x, y, z));
+        return ofComparisonEntities(new Vec3(x, y, z));
     }
 
-    static Comparator<Entity> ofComparisonEntities(Vec3d origin) {
-        return Comparator.comparingDouble(e -> e.squaredDistanceTo(origin));
+    static Comparator<Entity> ofComparisonEntities(Vec3 origin) {
+        return Comparator.comparingDouble(e -> e.distanceToSqr(origin));
     }
 }

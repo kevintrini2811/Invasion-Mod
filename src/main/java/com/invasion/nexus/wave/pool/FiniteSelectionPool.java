@@ -2,10 +2,8 @@ package com.invasion.nexus.wave.pool;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.util.math.random.Random;
 
 class FiniteSelectionPool<T> implements Select<T> {
 	private final List<Entry<T>> currentPool;
@@ -20,7 +18,7 @@ class FiniteSelectionPool<T> implements Select<T> {
 
 	@Nullable
 	@Override
-    public T selectNext(Random random) {
+    public T selectNext(RandomSource random) {
 		if (totalAmount < 1) {
 			reset();
 		}
@@ -65,7 +63,7 @@ class FiniteSelectionPool<T> implements Select<T> {
 	    }
 
         @Override
-        public T selectNext(Random random) {
+        public T selectNext(RandomSource random) {
             amount--;
             return value.selectNext(random);
         }
@@ -88,7 +86,7 @@ class FiniteSelectionPool<T> implements Select<T> {
 	    private int total;
 
 	    @Override
-        public Builder<T> entry(Select.Builder<T> entry, Integer amount) {
+        public com.invasion.nexus.wave.pool.FiniteSelectionPool.Builder<T> entry(Select.Builder<T> entry, Integer amount) {
 	        entries.add(new Entry.Builder<>(entry, amount));
 	        total += amount;
 	        return this;

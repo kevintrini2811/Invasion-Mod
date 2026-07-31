@@ -1,23 +1,22 @@
 package com.invasion.entity.ai.goal;
 
 import com.invasion.nexus.NexusAccess;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
 import java.util.EnumSet;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 
 public class ExternalAttackNexusGoal extends Goal {
-    private final MobEntity mob;
+    private final Mob mob;
     private NexusAccess nexus;
     private int attackCooldown = 0;
 
-    public ExternalAttackNexusGoal(MobEntity mob, NexusAccess nexus) {
+    public ExternalAttackNexusGoal(Mob mob, NexusAccess nexus) {
         this.mob = mob;
         this.nexus = nexus;
-        this.setControls(EnumSet.of(Control.MOVE, Control.LOOK));
+        this.setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     public void setNexus(NexusAccess nexus) {
@@ -25,13 +24,13 @@ public class ExternalAttackNexusGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return nexus != null && nexus.isActive();
     }
 
     @Override
-    public boolean shouldContinue() {
-        return canStart() && !mob.isDead();
+    public boolean canContinueToUse() {
+        return canUse() && !mob.isDeadOrDying();
     }
 
     @Override
@@ -39,25 +38,25 @@ public class ExternalAttackNexusGoal extends Goal {
         if (nexus == null) return;
 
         BlockPos pos = nexus.getOrigin();
-        Vec3d target = Vec3d.ofCenter(pos);
+        Vec3 target = Vec3.atCenterOf(pos);
 
-        double distSq = mob.squaredDistanceTo(target);
+        double distSq = mob.distanceToSqr(target);
         // erst hinlaufen
         if (distSq > 4.0) {
-            mob.getNavigation().startMovingTo(target.x, target.y, target.z, 1.1);
+            mob.getNavigation().moveTo(target.x, target.y, target.z, 1.1);
         } else {
             // Am Nexus: stehenbleiben und draufhauen
             mob.getNavigation().stop();
-            mob.getLookControl().lookAt(target.x, target.y, target.z);
+            mob.getLookControl().setLookAt(target.x, target.y, target.z);
 
             if (attackCooldown > 0) {
                 attackCooldown--;
                 return;
             }
 
-            mob.swingHand(Hand.MAIN_HAND);
+            mob.swing(InteractionHand.MAIN_HAND);
             if (nexus.isActive()) {
-                nexus.damage(mob.getDamageSources().mobAttack(mob), 2);
+                nexus.damage(mob.damageSources().mobAttack(mob), 2);
             }
             attackCooldown = 20; // alle 20 Ticks = 1x pro Sekunde
         }

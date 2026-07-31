@@ -1,14 +1,13 @@
 package com.invasion.nexus;
 
 import com.invasion.item.InvItems;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
 
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.registry.RegistryWrapper;
-
-public class NexusInventory extends SimpleInventory {
+public class NexusInventory extends SimpleContainer {
     static final int MAX_FLUX_GENERATION_TIME = 3000;
     static final int MAX_TRAP_COOK_TIME = 1200;
 
@@ -36,18 +35,18 @@ public class NexusInventory extends SimpleInventory {
     }
 
     public void tick(NexusAccess nexus) {
-        tickCookTime(nexus, getStack(0), getStack(1));
+        tickCookTime(nexus, getItem(0), getItem(1));
     }
 
     public void generateFlux(int increment) {
         accumulatedFlux += increment;
         if (accumulatedFlux >= MAX_FLUX_GENERATION_TIME) {
-            ItemStack currentGeneratedItem = getStack(1);
+            ItemStack currentGeneratedItem = getItem(1);
             if (currentGeneratedItem.isEmpty()) {
-                setStack(1, InvItems.RIFT_FLUX.getDefaultStack());
+                setItem(1, InvItems.RIFT_FLUX.getDefaultInstance());
                 accumulatedFlux -= MAX_FLUX_GENERATION_TIME;
-            } else if (currentGeneratedItem.isOf(InvItems.RIFT_FLUX)) {
-                currentGeneratedItem.increment(1);
+            } else if (currentGeneratedItem.is(InvItems.RIFT_FLUX)) {
+                currentGeneratedItem.grow(1);
                 accumulatedFlux -= MAX_FLUX_GENERATION_TIME;
             }
         }
@@ -55,29 +54,29 @@ public class NexusInventory extends SimpleInventory {
 
     private void tickCookTime(NexusAccess nexus, ItemStack firstStack, ItemStack secondStack) {
         if (!firstStack.isEmpty()) {
-            if (firstStack.isOf(InvItems.EMPTY_TRAP)) {
+            if (firstStack.is(InvItems.EMPTY_TRAP)) {
                 if (cookTime < MAX_TRAP_COOK_TIME) {
                     cookTime += nexus.getMode() == Mode.STOPPED ? 1 : 9;
                 } else {
                     if (secondStack.isEmpty()) {
-                        setStack(1, InvItems.FLAME_TRAP.getDefaultStack());
-                        firstStack.decrement(1);
+                        setItem(1, InvItems.FLAME_TRAP.getDefaultInstance());
+                        firstStack.shrink(1);
                         cookTime = 0;
-                    } else if (secondStack.isOf(InvItems.FLAME_TRAP) && secondStack.getCount() < secondStack.getMaxCount()) {
-                        secondStack.increment(1);
-                        firstStack.decrement(1);
+                    } else if (secondStack.is(InvItems.FLAME_TRAP) && secondStack.getCount() < secondStack.getMaxStackSize()) {
+                        secondStack.grow(1);
+                        firstStack.shrink(1);
                         cookTime = 0;
                     }
                 }
-            } else if (firstStack.isOf(InvItems.RIFT_FLUX)) {
+            } else if (firstStack.is(InvItems.RIFT_FLUX)) {
                 if (cookTime < MAX_TRAP_COOK_TIME && nexus.getLevel() >= 10) {
                     cookTime += 5;
                 }
 
                 if (cookTime >= MAX_TRAP_COOK_TIME) {
                     if (secondStack.isEmpty()) {
-                        setStack(1, InvItems.STRONG_NEXUS_CATALYST.getDefaultStack());
-                        firstStack.decrement(1);
+                        setItem(1, InvItems.STRONG_NEXUS_CATALYST.getDefaultInstance());
+                        firstStack.shrink(1);
                         cookTime = 0;
                     }
                 }
@@ -87,16 +86,16 @@ public class NexusInventory extends SimpleInventory {
         }
     }
 
-    public void readNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
+    public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         accumulatedFlux = compound.getInt("accumulatedFlux");
         cookTime = compound.getInt("cookTime");
-        readNbtList(compound.getList("Items", NbtElement.COMPOUND_TYPE), lookup);
+        fromTag(compound.getList("Items", Tag.TAG_COMPOUND), lookup);
     }
 
-    public NbtCompound writeNbt(NbtCompound compound, RegistryWrapper.WrapperLookup lookup) {
+    public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         compound.putInt("accumulatedFlux", accumulatedFlux);
         compound.putInt("cookTime", cookTime);
-        compound.put("Items", toNbtList(lookup));
+        compound.put("Items", createTag(lookup));
         return compound;
     }
 }

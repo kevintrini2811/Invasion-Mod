@@ -2,13 +2,12 @@ package com.invasion.nexus.wave.pool;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.util.RandomSource;
 import com.invasion.InvasionMod;
-import net.minecraft.util.math.random.Random;
 
 record RandomSelectionPool<T>(List<Entry<T>> pool, float totalWeight) implements Select<T> {
     @Override
-    public T selectNext(Random random) {
+    public T selectNext(RandomSource random) {
         float r = random.nextFloat() * totalWeight;
         for (Entry<T> entry : pool) {
             if (r < entry.weight()) {
@@ -38,7 +37,7 @@ record RandomSelectionPool<T>(List<Entry<T>> pool, float totalWeight) implements
         private float total;
 
         @Override
-        public Builder<T> entry(Select.Builder<T> entry, Float amount) {
+        public com.invasion.nexus.wave.pool.RandomSelectionPool.Builder<T> entry(Select.Builder<T> entry, Float amount) {
             entries.add(new Entry.Builder<>(entry, amount));
             total += amount;
             return this;

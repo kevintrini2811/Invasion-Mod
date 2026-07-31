@@ -21,44 +21,46 @@ import com.invasion.client.render.entity.TrapEntityRenderer;
 import com.invasion.entity.InvEntities;
 import com.invasion.item.InvItems;
 import com.invasion.particle.InvParticles;
-import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import net.minecraft.client.item.ModelPredicateProviderRegistry;
-import net.minecraft.client.render.entity.EmptyEntityRenderer;
-import net.minecraft.client.render.entity.SpiderEntityRenderer;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.renderer.entity.NoopRenderer;
+import net.minecraft.client.renderer.entity.SpiderRenderer;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
 
 public interface InvRenderers {
-    static void bootstrap() {
-        ParticleFactoryRegistry.getInstance().register(InvParticles.DAZE, DazeParticle::factory);
+    static void registerParticles(RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet(InvParticles.DAZE, DazeParticle::factory);
+    }
 
-        EntityRendererRegistry.register(InvEntities.ZOMBIE, AbstractIMZombieEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SKELETON, IMSkeletonEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SPIDER, SpiderEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.JUMPING_SPIDER, context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.JUMPER));
-        EntityRendererRegistry.register(InvEntities.QUEEN_SPIDER, context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
-        EntityRendererRegistry.register(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.IMP, ImpEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.THROWER, ThrowerEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BURROWER, BurrowerEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BOULDER, BoulderEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.TNT, TntEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.WOLF, IMWolfEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.TRAP, TrapEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BOLT, ElectricityBoltEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SFX, EmptyEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SPAWN_PROXY, EmptyEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.CREEPER, IMCreeperEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BIRD, VultureEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.VULTURE, RenderGiantBird::new);
+    static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(InvEntities.ZOMBIE, AbstractIMZombieEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.SKELETON, IMSkeletonEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.SPIDER, SpiderRenderer::new);
+        event.registerEntityRenderer(InvEntities.JUMPING_SPIDER, context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.JUMPER));
+        event.registerEntityRenderer(InvEntities.QUEEN_SPIDER, context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
+        event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.IMP, ImpEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.THROWER, ThrowerEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.BURROWER, BurrowerEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.BOULDER, BoulderEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.TNT, TntEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.WOLF, IMWolfEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.TRAP, TrapEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.BOLT, ElectricityBoltEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.SFX, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.SPAWN_PROXY, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.CREEPER, IMCreeperEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.BIRD, VultureEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.VULTURE, RenderGiantBird::new);
 
-        ModelPredicateProviderRegistry.register(InvItems.SEARING_BOW, Identifier.ofVanilla("pull"), (stack, world, entity, seed) -> {
-            return entity == null || entity.getActiveItem() != stack ? 0.0F : (stack.getMaxUseTime(entity) - entity.getItemUseTimeLeft()) / 20F;
+        ItemProperties.register(InvItems.SEARING_BOW, ResourceLocation.withDefaultNamespace("pull"), (stack, world, entity, seed) -> {
+            return entity == null || entity.getUseItem() != stack ? 0.0F : (stack.getUseDuration(entity) - entity.getUseItemRemainingTicks()) / 20F;
         });
-        ModelPredicateProviderRegistry.register(InvItems.SEARING_BOW, Identifier.ofVanilla("pulling"),
-            (stack, world, entity, seed) -> entity != null && entity.isUsingItem() && entity.getActiveItem() == stack ? 1 : 0
+        ItemProperties.register(InvItems.SEARING_BOW, ResourceLocation.withDefaultNamespace("pulling"),
+            (stack, world, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1 : 0
         );
     }
 }

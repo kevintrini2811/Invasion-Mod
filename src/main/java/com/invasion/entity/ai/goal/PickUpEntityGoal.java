@@ -4,13 +4,13 @@ import org.joml.Vector3f;
 
 import com.invasion.entity.VultureEntity;
 import com.invasion.entity.pathfinding.FlyingNavigation;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 import com.invasion.entity.HasAiGoals;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 
-public class PickUpEntityGoal extends net.minecraft.entity.ai.goal.Goal {
+public class PickUpEntityGoal extends net.minecraft.world.entity.ai.goal.Goal {
     private final VultureEntity theEntity;
 
     private final Vector3f pickupPoint;
@@ -37,25 +37,25 @@ public class PickUpEntityGoal extends net.minecraft.entity.ai.goal.Goal {
     }
 
     @Override
-    public boolean canStart() {
-        return theEntity.hasGoal(HasAiGoals.Goal.PICK_UP_TARGET) || theEntity.hasPassengers();
+    public boolean canUse() {
+        return theEntity.hasGoal(HasAiGoals.Goal.PICK_UP_TARGET) || theEntity.isVehicle();
     }
 
     @Override
     public void start() {
-        isHoldingEntity = theEntity.hasPassengers();
+        isHoldingEntity = theEntity.isVehicle();
         time = 0;
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         LivingEntity target = theEntity.getTarget();
         if (target != null && target.isAlive()) {
             if (!isHoldingEntity) {
                 if (time > abortTime && isLinedUp(target)) {
                     return true;
                 }
-            } else if (theEntity.isConnectedThroughVehicle(target)) {
+            } else if (theEntity.isPassengerOfSameVehicle(target)) {
                 return true;
             }
         }
@@ -69,16 +69,16 @@ public class PickUpEntityGoal extends net.minecraft.entity.ai.goal.Goal {
         time++;
         if (!isHoldingEntity) {
             LivingEntity target = theEntity.getTarget();
-            double dY = target.prevY - theEntity.prevY;
+            double dY = target.yo - theEntity.yo;
             if (Math.abs(dY - pickupPoint.y) < pickupRangeY) {
-                double dAngle = theEntity.prevY * MathHelper.RADIANS_PER_DEGREE;
+                double dAngle = theEntity.yo * Mth.DEG_TO_RAD;
                 double sinF = Math.sin(dAngle);
                 double cosF = Math.cos(dAngle);
                 double x = pickupPoint.x * cosF - pickupPoint.z * sinF;
                 double z = pickupPoint.z * cosF + pickupPoint.x * sinF;
 
-                double dX = target.prevX - (x + theEntity.prevX);
-                double dZ = target.prevZ - (z + theEntity.prevZ);
+                double dX = target.xo - (x + theEntity.xo);
+                double dZ = target.zo - (z + theEntity.zo);
                 double dXZ = Math.sqrt(dX * dX + dZ * dZ);
 
                 if (dXZ < pickupRangeXZ) {
@@ -97,14 +97,14 @@ public class PickUpEntityGoal extends net.minecraft.entity.ai.goal.Goal {
     }
 
     private boolean isLinedUp(Entity target) {
-        Vec3d delta = target.getPos().subtract(theEntity.getPos());
-        double dXZ = delta.horizontalLength();
-        double yawToTarget = Math.atan2(delta.z, delta.x) * MathHelper.DEGREES_PER_RADIAN - 90;
-        double dYaw = MathHelper.subtractAngles((float)yawToTarget, theEntity.getYaw());
+        Vec3 delta = target.position().subtract(theEntity.position());
+        double dXZ = delta.horizontalDistance();
+        double yawToTarget = Math.atan2(delta.z, delta.x) * Mth.RAD_TO_DEG - 90;
+        double dYaw = Mth.degreesDifference((float)yawToTarget, theEntity.getYRot());
         if (dYaw < -abortAngleYaw || dYaw > abortAngleYaw) {
             return false;
         }
-        double dPitch = Math.atan(delta.y / dXZ) * MathHelper.DEGREES_PER_RADIAN - theEntity.getPitch();
+        double dPitch = Math.atan(delta.y / dXZ) * Mth.RAD_TO_DEG - theEntity.getXRot();
         return dPitch >= -abortAnglePitch && dPitch <= abortAnglePitch;
     }
 }

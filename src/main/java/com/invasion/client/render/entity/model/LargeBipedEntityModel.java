@@ -1,15 +1,15 @@
 package com.invasion.client.render.entity.model;
 
-import net.minecraft.client.model.Dilation;
-import net.minecraft.client.model.ModelData;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.ModelPartBuilder;
-import net.minecraft.client.model.ModelPartData;
-import net.minecraft.client.model.ModelTransform;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.EntityModelPartNames;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartNames;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.world.entity.LivingEntity;
 
 /**
  * Enlarged version of a normal biped.
@@ -17,28 +17,28 @@ import net.minecraft.entity.LivingEntity;
  *
  * @param <T> The entity type
  */
-public class LargeBipedEntityModel<T extends LivingEntity> extends BipedEntityModel<T> {
+public class LargeBipedEntityModel<T extends LivingEntity> extends HumanoidModel<T> {
   public LargeBipedEntityModel(ModelPart root) {
     super(root);
   }
 
-  public static TexturedModelData getTexturedModelData(Dilation dilation, float pivotOffsetY) {
-      return TexturedModelData.of(getModelData(dilation, pivotOffsetY), 64, 64);
+  public static LayerDefinition getTexturedModelData(CubeDeformation dilation, float pivotOffsetY) {
+      return LayerDefinition.create(createMesh(dilation, pivotOffsetY), 64, 64);
   }
 
-  public static ModelData getModelData(Dilation dilation, float pivotOffsetY) {
-      ModelData data = new ModelData();
-      ModelPartData root = data.getRoot();
-      root.addChild(EntityModelPartNames.HEAD, ModelPartBuilder.create().uv(0, 0).cuboid(-3.5F, -7, -3.5F, 7, 7, 7, dilation), ModelTransform.pivot(0, 0 + pivotOffsetY, 0));
-      root.addChild(EntityModelPartNames.HAT, ModelPartBuilder.create().uv(32, 0).cuboid(-3.5F, -7, -3.5F, 7, 7, 7, dilation.add(0.5F)), ModelTransform.pivot(0, 0 + pivotOffsetY, 0));
+  public static MeshDefinition createMesh(CubeDeformation dilation, float pivotOffsetY) {
+      MeshDefinition data = new MeshDefinition();
+      PartDefinition root = data.getRoot();
+      root.addOrReplaceChild(PartNames.HEAD, CubeListBuilder.create().texOffs(0, 0).addBox(-3.5F, -7, -3.5F, 7, 7, 7, dilation), PartPose.offset(0, 0 + pivotOffsetY, 0));
+      root.addOrReplaceChild(PartNames.HAT, CubeListBuilder.create().texOffs(32, 0).addBox(-3.5F, -7, -3.5F, 7, 7, 7, dilation.extend(0.5F)), PartPose.offset(0, 0 + pivotOffsetY, 0));
 
-      root.addChild(EntityModelPartNames.BODY, ModelPartBuilder.create().uv(16, 15).cuboid(-5, 0, -3, 10, 12, 5, dilation), ModelTransform.pivot(0, 0 + pivotOffsetY, 0));
+      root.addOrReplaceChild(PartNames.BODY, CubeListBuilder.create().texOffs(16, 15).addBox(-5, 0, -3, 10, 12, 5, dilation), PartPose.offset(0, 0 + pivotOffsetY, 0));
 
-      root.addChild(EntityModelPartNames.RIGHT_ARM, ModelPartBuilder.create().uv(46, 15).cuboid(-3, -2, -2, 4, 12, 4, dilation), ModelTransform.pivot(-6, 2 + pivotOffsetY, 0));
-      root.addChild(EntityModelPartNames.LEFT_ARM, ModelPartBuilder.create().uv(46, 15).mirrored().cuboid(-1, -2, -2, 4, 12, 4, dilation), ModelTransform.pivot(6, 2 + pivotOffsetY, 0));
+      root.addOrReplaceChild(PartNames.RIGHT_ARM, CubeListBuilder.create().texOffs(46, 15).addBox(-3, -2, -2, 4, 12, 4, dilation), PartPose.offset(-6, 2 + pivotOffsetY, 0));
+      root.addOrReplaceChild(PartNames.LEFT_ARM, CubeListBuilder.create().texOffs(46, 15).mirror().addBox(-1, -2, -2, 4, 12, 4, dilation), PartPose.offset(6, 2 + pivotOffsetY, 0));
 
-      root.addChild(EntityModelPartNames.RIGHT_LEG, ModelPartBuilder.create().uv(0, 16).cuboid(-2, 0, -2, 4, 12, 4, dilation), ModelTransform.pivot(-2F, 12 + pivotOffsetY, 0));
-      root.addChild(EntityModelPartNames.LEFT_LEG, ModelPartBuilder.create().uv(0, 16).mirrored().cuboid(-2, 0, -2, 4, 12, 4, dilation), ModelTransform.pivot(2F, 12 + pivotOffsetY, 0));
+      root.addOrReplaceChild(PartNames.RIGHT_LEG, CubeListBuilder.create().texOffs(0, 16).addBox(-2, 0, -2, 4, 12, 4, dilation), PartPose.offset(-2F, 12 + pivotOffsetY, 0));
+      root.addOrReplaceChild(PartNames.LEFT_LEG, CubeListBuilder.create().texOffs(0, 16).mirror().addBox(-2, 0, -2, 4, 12, 4, dilation), PartPose.offset(2F, 12 + pivotOffsetY, 0));
       return data;
   }
 }

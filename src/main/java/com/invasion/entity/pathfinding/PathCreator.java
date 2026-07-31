@@ -1,8 +1,8 @@
 package com.invasion.entity.pathfinding;
 
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.pathfinder.Path;
 
 @Deprecated
 public class PathCreator implements PathSource {
@@ -44,7 +44,7 @@ public class PathCreator implements PathSource {
 	}
 
 	@Override
-    public Path createPath(IMPathNodeMaker pather, BlockPos from, BlockPos to, float targetRadius, float maxSearchRange, BlockView terrainMap) {
+    public Path createPath(IMPathNodeMaker pather, BlockPos from, BlockPos to, float targetRadius, float maxSearchRange, BlockGetter terrainMap) {
 		final long time = System.nanoTime();
 		final Path path = pathFinder.createPath(pather, from, to, targetRadius, maxSearchRange, terrainMap, searchDepth, quickFailDepth);
 		nanosUsed[index = (index + 1) % nanosUsed.length] = (int) (System.nanoTime() - time);

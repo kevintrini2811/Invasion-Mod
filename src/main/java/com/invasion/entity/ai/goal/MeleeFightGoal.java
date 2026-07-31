@@ -3,11 +3,10 @@ package com.invasion.entity.ai.goal;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.pathfinding.Navigation;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-
-public class MeleeFightGoal<T extends LivingEntity, E extends PathAwareEntity & NexusEntity> extends EntityAIMeleeAttack<T, E> {
+public class MeleeFightGoal<T extends LivingEntity, E extends PathfinderMob & NexusEntity> extends EntityAIMeleeAttack<T, E> {
 	private int time;
 	private float startingHealth;
 	private int damageDealt;
@@ -20,12 +19,12 @@ public class MeleeFightGoal<T extends LivingEntity, E extends PathAwareEntity & 
 	}
 
 	@Override
-    public boolean canStart() {
+    public boolean canUse() {
 		return mob.hasGoal(HasAiGoals.Goal.MELEE_TARGET) && hasValidTarget();
 	}
 
 	@Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
 		return (mob.hasGoal(HasAiGoals.Goal.MELEE_TARGET) || isWaitingForTransition()) && hasValidTarget();
 	}
 

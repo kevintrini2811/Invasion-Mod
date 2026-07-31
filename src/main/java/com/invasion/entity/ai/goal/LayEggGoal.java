@@ -4,11 +4,10 @@ import com.invasion.entity.SpiderEggEntity;
 
 import java.util.List;
 import java.util.function.Supplier;
-
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
 import com.invasion.entity.HasAiGoals;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.PathAwareEntity;
 
 public class LayEggGoal extends Goal {
     private static final int EGG_LAY_TIME = 45;
@@ -16,14 +15,14 @@ public class LayEggGoal extends Goal {
     private static final int NEXT_EGG_DELAY = 230;
     private static final int EGG_HATCH_TIME = 125;
 
-    private final PathAwareEntity theEntity;
+    private final PathfinderMob theEntity;
     private final Supplier<List<Entity>> offspringSupplier;
 
     private int time;
     private boolean isLaying;
     private int eggCount;
 
-    public LayEggGoal(PathAwareEntity entity, int eggs, Supplier<List<Entity>> offspringSupplier) {
+    public LayEggGoal(PathfinderMob entity, int eggs, Supplier<List<Entity>> offspringSupplier) {
         theEntity = entity;
         eggCount = eggs;
         this.offspringSupplier = offspringSupplier;
@@ -34,11 +33,11 @@ public class LayEggGoal extends Goal {
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return (!(theEntity instanceof HasAiGoals g) || g.getAIGoal() == HasAiGoals.Goal.TARGET_ENTITY)
             && eggCount > 0
             && theEntity.getTarget() != null
-            && theEntity.getVisibilityCache().canSee(theEntity.getTarget());
+            && theEntity.getSensing().hasLineOfSight(theEntity.getTarget());
     }
 
     @Override
@@ -62,6 +61,6 @@ public class LayEggGoal extends Goal {
     }
 
     private void layEgg() {
-        theEntity.getWorld().spawnEntity(new SpiderEggEntity(theEntity, offspringSupplier.get(), EGG_HATCH_TIME));
+        theEntity.level().addFreshEntity(new SpiderEggEntity(theEntity, offspringSupplier.get(), EGG_HATCH_TIME));
     }
 }

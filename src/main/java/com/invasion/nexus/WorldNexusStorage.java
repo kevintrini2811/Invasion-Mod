@@ -4,34 +4,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedData;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
 
-import net.minecraft.datafixer.DataFixTypes;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.RegistryWrapper.WrapperLookup;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.PersistentState;
+public class WorldNexusStorage extends SavedData {
+    private static final ResourceLocation ID = InvasionMod.id("nexus");
 
-public class WorldNexusStorage extends PersistentState {
-    private static final Identifier ID = InvasionMod.id("nexus");
-
-    public static Type<WorldNexusStorage> getType(ServerWorld world) {
-        return new PersistentState.Type<>(() -> new WorldNexusStorage(world), (nbt, lookup) -> new WorldNexusStorage(world, nbt, lookup), DataFixTypes.LEVEL);
+    public static Factory<WorldNexusStorage> getType(ServerLevel world) {
+        return new SavedData.Factory<>(() -> new WorldNexusStorage(world), (nbt, lookup) -> new WorldNexusStorage(world, nbt, lookup), DataFixTypes.LEVEL);
     }
 
-    public static WorldNexusStorage of(ServerWorld world) {
-        return world.getPersistentStateManager().getOrCreate(getType(world), ID.toUnderscoreSeparatedString());
+    public static WorldNexusStorage of(ServerLevel world) {
+        return world.getDataStorage().computeIfAbsent(getType(world), ID.toDebugFileName());
     }
 
-    private final ServerWorld world;
+    private final ServerLevel world;
 
     private final Map<UUID, Nexus> instances = new HashMap<>();
 
@@ -40,18 +38,18 @@ public class WorldNexusStorage extends PersistentState {
     private boolean resumed;
     private int cleanupTimer;
 
-    private WorldNexusStorage(ServerWorld world) {
+    private WorldNexusStorage(ServerLevel world) {
         this.world = world;
     }
 
-    private WorldNexusStorage(ServerWorld world, NbtCompound nbt, WrapperLookup lookup) {
+    private WorldNexusStorage(ServerLevel world, CompoundTag nbt, Provider lookup) {
         this(world);
         resumed = true;
-        if (nbt.containsUuid("activeNexus")) {
-            activeNexus = Optional.of(nbt.getUuid("activeNexus"));
+        if (nbt.hasUUID("activeNexus")) {
+            activeNexus = Optional.of(nbt.getUUID("activeNexus"));
         }
-        nbt.getList("nexuses", NbtElement.COMPOUND_TYPE).forEach(i -> {
-            Nexus nexus = new Nexus(world, this, (NbtCompound)i, lookup);
+        nbt.getList("nexuses", Tag.TAG_COMPOUND).forEach(i -> {
+            Nexus nexus = new Nexus(world, this, (CompoundTag)i, lookup);
             instances.put(nexus.getUuid(), nexus);
         });
     }
@@ -77,12 +75,12 @@ public class WorldNexusStorage extends PersistentState {
 
 
         if (!instances.isEmpty()) {
-            markDirty();
+            setDirty();
         }
     }
 
     private boolean tickCleanup(Nexus nexus) {
-        if (cleanupTimer == 0 && !world.getBlockState(nexus.getOrigin()).isOf(InvBlocks.NEXUS_CORE)) {
+        if (cleanupTimer == 0 && !world.getBlockState(nexus.getOrigin()).is(InvBlocks.NEXUS_CORE)) {
             nexus.stop(true);
             InvasionMod.LOGGER.warn("Stranded Nexus entity trying to delete itself...");
             return true;
@@ -120,18 +118,18 @@ public class WorldNexusStorage extends PersistentState {
             return false;
         }
         activeNexus = Optional.ofNullable(nexus).map(Nexus::getUuid);
-        markDirty();
+        setDirty();
         return true;
     }
 
     @Override
-    public NbtCompound writeNbt(NbtCompound nbt, WrapperLookup lookup) {
+    public CompoundTag save(CompoundTag nbt, Provider lookup) {
         activeNexus.ifPresent(nexus -> {
-            nbt.putUuid("activeNexus", nexus);
+            nbt.putUUID("activeNexus", nexus);
         });
-        NbtList nexuses = new NbtList();
+        ListTag nexuses = new ListTag();
         instances.forEach((uuid, nexus) -> {
-            nexuses.add(nexus.writeNbt(new NbtCompound(), lookup));
+            nexuses.add(nexus.writeNbt(new CompoundTag(), lookup));
         });
         nbt.put("nexuses", nexuses);
         return nbt;

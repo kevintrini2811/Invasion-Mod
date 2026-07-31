@@ -22,7 +22,7 @@ public class Wave {
         int numberOfSpawns = 0;
         elapsed += elapsedMillis;
         for (WaveEntry entry : entries) {
-            if (entry.getTime().test(elapsed)) {
+            if (entry.getTime().matches(elapsed)) {
                 numberOfSpawns += entry.doNextSpawns(elapsedMillis, spawner);
             }
         }

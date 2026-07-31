@@ -8,17 +8,17 @@ import java.util.function.Predicate;
 import com.invasion.InvTags;
 import com.invasion.InvasionMod;
 
-import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.piston.PistonBehavior;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Util;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.CollisionView;
+import net.neoforged.neoforge.common.Tags;
+import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.PushReaction;
 
 public class BlockMetadata {
     public static final float AIR_STRENGTH = 0.01F;
@@ -41,17 +41,17 @@ public class BlockMetadata {
     private static final Lookup<Float> BLOCK_COSTS = Util.make(new Lookup<>(), costs -> {
         costs.put(BlockTags.AIR, AIR_COST);
         costs.put(BlockTags.CLIMBABLE, AIR_COST);
-        costs.put(ConventionalBlockTags.STONES, HARD_COST);
+        costs.put(Tags.Blocks.STONES, HARD_COST);
         costs.put(BlockTags.STONE_BRICKS, HARD_COST);
-        costs.put(ConventionalBlockTags.COBBLESTONES, HARD_COST);
+        costs.put(Tags.Blocks.COBBLESTONES, HARD_COST);
         costs.put(Blocks.MOSSY_COBBLESTONE, HARD_COST);
         costs.put(Blocks.BRICKS, HARD_COST);
         costs.put(Blocks.OBSIDIAN, HARD_COST);
         costs.put(BlockTags.DIRT, SOFT_COST);
         costs.put(BlockTags.SAND, SOFT_COST);
         costs.put(Blocks.GRAVEL, SOFT_COST);
-        costs.put(ConventionalBlockTags.GLASS_BLOCKS, SOFT_COST);
-        costs.put(ConventionalBlockTags.GLASS_PANES, SOFT_COST);
+        costs.put(Tags.Blocks.GLASS_BLOCKS, SOFT_COST);
+        costs.put(Tags.Blocks.GLASS_PANES, SOFT_COST);
         costs.put(BlockTags.LEAVES, SOFT_COST);
         costs.put(Blocks.IRON_DOOR, DOOR_COST);
         costs.put(Blocks.IRON_TRAPDOOR, DOOR_COST);
@@ -59,19 +59,19 @@ public class BlockMetadata {
         costs.put(Blocks.COPPER_TRAPDOOR, DOOR_COST);
         costs.put(BlockTags.WOODEN_DOORS, SOFT_DOOR_COST);
         costs.put(BlockTags.WOODEN_TRAPDOORS, SOFT_DOOR_COST);
-        costs.put(ConventionalBlockTags.SANDSTONE_BLOCKS, HARD_COST);
-        costs.put(ConventionalBlockTags.SANDSTONE_SLABS, HARD_COST);
-        costs.put(ConventionalBlockTags.SANDSTONE_STAIRS, HARD_COST);
-        costs.put(ConventionalBlockTags.CONCRETES, HARD_COST);
+        costs.put(Tags.Blocks.SANDSTONE_BLOCKS, HARD_COST);
+        costs.put(Tags.Blocks.SANDSTONE_SLABS, HARD_COST);
+        costs.put(Tags.Blocks.SANDSTONE_STAIRS, HARD_COST);
+        costs.put(Tags.Blocks.CONCRETES, HARD_COST);
         costs.put(BlockTags.LOGS, HARD_COST);
         costs.put(BlockTags.PLANKS, HARD_COST);
-        costs.put(ConventionalBlockTags.ORES, HARD_COST);
-        costs.put(ConventionalBlockTags.STORAGE_BLOCKS_GOLD, HARD_COST);
-        costs.put(ConventionalBlockTags.STORAGE_BLOCKS_DIAMOND, HARD_COST);
-        costs.put(ConventionalBlockTags.STORAGE_BLOCKS_IRON, HARD_COST);
-        costs.put(ConventionalBlockTags.STORAGE_BLOCKS_EMERALD, HARD_COST);
-        costs.put(ConventionalBlockTags.STORAGE_BLOCKS_NETHERITE, HARD_COST);
-        costs.put(ConventionalBlockTags.STORAGE_BLOCKS_COPPER, HARD_COST);
+        costs.put(Tags.Blocks.ORES, HARD_COST);
+        costs.put(Tags.Blocks.STORAGE_BLOCKS_GOLD, HARD_COST);
+        costs.put(Tags.Blocks.STORAGE_BLOCKS_DIAMOND, HARD_COST);
+        costs.put(Tags.Blocks.STORAGE_BLOCKS_IRON, HARD_COST);
+        costs.put(Tags.Blocks.STORAGE_BLOCKS_EMERALD, HARD_COST);
+        costs.put(Tags.Blocks.STORAGE_BLOCKS_NETHERITE, HARD_COST);
+        costs.put(Tags.Blocks.STORAGE_BLOCKS_COPPER, HARD_COST);
         costs.put(BlockTags.FENCES, HARD_COST);
         costs.put(BlockTags.FENCE_GATES, HARD_COST);
         costs.put(Blocks.NETHERRACK, HARD_COST);
@@ -84,9 +84,9 @@ public class BlockMetadata {
     });
     private static final Lookup<Float> BLOCK_STRENGTHS = Util.make(new Lookup<>(), strengths -> {
         strengths.put(BlockTags.AIR, AIR_STRENGTH);
-        strengths.put(ConventionalBlockTags.STONES, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STONES, HARD_STRENGTH);
         strengths.put(BlockTags.STONE_BRICKS, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.COBBLESTONES, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.COBBLESTONES, HARD_STRENGTH);
         strengths.put(Blocks.MOSSY_COBBLESTONE, HARD_STRENGTH);
         strengths.put(Blocks.BRICKS, HARD_STRENGTH);
         strengths.put(Blocks.OBSIDIAN, HEAVY_MATERIAL_STRENGTH);
@@ -97,8 +97,8 @@ public class BlockMetadata {
         strengths.put(Blocks.PODZOL, OVERGROWN_DIRT_STRENGTH);
         strengths.put(BlockTags.SAND, SOFT_STRENGTH);
         strengths.put(Blocks.GRAVEL, SOFT_STRENGTH);
-        strengths.put(ConventionalBlockTags.GLASS_BLOCKS, SOFT_STRENGTH);
-        strengths.put(ConventionalBlockTags.GLASS_PANES, SOFT_STRENGTH);
+        strengths.put(Tags.Blocks.GLASS_BLOCKS, SOFT_STRENGTH);
+        strengths.put(Tags.Blocks.GLASS_PANES, SOFT_STRENGTH);
         strengths.put(BlockTags.LEAVES, OVERGROWTH_STRENGTH);
         strengths.put(BlockTags.CAVE_VINES, OVERGROWTH_STRENGTH);
         strengths.put(Blocks.IRON_DOOR, METAL_ENTRYWAY_STRENGTH);
@@ -106,17 +106,17 @@ public class BlockMetadata {
         strengths.put(Blocks.COPPER_DOOR, METAL_ENTRYWAY_STRENGTH);
         strengths.put(Blocks.COPPER_TRAPDOOR, METAL_ENTRYWAY_STRENGTH);
         strengths.put(BlockTags.WOODEN_DOORS, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.SANDSTONE_BLOCKS, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.SANDSTONE_SLABS, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.SANDSTONE_STAIRS, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.SANDSTONE_BLOCKS, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.SANDSTONE_SLABS, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.SANDSTONE_STAIRS, HARD_STRENGTH);
         strengths.put(BlockTags.LOGS, HARD_STRENGTH);
         strengths.put(BlockTags.PLANKS, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.STORAGE_BLOCKS_GOLD, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.STORAGE_BLOCKS_DIAMOND, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.STORAGE_BLOCKS_IRON, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.STORAGE_BLOCKS_EMERALD, HARD_STRENGTH);
-        strengths.put(ConventionalBlockTags.STORAGE_BLOCKS_NETHERITE, HEAVY_MATERIAL_STRENGTH);
-        strengths.put(ConventionalBlockTags.STORAGE_BLOCKS_COPPER, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STORAGE_BLOCKS_GOLD, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STORAGE_BLOCKS_DIAMOND, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STORAGE_BLOCKS_IRON, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STORAGE_BLOCKS_EMERALD, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STORAGE_BLOCKS_NETHERITE, HEAVY_MATERIAL_STRENGTH);
+        strengths.put(Tags.Blocks.STORAGE_BLOCKS_COPPER, HARD_STRENGTH);
         strengths.put(BlockTags.FENCES, HARD_STRENGTH);
         strengths.put(BlockTags.FENCE_GATES, HARD_STRENGTH);
         strengths.put(Blocks.NETHERRACK, 3.85F);
@@ -136,32 +136,32 @@ public class BlockMetadata {
     );
 
     public static boolean isIndestructible(BlockState state) {
-        return state.getBlock().getHardness() < 0
-                || state.getPistonBehavior() == PistonBehavior.BLOCK
+        return state.getBlock().defaultDestroyTime() < 0
+                || state.getPistonPushReaction() == PushReaction.BLOCK
                 || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock())
-                || state.isIn(ConventionalBlockTags.RELOCATION_NOT_SUPPORTED);
+                || state.is(Tags.Blocks.RELOCATION_NOT_SUPPORTED);
     }
 
     public static Optional<Float> getCost(BlockState state) {
         return InvasionMod.getConfig().getBlockCost(state.getBlock()).or(() -> BLOCK_COSTS.get(state));
     }
 
-    public static float getStrength(BlockPos pos, BlockState state, CollisionView world) {
+    public static float getStrength(BlockPos pos, BlockState state, CollisionGetter world) {
         int bonus = 0;
-        BlockPos.Mutable mutable = pos.mutableCopy();
+        BlockPos.MutableBlockPos mutable = pos.mutable();
         float strength = InvasionMod.getConfig().getBlockStrength(state.getBlock())
-                .orElseGet(() -> BLOCK_STRENGTHS.get(state).orElse(state.getHardness(world, pos)));
+                .orElseGet(() -> BLOCK_STRENGTHS.get(state).orElse(state.getDestroySpeed(world, pos)));
         switch (BlockSpecial.of(state)) {
             case CONSTRUCTION_BRICKS:
                 for (Direction direction : Direction.values()) {
-                    if (world.getBlockState(mutable.set(pos).move(direction)).isOf(state.getBlock())) {
+                    if (world.getBlockState(mutable.set(pos).move(direction)).is(state.getBlock())) {
                         bonus++;
                     }
                 }
                 break;
             case CONSTRUCTION_STONE:
                 for (Direction direction : Direction.values()) {
-                    if (world.getBlockState(mutable.set(pos).move(direction)).isIn(InvTags.Blocks.STONE_CONSTRUCTION_BONUS_MATERIALS)) {
+                    if (world.getBlockState(mutable.set(pos).move(direction)).is(InvTags.Blocks.STONE_CONSTRUCTION_BONUS_MATERIALS)) {
                         bonus++;
                     }
                 }
@@ -181,7 +181,7 @@ public class BlockMetadata {
 
         @SuppressWarnings("deprecation")
         public Lookup<T> put(TagKey<Block> tag, T value) {
-            entries.add(new Entry<>(b -> b.getRegistryEntry().isIn(tag), value));
+            entries.add(new Entry<>(b -> b.builtInRegistryHolder().is(tag), value));
             return this;
         }
 

@@ -6,19 +6,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
-
+import net.minecraft.Util;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.wave.EntityPattern;
 import com.invasion.nexus.wave.EntityPatterns;
 import com.invasion.nexus.wave.pool.Select;
-
-import net.minecraft.block.Block;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 
 public class InvasionConfig extends Config {
     private static final Map<String, Integer> DEFAULT_MOB_HEALTHS = Util.make(new HashMap<>(), m -> {
@@ -51,7 +50,7 @@ public class InvasionConfig extends Config {
     private static final float DEFAULT_NIGHT_MOB_STATS_SCALING = 1.0F;
     private static final boolean DEFAULT_NIGHT_MOBS_BURN = true;
 
-    private final Map<Identifier, Float> strengthOverrides = new HashMap<>();
+    private final Map<ResourceLocation, Float> strengthOverrides = new HashMap<>();
 
     public boolean enableLog;
     public boolean debugMode;
@@ -76,7 +75,7 @@ public class InvasionConfig extends Config {
     private Select<EntityPattern> spawnPool;
 
     public Optional<Float> getBlockStrength(Block block) {
-        return Optional.ofNullable(strengthOverrides.get(Registries.BLOCK.getId(block)));
+        return Optional.ofNullable(strengthOverrides.get(BuiltInRegistries.BLOCK.getKey(block)));
     }
 
     public Optional<Float> getBlockCost(Block block) {
@@ -106,7 +105,7 @@ public class InvasionConfig extends Config {
         mobHealthInvasion.clear();
         keySet().forEach(key -> {
             if (key.startsWith("block-") && key.endsWith("-strength")) {
-                Identifier id = Identifier.tryParse(key.split("-")[1]);
+                ResourceLocation id = ResourceLocation.tryParse(key.split("-")[1]);
                 if (id != null) {
                     float strength = getPropertyValueFloat(key, 0);
                     if (strength > 0) {

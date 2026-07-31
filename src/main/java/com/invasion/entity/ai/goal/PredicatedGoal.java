@@ -1,10 +1,8 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.function.BooleanSupplier;
-
+import net.minecraft.world.entity.ai.goal.Goal;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.entity.ai.goal.Goal;
 
 public class PredicatedGoal extends Goal {
     private final Goal goal;
@@ -13,22 +11,22 @@ public class PredicatedGoal extends Goal {
     public PredicatedGoal(Goal goal, BooleanSupplier predicate) {
         this.goal = goal;
         this.predicate = predicate;
-        setControls(goal.getControls());
+        setFlags(goal.getFlags());
     }
 
     @Override
-    public boolean canStart() {
-        return predicate.getAsBoolean() && goal.canStart();
+    public boolean canUse() {
+        return predicate.getAsBoolean() && goal.canUse();
     }
 
     @Override
-    public boolean shouldContinue() {
-        return predicate.getAsBoolean() && goal.shouldContinue();
+    public boolean canContinueToUse() {
+        return predicate.getAsBoolean() && goal.canContinueToUse();
     }
 
     @Override
-    public boolean canStop() {
-        return !predicate.getAsBoolean() || goal.canStop();
+    public boolean isInterruptable() {
+        return !predicate.getAsBoolean() || goal.isInterruptable();
     }
 
     @Override
@@ -42,8 +40,8 @@ public class PredicatedGoal extends Goal {
     }
 
     @Override
-    public boolean shouldRunEveryTick() {
-        return goal.shouldRunEveryTick();
+    public boolean requiresUpdateEveryTick() {
+        return goal.requiresUpdateEveryTick();
     }
 
     @Override

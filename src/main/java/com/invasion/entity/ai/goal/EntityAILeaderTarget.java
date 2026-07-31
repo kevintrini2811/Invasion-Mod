@@ -2,8 +2,7 @@ package com.invasion.entity.ai.goal;
 
 import com.invasion.entity.EntityIMLiving;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
-
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.world.entity.LivingEntity;
 
 @Deprecated(since = "unused")
 public class EntityAILeaderTarget<T extends LivingEntity> extends CustomRangeActiveTargetGoal<T> {
@@ -19,11 +18,11 @@ public class EntityAILeaderTarget<T extends LivingEntity> extends CustomRangeAct
 	}
 
 	@Override
-    public boolean canStart() {
+    public boolean canUse() {
 	    if (rallyCooldown > 0) {
 	        rallyCooldown--;
 	    }
-		return rallyCooldown <= 0 && super.canStart();
+		return rallyCooldown <= 0 && super.canUse();
 	}
 
 	@Override

@@ -2,7 +2,19 @@ package com.invasion.entity.pathfinding;
 
 import java.util.List;
 import java.util.Set;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.CollisionGetter;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.PathfindingContext;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.block.BlockMetadata;
@@ -17,19 +29,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathContext;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.ai.pathing.PathNodeType;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.CollisionView;
 
 public class BuilderIMMobNavigation extends IMMobNavigation {
     private static final int MAX_LADDER_TOWER_HEIGHT = 4;
@@ -42,24 +41,24 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
     private final NexusEntity nexusEntity;
 
-    public <T extends MobEntity & NexusEntity> BuilderIMMobNavigation(T entity) {
+    public <T extends Mob & NexusEntity> BuilderIMMobNavigation(T entity) {
         super(entity);
         this.nexusEntity = entity;
     }
 
     @Override
-    public PathNodeMaker createNodeMaker() {
+    public NodeEvaluator createNodeMaker() {
         var nodeMaker = new NodeMaker();
-        nodeMaker.setCanEnterOpenDoors(true);
+        nodeMaker.setCanPassDoors(true);
         nodeMaker.setCanOpenDoors(true);
-        nodeMaker.setCanSwim(true);
+        nodeMaker.setCanFloat(true);
         nodeMaker.setCanClimbLadders(true);
         return nodeMaker;
     }
 
     @Override
-    protected Path findPathToAny(Set<BlockPos> positions, int range, boolean useHeadPos, int distance, float followRange) {
-        return super.findPathToAny(positions, range, useHeadPos, distance, followRange);
+    protected Path createPath(Set<BlockPos> positions, int range, boolean useHeadPos, int distance, float followRange) {
+        return super.createPath(positions, range, useHeadPos, distance, followRange);
     }
 
     @Override
@@ -67,15 +66,15 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         super.tickObjectives();
         if (!waitingForJob && nexusEntity.hasNexus()) {
             jobRequestTimer = Math.max(0, jobRequestTimer - 1);
-            int yDifference = nexusEntity.getNexus().getOrigin().getY() - entity.getBlockPos().getY();
+            int yDifference = nexusEntity.getNexus().getOrigin().getY() - mob.blockPosition().getY();
             int weight = yDifference > 1 ? Math.max(6000 / yDifference, 1) : 1;
-            if (getAIGoal() == Goal.BREAK_NEXUS && (getLastPathDistanceToTarget() > 2 && jobRequestTimer <= 0 || entity.getRandom().nextInt(weight) == 0)) {
+            if (getAIGoal() == Goal.BREAK_NEXUS && (getLastPathDistanceToTarget() > 2 && jobRequestTimer <= 0 || mob.getRandom().nextInt(weight) == 0)) {
                 waitingForJob = true;
                 nexusEntity.getNexus().getAttackerAI().requestBuildJob(nexusEntity, target -> {
                     waitingForJob = false;
                     jobRequestTimer = target.isPresent() ? WORK_FOUND_COOLDOWN : JOBLESS_COOLDOWN;
                     target.ifPresent(pos -> {
-                        startMovingAlong(findPathTo(pos, nexusEntity.asEntity().getBlockPos().getManhattanDistance(pos)), 1);
+                        moveTo(createPath(pos, nexusEntity.asEntity().blockPosition().distManhattan(pos)), 1);
                     });
                 });
             }
@@ -83,8 +82,8 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
     }
 
     @Nullable
-    private static Direction getInitialLadderOrientation(CollisionView world, BlockPos.Mutable mutable) {
-        for (Direction facing : Direction.Type.HORIZONTAL) {
+    private static Direction getInitialLadderOrientation(CollisionGetter world, BlockPos.MutableBlockPos mutable) {
+        for (Direction facing : Direction.Plane.HORIZONTAL) {
             if (canPositionSupportLadder(world, mutable, facing)) {
                 return facing;
             }
@@ -92,7 +91,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         return Direction.UP;
     }
 
-    public static boolean canPositionSupportLadder(BlockView world, BlockPos.Mutable pos, Direction side, int height) {
+    public static boolean canPositionSupportLadder(BlockGetter world, BlockPos.MutableBlockPos pos, Direction side, int height) {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
@@ -104,8 +103,8 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         return true;
     }
 
-    public static boolean canPositionSupportLadder(BlockView world, BlockPos.Mutable pos, Direction side) {
-        return world.getBlockState(pos.move(side)).isSideSolidFullSquare(world, pos, side);
+    public static boolean canPositionSupportLadder(BlockGetter world, BlockPos.MutableBlockPos pos, Direction side) {
+        return world.getBlockState(pos.move(side)).isFaceSturdy(world, pos, side);
     }
 
     class NodeMaker extends IMLandPathNodeMaker {
@@ -114,34 +113,34 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         private final Object2ObjectMap<Direction, Long2ObjectMap<Long>> climbableObstacleHeights = new Object2ObjectOpenHashMap<>();
 
         @Override
-        public void clear() {
-            super.clear();
+        public void done() {
+            super.done();
             ladderOrientationPossibilities.clear();
             climbableObstacleHeights.clear();
         }
 
         protected final List<Direction> getPossibleLadderOrientations(BlockPos pos) {
-            return ladderOrientationPossibilities.computeIfAbsent(pos.asLong(), l -> ClimberUtil.getPossibleLadderOrientations(world, pos.mutableCopy()).toList());
+            return ladderOrientationPossibilities.computeIfAbsent(pos.asLong(), l -> ClimberUtil.getPossibleLadderOrientations(level, pos.mutable()).toList());
         }
 
         protected final long getWallHeightPermittingGaps(Direction orientation, BlockPos pos) {
             return climbableObstacleHeights.computeIfAbsent(orientation, o -> new Long2ObjectOpenHashMap<Long>())
-                    .computeIfAbsent(pos.asLong(), l -> (long)ClimberUtil.getWallHeightPermittingGaps(world, pos.mutableCopy(), orientation, MAX_LADDER_TOWER_HEIGHT, MAX_LADDER_TOWER_HEIGHT));
+                    .computeIfAbsent(pos.asLong(), l -> (long)ClimberUtil.getWallHeightPermittingGaps(level, pos.mutable(), orientation, MAX_LADDER_TOWER_HEIGHT, MAX_LADDER_TOWER_HEIGHT));
         }
 
         @Override
-        protected void populateChunkCacheData(NexusAccess nexus, CollisionView view) {
+        protected void populateChunkCacheData(NexusAccess nexus, CollisionGetter view) {
             super.populateChunkCacheData(nexus, view);
             nexus.getAttackerAI().addScaffoldDataTo(view);
         }
 
         @Override
-        public float getDistancePenalty(PathNode previousNode, PathNode nextNode, CollisionView world) {
-            world = context.getWorld();
+        public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
+            world = currentContext.level();
 
-            BlockState block = world.getBlockState(nextNode.getBlockPos());
+            BlockState block = world.getBlockState(nextNode.asBlockPos());
             PathAction action = ActionablePathNode.getAction(nextNode);
-            float materialMultiplier = !block.isAir() && canBuildOnBlock(world, nextNode.getBlockPos()) ? 3.2F : 1;
+            float materialMultiplier = !block.isAir() && canBuildOnBlock(world, nextNode.asBlockPos()) ? 3.2F : 1;
 
             if (action.getType() == PathAction.Type.BRIDGE) {
                 return 1.7F * materialMultiplier;
@@ -159,17 +158,17 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                 return 1.4F;
             }
 
-            float multiplier = 1 + ScaffoldView.of(world).getMobDensity(nextNode.getBlockPos());
+            float multiplier = 1 + ScaffoldView.of(world).getMobDensity(nextNode.asBlockPos());
 
-            if (block.isAir() || block.isReplaceable()) {
+            if (block.isAir() || block.canBeReplaced()) {
                 return multiplier;
             }
 
-            if (block.isOf(Blocks.LADDER)) {
+            if (block.is(Blocks.LADDER)) {
                 return 0.7F * multiplier;
             }
 
-            if (!block.isOf(InvBlocks.NEXUS_CORE) && !block.isSolidBlock(world, nextNode.getBlockPos())) {
+            if (!block.is(InvBlocks.NEXUS_CORE) && !block.isRedstoneConductor(world, nextNode.asBlockPos())) {
                 return 3.2F;
             }
 
@@ -177,26 +176,26 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         }
 
         @Override
-        public PathNodeType getDefaultNodeType(PathContext context, int x, int y, int z) {
-            PathNodeType type = super.getDefaultNodeType(context, x, y, z);
-            if (type != PathNodeType.WALKABLE && !getPossibleLadderOrientations(new BlockPos.Mutable(x, y, z)).isEmpty()) {
-                return PathNodeType.WALKABLE;
+        public PathType getPathType(PathfindingContext context, int x, int y, int z) {
+            PathType type = super.getPathType(context, x, y, z);
+            if (type != PathType.WALKABLE && !getPossibleLadderOrientations(new BlockPos.MutableBlockPos(x, y, z)).isEmpty()) {
+                return PathType.WALKABLE;
             }
             return type;
         }
 
         @Override
-        protected PathNode getPathNode(int x, int y, int z, int maxYStep, double feetY, Direction direction, PathNodeType nodeType) {
-            BlockPos.Mutable mutable = new BlockPos.Mutable();
+        protected Node findAcceptedNode(int x, int y, int z, int maxYStep, double feetY, Direction direction, PathType nodeType) {
+            BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
             boolean isHorizontal = direction.getAxis().isHorizontal();
             boolean isOnLadder = previousNodeAction.getType() == PathAction.Type.LADDER;
-            boolean isScaffoldPosition = ScaffoldView.of(world).isScaffoldPosition(mutable.set(x, y, z));
+            boolean isScaffoldPosition = ScaffoldView.of(level).isScaffoldPosition(mutable.set(x, y, z));
 
             if (isHorizontal && isOnLadder && !isScaffoldPosition) {
                 return null;
             }
 
-            PathNode node = super.getPathNode(x, y, z, maxYStep, feetY, direction, nodeType);
+            Node node = super.findAcceptedNode(x, y, z, maxYStep, feetY, direction, nodeType);
 
             if (isScaffoldPosition && ActionablePathNode.getAction(node) == PathAction.NONE) {
                 return ActionablePathNode.setActionIfNotPresent(node, PathAction.SCAFFOLD_UP);
@@ -207,7 +206,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
             if (isNoAction && isHorizontal) {
 
-                if (isBridgableGap(context.getWorld(), mutable.set(x, y - MAX_LADDER_TOWER_HEIGHT, z), MAX_LADDER_TOWER_HEIGHT)) {
+                if (isBridgableGap(currentContext.level(), mutable.set(x, y - MAX_LADDER_TOWER_HEIGHT, z), MAX_LADDER_TOWER_HEIGHT)) {
                     return getBridgeNode(x, y, z);
                 }
 
@@ -219,7 +218,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                 }
 
                 // Get the initial orientation from vertical neighbours
-                Direction ladderOrientation = ClimberUtil.getOrientationFromNeighbors(world, mutable.set(x, y, z), possibleOrientations);
+                Direction ladderOrientation = ClimberUtil.getOrientationFromNeighbors(level, mutable.set(x, y, z), possibleOrientations);
                 long ladderHeight = getWallHeightPermittingGaps(ladderOrientation, mutable.set(x, feetY, z));
                 Direction optimalOrientation = ladderOrientation;
 
@@ -247,9 +246,9 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
                 if (ladderOrientation.getAxis().isHorizontal()) {
                     // Check if we can continue laddering
-                    int ascentionHeight = ClimberUtil.getGapHeight(world, mutable.set(x, feetY, z).move(ladderOrientation.getOpposite()), MAX_LADDERABLE_WALL_HEIGHT);
+                    int ascentionHeight = ClimberUtil.getGapHeight(level, mutable.set(x, feetY, z).move(ladderOrientation.getOpposite()), MAX_LADDERABLE_WALL_HEIGHT);
 
-                    if (ClimberUtil.canPositionSupportLadder(world, mutable.set(x, y, z), ladderOrientation)) {
+                    if (ClimberUtil.canPositionSupportLadder(level, mutable.set(x, y, z), ladderOrientation)) {
                         if (ascentionHeight <= 0 || ascentionHeight > MAX_LADDER_TOWER_HEIGHT) {
                             // return null;
                         }
@@ -266,10 +265,10 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                 // --- NEU: Fallback-Tower, wenn wir direkt unter einer Decke stehen ---
                 // Falls keine sinnvolle Ladder-Orientierung vorhanden war, prüfen wir,
                 // ob direkt über uns ein solider Block ist (z.B. Nexus-Boden).
-                BlockPos.Mutable ceiling = mutable.set(x, y + 1, z);
-                if (!PathingUtil.isAirOrReplaceable(world.getBlockState(ceiling))) {
+                BlockPos.MutableBlockPos ceiling = mutable.set(x, y + 1, z);
+                if (!PathingUtil.isAirOrReplaceable(level.getBlockState(ceiling))) {
                     // Über uns ist ein solider Block -> versuch irgendeine Turm-Richtung
-                    for (Direction dir : Direction.Type.HORIZONTAL) {
+                    for (Direction dir : Direction.Plane.HORIZONTAL) {
                         if (canPositionFitTower(mutable.set(x, y, z), dir)) {
                             return getLadderNode(
                                     x, y, z,
@@ -283,10 +282,10 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
             return node;
         }
 
-        private boolean canPositionFitTower(BlockPos.Mutable pos, Direction ladderOrientation) {
+        private boolean canPositionFitTower(BlockPos.MutableBlockPos pos, Direction ladderOrientation) {
             return ladderOrientation.getAxis().isHorizontal()
-                && PathingUtil.isAirOrReplaceable(world.getBlockState(pos))
-                && PathingUtil.isAirOrReplaceable(world.getBlockState(pos.move(ladderOrientation.getOpposite())));
+                && PathingUtil.isAirOrReplaceable(level.getBlockState(pos))
+                && PathingUtil.isAirOrReplaceable(level.getBlockState(pos.move(ladderOrientation.getOpposite())));
         }
 
         private Direction getRememberedLadderOrientation() {
@@ -294,11 +293,11 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                 return previousNodeAction.getOrientation();
             }
 
-            BlockState stateAtNode = world.getBlockState(previousNodePosition);
+            BlockState stateAtNode = level.getBlockState(previousNodePosition);
 
             // Sicherstellen, dass es wirklich eine Leiter ist
-            if (stateAtNode.getBlock() instanceof LadderBlock && stateAtNode.contains(LadderBlock.FACING)) {
-                return stateAtNode.get(LadderBlock.FACING);
+            if (stateAtNode.getBlock() instanceof LadderBlock && stateAtNode.hasProperty(LadderBlock.FACING)) {
+                return stateAtNode.getValue(LadderBlock.FACING);
             }
 
             // Alles andere (z.B. Vines) -> keine spezielle Ausrichtung, einfach UP
@@ -306,26 +305,26 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         }
 
 
-        private PathNode getBridgeNode(int x, int y, int z) {
-            PathNode node = getNode(x, y, z);
-            node.type = PathNodeType.WALKABLE;
-            node.penalty = 1.5F;
+        private Node getBridgeNode(int x, int y, int z) {
+            Node node = getNode(x, y, z);
+            node.type = PathType.WALKABLE;
+            node.costMalus = 1.5F;
             return ActionablePathNode.setAction(node, PathAction.BRIDGE);
         }
 
-        private PathNode getLadderNode(int x, int y, int z, PathAction action, float penalty) {
-            PathNode node = getNode(x, y, z);
-            node.type = PathNodeType.WALKABLE;
-            node.penalty = penalty;
+        private Node getLadderNode(int x, int y, int z, PathAction action, float penalty) {
+            Node node = getNode(x, y, z);
+            node.type = PathType.WALKABLE;
+            node.costMalus = penalty;
             return ActionablePathNode.setAction(node, action);
         }
 
-        private boolean isBridgableGap(CollisionView world, BlockPos.Mutable mutable, int height) {
+        private boolean isBridgableGap(CollisionGetter world, BlockPos.MutableBlockPos mutable, int height) {
             int originalY = mutable.getY() + 1;
             try {
                 for (int yOffset = 0; yOffset < height; yOffset++) {
-                    PathNodeType type = getLandNodeType(entity, mutable.setY(originalY + yOffset));
-                    if (type != PathNodeType.OPEN && type != PathNodeType.WATER && type != PathNodeType.LAVA) {
+                    PathType type = getPathTypeStatic(mob, mutable.setY(originalY + yOffset));
+                    if (type != PathType.OPEN && type != PathType.WATER && type != PathType.LAVA) {
                         return false;
                     }
                 }
@@ -335,7 +334,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
             }
         }
 
-        private boolean canBuildOnBlock(CollisionView world, BlockPos pos) {
+        private boolean canBuildOnBlock(CollisionGetter world, BlockPos pos) {
             return world.getBlockState(pos).isAir() || !BlockMetadata.isIndestructible(world.getBlockState(pos)) || PathingUtil.hasAdjacentLadder(world, pos);
         }
     }

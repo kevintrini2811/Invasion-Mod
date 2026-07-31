@@ -1,25 +1,23 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
-
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.Stunnable;
 import com.invasion.entity.ai.ClimbableMoveControl;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.entity.attribute.EntityAttributeModifier.Operation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-
-public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.minecraft.entity.ai.goal.Goal {
-    private static final EntityAttributeModifier SPRINTING_SPEED_BOOST = new EntityAttributeModifier(
+public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minecraft.world.entity.ai.goal.Goal {
+    private static final AttributeModifier SPRINTING_SPEED_BOOST = new AttributeModifier(
             InvasionMod.id("sprinting"), 2.3F, Operation.ADD_MULTIPLIED_BASE
     );
 
@@ -32,18 +30,18 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
     private boolean isExecuting = true;
     private boolean isInWindup;
 
-    protected Vec3d lastPos = Vec3d.ZERO;
+    protected Vec3 lastPos = Vec3.ZERO;
 
     public SprintGoal(T entity) {
         theEntity = entity;
-        setControls(EnumSet.of(Goal.Control.MOVE));
+        setFlags(EnumSet.of(Goal.Flag.MOVE));
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         if (--updateTimer <= 0) {
             updateTimer = 20;
-            if ((theEntity.getTarget() != null && theEntity.getVisibilityCache().canSee(theEntity.getTarget())) || theEntity.isSprinting()) {
+            if ((theEntity.getTarget() != null && theEntity.getSensing().hasLineOfSight(theEntity.getTarget())) || theEntity.isSprinting()) {
                 return true;
             }
 
@@ -71,18 +69,18 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
 
             double dX = target.getX() - theEntity.getX();
             double dZ = target.getZ() - theEntity.getZ();
-            double dAngle = MathHelper.wrapDegrees(Math.atan2(dZ, dX) * MathHelper.DEGREES_PER_RADIAN - 90 - theEntity.getYaw());
+            double dAngle = Mth.wrapDegrees(Math.atan2(dZ, dX) * Mth.RAD_TO_DEG - 90 - theEntity.getYRot());
             if (dAngle > 60) {
                 ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(2);
                 missingTarget = 1;
             }
 
-            if (theEntity.squaredDistanceTo(lastPos) < 0.0009D) {
+            if (theEntity.distanceToSqr(lastPos) < 0.0009D) {
                 crash();
                 return;
             }
 
-            lastPos = theEntity.getPos();
+            lastPos = theEntity.position();
         }
 
         if (--timer <= 0) {
@@ -105,11 +103,11 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
         }
         double dX = target.getX() - theEntity.getX();
         double dZ = target.getZ() - theEntity.getZ();
-        double dAngle = MathHelper.wrapDegrees(Math.atan2(dZ, dX) * MathHelper.DEGREES_PER_RADIAN - 90 - theEntity.getYaw());
+        double dAngle = Mth.wrapDegrees(Math.atan2(dZ, dX) * Mth.RAD_TO_DEG - 90 - theEntity.getYRot());
         if (dAngle < 10) {
             isInWindup = true;
             timer = 20;
-            theEntity.stopMovement();
+            theEntity.stopInPlace();
         } else {
             timer = 10;
         }
@@ -119,18 +117,18 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
         isInWindup = false;
         missingTarget = 0;
         timer = 35;
-        EntityAttributeInstance attribute = theEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        AttributeInstance attribute = theEntity.getAttribute(Attributes.MOVEMENT_SPEED);
         if (!attribute.hasModifier(SPRINTING_SPEED_BOOST.id())) {
-            attribute.addTemporaryModifier(SPRINTING_SPEED_BOOST);
+            attribute.addTransientModifier(SPRINTING_SPEED_BOOST);
         }
         theEntity.setSprinting(true);
         ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(4.9F);
-        theEntity.setAttacking(false);
+        theEntity.setAggressive(false);
     }
 
     protected void endSprint() {
         timer = 180;
-        theEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).removeModifier(SPRINTING_SPEED_BOOST.id());
+        theEntity.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPRINTING_SPEED_BOOST.id());
         ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(30);
         theEntity.setSprinting(false);
     }
@@ -139,7 +137,7 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
         if (theEntity instanceof Stunnable i) {
             i.stun(40);
         }
-        theEntity.damage(theEntity.getDamageSources().generic(), 5);
+        theEntity.hurt(theEntity.damageSources().generic(), 5);
         theEntity.playSound(InvSounds.ENTITY_CRASH, 1F, 0.6F);
         endSprint();
     }

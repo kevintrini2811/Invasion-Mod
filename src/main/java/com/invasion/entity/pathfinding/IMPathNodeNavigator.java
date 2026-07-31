@@ -1,7 +1,11 @@
 package com.invasion.entity.pathfinding;
 
 import java.util.List;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.pathfinder.BinaryHeap;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.Lists;
@@ -11,25 +15,20 @@ import com.invasion.entity.pathfinding.path.PathAction;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathMinHeap;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
 
 /**
  * Version of PathNodeNavigator that takes the PathNodeMaker as a parameter rather than storing internally
  */
 @Deprecated
 public class IMPathNodeNavigator {
-    private BlockView worldMap;
+    private BlockGetter worldMap;
     private IMPathNodeMaker pathNodeMaker;
-    private final PathMinHeap minHeap = new PathMinHeap();
+    private final BinaryHeap minHeap = new BinaryHeap();
 
     // PathNodeMaker.pathNodeCache
-    private final Int2ObjectMap<PathNode> pathNodeCache = new Int2ObjectOpenHashMap<>();
-    private final PathNode[] successors = new PathNode[32];
-    private PathNode finalTarget;
+    private final Int2ObjectMap<Node> pathNodeCache = new Int2ObjectOpenHashMap<>();
+    private final Node[] successors = new Node[32];
+    private Node finalTarget;
     private float targetRadius;
     private int pathsIndex;
     private float searchRange;
@@ -39,15 +38,15 @@ public class IMPathNodeNavigator {
     private final IMPathNodeMaker.PathBuilder pathBuilder = new IMPathNodeMaker.PathBuilder() {
         @Override
         public void addNode(BlockPos pos, PathAction action) {
-            PathNode node = openPoint(pos, action);
-            if (node != null && !node.visited && node.getDistance(finalTarget) < searchRange) {
+            Node node = openPoint(pos, action);
+            if (node != null && !node.closed && node.distanceTo(finalTarget) < searchRange) {
                 successors[pathsIndex++] = node;
             }
         }
     };
 
     @Nullable
-    public Path createPath(IMPathNodeMaker pather, BlockPos from, BlockPos to, float targetRadius, float maxSearchRange, BlockView iblockaccess, int searchDepth, int quickFailDepth) {
+    public Path createPath(IMPathNodeMaker pather, BlockPos from, BlockPos to, float targetRadius, float maxSearchRange, BlockGetter iblockaccess, int searchDepth, int quickFailDepth) {
         worldMap = iblockaccess;
         pathNodeMaker = pather;
         nodeLimit = searchDepth;
@@ -55,8 +54,8 @@ public class IMPathNodeNavigator {
         searchRange = maxSearchRange;
         minHeap.clear();
         pathNodeCache.clear();
-        PathNode start = openPoint(from);
-        PathNode target = openPoint(to);
+        Node start = openPoint(from);
+        Node target = openPoint(to);
         finalTarget = target;
         this.targetRadius = targetRadius;
         Path path = addToPath(start, target);
@@ -70,82 +69,82 @@ public class IMPathNodeNavigator {
      * PathNodeNavigator.findPathToAny
      */
     @Nullable
-    private Path addToPath(PathNode start, PathNode target) {
-        start.penalizedPathLength = 0;
-        start.distanceToNearestTarget = start.getDistance(target);
-        start.heapWeight = start.distanceToNearestTarget;
+    private Path addToPath(Node start, Node target) {
+        start.g = 0;
+        start.h = start.distanceTo(target);
+        start.f = start.h;
 
         minHeap.clear();
-        minHeap.push(start);
-        PathNode previousPoint = start;
+        minHeap.insert(start);
+        Node previousPoint = start;
 
         while (!minHeap.isEmpty()) {
             if (nodesOpened > nodeLimit) {
-                return createPath(start, previousPoint.getBlockPos(), false);
+                return createPath(start, previousPoint.asBlockPos(), false);
             }
-            PathNode examiningPoint = minHeap.pop();
-            float distanceToTarget = examiningPoint.getDistance(target);
+            Node examiningPoint = minHeap.pop();
+            float distanceToTarget = examiningPoint.distanceTo(target);
             if (distanceToTarget < this.targetRadius + 0.1F) {
-                return createPath(start, examiningPoint.getBlockPos(), true);
+                return createPath(start, examiningPoint.asBlockPos(), true);
             }
-            if (distanceToTarget < previousPoint.getDistance(target)) {
+            if (distanceToTarget < previousPoint.distanceTo(target)) {
                 previousPoint = examiningPoint;
             }
-            examiningPoint.visited = true;
+            examiningPoint.closed = true;
 
             pathsIndex = 0;
             pathNodeMaker.getSuccessors(worldMap, examiningPoint, pathBuilder);
             int i = pathsIndex;
 
             for (int j = 0; j < i; j++) {
-                PathNode newPoint = successors[j];
+                Node newPoint = successors[j];
 
-                float actualCost = examiningPoint.penalizedPathLength + pathNodeMaker.getPathNodePenalty(examiningPoint, newPoint, this.worldMap);
+                float actualCost = examiningPoint.g + pathNodeMaker.getPathNodePenalty(examiningPoint, newPoint, this.worldMap);
 
-                if (!newPoint.isInHeap() || actualCost < newPoint.penalizedPathLength) {
-                    newPoint.previous = examiningPoint;
-                    newPoint.penalizedPathLength = actualCost;
-                    newPoint.distanceToNearestTarget = calculateDistance(newPoint, target);
+                if (!newPoint.inOpenSet() || actualCost < newPoint.g) {
+                    newPoint.cameFrom = examiningPoint;
+                    newPoint.g = actualCost;
+                    newPoint.h = calculateDistance(newPoint, target);
 
-                    if (newPoint.isInHeap()) {
-                        minHeap.setNodeWeight(newPoint, newPoint.penalizedPathLength + newPoint.distanceToNearestTarget);
+                    if (newPoint.inOpenSet()) {
+                        minHeap.changeCost(newPoint, newPoint.g + newPoint.h);
                     } else {
-                        newPoint.heapWeight = newPoint.penalizedPathLength + newPoint.distanceToNearestTarget;
-                        minHeap.push(newPoint);
+                        newPoint.f = newPoint.g + newPoint.h;
+                        minHeap.insert(newPoint);
                     }
                 }
             }
         }
 
-        return previousPoint == start ? null : createPath(previousPoint, finalTarget.getBlockPos(), true);
+        return previousPoint == start ? null : createPath(previousPoint, finalTarget.asBlockPos(), true);
     }
 
-    private Path createPath(PathNode endNode, BlockPos target, boolean reachesTarget) {
-        List<PathNode> list = Lists.<PathNode>newArrayList();
-        PathNode pathNode = endNode;
+    private Path createPath(Node endNode, BlockPos target, boolean reachesTarget) {
+        List<Node> list = Lists.<Node>newArrayList();
+        Node pathNode = endNode;
         list.add(0, endNode);
 
-        while(pathNode.previous != null) {
-            pathNode = pathNode.previous;
+        while(pathNode.cameFrom != null) {
+            pathNode = pathNode.cameFrom;
             list.add(0, pathNode);
         }
 
         return new Path(list, target, reachesTarget);
     }
 
-    private float calculateDistance(PathNode start, PathNode target) {
-        return start.getSquaredDistance(target);
+    private float calculateDistance(Node start, Node target) {
+        return start.distanceToSqr(target);
     }
 
-    private PathNode openPoint(BlockPos pos) {
+    private Node openPoint(BlockPos pos) {
         return openPoint(pos, PathAction.NONE);
     }
 
-    private PathNode openPoint(BlockPos pos, PathAction action) {
-        int hash = PathNode.hash(pos.getX(), pos.getY(), pos.getZ());
-        PathNode pathpoint = pathNodeCache.get(hash);
+    private Node openPoint(BlockPos pos, PathAction action) {
+        int hash = Node.createHash(pos.getX(), pos.getY(), pos.getZ());
+        Node pathpoint = pathNodeCache.get(hash);
         if (pathpoint == null) {
-            pathpoint =  ActionablePathNode.setAction(new PathNode(pos.getX(), pos.getY(), pos.getZ()), action);
+            pathpoint =  ActionablePathNode.setAction(new Node(pos.getX(), pos.getY(), pos.getZ()), action);
             pathNodeCache.put(hash, pathpoint);
             nodesOpened++;
         }

@@ -1,11 +1,11 @@
 package com.invasion.item;
 
-import net.minecraft.block.Block;
-import net.minecraft.item.Items;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.recipe.Ingredient;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Block;
 
 record CustomToolMaterial (
         TagKey<Block> inverseTag,
@@ -14,31 +14,31 @@ record CustomToolMaterial (
           float attackDamage,
           int enchantability,
           Ingredient repairIngredient
-  ) implements ToolMaterial {
-    public static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(BlockTags.INCORRECT_FOR_GOLD_TOOL, 40, 12, 4, 22, Ingredient.ofItems(Items.GOLD_INGOT));
+  ) implements Tier {
+    public static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(BlockTags.INCORRECT_FOR_GOLD_TOOL, 40, 12, 4, 22, Ingredient.of(Items.GOLD_INGOT));
 
     @Override
-    public int getDurability() {
+    public int getUses() {
         return durability;
     }
 
     @Override
-    public float getMiningSpeedMultiplier() {
+    public float getSpeed() {
         return miningSpeedMultiplier;
     }
 
     @Override
-    public float getAttackDamage() {
+    public float getAttackDamageBonus() {
         return attackDamage;
     }
 
     @Override
-    public TagKey<Block> getInverseTag() {
+    public TagKey<Block> getIncorrectBlocksForDrops() {
         return inverseTag;
     }
 
     @Override
-    public int getEnchantability() {
+    public int getEnchantmentValue() {
         return enchantability;
     }
 

@@ -5,31 +5,30 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.InvScreenHandlers;
 import com.invasion.block.InvBlocks;
 import com.invasion.nexus.Mode;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerContext;
-import net.minecraft.screen.slot.Slot;
+public class NexusScreenHandler extends AbstractContainerMenu {
+    private final ContainerData properties;
+    private final ContainerLevelAccess context;
 
-public class NexusScreenHandler extends ScreenHandler {
-    private final PropertyDelegate properties;
-    private final ScreenHandlerContext context;
-
-    public NexusScreenHandler(int syncId, PlayerInventory inventory) {
-        this(syncId, inventory, new SimpleInventory(2), new ArrayPropertyDelegate(10), ScreenHandlerContext.EMPTY);
+    public NexusScreenHandler(int syncId, Inventory inventory) {
+        this(syncId, inventory, new SimpleContainer(2), new SimpleContainerData(10), ContainerLevelAccess.NULL);
     }
 
-    public NexusScreenHandler(int syncId, PlayerInventory playerInventory, Inventory nexusInventory, PropertyDelegate properties, ScreenHandlerContext context) {
+    public NexusScreenHandler(int syncId, Inventory playerInventory, Container nexusInventory, ContainerData properties, ContainerLevelAccess context) {
         super(InvScreenHandlers.NEXUS, syncId);
         this.context = context;
         this.properties = properties;
-        addProperties(properties);
+        addDataSlots(properties);
         addSlot(new Slot(nexusInventory, 0, 32, 33));
         addSlot(new OutputSlot(nexusInventory, 1, 102, 33));
 
@@ -99,44 +98,44 @@ public class NexusScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public boolean canUse(PlayerEntity entityplayer) {
-        return canUse(context, entityplayer, InvBlocks.NEXUS_CORE);
+    public boolean stillValid(Player entityplayer) {
+        return stillValid(context, entityplayer, InvBlocks.NEXUS_CORE);
     }
 
     @Override
-    public ItemStack quickMove(PlayerEntity player, int index) {
+    public ItemStack quickMoveStack(Player player, int index) {
         @Nullable
         Slot slot = slots.get(index);
-        if (slot == null || !slot.hasStack()) {
+        if (slot == null || !slot.hasItem()) {
             return ItemStack.EMPTY;
         }
 
-        ItemStack stack = slot.getStack();
+        ItemStack stack = slot.getItem();
         ItemStack remainder = stack.copy();
 
         if (index == 1) {
-            if (!insertItem(stack, 2, 38, true)) {
+            if (!moveItemStackTo(stack, 2, 38, true)) {
                 return ItemStack.EMPTY;
             }
         } else if ((index >= 2) && (index < 38)) {
-            if (!insertItem(stack, 0, 1, false)) {
+            if (!moveItemStackTo(stack, 0, 1, false)) {
                 return ItemStack.EMPTY;
             }
-        } else if (!insertItem(stack, 2, 38, false)) {
+        } else if (!moveItemStackTo(stack, 2, 38, false)) {
             return ItemStack.EMPTY;
         }
 
         if (stack.isEmpty()) {
-            slot.setStack(ItemStack.EMPTY);
+            slot.setByPlayer(ItemStack.EMPTY);
         } else {
-            slot.markDirty();
+            slot.setChanged();
         }
 
         if (stack.getCount() == remainder.getCount()) {
             return ItemStack.EMPTY;
         }
 
-        slot.onTakeItem(player, stack);
+        slot.onTake(player, stack);
         return remainder;
     }
 }

@@ -2,30 +2,28 @@ package com.invasion.entity;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.level.Level;
 import com.invasion.InvTags;
 import com.invasion.entity.ai.goal.LayEggGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.SpiderEntity;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.world.World;
-
 public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
-	public QueenSpiderEntity(EntityType<QueenSpiderEntity> type, World world) {
+	public QueenSpiderEntity(EntityType<QueenSpiderEntity> type, Level world) {
 		super(type, world);
 	}
 
-    public static DefaultAttributeContainer.Builder createAttributes() {
-        return SpiderEntity.createSpiderAttributes()
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 0.59F)
-                .add(EntityAttributes.GENERIC_ATTACK_DAMAGE, 5)
-                .add(EntityAttributes.GENERIC_GRAVITY, 0.18);
+    public static AttributeSupplier.Builder createAttributes() {
+        return Spider.createAttributes()
+                .add(Attributes.MOVEMENT_SPEED, 0.59F)
+                .add(Attributes.ATTACK_DAMAGE, 5)
+                .add(Attributes.GRAVITY, 0.18);
     }
 
     @Override
@@ -35,23 +33,23 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
 
     @Override
     protected void initExtraGoals() {
-        goalSelector.add(1, new PredicatedGoal(new LayEggGoal(this, 1, () -> getOffspring(null)), () -> !isBaby()));
+        goalSelector.addGoal(1, new PredicatedGoal(new LayEggGoal(this, 1, () -> getOffspring(null)), () -> !isBaby()));
     }
 
     @Override
     public List<Entity> getOffspring(Entity partner) {
         List<Entity> offspring = new ArrayList<>();
-        int offspringCount = 3 + getWorld().getRandom().nextInt(4);
-        getWorld().getRegistryManager()
-            .get(RegistryKeys.ENTITY_TYPE)
-            .getEntryList(InvTags.Entities.QUEEN_SPIDER_OFFSPRING).ifPresent(named -> {
+        int offspringCount = 3 + level().getRandom().nextInt(4);
+        level().registryAccess()
+            .registryOrThrow(Registries.ENTITY_TYPE)
+            .getTag(InvTags.Entities.QUEEN_SPIDER_OFFSPRING).ifPresent(named -> {
             for (int i = 0; i < offspringCount; i++) {
-                named.getRandom(getWorld().getRandom()).ifPresent(type -> {
-                    Entity child = type.value().create(getWorld());
+                named.getRandomElement(level().getRandom()).ifPresent(type -> {
+                    Entity child = type.value().create(level());
                     if (child instanceof NexusEntity n) {
                         n.setNexus(getNexus());
                     }
-                    if (child instanceof MobEntity l) {
+                    if (child instanceof Mob l) {
                         l.setBaby(true);
                     }
                     offspring.add(child);

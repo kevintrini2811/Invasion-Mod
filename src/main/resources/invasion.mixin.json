@@ -9,8 +9,5 @@
       "PathNodeMixin",
       "MobEntityAccessor"
     ],
-    "client": [
-      "client.DebugRendererMixin",
-      "client.PathfindingDebugRendererMixin"
-    ]
+    "client": []
 }
