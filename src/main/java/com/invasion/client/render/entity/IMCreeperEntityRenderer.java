@@ -42,4 +42,9 @@ public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntit
         return TEXTURE;
     }
 
+    @Override
+    protected boolean shouldShowName(IMCreeperEntity entity) {
+        return entity.hasCustomName() && super.shouldShowName(entity);
+    }
+
 }

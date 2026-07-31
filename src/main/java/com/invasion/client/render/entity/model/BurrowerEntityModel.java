@@ -16,9 +16,6 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.world.phys.Vec3;
 
 public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
-    private static final double POSITION_SCALE = 7.269999980926514D;
-    private static final Vec3 POSITION_TRANSFORM = new Vec3(-POSITION_SCALE, -POSITION_SCALE, POSITION_SCALE);
-
     private final ModelPart head;
     private final ModelPart evenSegment;
     private final ModelPart oddSegment;
@@ -52,12 +49,15 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
         segments = new PosRotate3D[17];
 
         segments[0] = new PosRotate3D(
-            entity.position().multiply(POSITION_TRANSFORM),
+            Vec3.ZERO,
             PosRotate3D.lerp(tickDelta, entity.getPrevRotation(), entity.getRotation(), new Vector3f())
         );
 
         for (int i = 0; i < 16; i++) {
-            segments[(i + 1)] = entity.getSegments3DLastTick()[i].lerp(tickDelta, entity.getSegments3D()[i]).multiplyPosition(POSITION_TRANSFORM);
+            PosRotate3D segment = entity.getSegments3DLastTick()[i].lerp(tickDelta, entity.getSegments3D()[i]);
+            segments[i + 1] = new PosRotate3D(
+                    segment.position().subtract(entity.position()).scale(16.0D),
+                    segment.rotation());
         }
     }
 

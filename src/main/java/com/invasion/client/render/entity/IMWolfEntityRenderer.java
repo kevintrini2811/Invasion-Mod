@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.animal.Wolf;
 
 public class IMWolfEntityRenderer extends WolfRenderer {
-    private static final ResourceLocation TEXTURE = InvasionMod.id("textures/wolf/tame_nexus.png");
+    private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/wolf/tame_nexus.png");
 
 	public IMWolfEntityRenderer(EntityRendererProvider.Context context) {
         super(context);

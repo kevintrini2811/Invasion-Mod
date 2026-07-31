@@ -15,6 +15,7 @@ import com.invasion.client.render.entity.ThrowerEntityRenderer;
 import com.invasion.client.render.entity.TntEntityRenderer;
 import com.invasion.client.render.entity.TrapEntityRenderer;
 import com.invasion.client.render.entity.ZombiePigmanEntityRenderer;
+import com.invasion.client.render.entity.VariantMobRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
@@ -26,25 +27,27 @@ public final class InvRenderers {
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(InvEntities.ZOMBIE, AbstractIMZombieEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.HUSK, AbstractIMZombieEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.DROWNED, AbstractIMZombieEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER, AbstractIMZombieEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.HUSK, VariantMobRenderers.Husk::new);
+        event.registerEntityRenderer(InvEntities.DROWNED, VariantMobRenderers.Drowned::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER, VariantMobRenderers.ZombieVillager::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.ZOMBIFIED_PIGLIN, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIFIED_PIGLIN, VariantMobRenderers.ZombifiedPiglin::new);
         event.registerEntityRenderer(InvEntities.SKELETON, IMSkeletonEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.BOGGED, IMSkeletonEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.PARCHED, IMSkeletonEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.STRAY, IMSkeletonEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.WITHER_SKELETON, IMSkeletonEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.SPIDER, SpiderRenderer::new);
+        event.registerEntityRenderer(InvEntities.BOGGED, VariantMobRenderers.Bogged::new);
+        event.registerEntityRenderer(InvEntities.PARCHED, VariantMobRenderers.Parched::new);
+        event.registerEntityRenderer(InvEntities.STRAY, VariantMobRenderers.Stray::new);
+        event.registerEntityRenderer(InvEntities.WITHER_SKELETON, VariantMobRenderers.WitherSkeleton::new);
+        event.registerEntityRenderer(InvEntities.SPIDER,
+                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.NORMAL));
         event.registerEntityRenderer(InvEntities.JUMPING_SPIDER,
                 context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.JUMPER));
-        event.registerEntityRenderer(InvEntities.CAVE_SPIDER, SpiderRenderer::new);
+        event.registerEntityRenderer(InvEntities.CAVE_SPIDER,
+                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.CAVE));
         event.registerEntityRenderer(InvEntities.QUEEN_SPIDER,
                 context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.IMP, ImpEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.ENDERMAN, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.ENDERMAN, VariantMobRenderers.Enderman::new);
         event.registerEntityRenderer(InvEntities.PHANTOM, PhantomRenderer::new);
         event.registerEntityRenderer(InvEntities.THROWER, ThrowerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.BURROWER, BurrowerEntityRenderer::new);

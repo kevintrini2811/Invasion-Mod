@@ -24,4 +24,9 @@ public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity,
     public ResourceLocation getTextureLocation(BurrowerEntity entity) {
         return TEXTURE;
     }
+
+    @Override
+    protected boolean shouldShowName(BurrowerEntity entity) {
+        return entity.hasCustomName() && super.shouldShowName(entity);
+    }
 }

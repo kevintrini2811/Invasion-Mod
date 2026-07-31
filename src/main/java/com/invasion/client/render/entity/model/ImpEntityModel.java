@@ -45,8 +45,8 @@ public class ImpEntityModel extends HierarchicalModel<ImpEnitty> {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         root.addOrReplaceChild(PartNames.HEAD, CubeListBuilder.create().texOffs(44, 0).addBox(-2.733333F, -3, -2, 5, 3, 4), PartPose.offsetAndRotation(-0.4F, 9.8F, -3.3F, 0.15807F, 0, 0))
-            .addOrReplaceChild("right_horn", CubeListBuilder.create().texOffs(0, 0).addBox(1, -4, 1.5F, 1, 1, 1), PartPose.offset(-0.4F, 0F, -3.3F))
-            .addOrReplaceChild("left_horn", CubeListBuilder.create().texOffs(0, 2).addBox(-1, -4, 1.5F, 1, 1, 1), PartPose.offset(-0.4F, 0F, -3.3F));
+            .addOrReplaceChild("right_horn", CubeListBuilder.create().texOffs(0, 0).addBox(0.6F, -4.5F, -1.0F, 1, 2, 1), PartPose.ZERO)
+            .addOrReplaceChild("left_horn", CubeListBuilder.create().texOffs(0, 2).addBox(-1.6F, -4.5F, -1.0F, 1, 2, 1), PartPose.ZERO);
         root.addOrReplaceChild(PartNames.BODY, CubeListBuilder.create().texOffs(23, 1).addBox(-4, 0, -4, 7, 4, 3), PartPose.offsetAndRotation(0, 9.1F, -0.8666667F, 0.64346F, 0, 0));
         root.addOrReplaceChild(PartNames.RIGHT_ARM, CubeListBuilder.create().texOffs(26, 9).addBox(-2, -0.7333333F, -1.133333F, 2, 7, 2), PartPose.offset(-4, 10.8F, -2.066667F));
         root.addOrReplaceChild(PartNames.LEFT_ARM, CubeListBuilder.create().texOffs(18, 9).addBox(0, -0.8666667F, -1, 2, 7, 2), PartPose.offset(3, 10.8F, -2.1F));

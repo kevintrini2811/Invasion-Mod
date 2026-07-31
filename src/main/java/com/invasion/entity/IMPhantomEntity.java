@@ -47,6 +47,16 @@ public final class IMPhantomEntity extends Phantom
         resetHealth();
     }
 
+    @Override
+    public void aiStep() {
+        super.aiStep();
+        // Invasion phantoms are wave mobs and must remain usable during
+        // daytime waves. Vanilla Phantom ignites itself every daylight tick.
+        if (level().isDay() && level().canSeeSky(blockPosition())) {
+            clearFire();
+        }
+    }
+
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 20)

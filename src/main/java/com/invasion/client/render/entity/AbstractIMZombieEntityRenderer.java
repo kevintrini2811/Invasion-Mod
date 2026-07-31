@@ -51,12 +51,6 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
                 ctx.getModelManager(),
                 false
         ));
-        addLayer(new ArmorFeature(this,
-                new BigZombieEntityModel(LargeBipedEntityModel.getTexturedModelData(new CubeDeformation(0.5F), 0).bakeRoot()),
-                new BigZombieEntityModel(LargeBipedEntityModel.getTexturedModelData(new CubeDeformation(1), 0).bakeRoot()),
-                ctx.getModelManager(),
-                true
-        ));
     }
 
     @Override
@@ -101,7 +95,11 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
 
         @Override
         public void render(PoseStack matrices, MultiBufferSource vertices, int light, AbstractIMZombieEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-            if (isBrute(entity) == isBig) {
+            // Vanilla armor UVs are authored for the regular humanoid mesh.
+            // The old enlarged armor mesh stretched every armor texture across
+            // the brute torso. Keep the vanilla mesh and let copied brute limb
+            // poses place it correctly instead.
+            if (!isBig) {
                 super.render(matrices, vertices, light, entity, limbAngle, limbDistance, tickDelta, animationProgress, headYaw, headPitch);
             }
         }
