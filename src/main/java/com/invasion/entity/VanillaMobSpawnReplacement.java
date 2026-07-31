@@ -157,7 +157,10 @@ public final class VanillaMobSpawnReplacement {
         converted.setCustomName(source.getCustomName());
         converted.setCustomNameVisible(source.isCustomNameVisible());
         converted.setNoAi(source.isNoAi());
-        converted.setCanPickUpLoot(source.canPickUpLoot());
+        converted.setCanPickUpLoot(
+                source.canPickUpLoot()
+                        && com.invasion.compat.AsyncCompatibility
+                                .canUseVanillaItemPickup());
         if (source instanceof Drowned
                 && converted instanceof IMDrownedEntity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
@@ -194,7 +197,9 @@ public final class VanillaMobSpawnReplacement {
             imPhantom.setPhantomSize(phantom.getPhantomSize());
         }
         if (converted instanceof AbstractIMZombieEntity) {
-            converted.setCanPickUpLoot(true);
+            converted.setCanPickUpLoot(
+                    com.invasion.compat.AsyncCompatibility
+                            .canUseVanillaItemPickup());
         }
         if (source.isPersistenceRequired()) {
             converted.setPersistenceRequired();

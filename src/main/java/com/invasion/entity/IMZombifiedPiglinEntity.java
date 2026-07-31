@@ -48,7 +48,8 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     public IMZombifiedPiglinEntity(
             EntityType<? extends ZombifiedPiglin> type, Level level) {
         super(type, level);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
         getNavigatorNew().setCanDestroyBlocks(true);
         applyTierAttributes();
         resetHealth();

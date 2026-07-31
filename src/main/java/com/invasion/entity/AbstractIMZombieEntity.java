@@ -58,7 +58,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
 
     protected AbstractIMZombieEntity(EntityType<? extends AbstractIMZombieEntity> type, Level world, float diggingSpeed) {
         super(type, world);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
     }
 
     @Override

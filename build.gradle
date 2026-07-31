@@ -12,7 +12,7 @@ base {
 }
 
 tasks.named('jar') {
-    archiveFileName = "${project.name}-${project.version}-neo.jar"
+    archiveFileName = "${project.name}-${project.version}-26.2neo.jar"
 }
 
 java {

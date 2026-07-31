@@ -15,6 +15,17 @@ public final class AsyncCompatibility {
     private AsyncCompatibility() {
     }
 
+    /**
+     * Async 0.2.4 routes vanilla Mob item pickup through async-api. On
+     * NeoForge 26.2 that hook can load ItemEntity through the FML plugin
+     * classloader and crash with a loader constraint violation. Invasion mobs
+     * that need equipment use their own server-side pickup scan, so disabling
+     * Mob.aiStep's automatic pickup is the safe compatibility path.
+     */
+    public static boolean canUseVanillaItemPickup() {
+        return !ModList.get().isLoaded("async");
+    }
+
     public static void registerSynchronizedEntities() {
         if (!ModList.get().isLoaded("async")) {
             return;

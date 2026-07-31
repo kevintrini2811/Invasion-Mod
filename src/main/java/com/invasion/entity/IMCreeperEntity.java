@@ -93,7 +93,8 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     public IMCreeperEntity(EntityType<IMCreeperEntity> type, Level world) {
         super(type, world);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
     }
 
     @Override

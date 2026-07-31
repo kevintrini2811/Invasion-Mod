@@ -79,7 +79,8 @@ public class NexusSpiderEntity extends Spider
     public NexusSpiderEntity(EntityType<? extends NexusSpiderEntity> type, Level world) {
         super(type, world);
         moveControl = new IMSpiderMoveControl(this);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
         getNavigatorNew().setCanDestroyBlocks(true);
         resetHealth();
     }

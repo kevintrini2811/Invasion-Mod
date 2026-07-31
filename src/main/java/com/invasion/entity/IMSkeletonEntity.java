@@ -55,7 +55,8 @@ public class IMSkeletonEntity extends IMMobEntity
             EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);
         setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
         getNavigatorNew().setCanDestroyBlocks(true);
     }
 

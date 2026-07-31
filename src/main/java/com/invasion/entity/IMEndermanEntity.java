@@ -55,7 +55,8 @@ public final class IMEndermanEntity extends IMMobEntity {
         getNavigatorNew().setCanDestroyBlocks(true);
         setPathfindingMalus(PathType.WATER, -1);
         setPathfindingMalus(PathType.WATER_BORDER, -1);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
     }
 
     @Override

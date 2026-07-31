@@ -50,7 +50,8 @@ public class ImpEnitty extends IMMobEntity
     public ImpEnitty(EntityType<ImpEnitty> type, Level world) {
         super(type, world);
         getNavigatorNew().getActor().setCanClimb(true);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
     }
 
     public static AttributeSupplier.Builder createAttributes() {

@@ -78,7 +78,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, Level world) {
         super(type, world);
         getNavigatorNew().setCanDestroyBlocks(true);
-        setCanPickUpLoot(true);
+        setCanPickUpLoot(
+                com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
     }
 
     @Override
