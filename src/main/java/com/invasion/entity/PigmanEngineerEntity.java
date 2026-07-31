@@ -160,7 +160,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                     candidate -> !candidate.hasPickUpDelay()
                             && wantsToPickUp(
                                     serverLevel, candidate.getItem()))) {
-                pickUpItem(serverLevel, item);
+                com.invasion.compat.AsyncCompatibility.pickUpEquipment(
+                        this, serverLevel, item);
             }
         }
 

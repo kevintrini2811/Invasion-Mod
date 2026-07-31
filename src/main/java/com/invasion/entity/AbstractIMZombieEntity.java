@@ -119,7 +119,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
                 getBoundingBox().inflate(1.25D),
                 candidate -> !candidate.hasPickUpDelay()
                         && wantsToPickUp(world, candidate.getItem()))) {
-            pickUpItem(world, item);
+            com.invasion.compat.AsyncCompatibility.pickUpEquipment(
+                    this, world, item);
         }
     }
 
