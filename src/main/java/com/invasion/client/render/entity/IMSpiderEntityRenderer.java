@@ -26,7 +26,7 @@ public class IMSpiderEntityRenderer<T extends NexusSpiderEntity> extends SpiderR
         this.texture = texture;
         this.scale = scale;
         addLayer(new MobHeadArmorLayer<>(this, context,
-                spider -> getModel().root().getChild("head"), 0.95F));
+                spider -> getModel().root().getChild("head"), 1.08F));
     }
 
     @Override

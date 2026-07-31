@@ -76,8 +76,8 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
                 .add(Attributes.ATTACK_DAMAGE, 8)
                 .add(Attributes.FOLLOW_RANGE, 32)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1)
-                .add(Attributes.GRAVITY, 0.08)
-                .add(Attributes.STEP_HEIGHT, 0.6);
+                .add(Attributes.GRAVITY, 0)
+                .add(Attributes.STEP_HEIGHT, 0);
     }
 
     @Override
@@ -201,10 +201,16 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
             float targetPitch = (float) Math.atan2(direction.y, horizontal);
             Vector3f rotation = new Vector3f(
                     0.0F,
-                    Mth.rotLerp(0.35F, oldYaw, targetYaw),
-                    Mth.rotLerp(0.35F, oldPitch, targetPitch));
+                    rotLerpRad(0.35F, oldYaw, targetYaw),
+                    rotLerpRad(0.35F, oldPitch, targetPitch));
             segments3D[i] = new PosRotate3D(sampledPoints[i], rotation);
         }
+    }
+
+    private static float rotLerpRad(float amount, float start, float end) {
+        float delta = (float) Math.atan2(Math.sin(end - start),
+                Math.cos(end - start));
+        return start + amount * delta;
     }
 
     private Vec3 sampleClientHistory(Vec3[] history, double targetDistance) {

@@ -18,6 +18,16 @@ public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity,
     @Override
     protected void scale(BurrowerEntity entity, PoseStack matrices, float amount) {
         matrices.scale(2.2F, 2.2F, 2.2F);
+        // Cancel LivingEntityRenderer's humanoid model-origin offset. Every
+        // burrower segment already carries its position relative to the head.
+        matrices.translate(0.0F, 1.501F, 0.0F);
+    }
+
+    @Override
+    protected void setupRotations(BurrowerEntity entity, PoseStack matrices,
+            float bob, float bodyYaw, float partialTick, float scale) {
+        // Segment rotations are complete world-space rotations; applying the
+        // normal mob body yaw would rotate the entire chain a second time.
     }
 
     @Override

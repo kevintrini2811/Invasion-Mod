@@ -16,9 +16,9 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.world.phys.Vec3;
 
 public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
-    // Living-entity models render around a humanoid-height origin. The
-    // burrower's parts are centered around zero, so lower them to ground level.
-    private static final float GROUND_OFFSET = 11.0F;
+    private static final double POSITION_SCALE = 16.0D / 2.2D;
+    private static final Vec3 POSITION_TRANSFORM =
+            new Vec3(-POSITION_SCALE, -POSITION_SCALE, POSITION_SCALE);
     private final ModelPart head;
     private final ModelPart evenSegment;
     private final ModelPart oddSegment;
@@ -59,10 +59,8 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
         for (int i = 0; i < 16; i++) {
             PosRotate3D segment = entity.getSegments3DLastTick()[i].lerp(tickDelta, entity.getSegments3D()[i]);
             segments[i + 1] = new PosRotate3D(
-                    new Vec3(
-                            segment.position().x - entity.getX(),
-                            segment.position().y - entity.getY(),
-                            segment.position().z - entity.getZ()).scale(7.27D),
+                    segment.position().subtract(entity.position())
+                            .multiply(POSITION_TRANSFORM),
                     segment.rotation());
         }
     }
@@ -83,7 +81,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
         for (int i = 0; i < segments.length; i++) {
             ModelPart segment = getPart(i);
             segment.setPos((float) segments[i].position().x,
-                    (float) segments[i].position().y + GROUND_OFFSET,
+                    (float) segments[i].position().y,
                     (float) segments[i].position().z);
             segment.setRotation(segments[i].rotation().x(), segments[i].rotation().y(), segments[i].rotation().z());
             segment.render(matrices, vertices, light, overlay, color);
