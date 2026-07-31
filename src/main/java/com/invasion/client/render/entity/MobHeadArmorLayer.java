@@ -55,7 +55,7 @@ public final class MobHeadArmorLayer<T extends LivingEntity, M extends EntityMod
         head.apply(entity).translateAndRotate(poseStack);
         // A spider head extends eight model pixels forward from its pivot,
         // whereas humanoid armor is centered on its pivot.
-        poseStack.translate(0.0F, -0.48F, -0.25F);
+        poseStack.translate(0.0F, -0.62F, -0.25F);
         poseStack.scale(scale, scale, scale);
         boolean inner = false;
         var material = armor.getMaterial().value();
