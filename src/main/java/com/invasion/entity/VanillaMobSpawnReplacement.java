@@ -97,7 +97,6 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (mob.getType() == EntityType.BOGGED) {
             convert(mob, InvEntities.BOGGED, nexus);
-            convert(mob, InvEntities.PARCHED, nexus);
         } else if (mob.getType() == EntityType.STRAY) {
             convert(mob, InvEntities.STRAY, nexus);
         } else if (mob.getType() == EntityType.WITHER_SKELETON) {

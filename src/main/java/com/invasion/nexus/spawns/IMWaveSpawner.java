@@ -382,9 +382,6 @@ public class IMWaveSpawner implements Spawner {
 				|| biome.is(Biomes.MANGROVE_SWAMP)) {
 			relevantVariants.add(InvEntities.BOGGED);
 		}
-		if (biome.is(Biomes.DESERT)) {
-			relevantVariants.add(InvEntities.PARCHED);
-		}
 		if (biome.is(Biomes.SNOWY_PLAINS)
 				|| biome.is(Biomes.ICE_SPIKES)) {
 			relevantVariants.add(InvEntities.STRAY);
@@ -397,9 +394,8 @@ public class IMWaveSpawner implements Spawner {
 
 		EntityType<? extends Mob> replacement;
 		if (relevantVariants.isEmpty()) {
-			replacement = switch (getRandom().nextInt(3)) {
+			replacement = switch (getRandom().nextInt(2)) {
 				case 0 -> InvEntities.BOGGED;
-				case 1 -> InvEntities.PARCHED;
 				default -> InvEntities.STRAY;
 			};
 		} else {

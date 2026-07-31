@@ -25,12 +25,6 @@ public interface InvEntities {
                             IMBoggedEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.99F).eyeHeight(1.74F)
                     .ridingOffset(-0.7F).clientTrackingRange(8));
-    EntityType<IMParchedEntity> PARCHED = register(
-            "parched",
-            EntityType.Builder.<IMParchedEntity>of(
-                            IMParchedEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.99F).eyeHeight(1.74F)
-                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMStrayEntity> STRAY = register(
             "stray",
             EntityType.Builder.<IMStrayEntity>of(
@@ -145,8 +139,6 @@ public interface InvEntities {
         event.put(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(
                 BOGGED, IMBoggedEntity.createAttributes().build());
-        event.put(
-                PARCHED, IMParchedEntity.createAttributes().build());
         event.put(
                 STRAY, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(

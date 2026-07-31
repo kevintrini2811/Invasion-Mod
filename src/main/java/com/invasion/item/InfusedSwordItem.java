@@ -13,7 +13,10 @@ import net.minecraft.world.level.Level;
 
 public class InfusedSwordItem extends SwordItem {
     public InfusedSwordItem(Properties properties) {
-        super(CustomToolMaterial.INFUSED_GOLD, properties.stacksTo(1));
+        super(CustomToolMaterial.INFUSED_GOLD,
+                properties.stacksTo(1).attributes(
+                        SwordItem.createAttributes(
+                                CustomToolMaterial.INFUSED_GOLD, 3, -2.4F)));
     }
 
     @Override
@@ -21,7 +24,7 @@ public class InfusedSwordItem extends SwordItem {
         if (stack.isDamaged()) {
             stack.setDamageValue(stack.getDamageValue() - 1);
         }
-        return true;
+        return super.hurtEnemy(stack, target, attacker);
     }
 
     @Override

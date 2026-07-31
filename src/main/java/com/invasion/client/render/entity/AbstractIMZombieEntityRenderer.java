@@ -41,7 +41,13 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
     protected final LargeBipedEntityModel<AbstractIMZombieEntity> bigModel;
 
     public AbstractIMZombieEntityRenderer(EntityRendererProvider.Context ctx) {
-        super(ctx, new ZombieEntityModel(ctx.bakeLayer(ModelLayers.ZOMBIE)), 0.5F);
+        this(ctx, ModelLayers.ZOMBIE);
+    }
+
+    protected AbstractIMZombieEntityRenderer(
+            EntityRendererProvider.Context ctx,
+            net.minecraft.client.model.geom.ModelLayerLocation bodyLayer) {
+        super(ctx, new ZombieEntityModel(ctx.bakeLayer(bodyLayer)), 0.5F);
         normalModel = model;
         bigModel = new BigZombieEntityModel(LargeBipedEntityModel.getTexturedModelData(CubeDeformation.NONE, 0).bakeRoot());
 
