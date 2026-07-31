@@ -49,6 +49,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
 
     private DynamicPathNodeNavigator.NodeFactory delegate = DynamicPathNodeNavigator.NodeFactory.DEFAULT;
     private Consumer<CollisionGetter> chunkCacheModifier = a -> {};
+    private CollisionGetter pathingView;
 
     protected PathAction previousNodeAction = PathAction.NONE;
     protected BlockPos previousNodePosition = BlockPos.ZERO;
@@ -80,8 +81,11 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     @Override
     public void prepare(PathNavigationRegion cachedWorld, Mob entity) {
         super.prepare(cachedWorld, entity);
+        pathingView = cachedWorld;
         if (entity instanceof IHasNexus nexusHolder && nexusHolder.hasNexus()) {
-            populateChunkCacheData(nexusHolder.getNexus(), cachedWorld);
+            pathingView = nexusHolder.getNexus().getAttackerAI()
+                    .wrapEntityData(cachedWorld);
+            populateChunkCacheData(nexusHolder.getNexus(), pathingView);
         }
     }
 
@@ -92,6 +96,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     @Override
     public void setDelegate(NodeFactory delegate, Consumer<CollisionGetter> chunkCacheModifier) {
         this.delegate = delegate;
+        this.chunkCacheModifier = chunkCacheModifier;
     }
 
     @Override
@@ -101,14 +106,14 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
 
     @Override
     public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
-        return delegate.getDistancePenalty(previousNode, nextNode, level);
+        return delegate.getDistancePenalty(previousNode, nextNode, pathingView);
     }
 
     @Override
     public int getNeighbors(Node[] successors, Node node) {
         previousNodePosition = node.asBlockPos();
         previousNodeAction = ActionablePathNode.getAction(node);
-        int index = getSuccessors(super.getNeighbors(successors, node), successors, node, level, this);
+        int index = getSuccessors(super.getNeighbors(successors, node), successors, node, pathingView, this);
         if (Debug.DEBUG_PATHFINDING) {
             for (int i = 0; i < index; i++) {
                 /*if (ActionablePathNode.getAction(successors[i]) != PathAction.NONE) {
@@ -153,6 +158,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     @Override
     public BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter context,
             int x, int y, int z) {
+        context = (net.minecraft.world.level.BlockGetter) pathingView;
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, y, z);
         BlockPathTypes type = getBlockPathTypeStatic(context, pos);
         if (getCanClimbLadders() && PathingUtil.isLadder(context.getBlockState(pos))) {
@@ -168,6 +174,15 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
 
     protected boolean isNoActionNode(Node node) {
         return node != null && ActionablePathNode.getAction(node) == PathAction.NONE;
+    }
+
+    @Override
+    protected boolean isDiagonalValid(
+            Node xNode, @Nullable Node zNode,
+            @Nullable Node xDiagNode, @Nullable Node zDiagNode) {
+        return super.isDiagonalValid(xNode, zNode, xDiagNode, zDiagNode)
+                && (ActionablePathNode.getAction(xNode) != PathAction.DIG
+                        || ActionablePathNode.getAction(zNode) != PathAction.DIG);
     }
 
     @Nullable

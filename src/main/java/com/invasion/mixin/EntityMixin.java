@@ -10,7 +10,7 @@ import net.minecraft.world.entity.Entity;
 
 @Mixin(Entity.class)
 abstract class EntityMixin {
-    @Inject(method = "setRemoved", at = @At("TAIL"))
+    @Inject(method = "m_142467_", at = @At("TAIL"), remap = false)
     private void invasion_after_setRemoved(Entity.RemovalReason reason, CallbackInfo info) {
         if (this instanceof Combatant self && self.hasNexus()) {
             self.getNexus().notifyCombatantRemoved(self, reason);

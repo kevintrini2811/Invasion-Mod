@@ -35,6 +35,7 @@ public final class EquipmentUtil {
     }
 
     public static boolean isHumanoidArmor(ItemStack stack) {
-        return stack.getItem() instanceof ArmorItem;
+        return stack.getItem() instanceof ArmorItem
+                || stack.is(Tags.Items.ARMORS);
     }
 }

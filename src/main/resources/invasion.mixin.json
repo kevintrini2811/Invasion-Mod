@@ -4,6 +4,8 @@
     "package": "com.invasion.mixin",
     "compatibilityLevel": "JAVA_17",
     "mixins": [
+      "EntityMixin",
+      "PathNodeMixin",
       "PhantomAccessor"
     ],
     "client": []

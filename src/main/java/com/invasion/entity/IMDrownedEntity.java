@@ -114,15 +114,14 @@ public final class IMDrownedEntity extends EntityIMZombie
                 || target != null && target.isInWater();
     }
 
-    protected void travelInWater(
-            Vec3 movementInput, double gravity,
-            boolean falling, double y) {
+    @Override
+    public void travel(Vec3 movementInput) {
         if (isUnderWater() && wantsToSwim()) {
             moveRelative(0.01F, movementInput);
             move(MoverType.SELF, getDeltaMovement());
             setDeltaMovement(getDeltaMovement().scale(0.9D));
         } else {
-            travel(movementInput);
+            super.travel(movementInput);
         }
     }
 

@@ -26,17 +26,17 @@ abstract class PathNodeMixin implements ActionablePathNode {
         this.action = action;
     }
 
-    @Inject(method = "cloneAndMove", at = @At("RETURN"))
+    @Inject(method = "m_77289_", at = @At("RETURN"), remap = false)
     private void invasion_after_copyWithNewPosition(int x, int y, int z, CallbackInfoReturnable<Node> info) {
         ((ActionablePathNode)info.getReturnValue()).setAction(action);
     }
 
-    @Inject(method = "writeToStream", at = @At("RETURN"))
+    @Inject(method = "m_164699_", at = @At("RETURN"), remap = false)
     private void invasion_after_write(FriendlyByteBuf buf, CallbackInfo info) {
         buf.writeEnum(action);
     }
 
-    @Inject(method = "readContents", at = @At("RETURN"))
+    @Inject(method = "m_262841_", at = @At("RETURN"), remap = false)
     private static void invasion_after_readFromBuf(FriendlyByteBuf buf, Node target, CallbackInfo info) {
         ((ActionablePathNode)target).setAction(buf.readEnum(PathAction.class));
     }
