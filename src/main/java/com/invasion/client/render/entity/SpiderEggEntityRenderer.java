@@ -38,7 +38,8 @@ public final class SpiderEggEntityRenderer
         VertexConsumer vertices = buffers.getBuffer(
                 RenderType.entityCutoutNoCull(TEXTURE));
         model.renderToBuffer(
-                pose, vertices, light, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+                pose, vertices, light, OverlayTexture.NO_OVERLAY,
+                1.0F, 1.0F, 1.0F, 1.0F);
         pose.popPose();
         super.render(entity, yaw, partialTick, pose, buffers, light);
     }
