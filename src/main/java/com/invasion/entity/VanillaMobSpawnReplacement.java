@@ -9,8 +9,6 @@ import java.util.UUID;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.WorldNexusStorage;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -24,6 +22,9 @@ import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -33,12 +34,15 @@ public final class VanillaMobSpawnReplacement {
     }
 
     public static void bootstrap() {
-        ServerEntityEvents.ENTITY_LOAD.register(VanillaMobSpawnReplacement::queueVanillaMob);
-        ServerTickEvents.END_LEVEL_TICK.register(VanillaMobSpawnReplacement::processQueue);
+        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
+        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
     }
 
-    private static void queueVanillaMob(
-            net.minecraft.world.entity.Entity entity, ServerLevel world) {
+    private static void queueVanillaMob(EntityJoinLevelEvent event) {
+        if (!(event.getLevel() instanceof ServerLevel world)) {
+            return;
+        }
+        net.minecraft.world.entity.Entity entity = event.getEntity();
         if (converting
                 || !(entity instanceof Mob mob)
                 || !isReplaceableType(mob.getType())
@@ -51,7 +55,10 @@ public final class VanillaMobSpawnReplacement {
         PENDING.computeIfAbsent(world, ignored -> new HashSet<>()).add(mob.getUUID());
     }
 
-    private static void processQueue(ServerLevel world) {
+    private static void processQueue(LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel world)) {
+            return;
+        }
         Set<UUID> pending = PENDING.remove(world);
         if (pending == null || pending.isEmpty()) {
             return;

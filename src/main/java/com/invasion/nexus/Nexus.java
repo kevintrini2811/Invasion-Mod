@@ -37,7 +37,7 @@ import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
 import com.invasion.network.NexusHudPayload;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class Nexus implements ControllableNexusAccess {
     private static final int INITIAL_SPAWN_RADIUS = 52;
@@ -495,9 +495,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {
-        if (ServerPlayNetworking.canSend(player, NexusHudPayload.TYPE)) {
-            ServerPlayNetworking.send(player, payload);
-        }
+        PacketDistributor.sendToPlayer(player, payload);
     }
 
     @Override

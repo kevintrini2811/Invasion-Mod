@@ -2,6 +2,7 @@ package com.invasion.client;
 
 import com.invasion.InvasionMod;
 import com.invasion.InvScreenHandlers;
+import com.invasion.block.InvBlockEntities;
 import com.invasion.client.render.InvRenderers;
 import com.invasion.client.screen.NexusScreen;
 import net.neoforged.api.distmarker.Dist;
