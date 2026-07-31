@@ -32,6 +32,10 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.storage.loot.BuiltInLootTables;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
 public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable {
     private static final EntityDataAccessor<Boolean> SHEARED =
@@ -118,6 +122,16 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
     public void shear(SoundSource source) {
         level().playSound(
                 null, this, SoundEvents.BOGGED_SHEAR, source, 1.0F, 1.0F);
+        if (level() instanceof ServerLevel server) {
+            LootTable table = server.getServer().reloadableRegistries()
+                    .getLootTable(BuiltInLootTables.BOGGED_SHEAR);
+            LootParams params = new LootParams.Builder(server)
+                    .withParameter(LootContextParams.ORIGIN, position())
+                    .withParameter(LootContextParams.THIS_ENTITY, this)
+                    .create(LootContextParamSets.SHEARING);
+            table.getRandomItems(params).forEach(
+                    stack -> spawnAtLocation(stack, getBbHeight()));
+        }
         setSheared(true);
     }
 

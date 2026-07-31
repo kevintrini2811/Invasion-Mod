@@ -5,6 +5,7 @@ import net.neoforged.neoforge.common.Tags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ArmorItem;
 
 public final class EquipmentUtil {
     private EquipmentUtil() {
@@ -31,7 +32,8 @@ public final class EquipmentUtil {
     }
 
     public static boolean isHumanoidArmor(ItemStack stack) {
-        return stack.is(ItemTags.HEAD_ARMOR)
+        return stack.getItem() instanceof ArmorItem
+                || stack.is(ItemTags.HEAD_ARMOR)
                 || stack.is(ItemTags.CHEST_ARMOR)
                 || stack.is(ItemTags.LEG_ARMOR)
                 || stack.is(ItemTags.FOOT_ARMOR);
