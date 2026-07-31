@@ -1,0 +1,41 @@
+modLoader="javafml"
+loaderVersion="[1,)"
+license="MIT"
+issueTrackerURL="https://github.com/kevintrini2811/Invasion-Mod/issues"
+
+[[mods]]
+modId="invmod"
+version="${version}"
+displayName="Invasion"
+displayURL="https://github.com/kevintrini2811/Invasion-Mod"
+logoFile="assets/invmod/meta/logo.png"
+authors="Lieu, Elsee, UnstoppableN, Doenerstyle, Sollace, Cedric"
+description='''So you think your base is tough, do you?
+
+Start increasingly difficult invasions from the Nexus and defend it against
+invaders that build, dig, and adapt to fortifications.
+'''
+
+[[mixins]]
+config="invasion.mixin.json"
+
+[[dependencies.invmod]]
+modId="neoforge"
+type="required"
+versionRange="[${neoVersion},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.invmod]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraftVersion}]"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.invmod]]
+modId="jei"
+type="optional"
+versionRange="[30.15,)"
+ordering="AFTER"
+side="CLIENT"

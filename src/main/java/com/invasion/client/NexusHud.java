@@ -2,12 +2,12 @@ package com.invasion.client;
 
 import com.invasion.InvasionMod;
 import com.invasion.network.NexusHudPayload;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
+import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 public final class NexusHud {
     private static final int BLUE = 0xFF5555FF;
@@ -20,9 +20,9 @@ public final class NexusHud {
     private NexusHud() {
     }
 
-    public static void bootstrap() {
-        HudElementRegistry.attachElementAfter(
-                VanillaHudElements.BOSS_BAR,
+    public static void register(RegisterGuiLayersEvent event) {
+        event.registerAbove(
+                VanillaGuiLayers.BOSS_OVERLAY,
                 InvasionMod.id("nexus_status"),
                 NexusHud::render);
     }

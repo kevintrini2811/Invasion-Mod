@@ -196,8 +196,12 @@ public class InvasionConfig extends Config {
         nightMobMaxGroupSize = getPropertyValueInt("night-mob-max-group-size", 3);
         maxNightMobs = getPropertyValueInt("mob-limit-override", 70);
         nightMobsBurnInDay = getPropertyValueBoolean("night-mobs-burn-in-day", false);
-        spawnPool = loadSpawnPool();
-        saveConfig(file);
+        // Entity patterns depend on registered entity types. Build this lazily
+        // after NeoForge has completed the vanilla registry events.
+        spawnPool = null;
+        if (BuiltInRegistries.ENTITY_TYPE.containsKey(InvasionMod.id("zombie"))) {
+            saveConfig(file);
+        }
     }
 
     private Select<EntityPattern> loadSpawnPool() {

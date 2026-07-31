@@ -2,7 +2,7 @@ package com.invasion.client.render;
 
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
@@ -18,39 +18,39 @@ public final class InvRenderers {
     private InvRenderers() {
     }
 
-    public static void bootstrap() {
-        EntityRendererRegistry.register(InvEntities.ZOMBIE,
+    public static void register(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(InvEntities.ZOMBIE,
                 context -> new InvasionZombieRenderer<>(context, false));
-        EntityRendererRegistry.register(InvEntities.HUSK, InvHuskRenderer::new);
-        EntityRendererRegistry.register(InvEntities.DROWNED, InvDrownedRenderer::new);
-        EntityRendererRegistry.register(
+        event.registerEntityRenderer(InvEntities.HUSK, InvHuskRenderer::new);
+        event.registerEntityRenderer(InvEntities.DROWNED, InvDrownedRenderer::new);
+        event.registerEntityRenderer(
                 InvEntities.ZOMBIE_VILLAGER,
                 IMZombieVillagerRenderer::new);
-        EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
+        event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
-        EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BOGGED, InvBoggedRenderer::new);
-        EntityRendererRegistry.register(InvEntities.PARCHED, InvParchedRenderer::new);
-        EntityRendererRegistry.register(InvEntities.STRAY, InvStrayRenderer::new);
-        EntityRendererRegistry.register(
+        event.registerEntityRenderer(InvEntities.SKELETON, InvSkeletonRenderer::new);
+        event.registerEntityRenderer(InvEntities.BOGGED, InvBoggedRenderer::new);
+        event.registerEntityRenderer(InvEntities.PARCHED, InvParchedRenderer::new);
+        event.registerEntityRenderer(InvEntities.STRAY, InvStrayRenderer::new);
+        event.registerEntityRenderer(
                 InvEntities.WITHER_SKELETON,
                 InvWitherSkeletonRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SPIDER,
+        event.registerEntityRenderer(InvEntities.SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
                         Identifier.withDefaultNamespace("textures/entity/spider/spider.png")));
-        EntityRendererRegistry.register(InvEntities.JUMPING_SPIDER,
+        event.registerEntityRenderer(InvEntities.JUMPING_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/jumping_spider.png")));
-        EntityRendererRegistry.register(InvEntities.CAVE_SPIDER,
+        event.registerEntityRenderer(InvEntities.CAVE_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
                         Identifier.withDefaultNamespace("textures/entity/spider/cave_spider.png")));
-        EntityRendererRegistry.register(InvEntities.QUEEN_SPIDER,
+        event.registerEntityRenderer(InvEntities.QUEEN_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/mother_spider.png")));
-        EntityRendererRegistry.register(InvEntities.PIGMAN_ENGINEER,
+        event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/pigman_engineer.png"), 0.5F));
-        EntityRendererRegistry.register(InvEntities.IMP, ImpRenderer::new);
-        EntityRendererRegistry.register(InvEntities.ENDERMAN, IMEndermanRenderer::new);
-        EntityRendererRegistry.register(InvEntities.PHANTOM, PhantomRenderer::new);
-        EntityRendererRegistry.register(
+        event.registerEntityRenderer(InvEntities.IMP, ImpRenderer::new);
+        event.registerEntityRenderer(InvEntities.ENDERMAN, IMEndermanRenderer::new);
+        event.registerEntityRenderer(InvEntities.PHANTOM, PhantomRenderer::new);
+        event.registerEntityRenderer(
                 InvEntities.ZOMBIFIED_PIGLIN,
                 context -> new ZombifiedPiglinRenderer(
                         context,
@@ -58,21 +58,21 @@ public final class InvRenderers {
                         ModelLayers.ZOMBIFIED_PIGLIN_BABY,
                         ModelLayers.ZOMBIFIED_PIGLIN_ARMOR,
                         ModelLayers.ZOMBIFIED_PIGLIN_BABY_ARMOR));
-        EntityRendererRegistry.register(InvEntities.THROWER, ThrowerRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BURROWER, BurrowerRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BURROWER_TAIL, NoopRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BOULDER, BoulderProjectileRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SKELETON_ARROW, SkeletonArrowRenderer::new);
-        EntityRendererRegistry.register(InvEntities.TNT, TntProjectileRenderer::new);
-        EntityRendererRegistry.register(InvEntities.WOLF,
+        event.registerEntityRenderer(InvEntities.THROWER, ThrowerRenderer::new);
+        event.registerEntityRenderer(InvEntities.BURROWER, BurrowerRenderer::new);
+        event.registerEntityRenderer(InvEntities.BURROWER_TAIL, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.BOULDER, BoulderProjectileRenderer::new);
+        event.registerEntityRenderer(InvEntities.SKELETON_ARROW, SkeletonArrowRenderer::new);
+        event.registerEntityRenderer(InvEntities.TNT, TntProjectileRenderer::new);
+        event.registerEntityRenderer(InvEntities.WOLF,
                 IMWolfRenderer::new);
-        EntityRendererRegistry.register(InvEntities.TRAP, TrapRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BOLT, NoopRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SFX, NoopRenderer::new);
-        EntityRendererRegistry.register(InvEntities.SPAWN_PROXY,
+        event.registerEntityRenderer(InvEntities.TRAP, TrapRenderer::new);
+        event.registerEntityRenderer(InvEntities.BOLT, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.SFX, NoopRenderer::new);
+        event.registerEntityRenderer(InvEntities.SPAWN_PROXY,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/test.png"), 0.25F));
-        EntityRendererRegistry.register(InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
-        EntityRendererRegistry.register(InvEntities.CREEPER, GenericCreeperRenderer::new);
+        event.registerEntityRenderer(InvEntities.SPIDER_EGG, SpiderEggEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.CREEPER, GenericCreeperRenderer::new);
     }
 
     private static Identifier texture(String path) {

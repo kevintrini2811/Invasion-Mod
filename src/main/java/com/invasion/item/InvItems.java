@@ -8,9 +8,6 @@ import com.invasion.block.InvBlocks;
 import com.invasion.entity.TrapEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.NexusEntity;
-import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
-import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
-import net.fabricmc.fabric.api.registry.FuelValueEvents;
 import net.minecraft.util.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -24,9 +21,12 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.nbt.CompoundTag;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
+import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
 
 public interface InvItems {
     List<Item> REGISTRY = new ArrayList<>();
@@ -144,18 +144,26 @@ public interface InvItems {
         if (InvasionMod.getConfig().debugMode) {
             register("debug_wand", p -> new DebugWandItem(p.stacksTo(1)));
         }
+    }
+
+    static void bootstrapCreativeTab() {
         Identifier tabId = InvasionMod.id("invasion_mod");
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabId, FabricCreativeModeTab.builder().displayItems((context, entries) -> {
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabId, CreativeModeTab.builder().displayItems((context, entries) -> {
             REGISTRY.forEach(item -> entries.accept(item.getDefaultInstance()));
         }).icon(NEXUS_CORE::getDefaultInstance).title(Component.translatable(Util.makeDescriptionId("itemGroup", tabId))).build());
+    }
 
-        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(event -> {
+    static void addCreativeItems(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
             SPAWN_EGGS.forEach(event::accept);
-        });
+        }
+    }
 
-        FuelValueEvents.BUILD.register((builder, context) -> {
-            builder.add(NEXUS_CATALYST, 10);
-            builder.add(STABLE_NEXUS_CATALYST, 16);
-        });
+    static void fuelBurnTime(FurnaceFuelBurnTimeEvent event) {
+        if (event.getItemStack().is(NEXUS_CATALYST)) {
+            event.setBurnTime(10);
+        } else if (event.getItemStack().is(STABLE_NEXUS_CATALYST)) {
+            event.setBurnTime(16);
+        }
     }
 }

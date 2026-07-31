@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import com.invasion.InvasionMod;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.ModList;
 
 public final class AsyncCompatibility {
     private static final String ASYNC_CONFIG =
@@ -16,7 +16,7 @@ public final class AsyncCompatibility {
     }
 
     public static void registerSynchronizedEntities() {
-        if (!FabricLoader.getInstance().isModLoaded("async")) {
+        if (!ModList.get().isLoaded("async")) {
             return;
         }
 

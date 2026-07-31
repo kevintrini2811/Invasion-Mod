@@ -23,6 +23,5 @@ public interface InvBlocks {
     }
 
     static void bootstrap() {
-        InvBlockEntities.bootstrap();
     }
 }

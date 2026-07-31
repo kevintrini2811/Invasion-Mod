@@ -1,23 +1,25 @@
 package com.invasion.entity;
 
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import com.invasion.nexus.Combatant;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
 public final class VillagerResurrectionHandler {
     private VillagerResurrectionHandler() {
     }
 
     public static void bootstrap() {
-        ServerLivingEntityEvents.AFTER_DEATH.register(
-                VillagerResurrectionHandler::afterDeath);
+        NeoForge.EVENT_BUS.addListener(VillagerResurrectionHandler::afterDeath);
     }
 
-    private static void afterDeath(Entity victim, DamageSource source) {
+    private static void afterDeath(LivingDeathEvent event) {
+        Entity victim = event.getEntity();
+        DamageSource source = event.getSource();
         if (!(victim instanceof AbstractVillager villager)
                 || !(villager.level() instanceof ServerLevel world)
                 || !(source.getEntity() instanceof Combatant<?> killer)

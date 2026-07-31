@@ -4,9 +4,6 @@ import java.lang.reflect.Field;
 
 import com.invasion.InvasionConfig;
 import com.invasion.InvasionMod;
-import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
-import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
-import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -17,6 +14,7 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
 public interface InvEntities {
     EntityType<IMSkeletonEntity> SKELETON = register("skeleton", EntityType.Builder.<IMSkeletonEntity>of(IMSkeletonEntity::new, MobCategory.MONSTER)
@@ -143,52 +141,45 @@ public interface InvEntities {
         return InvasionMod.getConfig().debugMode ? builder : builder.noSummon().noSave();
     }
 
-    static void bootstrap() {
-        FabricDefaultAttributeRegistry.register(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
-        FabricDefaultAttributeRegistry.register(
-                BOGGED, IMBoggedEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(
-                PARCHED, IMParchedEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(
-                STRAY, IMSkeletonEntity.createIMSkeletonAttributes());
-        FabricDefaultAttributeRegistry.register(
-                WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
-        FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
-        FabricDefaultAttributeRegistry.register(
-                HUSK, EntityIMZombie.createTierT1V0Attributes());
-        FabricDefaultAttributeRegistry.register(
-                DROWNED, IMDrownedEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(
-                ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes());
-        FabricDefaultAttributeRegistry.register(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes());
-        FabricDefaultAttributeRegistry.register(
+    static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
+        event.put(
+                BOGGED, IMBoggedEntity.createAttributes().build());
+        event.put(
+                PARCHED, IMParchedEntity.createAttributes().build());
+        event.put(
+                STRAY, IMSkeletonEntity.createIMSkeletonAttributes().build());
+        event.put(
+                WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
+        event.put(ZOMBIE, EntityIMZombie.createTierT1V0Attributes().build());
+        event.put(
+                HUSK, EntityIMZombie.createTierT1V0Attributes().build());
+        event.put(
+                DROWNED, IMDrownedEntity.createAttributes().build());
+        event.put(
+                ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes().build());
+        event.put(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes().build());
+        event.put(
                 ZOMBIFIED_PIGLIN,
-                IMZombifiedPiglinEntity.createIMAttributes());
-        FabricDefaultAttributeRegistry.register(PIGMAN_ENGINEER, PigmanEngineerEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(CREEPER, IMCreeperEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(SPIDER, NexusSpiderEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(JUMPING_SPIDER, JumpingSpiderEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(CAVE_SPIDER, IMCaveSpiderEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(QUEEN_SPIDER, QueenSpiderEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(THROWER, ThrowerEntity.createT1V0Attributes());
-        FabricDefaultAttributeRegistry.register(BURROWER, BurrowerEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(IMP, ImpEnitty.createAttributes());
-        FabricDefaultAttributeRegistry.register(ENDERMAN, IMEndermanEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(PHANTOM, IMPhantomEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(WOLF, IMWolfEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(SPIDER_EGG, SpiderEggEntity.createAttributes());
-        FabricDefaultAttributeRegistry.register(SPAWN_PROXY, Mob.createMobAttributes());
+                IMZombifiedPiglinEntity.createIMAttributes().build());
+        event.put(PIGMAN_ENGINEER, PigmanEngineerEntity.createAttributes().build());
+        event.put(CREEPER, IMCreeperEntity.createAttributes().build());
+        event.put(SPIDER, NexusSpiderEntity.createAttributes().build());
+        event.put(JUMPING_SPIDER, JumpingSpiderEntity.createAttributes().build());
+        event.put(CAVE_SPIDER, IMCaveSpiderEntity.createAttributes().build());
+        event.put(QUEEN_SPIDER, QueenSpiderEntity.createAttributes().build());
+        event.put(THROWER, ThrowerEntity.createT1V0Attributes().build());
+        event.put(BURROWER, BurrowerEntity.createAttributes().build());
+        event.put(IMP, ImpEnitty.createAttributes().build());
+        event.put(ENDERMAN, IMEndermanEntity.createAttributes().build());
+        event.put(PHANTOM, IMPhantomEntity.createAttributes().build());
+        event.put(WOLF, IMWolfEntity.createAttributes().build());
+        event.put(SPIDER_EGG, SpiderEggEntity.createAttributes().build());
+        event.put(SPAWN_PROXY, Mob.createMobAttributes().build());
+    }
 
+    static void bootstrap() {
         InvasionConfig config = InvasionMod.getConfig();
-
-        if (config.nightSpawnsEnabled) {
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.ZOMBIE, EntityTypes.SKELETON, EntityTypes.SPIDER), SPAWN_PROXY.getCategory(), SPAWN_PROXY, config.nightMobSpawnChance, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.ZOMBIE), ZOMBIE.getCategory(), ZOMBIE, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SPIDER), SPIDER.getCategory(), SPIDER, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SPIDER), SPIDER.getCategory(), JUMPING_SPIDER, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SPIDER), SPIDER.getCategory(), QUEEN_SPIDER, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SKELETON), SKELETON.getCategory(), SKELETON, 1, 1, 1);
-        }
 
         if (config.maxNightMobs != 70) {
             try {
