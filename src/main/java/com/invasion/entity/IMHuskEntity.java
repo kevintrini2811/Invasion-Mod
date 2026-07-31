@@ -62,15 +62,14 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     private void convertToIMZombie(ServerLevel world) {
-        EntityIMZombie zombie = InvEntities.ZOMBIE.create(
-                world, MobSpawnType.CONVERSION);
+        EntityIMZombie zombie = InvEntities.ZOMBIE.create(world);
         if (zombie == null) {
             return;
         }
 
         Entity vehicle = getVehicle();
         stopRiding();
-        zombie.snapTo(
+        zombie.moveTo(
                 getX(), getY(), getZ(), getYRot(), getXRot());
         zombie.setDeltaMovement(getDeltaMovement());
         zombie.setBaby(isBaby());
@@ -104,7 +103,7 @@ public final class IMHuskEntity extends EntityIMZombie {
         boolean hit = super.doHurtTarget(target);
         if (hit && getMainHandItem().isEmpty()
                 && target instanceof LivingEntity living) {
-            int duration = 140 * (int) world
+            int duration = 140 * (int) level()
                     .getCurrentDifficultyAt(blockPosition())
                     .getEffectiveDifficulty();
             living.addEffect(
@@ -148,8 +147,8 @@ public final class IMHuskEntity extends EntityIMZombie {
     public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         inWaterTime = input.getInt("InWaterTime");
-        conversionTime = input.getIntOr(
-                "ZombieConversionTime", -1);
+        conversionTime = input.contains("ZombieConversionTime")
+                ? input.getInt("ZombieConversionTime") : -1;
         entityData.set(CONVERTING, conversionTime >= 0);
     }
 }

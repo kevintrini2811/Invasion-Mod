@@ -31,8 +31,7 @@ public final class EquipmentUtil {
     }
 
     public static boolean isHumanoidArmor(ItemStack stack) {
-        return stack.is(Tags.Items.ARMORS_HUMANOID)
-                || stack.is(ItemTags.HEAD_ARMOR)
+        return stack.is(ItemTags.HEAD_ARMOR)
                 || stack.is(ItemTags.CHEST_ARMOR)
                 || stack.is(ItemTags.LEG_ARMOR)
                 || stack.is(ItemTags.FOOT_ARMOR);

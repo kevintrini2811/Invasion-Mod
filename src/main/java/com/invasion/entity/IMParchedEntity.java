@@ -63,22 +63,22 @@ public final class IMParchedEntity extends IMSkeletonEntity {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.PARCHED_AMBIENT;
+        return SoundEvents.SKELETON_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.PARCHED_HURT;
+        return SoundEvents.SKELETON_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.PARCHED_DEATH;
+        return SoundEvents.SKELETON_DEATH;
     }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        playSound(SoundEvents.PARCHED_STEP, 0.15F, 1.0F);
+        playSound(SoundEvents.SKELETON_STEP, 0.15F, 1.0F);
     }
 
     private static final class ParchedKillWithArrowGoal

@@ -54,7 +54,7 @@ class TerrainDataLayerChunk implements ScaffoldView, BlockGetter {
     }
 
     @Override
-    public int getMinY() {
-        return world.getMinY();
+    public int getMinBuildHeight() {
+        return world.getMinBuildHeight();
     }
 }

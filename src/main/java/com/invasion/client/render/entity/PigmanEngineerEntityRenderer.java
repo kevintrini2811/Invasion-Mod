@@ -16,7 +16,7 @@ public class PigmanEngineerEntityRenderer extends HumanoidMobRenderer<PigmanEngi
     }
 
     @Override
-    public ResourceLocation getTexture(PigmanEngineerEntity entity) {
+    public ResourceLocation getTextureLocation(PigmanEngineerEntity entity) {
         return TEXTURE;
     }
 }

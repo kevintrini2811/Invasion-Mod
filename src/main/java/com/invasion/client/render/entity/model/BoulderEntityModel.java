@@ -29,7 +29,7 @@ public class BoulderEntityModel extends HierarchicalModel<BoulderEntity> {
     }
 
     @Override
-    public void setAngles(BoulderEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+    public void setupAnim(BoulderEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
         root.zRot = animationProgress;
         root.xRot = headPitch;
         root.yRot = headYaw;

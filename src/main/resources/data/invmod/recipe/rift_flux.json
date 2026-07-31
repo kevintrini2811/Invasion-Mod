@@ -2,7 +2,9 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": "invmod:small_remnants"
+    "X": {
+      "item": "invmod:small_remnants"
+    }
   },
   "pattern": [
     "XXX",

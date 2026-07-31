@@ -10,7 +10,7 @@ import java.util.Set;
 public interface InvBlockEntities {
     BlockEntityType<NexusBlockEntity> NEXUS = register(
             "nexus",
-            new BlockEntityType<>(NexusBlockEntity::new, Set.of(InvBlocks.NEXUS_CORE))
+            new BlockEntityType<>(NexusBlockEntity::new, Set.of(InvBlocks.NEXUS_CORE), null)
     );
 
     private static <T extends BlockEntity> BlockEntityType<T> register(String name, BlockEntityType<T> type) {

@@ -2,9 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": "invmod:phase_crystal",
-    "#": "minecraft:redstone",
-    "D": "minecraft:obsidian"
+    "X": {
+      "item": "invmod:phase_crystal"
+    },
+    "#": {
+      "item": "minecraft:redstone"
+    },
+    "D": {
+      "item": "minecraft:obsidian"
+    }
   },
   "pattern": [
     " X ",

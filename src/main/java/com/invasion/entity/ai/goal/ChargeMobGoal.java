@@ -84,7 +84,7 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
 
         if (!hasAttacked && mob.distanceToSqr(chargePos) <= Mth.square(mob.getBbWidth() * 2.1F)) {
             hasAttacked = true;
-            mob.doHurtTarget((ServerLevel) mob.level(), target);
+            mob.doHurtTarget(target);
         }
     }
 

@@ -70,7 +70,7 @@ public class ImpEntityModel extends HierarchicalModel<ImpEnitty> {
     }
 
     @Override
-    public void setAngles(ImpEnitty entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+    public void setupAnim(ImpEnitty entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
         head.yRot = headYaw / 57.29578F;
         head.xRot = headPitch / 57.29578F;
 

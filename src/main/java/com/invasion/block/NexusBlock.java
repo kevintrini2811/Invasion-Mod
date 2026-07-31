@@ -55,7 +55,7 @@ public class NexusBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level world,
+    protected net.minecraft.world.ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world,
                                              BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
 
         // SERVER: Nexus für die Commands merken
@@ -87,16 +87,16 @@ public class NexusBlock extends BaseEntityBlock {
         // Vorhandenes Verhalten (GUI öffnen) beibehalten
         if (!stack.is(InvItems.MATERIAL_PROBE)
                 && !stack.is(InvItems.NEXUS_ADJUSTER)
-                && !stack.is(InvItems.DEBUG_WAND)) {
+                && !stack.getItemHolder().is(InvItems.DEBUG_WAND)) {
 
             MenuProvider factory = getMenuProvider(state, world, pos);
             if (factory != null) {
                 player.openMenu(factory);
             }
-            return InteractionResult.SUCCESS;
+            return net.minecraft.world.ItemInteractionResult.SUCCESS;
         }
 
-        return InteractionResult.PASS;
+        return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
     }
 
 
@@ -139,9 +139,11 @@ public class NexusBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel world, BlockPos pos, boolean moved) {
-        world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(NexusBlockEntity::discard);
-        super.affectNeighborsAfterRemoval(state, world, pos, moved);
+    protected void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
+        if (!state.is(newState.getBlock())) {
+            world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(NexusBlockEntity::discard);
+        }
+        super.onRemove(state, world, pos, newState, moved);
     }
 
     @Nullable

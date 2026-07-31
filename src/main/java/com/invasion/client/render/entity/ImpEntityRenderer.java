@@ -15,7 +15,7 @@ public class ImpEntityRenderer extends LivingEntityRenderer<ImpEnitty, ImpEntity
 	}
 
 	@Override
-    public ResourceLocation getTexture(ImpEnitty entity) {
+    public ResourceLocation getTextureLocation(ImpEnitty entity) {
 		return TEXTURE;
 	}
 }

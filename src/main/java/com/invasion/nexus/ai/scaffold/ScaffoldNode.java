@@ -12,14 +12,14 @@ public record ScaffoldNode(
     ) {
     public ScaffoldNode(CompoundTag compound) {
         this(
-            compound.read("pos", BlockPos.CODEC).orElse(BlockPos.ZERO),
+            NbtUtils.readBlockPos(compound, "pos").orElse(BlockPos.ZERO),
             Direction.from2DDataValue(compound.getInt("orientation")),
             compound.getInt("height")
         );
     }
 
     public void toNbt(CompoundTag compound) {
-        compound.store("pos", BlockPos.CODEC, pos);
+        compound.put("pos", NbtUtils.writeBlockPos(pos));
         compound.putInt("orientation", orientation.get2DDataValue());
         compound.putInt("height", height);
     }

@@ -41,7 +41,7 @@ public class ThrowerEntityModel extends HumanoidModel<ThrowerEntity> {
     }
 
     @Override
-    public void setAngles(ThrowerEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+    public void setupAnim(ThrowerEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
         this.hat.visible = false;
         super.setupAnim(entity, limbAngle, limbDistance, animationProgress, headYaw, headPitch);
         head.setPos(0, 16, 1);

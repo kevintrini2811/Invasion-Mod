@@ -3,7 +3,9 @@
   "category": "misc",
   "cookingtime": 10,
   "experience": 1.0,
-  "ingredient": "invmod:catalyst_mixture",
+  "ingredient": {
+    "item": "invmod:catalyst_mixture"
+  },
   "result": {
     "id": "invmod:nexus_catalyst"
   }

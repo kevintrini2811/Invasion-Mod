@@ -86,8 +86,8 @@ public class NexusSpiderEntity extends Spider
     public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
-                && isEquippableInSlot(stack, slot)
-                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+                && stack.canEquip(slot, this)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     public static AttributeSupplier.Builder createAttributes() {

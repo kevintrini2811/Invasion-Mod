@@ -23,7 +23,6 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
@@ -119,15 +118,16 @@ public interface InvItems {
     Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
-        InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
-                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, data.copyTag())), type);
+        InvasionSpawnEggItem egg = new InvasionSpawnEggItem(
+                properties.component(DataComponents.ENTITY_DATA, data),
+                type, primaryColor, secondaryColor);
         SPAWN_EGGS.add(egg);
         return egg;
     }
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor) {
-        InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
-                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, new CompoundTag())), type);
+        InvasionSpawnEggItem egg = new InvasionSpawnEggItem(
+                properties, type, primaryColor, secondaryColor);
         SPAWN_EGGS.add(egg);
         return egg;
     }

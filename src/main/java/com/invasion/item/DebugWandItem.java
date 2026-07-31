@@ -57,7 +57,7 @@ class DebugWandItem extends Item {
         Zombie zombie2 = new Zombie(world);
         zombie2.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-        EntityTypes.WOLF.create(world, w -> {}, pos, MobSpawnType.COMMAND, true, false);
+        EntityType.WOLF.create(world, w -> {}, pos, MobSpawnType.COMMAND, true, false);
 
         Entity entity1 = InvEntities.PIGMAN_ENGINEER.create(world);
         entity1.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
@@ -111,9 +111,10 @@ class DebugWandItem extends Item {
     }
 
     @Override
-    public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
+    public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (target instanceof Wolf wolf && attacker instanceof Player player) {
             wolf.tame(player);
         }
+        return true;
     }
 }

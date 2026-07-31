@@ -103,9 +103,11 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
         ItemStack stack = player.getItemInHand(hand);
         if (stack.is(Items.SHEARS) && readyForShearing()) {
             if (level() instanceof ServerLevel world) {
-                shear(world, SoundSource.PLAYERS, stack);
+                shear(SoundSource.PLAYERS);
                 gameEvent(GameEvent.SHEAR, player);
-                stack.hurtAndBreak(1, player, hand.asEquipmentSlot());
+                stack.hurtAndBreak(1, player,
+                        hand == InteractionHand.MAIN_HAND
+                                ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
             }
             return InteractionResult.SUCCESS;
         }
@@ -113,14 +115,9 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
     }
 
     @Override
-    public void shear(
-            ServerLevel world, SoundSource source, ItemStack shears) {
-        world.playSound(
+    public void shear(SoundSource source) {
+        level().playSound(
                 null, this, SoundEvents.BOGGED_SHEAR, source, 1.0F, 1.0F);
-        dropFromShearingLootTable(
-                world, BuiltInLootTables.BOGGED_SHEAR, shears,
-                (level, stack) -> spawnAtLocation(
-                        level, stack, getBbHeight()));
         setSheared(true);
     }
 

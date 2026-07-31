@@ -17,7 +17,7 @@ public interface MountableEntity extends NexusEntity {
         while (--jockyAttempsts > 0) {
             RandomSource random = world.getRandom();
             if (random.nextInt(100) == 0) {
-                Monster jockey = getJockeyType(world).create(self.level(), spawnReason);
+                Monster jockey = getJockeyType(world).create(self.level());
                 if (jockey != null) {
                     if (jockey instanceof NexusSpiderEntity) {
                         jockey.setBaby(true);

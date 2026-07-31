@@ -2,9 +2,15 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "invmod:rift_flux",
-    "invmod:rift_flux",
-    "minecraft:bone"
+    {
+      "item": "invmod:rift_flux"
+    },
+    {
+      "item": "invmod:rift_flux"
+    },
+    {
+      "item": "minecraft:bone"
+    }
   ],
   "result": {
     "id": "invmod:strange_bone"

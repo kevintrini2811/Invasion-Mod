@@ -50,7 +50,7 @@ public final class BurrowerTailEntity extends Entity {
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    public boolean hurt(DamageSource source, float amount) {
         BurrowerEntity parent = parent();
         return parent != null && parent.hurt(source, amount);
     }

@@ -41,13 +41,15 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
     public List<Entity> getOffspring(Entity partner) {
         List<Entity> offspring = new ArrayList<>();
         int offspringCount = 3 + level().getRandom().nextInt(4);
-        var offspringTypes = java.util.stream.StreamSupport.stream(level().registryAccess()
+        var offspringTypes = level().registryAccess()
                 .lookupOrThrow(Registries.ENTITY_TYPE)
-                .getTagOrEmpty(InvTags.Entities.QUEEN_SPIDER_OFFSPRING).spliterator(), false)
+                .get(InvTags.Entities.QUEEN_SPIDER_OFFSPRING).stream()
+                .flatMap(set -> java.util.stream.StreamSupport.stream(
+                        set.spliterator(), false))
                 .toList();
         for (int i = 0; i < offspringCount && !offspringTypes.isEmpty(); i++) {
             var type = offspringTypes.get(level().getRandom().nextInt(offspringTypes.size()));
-            Entity child = type.value().create(level(), MobSpawnType.EVENT);
+            Entity child = type.value().create(level());
             if (child == null) {
                 continue;
             }

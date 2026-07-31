@@ -27,7 +27,7 @@ public final class IMStrayEntity extends IMSkeletonEntity {
                 arrowStack, damageModifier, shotFrom);
         if (projectile instanceof Arrow arrow) {
             arrow.addEffect(
-                    new MobEffectInstance(MobEffects.SLOWNESS, 600));
+                    new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 600));
         }
         return projectile;
     }

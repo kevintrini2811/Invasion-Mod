@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": "minecraft:iron_ingot",
-    "#": "invmod:rift_flux"
+    "X": {
+      "item": "minecraft:iron_ingot"
+    },
+    "#": {
+      "item": "invmod:rift_flux"
+    }
   },
   "pattern": [
     " X ",

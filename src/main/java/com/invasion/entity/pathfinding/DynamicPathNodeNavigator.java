@@ -24,7 +24,7 @@ public class DynamicPathNodeNavigator extends PathFinder {
     }
 
     public static <T> T createHeadlessNavigator(NexusEntity entity, int range, Function<PathSupplier, T> supplier) {
-        PathfinderMob standin = (PathfinderMob)entity.asEntity().getType().create(entity.asEntity().level(), net.minecraft.world.entity.MobSpawnType.EVENT);
+        PathfinderMob standin = (PathfinderMob)entity.asEntity().getType().create(entity.asEntity().level());
         standin.restoreFrom(entity.asEntity());
         NodeEvaluator maker = entity.getNavigatorNew().createNodeMaker();
         var nav = new DynamicPathNodeNavigator(maker, range);

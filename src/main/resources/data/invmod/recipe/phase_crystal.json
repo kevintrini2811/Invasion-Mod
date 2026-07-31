@@ -3,11 +3,19 @@
   "category": "misc",
   "key": {
     "X": [
-      "minecraft:lapis_lazuli",
-      "minecraft:blue_dye"
+      {
+        "item": "minecraft:lapis_lazuli"
+      },
+      {
+        "item": "minecraft:blue_dye"
+      }
     ],
-    "#": "minecraft:redstone",
-    "D": "minecraft:diamond"
+    "#": {
+      "item": "minecraft:redstone"
+    },
+    "D": {
+      "item": "minecraft:diamond"
+    }
   },
   "pattern": [
     " X ",

@@ -26,13 +26,13 @@ public class TrapEntityRenderer extends EntityRenderer<TrapEntity> {
 	    matrices.pushPose();
 	    matrices.mulPose(Axis.XP.rotationDegrees(180));
 	    matrices.scale(1.3F, 1.3F, 1.3F);
-	    model.setAngles(entity, 0, 0, entity.tickCount + tickDelta, 0, 0);
-	    model.renderToBuffer(matrices, vertices.getBuffer(model.renderType(getTexture(entity))), light, 0);
+	    model.setupAnim(entity, 0, 0, entity.tickCount + tickDelta, 0, 0);
+	    model.renderToBuffer(matrices, vertices.getBuffer(model.renderType(getTextureLocation(entity))), light, 0);
 	    matrices.popPose();
 	}
 
 	@Override
-    public ResourceLocation getTexture(TrapEntity entity) {
+    public ResourceLocation getTextureLocation(TrapEntity entity) {
 		return TEXTURE;
 	}
 }

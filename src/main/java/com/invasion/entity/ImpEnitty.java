@@ -103,8 +103,7 @@ public class ImpEnitty extends IMMobEntity
     }
 
     @Override
-    public boolean hurtServer(
-            ServerLevel serverLevel, DamageSource source, float damage) {
+    public boolean hurt(DamageSource source, float damage) {
         if (source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypes.LAVA)) {
             return false;
         }
@@ -128,6 +127,7 @@ public class ImpEnitty extends IMMobEntity
     @Override
     public void customServerAiStep() {
         super.customServerAiStep();
+        ServerLevel world = (ServerLevel) level();
         if (isOnFire()
                 && !isInLava()
                 && world.getBlockStates(getBoundingBox().deflate(0.001D))
@@ -146,8 +146,8 @@ public class ImpEnitty extends IMMobEntity
                 ItemEntity.class,
                 getBoundingBox().inflate(1.25D),
                 candidate -> !candidate.hasPickUpDelay()
-                        && wantsToPickUp(world, candidate.getItem()))) {
-            pickUpItem(world, item);
+                        && wantsToPickUp(candidate.getItem()))) {
+            pickUpItem(item);
             if (isUsableWeapon(getMainHandItem())) {
                 break;
             }

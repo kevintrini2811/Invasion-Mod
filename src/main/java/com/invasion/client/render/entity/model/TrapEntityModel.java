@@ -50,7 +50,7 @@ public class TrapEntityModel extends HierarchicalModel<TrapEntity> {
     }
 
     @Override
-    public void setAngles(TrapEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+    public void setupAnim(TrapEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
         TrapEntity.Type type = entity.getTrapType();
         core.visible = type == TrapEntity.Type.RIFT;
         flames.visible = type == TrapEntity.Type.FIRE;

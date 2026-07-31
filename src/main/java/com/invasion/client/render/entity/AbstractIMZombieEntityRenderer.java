@@ -80,7 +80,7 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
     }
 
     @Override
-    public ResourceLocation getTexture(AbstractIMZombieEntity entity) {
+    public ResourceLocation getTextureLocation(AbstractIMZombieEntity entity) {
         int id = entity.getTextureId();
         List<ResourceLocation> textures = getTextures();
         return textures.get(id < 0 || id >= textures.size() ? 0 : id);
@@ -113,7 +113,7 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
         }
 
         @Override
-        public void setAngles(AbstractIMZombieEntity hostileEntity, float f, float g, float h, float i, float j) {
+        public void setupAnim(AbstractIMZombieEntity hostileEntity, float f, float g, float h, float i, float j) {
             super.setupAnim(hostileEntity, f, g, h, i, j);
             AnimationUtils.animateZombieArms(leftArm, rightArm, isAttacking(hostileEntity), attackTime, h);
         }
@@ -129,7 +129,7 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
         }
 
         @Override
-        public void setAngles(AbstractIMZombieEntity hostileEntity, float f, float g, float h, float i, float j) {
+        public void setupAnim(AbstractIMZombieEntity hostileEntity, float f, float g, float h, float i, float j) {
             super.setupAnim(hostileEntity, f, g, h, i, j);
             AnimationUtils.animateZombieArms(leftArm, rightArm, isAttacking(hostileEntity), attackTime, h);
         }

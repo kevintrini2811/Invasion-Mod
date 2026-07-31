@@ -31,7 +31,7 @@ public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEnti
     }
 
     @Override
-    public ResourceLocation getTexture(IMSkeletonEntity abstractSkeletonEntity) {
+    public ResourceLocation getTextureLocation(IMSkeletonEntity abstractSkeletonEntity) {
         return TEXTURE;
     }
 

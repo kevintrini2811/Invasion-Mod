@@ -75,8 +75,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
             return false;
         }
         return slot.isArmor()
-                && isEquippableInSlot(stack, slot)
-                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+                && stack.canEquip(slot, this)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     private static boolean isUsableWeapon(ItemStack stack) {
@@ -108,6 +108,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     @Override
     public void customServerAiStep() {
         super.customServerAiStep();
+        ServerLevel world = (ServerLevel) level();
 
         if (tickCount % 5 != 0) {
             return;
@@ -117,8 +118,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
                 ItemEntity.class,
                 getBoundingBox().inflate(1.25D),
                 candidate -> !candidate.hasPickUpDelay()
-                        && wantsToPickUp(world, candidate.getItem()))) {
-            pickUpItem(world, item);
+                        && wantsToPickUp(candidate.getItem()))) {
+            pickUpItem(item);
         }
     }
 
@@ -221,7 +222,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         entity.hurt(damageSources().mobAttack(this), (float)getAttackStrength() + 3);
         float yaw = getYRot() * Mth.DEG_TO_RAD;
         if (entity instanceof LivingEntity l) {
-            l.knockback(knockback, Mth.sin(yaw), Mth.cos(yaw), damageSources().mobAttack(this), (float)getAttackStrength());
+            l.knockback(knockback, Mth.sin(yaw), Mth.cos(yaw));
         }
         setSprinting(false);
         playSound(SoundEvents.GENERIC_BIG_FALL, 1, 1);
@@ -229,9 +230,9 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     @Override
-    public void knockback(double strength, double x, double z, DamageSource source, float damage, boolean force) {
+    public void knockback(double strength, double x, double z) {
         if (getTier() != 3) {
-            super.knockback(strength, x, z, source, damage, force);
+            super.knockback(strength, x, z);
         }
     }
 

@@ -1,19 +1,27 @@
 package com.invasion.item;
 
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ItemTags;
-import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.level.block.Block;
 
-final class CustomToolMaterial {
-    static final ToolMaterial INFUSED_GOLD = new ToolMaterial(
-            BlockTags.INCORRECT_FOR_GOLD_TOOL,
-            40,
-            12.0F,
-            4.0F,
-            22,
-            ItemTags.GOLD_TOOL_MATERIALS
-    );
+record CustomToolMaterial(
+        TagKey<Block> inverseTag,
+        int durability,
+        float miningSpeedMultiplier,
+        float attackDamage,
+        int enchantability,
+        Ingredient repairIngredient) implements Tier {
+    static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(
+            BlockTags.INCORRECT_FOR_GOLD_TOOL, 40, 12, 4, 22,
+            Ingredient.of(Items.GOLD_INGOT));
 
-    private CustomToolMaterial() {
-    }
+    @Override public int getUses() { return durability; }
+    @Override public float getSpeed() { return miningSpeedMultiplier; }
+    @Override public float getAttackDamageBonus() { return attackDamage; }
+    @Override public TagKey<Block> getIncorrectBlocksForDrops() { return inverseTag; }
+    @Override public int getEnchantmentValue() { return enchantability; }
+    @Override public Ingredient getRepairIngredient() { return repairIngredient; }
 }

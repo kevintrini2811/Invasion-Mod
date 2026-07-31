@@ -59,10 +59,10 @@ public interface AttributeUtil {
         if (currentWave > 5) {
             int effectAttempts = currentWave - 15;
             var unfairEffects = new ArrayList<>(List.of(
-                    MobEffects.RESISTANCE,
+                    MobEffects.DAMAGE_RESISTANCE,
                     MobEffects.FIRE_RESISTANCE,
                     MobEffects.WATER_BREATHING,
-                    MobEffects.JUMP_BOOST,
+                    MobEffects.JUMP,
                     MobEffects.WIND_CHARGED
             ));
             while (--effectAttempts > 0 && !unfairEffects.isEmpty()) {

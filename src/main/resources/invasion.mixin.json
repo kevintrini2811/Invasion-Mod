@@ -2,13 +2,11 @@
     "required": true,
     "minVersion": "0.7",
     "package": "com.invasion.mixin",
-    "compatibilityLevel": "JAVA_25",
+    "compatibilityLevel": "JAVA_21",
     "mixins": [
       "EntityMixin",
       "PathNodeMixin",
       "PhantomAccessor"
     ],
-    "client": [
-      "AgeableMobRendererAccessor"
-    ]
+    "client": []
 }

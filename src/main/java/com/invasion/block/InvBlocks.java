@@ -17,7 +17,8 @@ public interface InvBlocks {
         var id = InvasionMod.id("nexus_core");
         var key = ResourceKey.create(Registries.BLOCK, id);
         var block = new NexusBlock(Properties.of()
-                .explosionResistance(6000000).destroyTime(3).sound(SoundType.GLASS).emissiveRendering(state -> true)
+                .explosionResistance(6000000).destroyTime(3).sound(SoundType.GLASS)
+                .emissiveRendering((state, getter, pos) -> true)
                 .lightLevel(state -> state.getValue(NexusBlock.LIT) ? 15 : 8));
         return Registry.register(BuiltInRegistries.BLOCK, id, block);
     }

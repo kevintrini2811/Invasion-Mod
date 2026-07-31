@@ -33,7 +33,9 @@ class TerrainDataLayer extends TerrainDataLayerChunk implements CollisionGetter 
     @Override
     public BlockGetter getChunkForCollisions(int chunkX, int chunkZ) {
         BlockGetter chunk = world.getChunkForCollisions(chunkX, chunkZ);
-        return chunk == null ? null : chunks.computeIfAbsent(ChunkPos.pack(chunkX, chunkZ), l -> new TerrainDataLayerChunk(chunk));
+        return chunk == null ? null : chunks.computeIfAbsent(
+                ChunkPos.asLong(chunkX, chunkZ),
+                l -> new TerrainDataLayerChunk(chunk));
     }
 
     @Override

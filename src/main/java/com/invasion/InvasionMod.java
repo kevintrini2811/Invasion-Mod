@@ -70,7 +70,7 @@ public class InvasionMod {
         VanillaMobSpawnReplacement.bootstrap();
         VillagerResurrectionHandler.bootstrap();
 
-        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+        if (FMLEnvironment.dist == Dist.CLIENT) {
             InvasionModClient.register(modBus);
         }
     }

@@ -491,7 +491,7 @@ public class IMNavigation implements Navigation {
 			if (++steps > 16) {
 				return initialY;
 			}
-		} while (state.liquid() && y < theEntity.level().getMaxY());
+		} while (state.liquid() && y < theEntity.level().getMaxBuildHeight());
 
 		return y;
 	}

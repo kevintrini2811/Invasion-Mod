@@ -52,7 +52,7 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
         beamActive = !beamActive;
         setChanged();
         if (level != null) {
-            level().sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
         return beamActive;
     }

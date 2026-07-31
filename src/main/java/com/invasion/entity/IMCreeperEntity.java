@@ -98,8 +98,8 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
-                && isEquippableInSlot(stack, slot)
-                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+                && stack.canEquip(slot, this)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -179,7 +179,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
             if (speed > 0) {
                 if (commitToExplode) {
-                    getMoveControl().setWantedPosition(getX() + explodeDirection.getUnitVec3i().getX(), getY(), getZ() + explodeDirection.getUnitVec3i().getZ(), 0.1);
+                    getMoveControl().setWantedPosition(getX() + explodeDirection.getStepX(), getY(), getZ() + explodeDirection.getStepZ(), 0.1);
                 }
                 if (currentFuseTime == 0) {
                     playSound(SoundEvents.CREEPER_PRIMED, 1, 0.5F);
@@ -286,7 +286,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
             manuallyIgnited = true;
             setFuseSpeed(1);
             if (stack.isDamageableItem()) {
-                stack.hurtAndBreak(1, player, hand);
+                stack.hurtAndBreak(1, player,
+                        hand == InteractionHand.MAIN_HAND
+                                ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
             } else {
                 stack.shrink(1);
             }
@@ -346,7 +348,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     @Override
     public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
-        fuseTime = nbt.getShortOr("Fuse", (short) fuseTime);
+        fuseTime = nbt.contains("Fuse") ? nbt.getShort("Fuse") : fuseTime;
         stationaryTicks = nbt.getInt("stationaryTicks");
         manuallyIgnited = nbt.getBoolean("ignited");
     }

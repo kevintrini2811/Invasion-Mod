@@ -26,6 +26,7 @@ sourceSets {
             // Minecraft 26.2 render-state implementations. The 1.21.1 port uses
             // the retained immediate-mode renderers under client/render/entity.
             exclude 'com/invasion/client/render/*.java'
+            exclude 'com/invasion/mixin/AgeableMobRendererAccessor.java'
         }
     }
 }

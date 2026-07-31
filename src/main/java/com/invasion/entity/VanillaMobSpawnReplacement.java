@@ -85,52 +85,50 @@ public final class VanillaMobSpawnReplacement {
 
     private static void convertMob(
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
-        if (mob.getType() == EntityTypes.ZOMBIE) {
+        if (mob.getType() == EntityType.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
-        } else if (mob.getType() == EntityTypes.HUSK) {
+        } else if (mob.getType() == EntityType.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
-        } else if (mob.getType() == EntityTypes.DROWNED) {
+        } else if (mob.getType() == EntityType.DROWNED) {
             convert(mob, InvEntities.DROWNED, nexus);
-        } else if (mob.getType() == EntityTypes.ZOMBIFIED_PIGLIN) {
+        } else if (mob.getType() == EntityType.ZOMBIFIED_PIGLIN) {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
-        } else if (mob.getType() == EntityTypes.SKELETON) {
+        } else if (mob.getType() == EntityType.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
-        } else if (mob.getType() == EntityTypes.BOGGED) {
+        } else if (mob.getType() == EntityType.BOGGED) {
             convert(mob, InvEntities.BOGGED, nexus);
-        } else if (mob.getType() == EntityTypes.PARCHED) {
             convert(mob, InvEntities.PARCHED, nexus);
-        } else if (mob.getType() == EntityTypes.STRAY) {
+        } else if (mob.getType() == EntityType.STRAY) {
             convert(mob, InvEntities.STRAY, nexus);
-        } else if (mob.getType() == EntityTypes.WITHER_SKELETON) {
+        } else if (mob.getType() == EntityType.WITHER_SKELETON) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
-        } else if (mob.getType() == EntityTypes.CREEPER) {
+        } else if (mob.getType() == EntityType.CREEPER) {
             convert(mob, InvEntities.CREEPER, nexus);
-        } else if (mob.getType() == EntityTypes.SPIDER) {
+        } else if (mob.getType() == EntityType.SPIDER) {
             convert(mob, InvEntities.SPIDER, nexus);
-        } else if (mob.getType() == EntityTypes.CAVE_SPIDER) {
+        } else if (mob.getType() == EntityType.CAVE_SPIDER) {
             convert(mob, InvEntities.CAVE_SPIDER, nexus);
-        } else if (mob.getType() == EntityTypes.ENDERMAN) {
+        } else if (mob.getType() == EntityType.ENDERMAN) {
             convert(mob, InvEntities.ENDERMAN, nexus);
-        } else if (mob.getType() == EntityTypes.PHANTOM) {
+        } else if (mob.getType() == EntityType.PHANTOM) {
             convert(mob, InvEntities.PHANTOM, nexus);
         }
     }
 
     private static boolean isReplaceableType(EntityType<?> type) {
-        return type == EntityTypes.ZOMBIE
-                || type == EntityTypes.HUSK
-                || type == EntityTypes.DROWNED
-                || type == EntityTypes.ZOMBIFIED_PIGLIN
-                || type == EntityTypes.SKELETON
-                || type == EntityTypes.BOGGED
-                || type == EntityTypes.PARCHED
-                || type == EntityTypes.STRAY
-                || type == EntityTypes.WITHER_SKELETON
-                || type == EntityTypes.CREEPER
-                || type == EntityTypes.SPIDER
-                || type == EntityTypes.CAVE_SPIDER
-                || type == EntityTypes.ENDERMAN
-                || type == EntityTypes.PHANTOM;
+        return type == EntityType.ZOMBIE
+                || type == EntityType.HUSK
+                || type == EntityType.DROWNED
+                || type == EntityType.ZOMBIFIED_PIGLIN
+                || type == EntityType.SKELETON
+                || type == EntityType.BOGGED
+                || type == EntityType.STRAY
+                || type == EntityType.WITHER_SKELETON
+                || type == EntityType.CREEPER
+                || type == EntityType.SPIDER
+                || type == EntityType.CAVE_SPIDER
+                || type == EntityType.ENDERMAN
+                || type == EntityType.PHANTOM;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -149,7 +147,7 @@ public final class VanillaMobSpawnReplacement {
         Entity vehicle = source.getVehicle();
         source.stopRiding();
 
-        converted.snapTo(
+        converted.moveTo(
                 source.getX(), source.getY(), source.getZ(),
                 source.getYRot(), source.getXRot());
         converted.setDeltaMovement(source.getDeltaMovement());
@@ -180,8 +178,8 @@ public final class VanillaMobSpawnReplacement {
                             slot, source.getItemBySlot(slot).copy());
                 }
             }
-            imPiglin.setPersistentAngerEndTime(
-                    piglin.getPersistentAngerEndTime());
+            imPiglin.setRemainingPersistentAngerTime(
+                    piglin.getRemainingPersistentAngerTime());
             imPiglin.setPersistentAngerTarget(
                     piglin.getPersistentAngerTarget());
         }

@@ -18,7 +18,7 @@ public class IMSpiderEntityRenderer<T extends NexusSpiderEntity> extends SpiderR
     }
 
     @Override
-    public ResourceLocation getTexture(T spiderEntity) {
+    public ResourceLocation getTextureLocation(T spiderEntity) {
         return texture;
     }
 }

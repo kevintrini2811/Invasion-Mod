@@ -180,8 +180,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         }
 
         return nexus.getPos().filter(center -> {
-            IMWolfEntity wolf = InvEntities.WOLF.create(
-                    world, MobSpawnType.EVENT);
+            IMWolfEntity wolf = InvEntities.WOLF.create(world);
             if (wolf == null) {
                 return false;
             }
@@ -218,11 +217,11 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                     .betweenClosedStream(
                             new BlockPos(
                                     nexusPos.getX() - 5,
-                                    world.getMinY(),
+                                    world.getMinBuildHeight(),
                                     nexusPos.getZ() - 5),
                             new BlockPos(
                                     nexusPos.getX() + 5,
-                                    world.getMaxY() - 2,
+                                    world.getMaxBuildHeight() - 2,
                                     nexusPos.getZ() + 5))
                     .sorted(java.util.Comparator.comparingDouble(
                             nexusPos::distSqr))
@@ -258,8 +257,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         // Other mobs crowding the Nexus must not prevent a bound wolf from
         // returning. Block collision still guarantees enough physical space;
         // ordinary entity pushing separates overlapping mobs afterwards.
-        return world.noBlockCollision(
-                        wolf, targetBox, false)
+        return world.noBlockCollision(wolf, targetBox)
                 ? Optional.of(position)
                 : Optional.empty();
     }
@@ -282,7 +280,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                     setTarget(null);
                     teleportTo(pos.x, pos.y, pos.z);
                     stack.consume(1, player);
-                    return InteractionResult.SUCCESS_SERVER;
+                    return InteractionResult.SUCCESS;
                 }
             }
             return InteractionResult.FAIL;

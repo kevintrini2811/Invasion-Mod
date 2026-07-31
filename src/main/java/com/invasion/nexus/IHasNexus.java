@@ -83,8 +83,11 @@ public interface IHasNexus {
 
         public void readNbt(CompoundTag nbt) {
             nexus = null;
-            globalPos = nbt.read("globalPos", GlobalPos.CODEC).orElse(null);
-            nexusId = nbt.read("nexusId", net.minecraft.core.UUIDUtil.CODEC).orElse(null);
+            globalPos = nbt.contains("globalPos")
+                    ? GlobalPos.CODEC.decode(NbtOps.INSTANCE, nbt.get("globalPos"))
+                            .result().map(Pair::getFirst).orElse(null)
+                    : null;
+            nexusId = nbt.hasUUID("nexusId") ? nbt.getUUID("nexusId") : null;
         }
 
         public Optional<GlobalPos> getPos() {
@@ -93,10 +96,11 @@ public interface IHasNexus {
 
         public void writeNbt(CompoundTag nbt) {
             if (nexusId != null) {
-                nbt.store("nexusId", net.minecraft.core.UUIDUtil.CODEC, nexusId);
+                nbt.putUUID("nexusId", nexusId);
             }
             if (globalPos != null) {
-                nbt.store("globalPos", GlobalPos.CODEC, globalPos);
+                GlobalPos.CODEC.encodeStart(NbtOps.INSTANCE, globalPos)
+                        .result().ifPresent(value -> nbt.put("globalPos", value));
             }
         }
     }

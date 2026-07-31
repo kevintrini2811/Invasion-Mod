@@ -66,7 +66,7 @@ public final class IMPhantomEntity extends Phantom
 
         targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
                 this, LivingEntity.class, 10, true, false,
-                (candidate, world) -> isPlayerAlly(candidate, world)));
+                candidate -> isPlayerAlly(candidate, (ServerLevel) level())));
     }
 
     @Override
@@ -109,13 +109,13 @@ public final class IMPhantomEntity extends Phantom
     }
 
     @Override
-    protected void addAdditionalSaveData(CompoundTag output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(CompoundTag input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -124,9 +124,6 @@ public final class IMPhantomEntity extends Phantom
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityType.PHANTOM.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(
-                        level, source, causedByPlayer, lootTable));
     }
 
     @Override
@@ -142,7 +139,7 @@ public final class IMPhantomEntity extends Phantom
     @Override
     protected void customServerAiStep() {
         if (!hasNexus()) {
-            WorldNexusStorage.of(level).getNexus()
+            WorldNexusStorage.of((ServerLevel) level()).getNexus()
                     .filter(NexusAccess::isActive)
                     .ifPresent(this::setNexus);
         }
@@ -169,7 +166,7 @@ public final class IMPhantomEntity extends Phantom
             return true;
         }
         if (candidate instanceof OwnableEntity ownable
-                && ownable.getRootOwner() instanceof Player) {
+                && ownable.getOwner() instanceof Player) {
             return true;
         }
         return world.players().stream()
@@ -304,7 +301,7 @@ public final class IMPhantomEntity extends Phantom
                     target.getX(), target.getY(0.5D), target.getZ()));
             if (getBoundingBox().inflate(0.2D)
                     .intersects(target.getBoundingBox())) {
-                doHurtTarget((ServerLevel)level(), target);
+                doHurtTarget(target);
                 level().levelEvent(1039, blockPosition(), 0);
                 retreatTicks = 40;
             }

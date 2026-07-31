@@ -149,8 +149,8 @@ public class MineBlockGoal extends Goal {
         if (MobEffectUtil.hasDigSpeed(entity)) {
             multiplier *= 1 + (MobEffectUtil.getDigSpeedAmplification(entity) + 1) * 0.2F;
         }
-        if (entity.hasEffect(MobEffects.MINING_FATIGUE)) {
-            multiplier *= switch(entity.getEffect(MobEffects.MINING_FATIGUE).getAmplifier()) {
+        if (entity.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+            multiplier *= switch(entity.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier()) {
                 case 0 -> 0.3F;
                 case 1 -> 0.09F;
                 case 2 -> 0.0027F;

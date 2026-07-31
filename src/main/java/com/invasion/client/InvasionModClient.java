@@ -4,6 +4,7 @@ import com.invasion.InvScreenHandlers;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.client.render.InvRenderers;
 import com.invasion.client.screen.NexusScreen;
+import com.invasion.network.NexusHudPayload;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;

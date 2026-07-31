@@ -148,7 +148,7 @@ public class Participants {
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         entries.clear();
-        compound.getListOrEmpty("entries").forEach(el -> {
+        compound.getList("entries", net.minecraft.nbt.Tag.TAG_COMPOUND).forEach(el -> {
             Entry entry = new Entry((CompoundTag)el);
             entries.put(entry.id, entry);
         });
@@ -194,7 +194,7 @@ public class Participants {
 
         public Entry(CompoundTag compound) {
             this(compound.getLong("time"),
-                    compound.read("id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
+                    compound.getUUID("id"),
                     compound.getBoolean("creativeAtBinding"));
         }
 
@@ -205,7 +205,7 @@ public class Participants {
         }
 
         public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
-            compound.store("id", net.minecraft.core.UUIDUtil.CODEC, id);
+            compound.putUUID("id", id);
             compound.putLong("time", time);
             compound.putBoolean("creativeAtBinding", creativeAtBinding);
             return compound;

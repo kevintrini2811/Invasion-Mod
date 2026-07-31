@@ -48,7 +48,7 @@ public class TrapEntity extends Entity {
     public TrapEntity(EntityType<TrapEntity> type, Level world, double x, double y, double z, Type trapType) {
         this(type, world);
         setTrapType(trapType);
-        absSnapTo(x, y, z, 0, 0);
+        moveTo(x, y, z, 0, 0);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class TrapEntity extends Entity {
         }
 
         if (!isValidPlacement()) {
-            spawnAtLocation((ServerLevel) level(), InvItems.EMPTY_TRAP);
+            spawnAtLocation(InvItems.EMPTY_TRAP);
             discard();
             return;
         }
@@ -129,7 +129,7 @@ public class TrapEntity extends Entity {
                     l.stun(60);
                 }
             }
-            playSound(SoundEvents.ITEM_BREAK.value(), 1.5F, getRandom().nextFloat() * 0.25F + 0.55F);
+            playSound(SoundEvents.ITEM_BREAK, 1.5F, getRandom().nextFloat() * 0.25F + 0.55F);
         } else if (getTrapType() == Type.FIRE) {
             playSound(SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.5F, 1.15F / (getRandom().nextFloat() * 0.3F + 1));
             doFireball(1.1F, 8);
@@ -150,8 +150,8 @@ public class TrapEntity extends Entity {
     }
 
     @Override
-    public InteractionResult interact(Player player, InteractionHand hand, Vec3 location) {
-        InteractionResult result = super.interact(player, hand, location);
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        InteractionResult result = super.interact(player, hand);
         if (result != InteractionResult.PASS || getTrapType() == Type.EMPTY) {
             return result;
         }
@@ -220,7 +220,7 @@ public class TrapEntity extends Entity {
 
     @Override
     protected void readAdditionalSaveData(CompoundTag compound) {
-        setTrapType(Type.of(compound.getStringOr("type", "")));
+        setTrapType(Type.of(compound.getString("type")));
         timeTriggered = compound.getInt("time_triggered");
     }
 
@@ -231,7 +231,7 @@ public class TrapEntity extends Entity {
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    public boolean hurt(DamageSource source, float amount) {
         return false;
     }
 

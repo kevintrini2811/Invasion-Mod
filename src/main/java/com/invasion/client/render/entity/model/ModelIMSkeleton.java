@@ -14,6 +14,6 @@ public class ModelIMSkeleton extends SkeletonModel<IMSkeletonEntity> {
     }
 
     @Override
-    public void animateModel(IMSkeletonEntity mobEntity, float f, float g, float h) {
+    public void prepareMobModel(IMSkeletonEntity mobEntity, float f, float g, float h) {
     }
 }

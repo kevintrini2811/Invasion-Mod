@@ -61,8 +61,8 @@ public final class IMEndermanEntity extends IMMobEntity {
     public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
-                && isEquippableInSlot(stack, slot)
-                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+                && stack.canEquip(slot, this)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -163,7 +163,7 @@ public final class IMEndermanEntity extends IMMobEntity {
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    public boolean hurt(DamageSource source, float amount) {
         if (source.is(DamageTypeTags.IS_PROJECTILE)) {
             for (int attempt = 0; attempt < 64; attempt++) {
                 if (teleportRandomly()) {
@@ -204,7 +204,7 @@ public final class IMEndermanEntity extends IMMobEntity {
         }
 
         BlockPos.MutableBlockPos ground = new BlockPos.MutableBlockPos(x, y, z);
-        while (ground.getY() > level().getMinY()
+        while (ground.getY() > level().getMinBuildHeight()
                 && !level().getBlockState(ground).blocksMotion()) {
             ground.move(Direction.DOWN);
         }
@@ -228,8 +228,6 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityType.ENDERMAN.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(level, source, causedByPlayer, lootTable));
         getCarriedBlock().ifPresent(state -> {
             ItemStack stack = new ItemStack(state.getBlock().asItem());
             if (!stack.isEmpty()) {
@@ -248,7 +246,7 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        String id = input.getStringOr("carried_block", "");
+        String id = input.getString("carried_block");
         if (!id.isEmpty()) {
             net.minecraft.resources.ResourceLocation identifier = net.minecraft.resources.ResourceLocation.tryParse(id);
             if (identifier != null) {

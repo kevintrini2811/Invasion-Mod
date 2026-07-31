@@ -341,7 +341,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         double dx = (nexusPos.getX() + 0.5D) - this.getX();
         double dz = (nexusPos.getZ() + 0.5D) - this.getZ();
 
-        Direction dir = Direction.getApproximateNearest(dx, 0.0D, dz);
+        Direction dir = Direction.getNearest((float) dx, 0.0F, (float) dz);
         if (!dir.getAxis().isHorizontal()) {
             dir = this.getDirection();
         }

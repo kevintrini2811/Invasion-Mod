@@ -34,7 +34,7 @@ public class TrapItem extends Item {
                     context.getItemInHand().consume(1, context.getPlayer());
                 }
 
-                return InteractionResult.SUCCESS_SERVER;
+                return InteractionResult.SUCCESS;
             }
         }
 

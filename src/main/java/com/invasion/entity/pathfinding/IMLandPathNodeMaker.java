@@ -266,7 +266,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     }
 
     protected boolean canWalkOn(PathType type) {
-        return type != PathType.FIRE && type != PathType.FIRE_IN_NEIGHBOR && type != PathType.LAVA && type != PathType.STICKY_HONEY;
+        return type != PathType.DAMAGE_FIRE && type != PathType.DANGER_FIRE && type != PathType.LAVA && type != PathType.STICKY_HONEY;
     }
 
     public static boolean canMineBlock(PathfinderMob entity, BlockPos pos) {

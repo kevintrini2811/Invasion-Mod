@@ -567,7 +567,7 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void generateSpawnPoints() {
-		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld(), net.minecraft.world.entity.MobSpawnType.EVENT);
+		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld());
 		zombie.setNexus(nexus);
 		List<SpawnPoint> spawnPoints = new ArrayList<>();
 		BlockPos origin = nexus.getOrigin();

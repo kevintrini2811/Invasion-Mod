@@ -37,7 +37,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     public IMDrownedEntity(
             EntityType<? extends EntityIMZombie> type, Level world) {
         super(type, world);
-        moveControl = new SmoothSwimmingMoveControl<>(
+        moveControl = new SmoothSwimmingMoveControl(
                 this, 85, 10, 1.0F, 1.0F, true);
         setPathfindingMalus(PathType.WATER, 0.0F);
     }
@@ -96,10 +96,10 @@ public final class IMDrownedEntity extends EntityIMZombie
         double z = target.getZ() - getZ();
         double horizontal = Math.sqrt(x * x + z * z);
         if (level() instanceof ServerLevel world) {
-            Projectile.spawnProjectileUsingShoot(
-                    trident, world, tridentStack,
+            trident.shoot(
                     x, y + horizontal * 0.2D, z,
                     1.6F, 14 - level().getDifficulty().getId() * 4);
+            world.addFreshEntity(trident);
         }
         playSound(
                 SoundEvents.DROWNED_SHOOT, 1.0F,
@@ -112,7 +112,6 @@ public final class IMDrownedEntity extends EntityIMZombie
                 || target != null && target.isInWater();
     }
 
-    @Override
     protected void travelInWater(
             Vec3 movementInput, double gravity,
             boolean falling, double y) {
@@ -121,7 +120,7 @@ public final class IMDrownedEntity extends EntityIMZombie
             move(MoverType.SELF, getDeltaMovement());
             setDeltaMovement(getDeltaMovement().scale(0.9D));
         } else {
-            super.travelInWater(movementInput, gravity, falling, y);
+            travel(movementInput);
         }
     }
 
@@ -175,8 +174,4 @@ public final class IMDrownedEntity extends EntityIMZombie
         return SoundEvents.DROWNED_SWIM;
     }
 
-    @Override
-    public TagKey<Item> getPreferredWeaponType() {
-        return ItemTags.DROWNED_PREFERRED_WEAPONS;
-    }
 }

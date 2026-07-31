@@ -78,7 +78,7 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     }
 
     @Override
-    public boolean hurtServer(ServerLevel serverLevel, DamageSource source, float damage) {
+    public boolean hurt(DamageSource source, float damage) {
         if (source.is(DamageTypeTags.IS_FIRE)) {
             damage *= flammability;
         }

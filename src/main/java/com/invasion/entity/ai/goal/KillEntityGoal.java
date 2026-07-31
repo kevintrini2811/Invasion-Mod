@@ -31,7 +31,7 @@ public class KillEntityGoal<T extends LivingEntity> extends MoveToEntityGoal<T> 
     }
 
     protected void attackEntity(Entity target) {
-        mob.doHurtTarget((ServerLevel) mob.level(), getTarget());
+        mob.doHurtTarget(getTarget());
         setAttackTime(getAttackDelay());
     }
 

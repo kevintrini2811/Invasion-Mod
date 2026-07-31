@@ -97,7 +97,7 @@ public class AttackerAI {
     }
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
-        scaffolds.load(compound.getListOrEmpty("scaffolds")
+        scaffolds.load(compound.getList("scaffolds", net.minecraft.nbt.Tag.TAG_COMPOUND)
                 .stream()
                 .map(element -> new Scaffold((CompoundTag) element, nexus))
                 .toList()

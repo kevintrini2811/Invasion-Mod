@@ -112,7 +112,6 @@ public class PathNavigateAdapter extends PathNavigation {
         return true;
     }
 
-    @Override
     public boolean canNavigateGround() {
         return true;
     }

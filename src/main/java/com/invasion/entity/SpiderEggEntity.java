@@ -9,7 +9,6 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -101,10 +100,11 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
         super.addAdditionalSaveData(compound);
         compound.putInt("ticks", ticks);
         compound.putInt("hatchTime", hatchTime);
-        CompoundTag.ValueOutputList entities = compound.childrenList("contents");
+        net.minecraft.nbt.ListTag entities = new net.minecraft.nbt.ListTag();
         for (Entity entity : contents) {
-            entity.saveWithoutId(entities.addChild());
+            entities.add(entity.saveWithoutId(new CompoundTag()));
         }
+        compound.put("contents", entities);
     }
 
     @Override
@@ -112,9 +112,8 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
         super.readAdditionalSaveData(compound);
         ticks = compound.getInt("ticks");
         hatchTime = compound.getInt("hatchTime");
-        contents = compound.childrenListOrEmpty("contents").stream()
-                .flatMap(entity -> EntityType.create(entity, level(),
-                        new EntitySpawnRequest(MobSpawnType.LOAD, false)).stream())
+        contents = compound.getList("contents", net.minecraft.nbt.Tag.TAG_COMPOUND).stream()
+                .flatMap(entity -> EntityType.create((CompoundTag) entity, level()).stream())
                 .toList();
     }
 

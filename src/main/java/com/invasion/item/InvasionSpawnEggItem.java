@@ -8,20 +8,18 @@ import com.invasion.entity.NexusEntity;
 import com.invasion.nexus.WorldNexusStorage;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.context.UseOnContext;
-import net.minecraft.world.level.Level;
 
 public final class InvasionSpawnEggItem extends SpawnEggItem {
     private final EntityType<? extends Mob> entityType;
 
-    public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType) {
-        super(properties);
+    public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
+            int primaryColor, int secondaryColor) {
+        super(entityType, primaryColor, secondaryColor, properties);
         this.entityType = entityType;
     }
 
@@ -30,12 +28,9 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
         return spawnAndBind(context.getLevel(), context.getPlayer(), () -> super.useOn(context));
     }
 
-    @Override
-    public InteractionResult use(Level level, Player player, InteractionHand hand) {
-        return spawnAndBind(level, player, () -> super.use(level, player, hand));
-    }
-
-    private InteractionResult spawnAndBind(Level level, Player player, Supplier<InteractionResult> spawnAction) {
+    private InteractionResult spawnAndBind(net.minecraft.world.level.Level level,
+            net.minecraft.world.entity.player.Player player,
+            Supplier<InteractionResult> spawnAction) {
         if (!(level instanceof ServerLevel serverLevel) || player == null) {
             return spawnAction.get();
         }

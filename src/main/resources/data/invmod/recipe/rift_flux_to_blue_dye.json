@@ -2,15 +2,17 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": "invmod:rift_flux"
+    "X": {
+      "item": "invmod:rift_flux"
+    }
   },
   "pattern": [
     "X",
     " ",
     "X"
   ],
-  "result":   {
-      "id": "minecraft:blue_dye",
-      "count": 12
-    }
+  "result": {
+    "id": "minecraft:blue_dye",
+    "count": 12
+  }
 }

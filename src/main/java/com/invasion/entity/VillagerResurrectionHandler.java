@@ -27,13 +27,12 @@ public final class VillagerResurrectionHandler {
             return;
         }
 
-        IMZombieVillagerEntity zombie = InvEntities.ZOMBIE_VILLAGER.create(
-                world, MobSpawnType.CONVERSION);
+        IMZombieVillagerEntity zombie = InvEntities.ZOMBIE_VILLAGER.create(world);
         if (zombie == null) {
             return;
         }
 
-        zombie.snapTo(
+        zombie.moveTo(
                 villager.getX(), villager.getY(), villager.getZ(),
                 villager.getYRot(), villager.getXRot());
         zombie.setDeltaMovement(villager.getDeltaMovement());

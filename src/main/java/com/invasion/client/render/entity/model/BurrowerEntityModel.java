@@ -48,7 +48,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     }
 
     @Override
-    public void animateModel(BurrowerEntity entity, float limbAngle, float limbDistance, float tickDelta) {
+    public void prepareMobModel(BurrowerEntity entity, float limbAngle, float limbDistance, float tickDelta) {
         segments = new PosRotate3D[17];
 
         segments[0] = new PosRotate3D(
@@ -69,7 +69,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     }
 
     @Override
-    public void setAngles(BurrowerEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+    public void setupAnim(BurrowerEntity entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
     }
 
     @Override

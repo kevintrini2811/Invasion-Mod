@@ -142,7 +142,7 @@ public class ElectricityBoltEntity extends Entity {
     }
 
     @Override
-    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+    public boolean hurt(DamageSource source, float amount) {
         return false;
     }
 }

@@ -134,7 +134,7 @@ public interface InvEntities {
     private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
         var id = InvasionMod.id(name);
         var key = ResourceKey.create(Registries.ENTITY_TYPE, id);
-        return Registry.register(BuiltInRegistries.ENTITY_TYPE, id, builder.build(key));
+        return Registry.register(BuiltInRegistries.ENTITY_TYPE, id, builder.build(id.toString()));
     }
 
     private static <T extends Entity> EntityType.Builder<T> betaFeature(EntityType.Builder<T> builder) {

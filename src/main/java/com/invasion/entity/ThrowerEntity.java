@@ -156,9 +156,9 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     @Override
-    public void knockback(double strength, double x, double z, DamageSource source, float damage, boolean force) {
+    public void knockback(double strength, double x, double z) {
         if (getTier() != 2) {
-            super.knockback(strength, x, z, source, damage, force);
+            super.knockback(strength, x, z);
         }
     }
 
@@ -337,7 +337,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     public AbstractArrow createProjectile(int tier) {
-        return tier == 2 ? InvEntities.TNT.create(level(), MobSpawnType.EVENT) : InvEntities.BOULDER.create(level(), MobSpawnType.EVENT);
+        return tier == 2 ? InvEntities.TNT.create(level()) : InvEntities.BOULDER.create(level());
     }
 
     public void throwProjectile(Vec3 targetPosition) {

@@ -132,13 +132,14 @@ public class IMSkeletonEntity extends IMMobEntity
     public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot.isArmor()
-                && isEquippableInSlot(stack, slot)
-                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+                && stack.canEquip(slot, this)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     @Override
     public void customServerAiStep() {
         super.customServerAiStep();
+        ServerLevel world = (ServerLevel) level();
         if (tickCount % 5 != 0) {
             return;
         }
@@ -146,8 +147,8 @@ public class IMSkeletonEntity extends IMMobEntity
                 ItemEntity.class,
                 getBoundingBox().inflate(1.25D),
                 candidate -> !candidate.hasPickUpDelay()
-                        && wantsToPickUp(world, candidate.getItem()))) {
-            pickUpItem(world, item);
+                        && wantsToPickUp(candidate.getItem()))) {
+            pickUpItem(item);
         }
     }
 

@@ -218,7 +218,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         double headHorizontal =
                 Math.sqrt(headTangent.x * headTangent.x + headTangent.z * headTangent.z);
         if (headHorizontal > Math.max(0.02D, Math.abs(headTangent.y) * 0.2D)) {
-            stableBodyYaw = Mth.rotLerpRad(0.35F, stableBodyYaw,
+            stableBodyYaw = Mth.rotLerp(0.35F, stableBodyYaw,
                     (float) -Math.atan2(headTangent.z, headTangent.x));
         }
 
@@ -242,8 +242,8 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         if (!isVertical) {
             float targetYaw = (float) -Math.atan2(direction.z, direction.x);
             stableSegmentYaw[segmentIndex] =
-                    Mth.rotLerpRad(0.35F, stableSegmentYaw[segmentIndex], targetYaw);
-            stableBodyYaw = Mth.rotLerpRad(0.35F, stableBodyYaw, targetYaw);
+                    Mth.rotLerp(0.35F, stableSegmentYaw[segmentIndex], targetYaw);
+            stableBodyYaw = Mth.rotLerp(0.35F, stableBodyYaw, targetYaw);
         }
         return new Vector3f(
                 0,

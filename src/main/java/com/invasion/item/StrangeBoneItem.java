@@ -33,16 +33,16 @@ class StrangeBoneItem extends Item {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        if (!level().getBlockState(context.getClickedPos()).is(InvBlocks.NEXUS_CORE)) {
+        if (!context.getLevel().getBlockState(context.getClickedPos()).is(InvBlocks.NEXUS_CORE)) {
             return InteractionResult.PASS;
         }
-        if (level().isClientSide()) {
+        if (context.getLevel().isClientSide()) {
             return InteractionResult.SUCCESS;
         }
 
         Player player = context.getPlayer();
         if (player == null
-                || !(level().getBlockEntity(context.getClickedPos()) instanceof NexusBlockEntity blockEntity)
+                || !(context.getLevel().getBlockEntity(context.getClickedPos()) instanceof NexusBlockEntity blockEntity)
                 || !(blockEntity.getNexus() instanceof Nexus nexus)) {
             return InteractionResult.FAIL;
         }
@@ -90,7 +90,7 @@ class StrangeBoneItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        IMWolfEntity newWolf = InvEntities.WOLF.create(wolf.level(), MobSpawnType.CONVERSION);
+        IMWolfEntity newWolf = InvEntities.WOLF.create(wolf.level());
         if (newWolf == null) {
             return InteractionResult.FAIL;
         }

@@ -43,7 +43,7 @@ import net.minecraft.world.phys.Vec3;
 public class BurrowerEntity extends IMMobEntity implements Miner {
     public static final int NUMBER_OF_SEGMENTS = 16;
 
-    private static final EntityDataAccessor<Vector3fc> HEAD_ROTATION =
+    private static final EntityDataAccessor<Vector3f> HEAD_ROTATION =
             SynchedEntityData.defineId(BurrowerEntity.class, EntityDataSerializers.VECTOR3);
     private TerrainModifier terrainModifier = new TerrainModifier(this, 2);
     private TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1);
@@ -201,8 +201,8 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
             float targetPitch = (float) Math.atan2(direction.y, horizontal);
             Vector3f rotation = new Vector3f(
                     0.0F,
-                    Mth.rotLerpRad(0.35F, oldYaw, targetYaw),
-                    Mth.rotLerpRad(0.35F, oldPitch, targetPitch));
+                    Mth.rotLerp(0.35F, oldYaw, targetYaw),
+                    Mth.rotLerp(0.35F, oldPitch, targetPitch));
             segments3D[i] = new PosRotate3D(sampledPoints[i], rotation);
         }
     }

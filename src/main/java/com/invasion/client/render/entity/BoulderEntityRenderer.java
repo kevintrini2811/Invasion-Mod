@@ -21,11 +21,11 @@ public class BoulderEntityRenderer extends EntityRenderer<BoulderEntity> {
 
     @Override
     public void render(BoulderEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertexConsumers, int light) {
-        model.renderToBuffer(matrices, vertexConsumers.getBuffer(model.renderType(getTexture(entity))), light, 0);
+        model.renderToBuffer(matrices, vertexConsumers.getBuffer(model.renderType(getTextureLocation(entity))), light, 0);
     }
 
     @Override
-    public ResourceLocation getTexture(BoulderEntity entity) {
+    public ResourceLocation getTextureLocation(BoulderEntity entity) {
         return TEXTURE;
     }
 }

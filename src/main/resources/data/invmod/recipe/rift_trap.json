@@ -2,8 +2,12 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    "invmod:empty_trap",
-    "invmod:rift_flux"
+    {
+      "item": "invmod:empty_trap"
+    },
+    {
+      "item": "invmod:rift_flux"
+    }
   ],
   "result": {
     "id": "invmod:rift_trap"

@@ -193,7 +193,8 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private AABB getChunkBox(Level world) {
-        return new AABB(pos).inflate(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10).setMinY(world.getMinY()).setMaxY(world.getMaxY());
+        return new AABB(pos).inflate(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10)
+                .setMinY(world.getMinBuildHeight()).setMaxY(world.getMaxBuildHeight());
     }
 
     @Override
@@ -438,7 +439,7 @@ public class Nexus implements ControllableNexusAccess {
         if (hp <= 0) {
             if (mode == Mode.STARTED || mode == Mode.DEBUG) {
                 theEnd();
-                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld(), net.minecraft.world.entity.MobSpawnType.EVENT);
+                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld());
                 mob.setCustomName(InvBlocks.NEXUS_CORE.getName());
                 boundPlayers.sendMessage(source.getLocalizedDeathMessage(mob));
             }
@@ -459,7 +460,7 @@ public class Nexus implements ControllableNexusAccess {
                 return;
             }
         } else if (reason == RemovalReason.DISCARDED) {
-            if (combatant.asEntity().getType().create(getWorld(), net.minecraft.world.entity.MobSpawnType.EVENT) instanceof Combatant<?> copy) {
+            if (combatant.asEntity().getType().create(getWorld()) instanceof Combatant<?> copy) {
                 copy.asEntity().restoreFrom(combatant.asEntity());
                 copy.setNexus(this);
                 waveSpawner.askForRespawn(copy);
@@ -805,7 +806,7 @@ public class Nexus implements ControllableNexusAccess {
         DamageSource source = getWorld().damageSources().magic();
         for (LivingEntity mob : getWorld().getEntitiesOfClass(LivingEntity.class, boundingBoxToRadius, Combatant.PREDICATE)) {
             mob.hurt(source, mob.getMaxHealth());
-            mob.kill((ServerLevel) mob.level());
+            mob.kill();
         }
     }
 
@@ -852,8 +853,8 @@ public class Nexus implements ControllableNexusAccess {
 
     Nexus(ServerLevel world, WorldNexusStorage storage, CompoundTag compound, HolderLookup.Provider lookup) {
         this(world, storage,
-                compound.read("uuid", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
-                compound.read("pos", BlockPos.CODEC).orElseThrow());
+                compound.getUUID("uuid"),
+                net.minecraft.nbt.NbtUtils.readBlockPos(compound, "pos").orElseThrow());
         activationTimer = compound.getInt("activationTimer");
         mode = Mode.forId(compound.getInt("mode"));
         currentWave = compound.getInt("currentWave");
@@ -869,7 +870,8 @@ public class Nexus implements ControllableNexusAccess {
         activated = compound.getBoolean("activated");
         paused = compound.getBoolean("paused");
         mobsLeftInWave = compound.getInt("mobsLeftInWave");
-        lastMobsLeftInWave = compound.getIntOr("lastMobsLeftInWave", mobsLeftInWave);
+        lastMobsLeftInWave = compound.contains("lastMobsLeftInWave")
+                ? compound.getInt("lastMobsLeftInWave") : mobsLeftInWave;
         mobsToKillInWave = compound.getInt("mobsToKillInWave");
 
         nexusItemStacks.readNbt(compound.getCompound("inventory"), lookup);
@@ -881,8 +883,8 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
-        compound.store("uuid", net.minecraft.core.UUIDUtil.CODEC, uuid);
-        compound.store("pos", BlockPos.CODEC, pos);
+        compound.putUUID("uuid", uuid);
+        compound.put("pos", net.minecraft.nbt.NbtUtils.writeBlockPos(pos));
         compound.putInt("activationTimer", activationTimer);
         compound.putInt("mode", getMode().ordinal());
         compound.putInt("currentWave", getCurrentWave());

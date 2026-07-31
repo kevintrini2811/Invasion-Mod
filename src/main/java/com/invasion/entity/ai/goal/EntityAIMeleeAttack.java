@@ -48,7 +48,7 @@ public class EntityAIMeleeAttack<T extends LivingEntity, E extends PathfinderMob
 	}
 
 	protected void attackEntity(LivingEntity target) {
-		mob.doHurtTarget((ServerLevel) mob.level(), target);
+		mob.doHurtTarget(target);
 		setAttackTime(getAttackDelay());
 	}
 

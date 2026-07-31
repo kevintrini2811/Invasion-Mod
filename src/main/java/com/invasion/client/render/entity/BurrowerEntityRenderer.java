@@ -21,7 +21,7 @@ public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity,
     }
 
     @Override
-    public ResourceLocation getTexture(BurrowerEntity entity) {
+    public ResourceLocation getTextureLocation(BurrowerEntity entity) {
         return TEXTURE;
     }
 }

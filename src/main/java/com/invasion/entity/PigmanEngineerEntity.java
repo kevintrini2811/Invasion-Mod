@@ -145,6 +145,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public void customServerAiStep() {
         super.customServerAiStep();
+        ServerLevel serverLevel = (ServerLevel) level();
         if (buildingTower && isTowerBuildInterrupted()) {
             returnToTowerBuildPosition();
         } else {
@@ -157,17 +158,15 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                     ItemEntity.class,
                     getBoundingBox().inflate(1.25D),
                     candidate -> !candidate.hasPickUpDelay()
-                            && wantsToPickUp(
-                                    serverLevel, candidate.getItem()))) {
-                pickUpItem(serverLevel, item);
+                            && wantsToPickUp(candidate.getItem()))) {
+                pickUpItem(item);
             }
         }
 
     }
 
     @Override
-    public boolean hurtServer(
-            ServerLevel serverLevel, DamageSource source, float damage) {
+    public boolean hurt(DamageSource source, float damage) {
         boolean damaged = super.hurt(source, damage);
         if (damaged && buildingTower) {
             if (source.getEntity() instanceof LivingEntity attacker
@@ -182,8 +181,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot.isArmor()
-                && isEquippableInSlot(stack, slot)
-                && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+                && stack.canEquip(slot, this)
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     @Override

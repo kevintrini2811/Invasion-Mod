@@ -2,13 +2,15 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": "invmod:rift_flux"
+    "X": {
+      "item": "invmod:rift_flux"
+    }
   },
   "pattern": [
     "X X"
   ],
-  "result":   {
-      "id": "minecraft:redstone",
-      "count": 24
-    }
+  "result": {
+    "id": "minecraft:redstone",
+    "count": 24
+  }
 }

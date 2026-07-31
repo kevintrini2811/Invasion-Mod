@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.GrowingPlantBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.world.level.block.VegetationBlock;
+import net.minecraft.world.level.block.BushBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.GameRules;
@@ -63,7 +63,7 @@ public final class CarryBlockingBlockGoal extends Goal {
             return state.getValue(SnowLayerBlock.LAYERS)
                     == SnowLayerBlock.MAX_HEIGHT;
         }
-        return !(state.getBlock() instanceof VegetationBlock)
+        return !(state.getBlock() instanceof BushBlock)
                 && !(state.getBlock() instanceof GrowingPlantBlock)
                 && !state.is(BlockTags.CLIMBABLE)
                 && !state.is(BlockTags.REPLACEABLE_BY_TREES)

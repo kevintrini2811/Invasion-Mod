@@ -26,7 +26,7 @@ public class ThrowerEntityRenderer extends HumanoidMobRenderer<ThrowerEntity, Th
     }
 
 	@Override
-    public ResourceLocation getTexture(ThrowerEntity entity) {
+    public ResourceLocation getTextureLocation(ThrowerEntity entity) {
 	    int id = entity.getTier() - 1;
 	    return TEXTURES.get(id < 0 || id >= TEXTURES.size() ? 0 : id);
 	}

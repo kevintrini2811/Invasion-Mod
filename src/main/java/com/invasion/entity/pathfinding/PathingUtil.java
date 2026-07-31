@@ -19,8 +19,8 @@ public interface PathingUtil {
             PathType.UNPASSABLE_RAIL
     );
     Set<PathType> FIRE_DAMAGE_TYPES = Set.of(
-            PathType.FIRE,
-            PathType.FIRE_IN_NEIGHBOR,
+            PathType.DAMAGE_FIRE,
+            PathType.DANGER_FIRE,
             PathType.LAVA
     );
     Set<PathType> WATER_DAMAGE_TYPES = Set.of(

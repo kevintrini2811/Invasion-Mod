@@ -35,7 +35,7 @@ public class TntEntityRenderer extends EntityRenderer<EntityIMPrimedTNT> {
 
     @SuppressWarnings("deprecation")
     @Override
-    public ResourceLocation getTexture(EntityIMPrimedTNT tntEntity) {
+    public ResourceLocation getTextureLocation(EntityIMPrimedTNT tntEntity) {
         return TextureAtlas.LOCATION_BLOCKS;
     }
 }

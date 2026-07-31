@@ -22,7 +22,7 @@ public class CustomRangeActiveTargetGoal<T extends LivingEntity> extends Nearest
 	}
 
 	public CustomRangeActiveTargetGoal(Mob entity, Class<T> targetType, FloatSupplier range, boolean checkVisibility) {
-	    super(entity, targetType, 10, checkVisibility, false, (target, serverLevel) -> {
+	    super(entity, targetType, 10, checkVisibility, false, target -> {
             if (entity instanceof NexusEntity nexusEntity && nexusEntity.hasNexus()) {
                 return entity.distanceTo(target) < nexusEntity.findDistanceToNexus() * 0.5;
             }
