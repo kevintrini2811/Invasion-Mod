@@ -41,9 +41,9 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.JUMPING_SPIDER,
                 context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.JUMPER));
         event.registerEntityRenderer(InvEntities.CAVE_SPIDER,
-                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.CAVE));
+                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.CAVE, 0.7F));
         event.registerEntityRenderer(InvEntities.QUEEN_SPIDER,
-                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
+                context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER, 2.0F));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.IMP, ImpEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMAN, VariantMobRenderers.Enderman::new);

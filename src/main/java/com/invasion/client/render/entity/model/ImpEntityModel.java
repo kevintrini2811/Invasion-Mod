@@ -11,7 +11,8 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 
-public class ImpEntityModel extends HierarchicalModel<ImpEnitty> {
+public class ImpEntityModel extends HierarchicalModel<ImpEnitty>
+        implements net.minecraft.client.model.ArmedModel {
     private final ModelPart root;
 
     private final ModelPart head;
@@ -90,5 +91,16 @@ public class ImpEntityModel extends HierarchicalModel<ImpEnitty> {
         leftShin.xRot = cosB * 1.4F * limbDistance + 0.82461F;
         rightFoot.xRot = cosA * 1.4F * limbDistance - 0.01403F;
         leftFoot.xRot = cosB * 1.4F * limbDistance - 0.01214F;
+    }
+
+    @Override
+    public void translateToHand(net.minecraft.world.entity.HumanoidArm arm,
+            com.mojang.blaze3d.vertex.PoseStack poseStack) {
+        ModelPart armPart = arm == net.minecraft.world.entity.HumanoidArm.RIGHT
+                ? rightArm : leftArm;
+        armPart.translateAndRotate(poseStack);
+        poseStack.translate(
+                arm == net.minecraft.world.entity.HumanoidArm.RIGHT ? -0.06F : 0.06F,
+                0.42F, 0.0F);
     }
 }

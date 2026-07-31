@@ -7,6 +7,8 @@ import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.IMZombifiedPiglinEntity;
 import net.minecraft.client.model.EndermanModel;
 import net.minecraft.client.model.ZombieModel;
+import net.minecraft.client.model.PiglinModel;
+import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
@@ -14,6 +16,7 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -89,7 +92,12 @@ public final class VariantMobRenderers {
         private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/enderman/enderman.png");
         public Enderman(EntityRendererProvider.Context c) {
             super(c, new EndermanModel<>(c.bakeLayer(ModelLayers.ENDERMAN)), 0.5F);
-            addLayer(new HeadItemLayer<>(this, c));
+            addLayer(new HumanoidArmorLayer<>(this,
+                    new HumanoidModel<IMEndermanEntity>(
+                            c.bakeLayer(ModelLayers.ZOMBIE_INNER_ARMOR)),
+                    new HumanoidModel<IMEndermanEntity>(
+                            c.bakeLayer(ModelLayers.ZOMBIE_OUTER_ARMOR)),
+                    c.getModelManager()));
         }
         @Override public ResourceLocation getTextureLocation(IMEndermanEntity e) { return TEXTURE; }
     }
@@ -111,33 +119,17 @@ public final class VariantMobRenderers {
         }
     }
 
-    private static final class HeadItemLayer<T extends net.minecraft.world.entity.LivingEntity,
-            M extends net.minecraft.client.model.EntityModel<T> & net.minecraft.client.model.HeadedModel>
-            extends RenderLayer<T, M> {
-        private final EntityRendererProvider.Context context;
-        HeadItemLayer(net.minecraft.client.renderer.entity.RenderLayerParent<T, M> parent,
-                EntityRendererProvider.Context context) {
-            super(parent);
-            this.context = context;
-        }
-        @Override public void render(PoseStack p, MultiBufferSource b, int light, T e,
-                float a, float d, float tick, float age, float yaw, float pitch) {
-            var helmet = e.getItemBySlot(EquipmentSlot.HEAD);
-            if (helmet.isEmpty()) return;
-            p.pushPose();
-            getParentModel().getHead().translateAndRotate(p);
-            p.translate(0, -0.25, 0);
-            context.getItemRenderer().renderStatic(e, helmet, ItemDisplayContext.HEAD,
-                    false, p, b, e.level(), light,
-                    net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, e.getId());
-            p.popPose();
-        }
-    }
-
-    public static final class ZombifiedPiglin extends HumanoidMobRenderer<IMZombifiedPiglinEntity, ZombieModel<IMZombifiedPiglinEntity>> {
+    public static final class ZombifiedPiglin extends HumanoidMobRenderer<
+            IMZombifiedPiglinEntity, PiglinModel<IMZombifiedPiglinEntity>> {
         private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/piglin/zombified_piglin.png");
         public ZombifiedPiglin(EntityRendererProvider.Context c) {
-            super(c, new ZombieModel<>(c.bakeLayer(ModelLayers.ZOMBIE)), 0.5F);
+            super(c, new PiglinModel<>(c.bakeLayer(ModelLayers.ZOMBIFIED_PIGLIN)), 0.5F);
+            addLayer(new HumanoidArmorLayer<>(this,
+                    new HumanoidModel<IMZombifiedPiglinEntity>(
+                            c.bakeLayer(ModelLayers.ZOMBIFIED_PIGLIN_INNER_ARMOR)),
+                    new HumanoidModel<IMZombifiedPiglinEntity>(
+                            c.bakeLayer(ModelLayers.ZOMBIFIED_PIGLIN_OUTER_ARMOR)),
+                    c.getModelManager()));
         }
         @Override public ResourceLocation getTextureLocation(IMZombifiedPiglinEntity e) { return TEXTURE; }
     }

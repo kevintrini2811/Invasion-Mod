@@ -12,6 +12,8 @@ public class ImpEntityRenderer extends LivingEntityRenderer<ImpEnitty, ImpEntity
 
 	public ImpEntityRenderer(EntityRendererProvider.Context ctx) {
 		super(ctx, new ImpEntityModel(ImpEntityModel.getTexturedModelData().bakeRoot()), 0.3F);
+        addLayer(new net.minecraft.client.renderer.entity.layers.ItemInHandLayer<>(
+                this, ctx.getItemInHandRenderer()));
 	}
 
 	@Override
