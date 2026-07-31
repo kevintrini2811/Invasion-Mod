@@ -17,6 +17,10 @@ base {
     archivesName = project.name
 }
 
+tasks.named('jar') {
+    archiveFileName = "${project.name}-${project.version}-26.2fabric.jar"
+}
+
 sourceSets {
     main {
         java {
