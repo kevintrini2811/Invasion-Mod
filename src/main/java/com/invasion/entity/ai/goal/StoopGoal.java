@@ -1,5 +1,6 @@
 package com.invasion.entity.ai.goal;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.pathfinder.PathComputationType;
@@ -50,8 +51,8 @@ public class StoopGoal extends Goal {
     }
 
     private boolean isObstructed() {
-        return !theEntity.level()
-                .getBlockState(theEntity.blockPosition().above(2))
-                .isPathfindable(PathComputationType.LAND);
+        BlockPos pos = theEntity.blockPosition().above(2);
+        return !theEntity.level().getBlockState(pos)
+                .isPathfindable(theEntity.level(), pos, PathComputationType.LAND);
     }
 }

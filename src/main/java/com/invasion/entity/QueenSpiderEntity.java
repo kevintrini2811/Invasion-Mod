@@ -24,7 +24,7 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
         return Spider.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.22F)
                 .add(Attributes.ATTACK_DAMAGE, 4)
-                .add(Attributes.GRAVITY, 0.08);
+;
     }
 
     @Override
@@ -40,7 +40,7 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
     @Override
     public List<Entity> getOffspring(Entity partner) {
         List<Entity> offspring = new ArrayList<>();
-        int offspringCount = 3 + level().getRandom().nextInt(4);
+        int offspringCount = 3 + level().random.nextInt(4);
         var offspringTypes = level().registryAccess()
                 .lookupOrThrow(Registries.ENTITY_TYPE)
                 .get(InvTags.Entities.QUEEN_SPIDER_OFFSPRING).stream()
@@ -48,7 +48,7 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
                         set.spliterator(), false))
                 .toList();
         for (int i = 0; i < offspringCount && !offspringTypes.isEmpty(); i++) {
-            var type = offspringTypes.get(level().getRandom().nextInt(offspringTypes.size()));
+            var type = offspringTypes.get(level().random.nextInt(offspringTypes.size()));
             Entity child = type.value().create(level());
             if (child == null) {
                 continue;

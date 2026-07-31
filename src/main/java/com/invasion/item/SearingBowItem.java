@@ -20,21 +20,9 @@ public class SearingBowItem extends BowItem {
     }
 
     @Override
-    protected void shootProjectile(LivingEntity shooter, Projectile projectile, int index, float speed, float divergence, float yaw, @Nullable LivingEntity target) {
-        super.shootProjectile(shooter, projectile, index, speed, divergence, yaw, target);
-        float pullProgress = getUncappedPullProgress(getUseDuration(getDefaultInstance(), shooter) - shooter.getUseItemRemainingTicks());
-        if (pullProgress >= SEARING_ACTIVATION_PULL_PERCENTAGE) {
-            projectile.setRemainingFireTicks(100);
-            if (projectile instanceof AbstractArrow p) {
-                // Original formula with the vanilla arrow's base damage of 2:
-                // (2 + 1) * 1.5 + 1 = 5.5. Enchantments are applied on hit in 26.2.
-                p.setBaseDamage(SEARING_ARROW_BASE_DAMAGE);
-            }
-        }
-    }
-
-    @Override
-    protected int getDurabilityUse(ItemStack projectile) {
-        return 0;
+    public AbstractArrow customArrow(AbstractArrow arrow) {
+        arrow.setSecondsOnFire(5);
+        arrow.setBaseDamage(SEARING_ARROW_BASE_DAMAGE);
+        return arrow;
     }
 }

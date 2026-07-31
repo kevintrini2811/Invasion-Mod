@@ -49,17 +49,17 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     }
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        if (getRandom().nextInt(4) == 0) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        if (random.nextInt(4) == 0) {
             spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(HATCHED, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(HATCHED, false);
     }
 
     public boolean isHatched() {

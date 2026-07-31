@@ -2,6 +2,8 @@ package com.invasion.nexus;
 
 import com.invasion.item.InvItems;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
@@ -101,24 +103,24 @@ public class NexusInventory extends SimpleContainer {
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         accumulatedFlux = compound.getInt("accumulatedFlux");
         cookTime = compound.getInt("cookTime");
-        ItemStack.OPTIONAL_CODEC.listOf()
-                .parse(lookup.createSerializationContext(NbtOps.INSTANCE), compound.get("Items"))
-                .result()
-                .ifPresent(items -> {
-                    clearContent();
-                    for (int i = 0; i < Math.min(items.size(), getContainerSize()); i++) {
-                        setItem(i, items.get(i));
-                    }
-                });
+        NonNullList<ItemStack> items = NonNullList.withSize(
+                getContainerSize(), ItemStack.EMPTY);
+        ContainerHelper.loadAllItems(compound, items);
+        clearContent();
+        for (int i = 0; i < items.size(); i++) {
+            setItem(i, items.get(i));
+        }
     }
 
     public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         compound.putInt("accumulatedFlux", accumulatedFlux);
         compound.putInt("cookTime", cookTime);
-        ItemStack.OPTIONAL_CODEC.listOf()
-                .encodeStart(lookup.createSerializationContext(NbtOps.INSTANCE), getItems())
-                .result()
-                .ifPresent(tag -> compound.put("Items", tag));
+        NonNullList<ItemStack> items = NonNullList.withSize(
+                getContainerSize(), ItemStack.EMPTY);
+        for (int i = 0; i < items.size(); i++) {
+            items.set(i, getItem(i));
+        }
+        ContainerHelper.saveAllItems(compound, items);
         return compound;
     }
 }

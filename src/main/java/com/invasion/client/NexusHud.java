@@ -6,8 +6,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
-import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 
 public final class NexusHud {
     private static final int BLUE = 0xFF5555FF;
@@ -20,10 +20,10 @@ public final class NexusHud {
     private NexusHud() {
     }
 
-    public static void register(RegisterGuiLayersEvent event) {
+    public static void register(RegisterGuiOverlaysEvent event) {
         event.registerAbove(
-                VanillaGuiLayers.BOSS_OVERLAY,
-                InvasionMod.id("nexus_status"),
+                VanillaGuiOverlay.BOSS_EVENT_PROGRESS.id(),
+                "nexus_status",
                 NexusHud::render);
     }
 
@@ -31,7 +31,8 @@ public final class NexusHud {
         state = payload;
     }
 
-    private static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker deltaTracker) {
+    private static void render(net.minecraftforge.client.gui.overlay.ForgeGui gui,
+            GuiGraphics graphics, float partialTick, int screenWidth, int screenHeight) {
         if (!state.active()) {
             return;
         }

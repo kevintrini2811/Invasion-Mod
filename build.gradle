@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.143'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.143'
 }
 
 version = project.mod_version
@@ -12,12 +12,12 @@ base {
 }
 
 tasks.named('jar') {
-    archiveFileName = "${project.name}-${project.version}-1.21.1neo.jar"
+    archiveFileName = "${project.name}-${project.version}-1.20.1neo.jar"
 }
 
 java {
     withSourcesJar()
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(17)
 }
 
 sourceSets {
@@ -35,8 +35,10 @@ repositories {
     maven { name = 'JEI'; url = 'https://maven.blamejared.com' }
 }
 
-neoForge {
-    version = project.neo_version
+legacyForge {
+    enable {
+        neoForgeVersion = "${project.minecraft_version}-${project.neo_version}"
+    }
 
     runs {
         client {
@@ -59,7 +61,7 @@ neoForge {
 }
 
 dependencies {
-    compileOnly "mezz.jei:jei-${project.minecraft_version}-neoforge-api:${project.jei_version}"
+    compileOnly "mezz.jei:jei-${project.minecraft_version}-forge-api:${project.jei_version}"
 }
 
 processResources {
@@ -68,7 +70,7 @@ processResources {
             minecraftVersion: project.minecraft_version,
             neoVersion: project.neo_version)
 
-    filesMatching('META-INF/neoforge.mods.toml') {
+    filesMatching('META-INF/mods.toml') {
         expand(
                 version: project.version,
                 minecraftVersion: project.minecraft_version,
@@ -80,6 +82,6 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 21
+    options.release = 17
     options.compilerArgs += ['-Xmaxerrs', '5000']
 }

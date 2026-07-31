@@ -63,9 +63,9 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(TIER, 1);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(TIER, 1);
     }
 
     public int getTier() {
@@ -76,7 +76,7 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     public void onSpawned(
             @Nullable NexusAccess nexus, EntityConstruct spawnConditions) {
         setNexus(nexus);
-        entityData.set(TIER, Math.clamp(spawnConditions.tier(), 1, 2));
+        entityData.set(TIER, net.minecraft.util.Mth.clamp(spawnConditions.tier(), 1, 2));
         applyTierAttributes();
         if (getTier() == 2) {
             equipTierTwoArmor();
@@ -100,7 +100,7 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
 
     private void equipGoldArmor(
             EquipmentSlot slot, net.minecraft.world.item.Item item) {
-        if (getItemBySlot(slot).isEmpty() && getRandom().nextInt(5) == 1) {
+        if (getItemBySlot(slot).isEmpty() && random.nextInt(5) == 1) {
             setItemSlot(slot, item.getDefaultInstance());
         }
     }
@@ -146,11 +146,6 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     @Override
-    public boolean canUseSlot(EquipmentSlot slot) {
-        return slot != EquipmentSlot.HEAD && super.canUseSlot(slot);
-    }
-
-    @Override
     protected void customServerAiStep() {
         super.customServerAiStep();
         ServerLevel world = (ServerLevel) level();
@@ -184,7 +179,7 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     @Override
     public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        entityData.set(TIER, Math.clamp(
+        entityData.set(TIER, net.minecraft.util.Mth.clamp(
                 input.contains("tier") ? input.getInt("tier") : 1, 1, 2));
         applyTierAttributes();
         setItemSlot(EquipmentSlot.HEAD, ItemStack.EMPTY);
@@ -202,10 +197,9 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        if (getRandom().nextInt(4) == 0) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        if (random.nextInt(4) == 0) {
             spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
     }

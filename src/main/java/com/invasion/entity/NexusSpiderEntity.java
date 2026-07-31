@@ -57,7 +57,7 @@ public class NexusSpiderEntity extends Spider
     private static final AttributeModifier BABY_SPEED_BONUS = AttributeUtil.addToBase(InvasionMod.id("baby_speed"), 0.05F);
     private static final AttributeModifier BABY_ATTACK_BONUS = AttributeUtil.addToBase(InvasionMod.id("baby_attack"), -2F);
 
-    private static final List<Holder<Attribute>> GROWTH_SCALING_ATTRIBUTES = List.of(
+    private static final List<Attribute> GROWTH_SCALING_ATTRIBUTES = List.of(
             Attributes.ATTACK_DAMAGE,
             Attributes.ATTACK_KNOCKBACK,
             Attributes.KNOCKBACK_RESISTANCE
@@ -94,13 +94,13 @@ public class NexusSpiderEntity extends Spider
         return Spider.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.29F)
                 .add(Attributes.ATTACK_DAMAGE, 3)
-                .add(Attributes.GRAVITY, 0.08);
+;
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(CHILD, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(CHILD, false);
     }
 
     @Override
@@ -144,14 +144,14 @@ public class NexusSpiderEntity extends Spider
     }
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
         if (isBaby()) {
             return;
         }
-        if (getRandom().nextInt(4) == 0) {
+        if (random.nextInt(4) == 0) {
             spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
-        if (getRandom().nextFloat() < 0.35F) {
+        if (random.nextFloat() < 0.35F) {
             spawnAtLocation(Items.STRING);
         }
     }
@@ -166,13 +166,8 @@ public class NexusSpiderEntity extends Spider
         return this;
     }
 
-    @Override
-    public final float getAgeScale() {
-        return 1;
-    }
-
     public float scaleAmount() {
-        return super.getScale() * getGlobalScaleMultiplier();
+        return getGlobalScaleMultiplier();
     }
 
     protected float getGlobalScaleMultiplier() {
@@ -191,8 +186,8 @@ public class NexusSpiderEntity extends Spider
     }
 
     @Override
-    protected float getJumpPower(float strength) {
-        return super.getJumpPower(strength + 0.41F);
+    protected float getJumpPower() {
+        return super.getJumpPower() + 0.41F;
     }
 
     @Override
@@ -244,7 +239,9 @@ public class NexusSpiderEntity extends Spider
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType spawnReason, @Nullable SpawnGroupData entityData) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty,
+            MobSpawnType spawnReason, @Nullable SpawnGroupData entityData,
+            @Nullable CompoundTag entityTag) {
         if (entityData == null) {
             entityData = new NexusSpiderData(new AgeableMob.AgeableMobGroupData(true));
 
@@ -261,7 +258,7 @@ public class NexusSpiderEntity extends Spider
 
         passiveData.increaseGroupSizeByOne();
 
-        super.finalizeSpawn(world, difficulty, spawnReason, entityData);
+        super.finalizeSpawn(world, difficulty, spawnReason, entityData, entityTag);
 
         if (hasNexus()) {
             AttributeUtil.applyNexusWaveComplications(this, world, getNexus().getProgressionLevel(), difficulty, spawnReason);

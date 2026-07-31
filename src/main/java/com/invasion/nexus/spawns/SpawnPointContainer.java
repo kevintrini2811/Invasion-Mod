@@ -47,8 +47,8 @@ public class SpawnPointContainer {
     }
 
     public SpawnPoint getRandomSpawnPoint(SpawnType spawnType, Ints angle) {
-        int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
-        int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
+        int minAngle = (java.util.Objects.requireNonNullElse(angle.getMin(), -EntityPattern.MAX_ANGLE));
+        int maxAngle = (java.util.Objects.requireNonNullElse(angle.getMax(), EntityPattern.MAX_ANGLE));
         List<SpawnPoint> spawnList = spawnPoints.get(spawnType);
         if (spawnList.isEmpty()) {
             return null;
@@ -85,8 +85,8 @@ public class SpawnPointContainer {
     }
 
     public int getNumberOfSpawnPoints(SpawnType spawnType, Ints angle) {
-        int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
-        int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
+        int minAngle = (java.util.Objects.requireNonNullElse(angle.getMin(), -EntityPattern.MAX_ANGLE));
+        int maxAngle = (java.util.Objects.requireNonNullElse(angle.getMax(), EntityPattern.MAX_ANGLE));
         List<SpawnPoint> spawnList = spawnPoints.get(spawnType);
         if (spawnList.isEmpty() || (maxAngle - minAngle) >= 360) {
             return spawnList.size();

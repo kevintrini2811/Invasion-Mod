@@ -37,7 +37,7 @@ import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
 import com.invasion.network.NexusHudPayload;
-import net.neoforged.neoforge.network.PacketDistributor;
+import com.invasion.network.InvNetwork;
 
 public class Nexus implements ControllableNexusAccess {
     private static final int INITIAL_SPAWN_RADIUS = 52;
@@ -254,7 +254,7 @@ public class Nexus implements ControllableNexusAccess {
     @Override
     public int getChargedCreeperChancePercent() {
         return mode == Mode.CONTINUOUS
-                ? Math.clamp(continuousAttackCount, 1, 100)
+                ? net.minecraft.util.Mth.clamp(continuousAttackCount, 1, 100)
                 : ControllableNexusAccess.super
                         .getChargedCreeperChancePercent();
     }
@@ -262,7 +262,7 @@ public class Nexus implements ControllableNexusAccess {
     @Override
     public int getRandomEquipmentChancePercent() {
         return mode == Mode.CONTINUOUS
-                ? Math.clamp(continuousAttackCount - 1, 0, 100)
+                ? net.minecraft.util.Mth.clamp(continuousAttackCount - 1, 0, 100)
                 : ControllableNexusAccess.super
                         .getRandomEquipmentChancePercent();
     }
@@ -331,7 +331,7 @@ public class Nexus implements ControllableNexusAccess {
     public void stop(boolean killEnemies) {
         if (mode == Mode.WAITING) {
             setMode(Mode.CONTINUOUS);
-            int days = getWorld().getRandom().nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
+            int days = getWorld().random.nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
             nextAttackTime = (int) ((getWorld().getGameTime() / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
         } else {
             setMode(Mode.STOPPED);
@@ -496,7 +496,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {
-        PacketDistributor.sendToPlayer(player, payload);
+        InvNetwork.send(player, payload);
     }
 
     @Override
@@ -647,7 +647,7 @@ public class Nexus implements ControllableNexusAccess {
                     mobsLeftInWave = (lastMobsLeftInWave = mobsToKillInWave = (int) (wave.getTotalMobAmount() * 0.8F));
                     waveSpawner.beginNextWave(wave);
                     continuousAttack = true;
-                    int days = getWorld().getRandom().nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
+                    int days = getWorld().random.nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
                     nextAttackTime = (int) ((currentTime / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
                     regenerateHealth();
                     zapTimer = 0;
@@ -854,7 +854,8 @@ public class Nexus implements ControllableNexusAccess {
     Nexus(ServerLevel world, WorldNexusStorage storage, CompoundTag compound, HolderLookup.Provider lookup) {
         this(world, storage,
                 compound.getUUID("uuid"),
-                net.minecraft.nbt.NbtUtils.readBlockPos(compound, "pos").orElseThrow());
+                net.minecraft.nbt.NbtUtils.readBlockPos(
+                        compound.getCompound("pos")));
         activationTimer = compound.getInt("activationTimer");
         mode = Mode.forId(compound.getInt("mode"));
         currentWave = compound.getInt("currentWave");

@@ -14,7 +14,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 public final class GenericCreeperRenderer
         extends MobRenderer<IMCreeperEntity, InvasionCreeperRenderState, CreeperModel> {
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper.png");
+            new ResourceLocation("textures/entity/creeper/creeper.png");
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public GenericCreeperRenderer(EntityRendererProvider.Context context) {

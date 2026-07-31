@@ -30,7 +30,7 @@ public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements Pol
 
     public boolean trySpawnEntity(ServerLevel world, Mob entity) {
         if (isValidFor(world, entity)) {
-            entity.finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.STRUCTURE, null);
+            entity.finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.STRUCTURE, null, null);
             world.addFreshEntityWithPassengers(entity);
             return true;
         }

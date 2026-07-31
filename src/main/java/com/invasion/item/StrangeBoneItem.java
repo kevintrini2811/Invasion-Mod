@@ -108,7 +108,7 @@ class StrangeBoneItem extends Item {
             newWolf.tame(user);
         }
         wolf.discard();
-        stack.consume(1, user);
+        stack.shrink(1);
         return InteractionResult.SUCCESS;
     }
 }

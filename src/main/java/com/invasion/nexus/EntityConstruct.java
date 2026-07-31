@@ -31,7 +31,7 @@ public record EntityConstruct (
     }
 
     public Mob createMob(ServerLevel world, @Nullable NexusAccess nexus, BlockPos position) {
-        return entityType().create(world, entity -> {
+        return entityType().create(world, null, entity -> {
             if (entity instanceof BuildableMob b) {
                 b.onSpawned(nexus, this);
             }

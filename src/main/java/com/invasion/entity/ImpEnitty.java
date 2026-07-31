@@ -57,7 +57,7 @@ public class ImpEnitty extends IMMobEntity
         return Mob.createMobAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.3)
                 .add(Attributes.ATTACK_DAMAGE, 3)
-                .add(Attributes.STEP_HEIGHT, 1);
+;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class ImpEnitty extends IMMobEntity
     @Override
     public boolean doHurtTarget(Entity entity) {
         if (super.doHurtTarget(entity)) {
-            entity.igniteForSeconds(3);
+            entity.setSecondsOnFire(3);
             return true;
         }
         return false;
@@ -160,7 +160,7 @@ public class ImpEnitty extends IMMobEntity
             if (!world.getBlockState(fuelPos).ignitedByLava()) {
                 continue;
             }
-            int firstDirection = getRandom().nextInt(Direction.values().length);
+            int firstDirection = random.nextInt(Direction.values().length);
             for (int offset = 0; offset < Direction.values().length; offset++) {
                 Direction direction = Direction.values()[
                         (firstDirection + offset) % Direction.values().length];
@@ -177,7 +177,7 @@ public class ImpEnitty extends IMMobEntity
                 playSound(
                         SoundEvents.FLINTANDSTEEL_USE,
                         1.0F,
-                        0.8F + getRandom().nextFloat() * 0.4F);
+                        0.8F + random.nextFloat() * 0.4F);
                 return true;
             }
         }
@@ -188,7 +188,7 @@ public class ImpEnitty extends IMMobEntity
     public void performRangedAttack(LivingEntity target, float pullProgress) {
         ItemStack weapon = getMainHandItem();
         AbstractArrow projectile = ProjectileUtil.getMobArrow(
-                this, getProjectile(weapon), pullProgress, weapon);
+                this, getProjectile(weapon), pullProgress);
         shootArrow(projectile, target.getX(), target.getY(0.3333333333333333),
                 target.getZ());
     }
@@ -212,8 +212,8 @@ public class ImpEnitty extends IMMobEntity
                 getMainHandItem().is(Items.CROSSBOW)
                         ? SoundEvents.CROSSBOW_SHOOT
                         : SoundEvents.SKELETON_SHOOT,
-                1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
-        projectile.igniteForSeconds(100);
+                1, 1 / (random.nextFloat() * 0.4F + 0.8F));
+        projectile.setSecondsOnFire(100);
         level().addFreshEntity(projectile);
     }
 }

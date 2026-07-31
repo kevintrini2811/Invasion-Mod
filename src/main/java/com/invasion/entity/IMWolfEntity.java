@@ -85,7 +85,6 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         return nexus;
     }
 
-    @Override
     public boolean shouldTryTeleportToOwner() {
         return false;
     }
@@ -136,8 +135,8 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
-    protected void applyTamingSideEffects() {
-        super.applyTamingSideEffects();
+    public void setTame(boolean tame) {
+        super.setTame(tame);
         getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.3);
         getAttribute(Attributes.MAX_HEALTH).setBaseValue(
                 isTame() ? TAMED_BASE_HEALTH : 8);
@@ -157,9 +156,9 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                         getRandomX(2),
                         getRandomY(),
                         getRandomZ(2),
-                        getRandom().nextGaussian() * 0.02D,
-                        getRandom().nextGaussian() * 0.02D,
-                        getRandom().nextGaussian() * 0.02D
+                        random.nextGaussian() * 0.02D,
+                        random.nextGaussian() * 0.02D,
+                        random.nextGaussian() * 0.02D
                 );
             }
         }
@@ -257,7 +256,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         // Other mobs crowding the Nexus must not prevent a bound wolf from
         // returning. Block collision still guarantees enough physical space;
         // ordinary entity pushing separates overlapping mobs afterwards.
-        return world.noBlockCollision(wolf, targetBox)
+        return world.noCollision(wolf, targetBox)
                 ? Optional.of(position)
                 : Optional.empty();
     }
@@ -279,7 +278,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
                     getNavigation().stop();
                     setTarget(null);
                     teleportTo(pos.x, pos.y, pos.z);
-                    stack.consume(1, player);
+                    stack.shrink(1);
                     return InteractionResult.SUCCESS;
                 }
             }

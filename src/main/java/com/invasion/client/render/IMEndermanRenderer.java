@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
 public final class IMEndermanRenderer
         extends HumanoidMobRenderer<IMEndermanEntity, EndermanRenderState, EndermanModel<EndermanRenderState>> {
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/entity/enderman/enderman.png");
+            new ResourceLocation("textures/entity/enderman/enderman.png");
     private final BlockModelResolver blockModelResolver;
 
     public IMEndermanRenderer(EntityRendererProvider.Context context) {

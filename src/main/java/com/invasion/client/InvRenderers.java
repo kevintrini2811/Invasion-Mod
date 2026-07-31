@@ -19,7 +19,7 @@ import com.invasion.client.render.entity.VariantMobRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 
 public final class InvRenderers {
     private InvRenderers() {

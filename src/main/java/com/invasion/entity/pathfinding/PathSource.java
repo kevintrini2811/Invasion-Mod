@@ -32,7 +32,8 @@ public interface PathSource {
             return entity.blockPosition();
         }
 
-        return BlockPos.containing(entity.getBoundingBox().getMinPosition());
+        var box = entity.getBoundingBox();
+        return BlockPos.containing(box.minX, box.minY, box.minZ);
     }
 
     public enum PathPriority {

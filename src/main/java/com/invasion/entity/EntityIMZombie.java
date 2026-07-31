@@ -85,16 +85,16 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
                     InvasionMod.id("baby_zombie_speed"), 50);
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        if (getRandom().nextFloat() < 0.35F) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        if (random.nextFloat() < 0.35F) {
             spawnAtLocation(Items.ROTTEN_FLESH);
         }
-        if (getTier() == 1 && getFlavour() == 1 && getRandom().nextFloat() < 0.2F) {
+        if (getTier() == 1 && getFlavour() == 1 && random.nextFloat() < 0.2F) {
             spawnAtLocation(Items.WOODEN_SWORD);
-        } else if (getTier() == 2 && getFlavour() == 0 && getRandom().nextFloat() < 0.25F) {
+        } else if (getTier() == 2 && getFlavour() == 0 && random.nextFloat() < 0.25F) {
             spawnAtLocation(Items.IRON_CHESTPLATE);
-        } else if (getTier() == 2 && getFlavour() == 1 && getRandom().nextFloat() < 0.25F) {
+        } else if (getTier() == 2 && getFlavour() == 1 && random.nextFloat() < 0.25F) {
             spawnAtLocation(Items.IRON_SWORD);
         }
     }
@@ -167,9 +167,9 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(BABY, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(BABY, false);
     }
 
     @Override
@@ -241,7 +241,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
             // Tar keeps burning until it actually enters water. Refreshing a
             // short duration here prevents the normal fire timer from
             // expiring while still allowing water to clear it first.
-            igniteForTicks(20);
+            setRemainingFireTicks(20);
             spreadTarFire();
         }
     }
@@ -552,7 +552,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     protected void sunlightDamageTick() {
         if (isTar()) {
-            igniteForSeconds(8);
+            setSecondsOnFire(8);
         } else {
             super.sunlightDamageTick();
         }
@@ -566,7 +566,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     public SoundEvent getAmbientSound() {
         if (super.getTier() == 3) {
-            return getRandom().nextInt(3) == 0 ? InvSounds.ENTITY_BIG_ZOMBIE_AMBIENT : null;
+            return random.nextInt(3) == 0 ? InvSounds.ENTITY_BIG_ZOMBIE_AMBIENT : null;
         }
 
         return SoundEvents.ZOMBIE_AMBIENT;
@@ -594,7 +594,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         for (int el = entities.size() - 1; el >= 0; el--) {
             // Refresh nearby entities for as long as the Tar Zombie burns
             // instead of applying one fixed eight-second ignition.
-            entities.get(el).igniteForTicks(20);
+            entities.get(el).setRemainingFireTicks(20);
         }
     }
 }

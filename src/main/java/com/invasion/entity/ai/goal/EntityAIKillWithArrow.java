@@ -49,7 +49,7 @@ public class EntityAIKillWithArrow<T extends LivingEntity> extends KillEntityGoa
 		if (target instanceof LivingEntity l && mob instanceof RangedAttackMob attacker) {
 		    attacker.performRangedAttack(l, 1);
 		} else {
-    		Arrow projectile = new Arrow(mob.level(), mob, Items.ARROW.getDefaultInstance(), null);
+            Arrow projectile = new Arrow(mob.level(), mob);
             double dX = target.getX() - mob.getX();
             double dY = target.getY(0.3333333333333333) - projectile.getY();
             double dZ = target.getZ() - mob.getZ();

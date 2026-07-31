@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import net.minecraft.nbt.CompoundTag;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -28,7 +29,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,13 +40,13 @@ public final class IMDrownedEntity extends EntityIMZombie
         super(type, world);
         moveControl = new SmoothSwimmingMoveControl(
                 this, 85, 10, 1.0F, 1.0F, true);
-        setPathfindingMalus(PathType.WATER, 0.0F);
+        setPathfindingMalus(BlockPathTypes.WATER, 0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return EntityIMZombie.createTierT1V0Attributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.17D)
-                .add(Attributes.STEP_HEIGHT, 1.0D);
+;
     }
 
     @Override
@@ -65,8 +66,9 @@ public final class IMDrownedEntity extends EntityIMZombie
     @Override
     public SpawnGroupData finalizeSpawn(
             ServerLevelAccessor world, DifficultyInstance difficulty,
-            MobSpawnType reason, @Nullable SpawnGroupData data) {
-        data = super.finalizeSpawn(world, difficulty, reason, data);
+            MobSpawnType reason, @Nullable SpawnGroupData data,
+            @Nullable CompoundTag entityTag) {
+        data = super.finalizeSpawn(world, difficulty, reason, data, entityTag);
         RandomSource random = world.getRandom();
         if (getMainHandItem().isEmpty() && random.nextFloat() > 0.9F) {
             setItemSlot(
@@ -103,7 +105,7 @@ public final class IMDrownedEntity extends EntityIMZombie
         }
         playSound(
                 SoundEvents.DROWNED_SHOOT, 1.0F,
-                1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
+                1.0F / (random.nextFloat() * 0.4F + 0.8F));
     }
 
     public boolean wantsToSwim() {

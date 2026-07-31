@@ -67,9 +67,9 @@ import net.minecraft.server.level.ServerLevel;
 
 public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        if (getRandom().nextFloat() < 0.35F) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        if (random.nextFloat() < 0.35F) {
             spawnAtLocation(Items.GOLD_NUGGET);
         }
     }
@@ -101,9 +101,9 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(CHARGING, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(CHARGING, false);
     }
 
     @Override
@@ -156,9 +156,9 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
                     }
 
                     for (int i = 0; i < 10; i++) {
-                        double x = getRandom().triangle(pos.getX() + 0.5, 0.5);
-                        double y = getRandom().triangle(pos.getY() + 0.5, 0.5);
-                        double z = getRandom().triangle(pos.getZ() + 0.5, 0.5);
+                        double x = random.triangle(pos.getX() + 0.5, 0.5);
+                        double y = random.triangle(pos.getY() + 0.5, 0.5);
+                        double z = random.triangle(pos.getZ() + 0.5, 0.5);
                         level().addParticle(ParticleTypes.CLOUD,
                                 x, y, z,
                                 pos.getX() + 0.5 - x,
@@ -169,7 +169,7 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
                 }
             }
             if (sound) {
-                playSound(SoundEvents.GENERIC_EXPLODE.value(), 0.2F, 0.5F);
+                playSound(SoundEvents.GENERIC_EXPLODE, 0.2F, 0.5F);
             }
         }
     }
@@ -183,7 +183,7 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     @Nullable
     protected SoundEvent getAmbientSound() {
         if (getTier() == 3) {
-            return getRandom().nextInt(3) == 0 ? InvSounds.ENTITY_BIG_ZOMBIE_AMBIENT : null;
+            return random.nextInt(3) == 0 ? InvSounds.ENTITY_BIG_ZOMBIE_AMBIENT : null;
         }
 
         return SoundEvents.ZOMBIFIED_PIGLIN_AMBIENT;
@@ -215,19 +215,19 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
             setBaseMovementSpeed(0.35F);
             setAttackStrength(12);
 
-            if (getRandom().nextInt(5) == 1) {
+            if (random.nextInt(5) == 1) {
                 setItemSlot(EquipmentSlot.HEAD, Items.GOLDEN_HELMET.getDefaultInstance());
             }
 
-            if (getRandom().nextInt(5) == 1) {
+            if (random.nextInt(5) == 1) {
                 setItemSlot(EquipmentSlot.CHEST, Items.GOLDEN_CHESTPLATE.getDefaultInstance());
             }
 
-            if (getRandom().nextInt(5) == 1) {
+            if (random.nextInt(5) == 1) {
                 setItemSlot(EquipmentSlot.LEGS, Items.GOLDEN_LEGGINGS.getDefaultInstance());
             }
 
-            if (getRandom().nextInt(5) == 1) {
+            if (random.nextInt(5) == 1) {
                 setItemSlot(EquipmentSlot.FEET, Items.GOLDEN_BOOTS.getDefaultInstance());
             }
         } else if (isBrute()) {

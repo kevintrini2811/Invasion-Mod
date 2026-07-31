@@ -2,7 +2,7 @@ package com.invasion.client.render;
 
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
@@ -37,12 +37,12 @@ public final class InvRenderers {
                 InvWitherSkeletonRenderer::new);
         event.registerEntityRenderer(InvEntities.SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
-                        ResourceLocation.withDefaultNamespace("textures/entity/spider/spider.png")));
+                        new ResourceLocation("textures/entity/spider/spider.png")));
         event.registerEntityRenderer(InvEntities.JUMPING_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/jumping_spider.png")));
         event.registerEntityRenderer(InvEntities.CAVE_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
-                        ResourceLocation.withDefaultNamespace("textures/entity/spider/cave_spider.png")));
+                        new ResourceLocation("textures/entity/spider/cave_spider.png")));
         event.registerEntityRenderer(InvEntities.QUEEN_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/mother_spider.png")));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER,
@@ -80,6 +80,6 @@ public final class InvRenderers {
     }
 
     private static ResourceLocation vanilla(String path) {
-        return ResourceLocation.withDefaultNamespace(path);
+        return new ResourceLocation(path);
     }
 }

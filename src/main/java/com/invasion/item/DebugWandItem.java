@@ -57,7 +57,8 @@ class DebugWandItem extends Item {
         Zombie zombie2 = new Zombie(world);
         zombie2.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-        EntityType.WOLF.create(world, w -> {}, pos, MobSpawnType.COMMAND, true, false);
+        EntityType.WOLF.create(world, null, w -> {}, pos,
+                MobSpawnType.COMMAND, true, false);
 
         Entity entity1 = InvEntities.PIGMAN_ENGINEER.create(world);
         entity1.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));

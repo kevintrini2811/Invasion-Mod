@@ -11,7 +11,8 @@ public interface InvParticles {
     SimpleParticleType DAZE = register("daze", new SimpleParticleType(true));
 
     static <T extends ParticleType<?>> T register(String name, T type) {
-        return Registry.register(BuiltInRegistries.PARTICLE_TYPE, InvasionMod.id(name), type);
+        return InvasionMod.INSTANCE.register(
+                net.minecraft.core.registries.Registries.PARTICLE_TYPE, InvasionMod.id(name), type);
     }
 
     static void bootstrap() {}

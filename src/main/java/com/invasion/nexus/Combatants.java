@@ -39,7 +39,7 @@ public class Combatants implements Iterable<Combatant<?>> {
             sorted = true;
             Collections.sort(mobList, sorter);
         }
-        return mobList.removeLast();
+        return mobList.remove(mobList.size() - 1);
     }
 
     @Override

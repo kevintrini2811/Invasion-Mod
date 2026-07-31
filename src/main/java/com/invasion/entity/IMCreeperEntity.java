@@ -112,9 +112,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(FUSE_SPEED, 0);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(FUSE_SPEED, 0);
     }
 
     @Override
@@ -255,12 +255,12 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel world, DamageSource source, boolean causedByPlayer) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
         spawnAtLocation(Items.GUNPOWDER);
         Entity entity = source.getEntity();
         if (entity instanceof net.minecraft.world.entity.monster.AbstractSkeleton
                 || entity instanceof IMSkeletonEntity) {
-            spawnAtLocation(CLASSIC_MUSIC_DISCS[getRandom().nextInt(CLASSIC_MUSIC_DISCS.length)]);
+            spawnAtLocation(CLASSIC_MUSIC_DISCS[random.nextInt(CLASSIC_MUSIC_DISCS.length)]);
         }
     }
 
@@ -287,8 +287,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
             setFuseSpeed(1);
             if (stack.isDamageableItem()) {
                 stack.hurtAndBreak(1, player,
-                        hand == InteractionHand.MAIN_HAND
-                                ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+                        p -> p.broadcastBreakEvent(hand));
             } else {
                 stack.shrink(1);
             }
@@ -374,10 +373,10 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         class NodeMaker extends IMLandPathNodeMaker {
             @Override
             public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
-                world = currentContext.level();
-
                 BlockState state = world.getBlockState(nextNode.asBlockPos());
-                if (!state.isAir() && !state.isPathfindable(PathComputationType.LAND) && !state.is(InvBlocks.NEXUS_CORE)) {
+                if (!state.isAir() && !state.isPathfindable(world,
+                        nextNode.asBlockPos(), PathComputationType.LAND)
+                        && !state.is(InvBlocks.NEXUS_CORE)) {
                     // TODO: I'm not sure about this...
                     return 12;
                 }

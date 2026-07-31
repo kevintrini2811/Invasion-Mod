@@ -14,7 +14,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
-import net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer;
+import net.minecraft.client.renderer.entity.layers.StrayClothingLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -34,7 +34,7 @@ public final class VariantMobRenderers {
         ZombieVariant(EntityRendererProvider.Context context, String texture,
                 net.minecraft.client.model.geom.ModelLayerLocation bodyLayer) {
             super(context, bodyLayer);
-            textures = List.of(ResourceLocation.withDefaultNamespace(texture));
+            textures = List.of(new ResourceLocation(texture));
         }
         @Override protected List<ResourceLocation> getTextures() { return textures; }
         @Override protected boolean isBrute(AbstractIMZombieEntity entity) { return false; }
@@ -57,24 +57,19 @@ public final class VariantMobRenderers {
         private final ResourceLocation texture;
         SkeletonVariant(EntityRendererProvider.Context c, String texture) {
             super(c);
-            this.texture = ResourceLocation.withDefaultNamespace(texture);
+            this.texture = new ResourceLocation(texture);
         }
         @Override public ResourceLocation getTextureLocation(com.invasion.entity.IMSkeletonEntity e) { return texture; }
     }
     public static final class Bogged extends SkeletonVariant {
         public Bogged(EntityRendererProvider.Context c) {
             super(c, "textures/entity/skeleton/bogged.png");
-            addLayer(new SkeletonClothingLayer<>(this, c.getModelSet(),
-                    ModelLayers.BOGGED_OUTER_LAYER,
-                    ResourceLocation.withDefaultNamespace("textures/entity/skeleton/bogged_overlay.png")));
         }
     }
     public static final class Stray extends SkeletonVariant {
         public Stray(EntityRendererProvider.Context c) {
             super(c, "textures/entity/skeleton/stray.png");
-            addLayer(new SkeletonClothingLayer<>(this, c.getModelSet(),
-                    ModelLayers.STRAY_OUTER_LAYER,
-                    ResourceLocation.withDefaultNamespace("textures/entity/skeleton/stray_overlay.png")));
+            addLayer(new StrayClothingLayer<>(this, c.getModelSet()));
         }
     }
     public static final class WitherSkeleton extends SkeletonVariant {
@@ -85,13 +80,13 @@ public final class VariantMobRenderers {
     }
 
     public static final class CaveSpider extends SpiderRenderer<IMCaveSpiderEntity> {
-        private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/spider/cave_spider.png");
+        private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/spider/cave_spider.png");
         public CaveSpider(EntityRendererProvider.Context c) { super(c); }
         @Override public ResourceLocation getTextureLocation(IMCaveSpiderEntity e) { return TEXTURE; }
     }
 
     public static final class Enderman extends MobRenderer<IMEndermanEntity, EndermanModel<IMEndermanEntity>> {
-        private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/enderman/enderman.png");
+        private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/enderman/enderman.png");
         public Enderman(EntityRendererProvider.Context c) {
             super(c, new EndermanModel<>(c.bakeLayer(ModelLayers.ENDERMAN)), 0.5F);
             addLayer(new HumanoidArmorLayer<>(this,
@@ -112,7 +107,7 @@ public final class VariantMobRenderers {
                 net.minecraft.client.model.geom.ModelLayerLocation layer, String texture) {
             super(parent);
             model = new net.minecraft.client.model.HumanoidModel<>(c.bakeLayer(layer));
-            this.texture = ResourceLocation.withDefaultNamespace(texture);
+            this.texture = new ResourceLocation(texture);
         }
         @Override public void render(PoseStack p, MultiBufferSource b, int light,
                 AbstractIMZombieEntity e, float a, float d, float tick, float age, float yaw, float pitch) {
@@ -121,13 +116,13 @@ public final class VariantMobRenderers {
             }
             getParentModel().copyPropertiesTo(model);
             model.renderToBuffer(p, b.getBuffer(RenderType.entityCutoutNoCull(texture)),
-                    light, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+                    light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
         }
     }
 
     public static final class ZombifiedPiglin extends HumanoidMobRenderer<
             IMZombifiedPiglinEntity, PiglinModel<IMZombifiedPiglinEntity>> {
-        private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/piglin/zombified_piglin.png");
+        private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/piglin/zombified_piglin.png");
         public ZombifiedPiglin(EntityRendererProvider.Context c) {
             super(c, new PiglinModel<>(c.bakeLayer(ModelLayers.ZOMBIFIED_PIGLIN)), 0.5F);
             addLayer(new HumanoidArmorLayer<>(this,

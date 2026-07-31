@@ -3,7 +3,6 @@ package com.invasion.entity;
 import java.util.Arrays;
 import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.SynchedEntityData.Builder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -49,7 +48,7 @@ public class ElectricityBoltEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData(Builder builder) {
+    protected void defineSynchedData() {
     }
 
     @Override
@@ -129,8 +128,8 @@ public class ElectricityBoltEntity extends Entity {
 
         float yRatio = yDiffToMid / (vertices[end].y() - vertices[begin].y);
 
-        vertices[mid].x = vertices[begin].x + xDiff * yRatio + (getRandom().nextFloat() - 0.5F) * yDiffToMid * widthVariance;
-        vertices[mid].z = vertices[begin].z + zDiff * yRatio + (getRandom().nextFloat() - 0.5F) * yDiffToMid * widthVariance;
+        vertices[mid].x = vertices[begin].x + xDiff * yRatio + (random.nextFloat() - 0.5F) * yDiffToMid * widthVariance;
+        vertices[mid].z = vertices[begin].z + zDiff * yRatio + (random.nextFloat() - 0.5F) * yDiffToMid * widthVariance;
     }
 
     @Override

@@ -56,9 +56,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private static final int TOWER_LADDER_BUILD_TIME = 25;
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        if (getRandom().nextBoolean()) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        if (random.nextBoolean()) {
             spawnAtLocation(Items.LEATHER);
         } else {
             spawnAtLocation(isOnFire() ? Items.COOKED_PORKCHOP : Items.PORKCHOP);
@@ -96,7 +96,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 .add(Attributes.ATTACK_DAMAGE, 2)
                 .add(Attributes.ARMOR, 2.0)
                 .add(Attributes.SPAWN_REINFORCEMENTS_CHANCE)
-                .add(Attributes.STEP_HEIGHT, 1);
+;
     }
 
     @Override
@@ -124,7 +124,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     @Override
     protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance localDifficulty) {
-        Item heldItem = switch (getRandom().nextInt(3)) {
+        Item heldItem = switch (random.nextInt(3)) {
             case 0 -> Items.LADDER;
             case 1 -> Items.IRON_PICKAXE;
             default -> InvItems.ENGY_HAMMER;

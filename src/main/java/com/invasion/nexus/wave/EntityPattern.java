@@ -32,7 +32,7 @@ public record EntityPattern(
         return new EntityConstruct(type,
                 texture == null ? OPEN_TEXTURE : texture,
                 tier == null ? DEFAULT_TIER : tier,
-                flavour == null ? DEFAULT_FLAVOUR : flavour, OPEN_SCALING, angle.min().orElse(-MAX_VALID_ANGLE), angle.max().orElse(MAX_VALID_ANGLE));
+                flavour == null ? DEFAULT_FLAVOUR : flavour, OPEN_SCALING, (java.util.Objects.requireNonNullElse(angle.getMin(), -MAX_VALID_ANGLE)), (java.util.Objects.requireNonNullElse(angle.getMax(), MAX_VALID_ANGLE)));
     }
 
     public static final class Builder {

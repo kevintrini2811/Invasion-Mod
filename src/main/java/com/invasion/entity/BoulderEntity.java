@@ -41,17 +41,11 @@ public class BoulderEntity extends AbstractArrow {
 
     public BoulderEntity(EntityType<? extends BoulderEntity> type, Level world) {
         super(type, world);
-        setPickupItemStack(getDefaultPickupItem());
     }
 
     @Override
-    protected ItemStack getDefaultPickupItem() {
+    protected ItemStack getPickupItem() {
         return Items.STONE.getDefaultInstance();
-    }
-
-    @Override
-    protected boolean tryPickup(Player player) {
-        return !getPickupItemStackOrigin().isEmpty() && super.tryPickup(player);
     }
 
     @Override
@@ -67,7 +61,7 @@ public class BoulderEntity extends AbstractArrow {
         if (level() instanceof ServerLevel serverLevel) {
             float damage = Math.min(14, Math.max(tickCount / 20.0F, 1) * 6);
             if (hit.getEntity().hurt(damageSources().arrow(this, getOwner()), damage)) {
-                playSound(InvSounds.ENTITY_BOULDER_LAND, 1, 0.9F / (getRandom().nextFloat() * 0.2F + 0.9F));
+                playSound(InvSounds.ENTITY_BOULDER_LAND, 1, 0.9F / (random.nextFloat() * 0.2F + 0.9F));
                 level().gameEvent(this, GameEvent.PROJECTILE_LAND, blockPosition());
                 discard();
             }
@@ -91,7 +85,7 @@ public class BoulderEntity extends AbstractArrow {
 
                 if (!state.is(BlockTags.WITHER_IMMUNE) && !state.is(BlockTags.DRAGON_IMMUNE)) {
                     level().gameEvent(this, GameEvent.HIT_GROUND, hit.getBlockPos());
-                    if (BlockSpecial.of(state) == BlockSpecial.DEFLECTION && getRandom().nextInt(2) == 0) {
+                    if (BlockSpecial.of(state) == BlockSpecial.DEFLECTION && random.nextInt(2) == 0) {
                         discard();
                         return;
                     }

@@ -10,8 +10,8 @@ import net.minecraft.resources.ResourceLocation;
 public class IMSpiderEntityRenderer<T extends NexusSpiderEntity> extends SpiderRenderer<T> {
     public static final ResourceLocation JUMPER = InvasionMod.id("textures/entity/spider/jumping_spider.png");
     public static final ResourceLocation MOTHER = InvasionMod.id("textures/entity/spider/mother_spider.png");
-    public static final ResourceLocation NORMAL = ResourceLocation.withDefaultNamespace("textures/entity/spider/spider.png");
-    public static final ResourceLocation CAVE = ResourceLocation.withDefaultNamespace("textures/entity/spider/cave_spider.png");
+    public static final ResourceLocation NORMAL = new ResourceLocation("textures/entity/spider/spider.png");
+    public static final ResourceLocation CAVE = new ResourceLocation("textures/entity/spider/cave_spider.png");
 
     private final ResourceLocation texture;
     private final float scale;

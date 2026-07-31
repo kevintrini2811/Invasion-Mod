@@ -29,15 +29,10 @@ public class BountyHunter extends SavedData {
     private static final Codec<List<UUID>> DEATH_LIST_CODEC = UUIDUtil.AUTHLIB_CODEC.listOf();
     private static final ResourceLocation ID = InvasionMod.id("nexus_bounty_hunter");
 
-    public static Factory<BountyHunter> getType(ServerLevel world) {
-        return new SavedData.Factory<>(
-                () -> new BountyHunter(world),
-                (nbt, lookup) -> new BountyHunter(world, nbt, lookup),
-                DataFixTypes.LEVEL);
-    }
-
     public static BountyHunter of(ServerLevel world) {
-        return world.getDataStorage().computeIfAbsent(getType(world), ID.toDebugFileName());
+        return world.getDataStorage().computeIfAbsent(
+                nbt -> new BountyHunter(world, nbt),
+                () -> new BountyHunter(world), ID.toDebugFileName());
     }
 
     private final List<UUID> players = new ArrayList<>();
@@ -49,14 +44,14 @@ public class BountyHunter extends SavedData {
         this.world = world;
     }
 
-    private BountyHunter(ServerLevel world, CompoundTag nbt, Provider lookup) {
+    private BountyHunter(ServerLevel world, CompoundTag nbt) {
         this(world);
         DEATH_LIST_CODEC.decode(NbtOps.INSTANCE, nbt.get("players"))
                 .result().map(Pair::getFirst).ifPresent(players::addAll);
     }
 
     @Override
-    public CompoundTag save(CompoundTag nbt, Provider lookup) {
+    public CompoundTag save(CompoundTag nbt) {
         DEATH_LIST_CODEC.encodeStart(NbtOps.INSTANCE, players)
                 .result().ifPresent(data -> nbt.put("players", data));
         return nbt;

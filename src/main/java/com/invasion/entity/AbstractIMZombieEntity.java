@@ -42,7 +42,7 @@ import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
@@ -128,7 +128,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         ItemStack bow = getMainHandItem();
         ItemStack arrow = getProjectile(bow);
         AbstractArrow projectile = ProjectileUtil.getMobArrow(
-                this, arrow, pullProgress, bow);
+                this, arrow, pullProgress);
         shootArrow(projectile, target.getX(), target.getY(0.3333333333333333),
                 target.getZ());
     }
@@ -154,7 +154,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
                         ? SoundEvents.CROSSBOW_SHOOT
                         : SoundEvents.SKELETON_SHOOT,
                 1,
-                1 / (getRandom().nextFloat() * 0.4F + 0.8F));
+                1 / (random.nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(projectile);
     }
 
@@ -291,14 +291,13 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         class NodeMaker extends IMLandPathNodeMaker {
             @Override
             public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
-                world = currentContext.level();
-
                 if (this.mob instanceof AbstractIMZombieEntity entity
                         && AbstractIMZombieEntity.isTar(entity)
-                        && nextNode.type == PathType.WATER) {
+                        && nextNode.type == BlockPathTypes.WATER) {
                     float multiplier = 1 + ScaffoldView.of(world).getMobDensity(nextNode.asBlockPos()) * 3;
 
-                    if (nextNode.y > previousNode.y && canMineBlock(world, nextNode.asBlockPos(), currentContext.getBlockState(nextNode.asBlockPos()))) {
+                    if (nextNode.y > previousNode.y && canMineBlock(world,
+                            nextNode.asBlockPos(), world.getBlockState(nextNode.asBlockPos()))) {
                         multiplier += 2;
                     }
 

@@ -17,14 +17,13 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Drowned;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.TickEvent;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -34,8 +33,8 @@ public final class VanillaMobSpawnReplacement {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
-        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
+        MinecraftForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
+        MinecraftForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
     }
 
     private static void queueVanillaMob(EntityJoinLevelEvent event) {
@@ -55,8 +54,9 @@ public final class VanillaMobSpawnReplacement {
         PENDING.computeIfAbsent(world, ignored -> new HashSet<>()).add(mob.getUUID());
     }
 
-    private static void processQueue(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel world)) {
+    private static void processQueue(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END
+                || !(event.level instanceof ServerLevel world)) {
             return;
         }
         Set<UUID> pending = PENDING.remove(world);
@@ -95,8 +95,6 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
         } else if (mob.getType() == EntityType.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
-        } else if (mob.getType() == EntityType.BOGGED) {
-            convert(mob, InvEntities.BOGGED, nexus);
         } else if (mob.getType() == EntityType.STRAY) {
             convert(mob, InvEntities.STRAY, nexus);
         } else if (mob.getType() == EntityType.WITHER_SKELETON) {
@@ -120,7 +118,6 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.DROWNED
                 || type == EntityType.ZOMBIFIED_PIGLIN
                 || type == EntityType.SKELETON
-                || type == EntityType.BOGGED
                 || type == EntityType.STRAY
                 || type == EntityType.WITHER_SKELETON
                 || type == EntityType.CREEPER
@@ -181,10 +178,6 @@ public final class VanillaMobSpawnReplacement {
                     piglin.getRemainingPersistentAngerTime());
             imPiglin.setPersistentAngerTarget(
                     piglin.getPersistentAngerTarget());
-        }
-        if (source instanceof Bogged bogged
-                && converted instanceof IMBoggedEntity imBogged) {
-            imBogged.setSheared(bogged.isSheared());
         }
         if (source instanceof Phantom phantom
                 && converted instanceof IMPhantomEntity imPhantom) {

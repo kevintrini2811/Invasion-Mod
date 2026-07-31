@@ -13,10 +13,8 @@ import net.minecraft.world.level.Level;
 
 public class InfusedSwordItem extends SwordItem {
     public InfusedSwordItem(Properties properties) {
-        super(CustomToolMaterial.INFUSED_GOLD,
-                properties.stacksTo(1).attributes(
-                        SwordItem.createAttributes(
-                                CustomToolMaterial.INFUSED_GOLD, 3, -2.4F)));
+        super(CustomToolMaterial.INFUSED_GOLD, 3, -2.4F,
+                properties.stacksTo(1));
     }
 
     @Override

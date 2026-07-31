@@ -95,15 +95,15 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 int enclosedLevelSide = 0;
 
                 BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-                if (!entity.level().getBlockState(mutable.set(node.x, node.y, node.z).move(Direction.DOWN)).isPathfindable(PathComputationType.LAND)) {
+                if (!isPathfindable(mutable.set(node.x, node.y, node.z).move(Direction.DOWN))) {
                     penalty += 0.3F;
                 }
-                if (!entity.level().getBlockState(mutable.set(node.x, node.y, node.z).move(Direction.UP)).isPathfindable(PathComputationType.LAND)) {
+                if (!isPathfindable(mutable.set(node.x, node.y, node.z).move(Direction.UP))) {
                     penalty += 2;
                 }
 
                 for (Direction offset : Direction.Plane.HORIZONTAL) {
-                    if (!entity.level().getBlockState(mutable.set(node.x, node.y, node.z).move(offset)).isPathfindable(PathComputationType.LAND)) {
+                    if (!isPathfindable(mutable.set(node.x, node.y, node.z).move(offset))) {
                         enclosedLevelSide++;
                     }
                 }
@@ -113,9 +113,17 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 }
                 penalty += enclosedLevelSide * 0.5F;
 
-                float factor = !block.isAir() && (!block.isPathfindable(PathComputationType.LAND) || BlockMetadata.getCost(block).isPresent()) ? 1.3F : 1;
+                BlockPos nodePos = node.asBlockPos();
+                float factor = !block.isAir() && (!block.isPathfindable(
+                        entity.level(), nodePos, PathComputationType.LAND)
+                        || BlockMetadata.getCost(block).isPresent()) ? 1.3F : 1;
 
                 return prevNode.distanceTo(node) * factor * penalty;
+            }
+
+            private boolean isPathfindable(BlockPos pos) {
+                return entity.level().getBlockState(pos).isPathfindable(
+                        entity.level(), pos, PathComputationType.LAND);
             }
         };
     }

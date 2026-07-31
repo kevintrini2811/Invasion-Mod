@@ -142,7 +142,7 @@ public class InvasionCommand {
     private static int testSpawner(CommandSourceStack source, Ints waves) {
         new Tester(message -> {
             source.sendSuccess(() -> Component.literal(message), false);
-        }).doWaveSpawnerTest(waves.min().orElseThrow(), waves.max().orElseThrow());
+        }).doWaveSpawnerTest(java.util.Objects.requireNonNull(waves.getMin()), java.util.Objects.requireNonNull(waves.getMax()));
         return 0;
     }
 

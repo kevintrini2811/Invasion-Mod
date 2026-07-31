@@ -25,7 +25,7 @@ public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity,
 
     @Override
     protected void setupRotations(BurrowerEntity entity, PoseStack matrices,
-            float bob, float bodyYaw, float partialTick, float scale) {
+            float bob, float bodyYaw, float partialTick) {
         // Segment rotations are complete world-space rotations; applying the
         // normal mob body yaw would rotate the entire chain a second time.
     }

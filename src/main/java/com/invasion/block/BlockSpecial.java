@@ -12,7 +12,7 @@ public enum BlockSpecial {
     CONSTRUCTION_BRICKS(InvTags.Blocks.BRITTLE_CONSTRUCTION_MATERIALS),
     CONSTRUCTION_STONE(InvTags.Blocks.SOLID_CONSTRUCTION_MATERIALS),
     DEFLECTION(InvTags.Blocks.REPULSIVE_CONSTRUCTION_MATERIALS),
-    NONE(BlockTags.AIR);
+    NONE(null);
 
     private static final List<BlockSpecial> VALUES = Arrays.asList(values());
 
@@ -24,7 +24,7 @@ public enum BlockSpecial {
 
     public static BlockSpecial of(BlockState state) {
         for (BlockSpecial special : VALUES) {
-            if (state.is(special.tag)) {
+            if (special.tag != null && state.is(special.tag)) {
                 return special;
             }
         }

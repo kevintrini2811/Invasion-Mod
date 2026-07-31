@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import com.invasion.InvasionMod;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 
 public final class AsyncCompatibility {
     private static final String ASYNC_CONFIG =

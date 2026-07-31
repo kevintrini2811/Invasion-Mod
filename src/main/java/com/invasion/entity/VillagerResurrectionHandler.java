@@ -6,15 +6,15 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import com.invasion.nexus.Combatant;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
 
 public final class VillagerResurrectionHandler {
     private VillagerResurrectionHandler() {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(VillagerResurrectionHandler::afterDeath);
+        MinecraftForge.EVENT_BUS.addListener(VillagerResurrectionHandler::afterDeath);
     }
 
     private static void afterDeath(LivingDeathEvent event) {

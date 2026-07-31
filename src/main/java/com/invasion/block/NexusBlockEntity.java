@@ -63,8 +63,8 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
 
     @Override
-    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
-        return saveCustomOnly(registries);
+    public CompoundTag getUpdateTag() {
+        return saveWithoutMetadata();
     }
 
     @Override
@@ -161,16 +161,16 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
 
     @Override
-    protected void loadAdditional(CompoundTag compound, HolderLookup.Provider lookup) {
-        super.loadAdditional(compound, lookup);
+    public void load(CompoundTag compound) {
+        super.load(compound);
         nexusId = compound.hasUUID("nexusId") ? compound.getUUID("nexusId") : UUID.randomUUID();
         beamActive = compound.getBoolean("beamActive");
         nexus = null;
     }
 
     @Override
-    protected void saveAdditional(CompoundTag compound, HolderLookup.Provider lookup) {
-        super.saveAdditional(compound, lookup);
+    protected void saveAdditional(CompoundTag compound) {
+        super.saveAdditional(compound);
         compound.putUUID("nexusId", nexusId);
         compound.putBoolean("beamActive", beamActive);
     }

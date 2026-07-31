@@ -15,7 +15,7 @@ import net.minecraft.util.Mth;
  * @see net.minecraft.client.renderer.entity.CreeperRenderer
  */
 public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntity, CreeperModel<IMCreeperEntity>> {
-    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/creeper/creeper.png");
 
 	public IMCreeperEntityRenderer(EntityRendererProvider.Context context) {
         super(context, new CreeperModel<>(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);

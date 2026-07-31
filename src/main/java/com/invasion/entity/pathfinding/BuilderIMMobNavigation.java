@@ -6,7 +6,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.PigmanEngineerEntity;
@@ -104,7 +104,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
                 int maxYStep,
                 double feetY,
                 Direction direction,
-                PathType nodeType) {
+                BlockPathTypes nodeType) {
             Node node = super.findAcceptedNode(
                     x, y, z, maxYStep, feetY, direction, nodeType);
 
@@ -123,7 +123,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
         private Node getBridgeNode(int x, int y, int z) {
             Node node = getNode(x, y, z);
-            node.type = PathType.WALKABLE;
+            node.type = BlockPathTypes.WALKABLE;
             node.costMalus = 1.5F;
             return ActionablePathNode.setAction(node, PathAction.BRIDGE);
         }
@@ -131,9 +131,9 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         private boolean isBridgableGap(BlockPos.MutableBlockPos mutable) {
             int originalY = mutable.getY();
             try {
-                PathType type = getPathTypeStatic(
-                        mob, mutable.setY(originalY - 1));
-                return type == PathType.OPEN || type == PathType.WATER || type == PathType.LAVA;
+                BlockPathTypes type = getBlockPathTypeStatic(
+                        mob.level(), mutable.setY(originalY - 1));
+                return type == BlockPathTypes.OPEN || type == BlockPathTypes.WATER || type == BlockPathTypes.LAVA;
             } finally {
                 mutable.setY(originalY);
             }

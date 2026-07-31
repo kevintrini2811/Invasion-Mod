@@ -96,7 +96,7 @@ public class IMWaveSpawner implements Spawner {
 
     @Override
     public RandomSource getRandom() {
-        return nexus.getWorld().getRandom();
+        return nexus.getWorld().random;
     }
 
 	public long getElapsedTime() {
@@ -267,7 +267,7 @@ public class IMWaveSpawner implements Spawner {
 
 		for (int j = 0; j < spawnTries; j++) {
 		    @Nullable
-			final SpawnPoint spawnPoint = angle.max().orElse(EntityPattern.MAX_VALID_ANGLE) - angle.min().orElse(EntityPattern.MAX_ANGLE) >= 360
+			final SpawnPoint spawnPoint = (java.util.Objects.requireNonNullElse(angle.getMax(), EntityPattern.MAX_VALID_ANGLE)) - (java.util.Objects.requireNonNullElse(angle.getMin(), EntityPattern.MAX_ANGLE)) >= 360
 				        ? spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID)
 		                : spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID, angle);
 

@@ -25,9 +25,8 @@ import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.pathfinder.PathfindingContext;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.server.level.ServerLevel;
@@ -82,8 +81,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     public void prepare(PathNavigationRegion cachedWorld, Mob entity) {
         super.prepare(cachedWorld, entity);
         if (entity instanceof IHasNexus nexusHolder && nexusHolder.hasNexus()) {
-            this.currentContext = new PathfindingContext(nexusHolder.getNexus().getAttackerAI().wrapEntityData(cachedWorld), entity);
-            populateChunkCacheData(nexusHolder.getNexus(), currentContext.level());
+            populateChunkCacheData(nexusHolder.getNexus(), cachedWorld);
         }
     }
 
@@ -103,14 +101,14 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
 
     @Override
     public float getDistancePenalty(Node previousNode, Node nextNode, CollisionGetter world) {
-        return delegate.getDistancePenalty(previousNode, nextNode, currentContext.level());
+        return delegate.getDistancePenalty(previousNode, nextNode, level);
     }
 
     @Override
     public int getNeighbors(Node[] successors, Node node) {
         previousNodePosition = node.asBlockPos();
         previousNodeAction = ActionablePathNode.getAction(node);
-        int index = getSuccessors(super.getNeighbors(successors, node), successors, node, currentContext.level(), this);
+        int index = getSuccessors(super.getNeighbors(successors, node), successors, node, level, this);
         if (Debug.DEBUG_PATHFINDING) {
             for (int i = 0; i < index; i++) {
                 /*if (ActionablePathNode.getAction(successors[i]) != PathAction.NONE) {
@@ -133,7 +131,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     @Override
     public int getSuccessors(int index, Node[] successors, Node node, CollisionGetter world, DynamicPathNodeNavigator.NodeCache cache) {
 
-        PathType currentNodeType = getCachedPathType(node.x, node.y, node.z);
+        BlockPathTypes currentNodeType = getCachedBlockType(mob, node.x, node.y, node.z);
         double prevY = getFloorLevel(node.asBlockPos());
 
         int stepHeight = Mth.floor(Math.max(1, mob.maxUpStep()));
@@ -153,22 +151,19 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     }
 
     @Override
-    public PathType getPathType(PathfindingContext context, int x, int y, int z) {
+    public BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter context,
+            int x, int y, int z) {
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, y, z);
-        PathType type = getPathTypeStatic(context, pos);
+        BlockPathTypes type = getBlockPathTypeStatic(context, pos);
         if (getCanClimbLadders() && PathingUtil.isLadder(context.getBlockState(pos))) {
-            return PathType.WALKABLE;
+            return BlockPathTypes.WALKABLE;
         }
-        if (canDestroyBlocks() && type == PathType.BLOCKED && !context.getBlockState(pos.move(Direction.UP)).isPathfindable(PathComputationType.LAND)) {
-            return PathType.WALKABLE;
+        if (canDestroyBlocks() && type == BlockPathTypes.BLOCKED
+                && !context.getBlockState(pos.move(Direction.UP))
+                        .isPathfindable(context, pos, PathComputationType.LAND)) {
+            return BlockPathTypes.WALKABLE;
         }
         return type;
-    }
-
-    @Override
-    protected boolean isDiagonalValid(Node xNode, @Nullable Node zNode, @Nullable Node xDiagNode) {
-        return super.isDiagonalValid(xNode, zNode, xDiagNode)
-                && (ActionablePathNode.getAction(xNode) != PathAction.DIG || ActionablePathNode.getAction(zNode) != PathAction.DIG);
     }
 
     protected boolean isNoActionNode(Node node) {
@@ -177,23 +172,25 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
 
     @Nullable
     @Override
-    protected Node findAcceptedNode(int x, int y, int z, int maxYStep, double feetY, Direction direction, PathType nodeType) {
+    protected Node findAcceptedNode(int x, int y, int z, int maxYStep, double feetY, Direction direction, BlockPathTypes nodeType) {
         @Nullable
         Node node = super.findAcceptedNode(x, y, z, maxYStep, feetY, direction, nodeType);
-        if (canDestroyBlocks() && node != null && getPathTypeStatic(currentContext, new BlockPos.MutableBlockPos(node.x, node.y, node.z)) == PathType.BLOCKED) {
+        if (canDestroyBlocks() && node != null && getBlockPathTypeStatic(level, new BlockPos.MutableBlockPos(node.x, node.y, node.z)) == BlockPathTypes.BLOCKED) {
             BlockPos pos = node.asBlockPos();
-            BlockState state = currentContext.getBlockState(pos);
-            if (canMineBlock(currentContext.level(), pos, state) && !currentContext.getBlockState(pos.above()).isPathfindable(PathComputationType.LAND)) {
-                node.type = PathType.WALKABLE;
+            BlockState state = level.getBlockState(pos);
+            if (canMineBlock(level, pos, state)
+                    && !level.getBlockState(pos.above())
+                            .isPathfindable(level, pos.above(), PathComputationType.LAND)) {
+                node.type = BlockPathTypes.WALKABLE;
                 node.costMalus = getBlockStrength(pos, state);
                 return ActionablePathNode.setAction(node, PathAction.DIG);
             }
         }
 
-        if (node != null && node.type == PathType.WALKABLE) {
+        if (node != null && node.type == BlockPathTypes.WALKABLE) {
             BlockPos pos = node.asBlockPos();
-            float mobDensityMultiplier = 1 + (ScaffoldView.of(currentContext.level()).getMobDensity(pos) * 3);
-            node.costMalus += getWalkableNodePathingPenalty(currentContext.level(), pos, mobDensityMultiplier);
+            float mobDensityMultiplier = 1 + (ScaffoldView.of(level).getMobDensity(pos) * 3);
+            node.costMalus += getWalkableNodePathingPenalty(level, pos, mobDensityMultiplier);
         }
 
         if (node != null) {
@@ -233,7 +230,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     }
 
     protected float getWalkableNodePathingPenalty(CollisionGetter world, BlockPos pos, float mobDensityMultiplier) {
-        BlockState state = currentContext.getBlockState(pos);
+        BlockState state = level.getBlockState(pos);
         return BlockMetadata.getCost(state).orElse(state.isRedstoneConductor(world, pos) ? 3.2F : 1) * mobDensityMultiplier;
     }
 
@@ -241,12 +238,13 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     protected boolean canStartAt(BlockPos pos) {
         return super.canStartAt(pos)
                 || (canDestroyBlocks()
-                        && canMineBlock(currentContext.level(), pos, currentContext.getBlockState(pos))
-                        && !currentContext.getBlockState(pos.above()).isPathfindable(PathComputationType.LAND));
+                        && canMineBlock(level, pos, level.getBlockState(pos))
+                        && !level.getBlockState(pos.above())
+                                .isPathfindable(level, pos.above(), PathComputationType.LAND));
     }
 
     public float getBlockStrength(BlockPos pos, BlockState state) {
-        return BlockMetadata.getStrength(pos, state, currentContext.level());
+        return BlockMetadata.getStrength(pos, state, level);
     }
 
     public boolean canMineBlock(CollisionGetter world, BlockPos pos, BlockState state) {
@@ -265,8 +263,8 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
         return avoidsBlock(mob, world, pos, state);
     }
 
-    protected boolean canWalkOn(PathType type) {
-        return type != PathType.DAMAGE_FIRE && type != PathType.DANGER_FIRE && type != PathType.LAVA && type != PathType.STICKY_HONEY;
+    protected boolean canWalkOn(BlockPathTypes type) {
+        return type != BlockPathTypes.DAMAGE_FIRE && type != BlockPathTypes.DANGER_FIRE && type != BlockPathTypes.LAVA && type != BlockPathTypes.STICKY_HONEY;
     }
 
     public static boolean canMineBlock(PathfinderMob entity, BlockPos pos) {

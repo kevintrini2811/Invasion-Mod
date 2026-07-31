@@ -15,7 +15,7 @@ import net.minecraft.resources.ResourceLocation;
  * @see net.minecraft.client.renderer.entity.SkeletonRenderer
  */
 public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEntity, SkeletonModel<IMSkeletonEntity>> {
-    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/skeleton/skeleton.png");
 
     public IMSkeletonEntityRenderer(EntityRendererProvider.Context context) {
         this(context, ModelLayers.SKELETON, ModelLayers.SKELETON_INNER_ARMOR, ModelLayers.SKELETON_OUTER_ARMOR);

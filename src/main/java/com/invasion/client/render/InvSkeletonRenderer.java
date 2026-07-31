@@ -16,7 +16,7 @@ import net.minecraft.world.item.Items;
 public final class InvSkeletonRenderer extends
         HumanoidMobRenderer<IMSkeletonEntity, SkeletonRenderState, SkeletonModel<SkeletonRenderState>> {
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
+            new ResourceLocation("textures/entity/skeleton/skeleton.png");
 
     public InvSkeletonRenderer(EntityRendererProvider.Context context) {
         super(context, new SkeletonModel<>(context.bakeLayer(ModelLayers.SKELETON)), 0.5F);

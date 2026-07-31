@@ -15,9 +15,9 @@ import com.invasion.entity.Stunnable;
 import com.invasion.entity.ai.ClimbableMoveControl;
 
 public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minecraft.world.entity.ai.goal.Goal {
-    private static final AttributeModifier SPRINTING_SPEED_BOOST = new AttributeModifier(
-            InvasionMod.id("sprinting"), 1.3F, Operation.ADD_MULTIPLIED_BASE
-    );
+    private static final AttributeModifier SPRINTING_SPEED_BOOST =
+            com.invasion.entity.AttributeUtil.addPercentage(
+                    InvasionMod.id("sprinting"), 130);
 
     protected final T theEntity;
 
@@ -111,7 +111,8 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
         if (dAngle < 10) {
             isInWindup = true;
             timer = 20;
-            theEntity.stopInPlace();
+            theEntity.getNavigation().stop();
+            theEntity.setDeltaMovement(Vec3.ZERO);
         } else {
             timer = 10;
         }
@@ -122,7 +123,7 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
         missingTarget = 0;
         timer = 35;
         AttributeInstance attribute = theEntity.getAttribute(Attributes.MOVEMENT_SPEED);
-        if (!attribute.hasModifier(SPRINTING_SPEED_BOOST.id())) {
+        if (!attribute.hasModifier(SPRINTING_SPEED_BOOST)) {
             attribute.addTransientModifier(SPRINTING_SPEED_BOOST);
         }
         theEntity.setSprinting(true);
@@ -132,7 +133,7 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
 
     protected void endSprint() {
         timer = 180;
-        theEntity.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPRINTING_SPEED_BOOST.id());
+        theEntity.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPRINTING_SPEED_BOOST.getId());
         ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(30);
         theEntity.setSprinting(false);
     }

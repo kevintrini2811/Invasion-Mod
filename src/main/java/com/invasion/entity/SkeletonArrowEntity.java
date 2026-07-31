@@ -24,7 +24,6 @@ public class SkeletonArrowEntity extends Arrow {
         this(InvEntities.SKELETON_ARROW, level);
         setOwner(owner);
         setPos(owner.getX(), owner.getEyeY() - 0.1, owner.getZ());
-        setPickupItemStack(Items.ARROW.getDefaultInstance());
     }
 
     @Override

@@ -22,7 +22,7 @@ public class IMCaveSpiderEntity extends NexusSpiderEntity {
                 .add(Attributes.MAX_HEALTH, 12)
                 .add(Attributes.MOVEMENT_SPEED, 0.3F)
                 .add(Attributes.ATTACK_DAMAGE, 2)
-                .add(Attributes.GRAVITY, 0.08);
+;
     }
 
     @Override

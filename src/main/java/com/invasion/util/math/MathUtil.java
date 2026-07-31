@@ -19,11 +19,11 @@ public interface MathUtil {
     }
 
     static double boundAnglePiRad(double angle) {
-        angle %= Math.TAU;
+        angle %= (Math.PI * 2.0);
         if (angle >= Math.PI)
-            angle -= Math.TAU;
+            angle -= (Math.PI * 2.0);
         else if (angle < -Math.PI) {
-            angle += Math.TAU;
+            angle += (Math.PI * 2.0);
         }
         return angle;
     }

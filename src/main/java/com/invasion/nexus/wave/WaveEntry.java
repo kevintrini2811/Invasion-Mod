@@ -78,7 +78,7 @@ public class WaveEntry {
                 toNextSpawn = 0;
             }
 
-            int amountToSpawn = Math.round(amount * elapsed / (time.max().orElse(0) - time.min().orElse(0))) - amountQueued;
+            int amountToSpawn = Math.round(amount * elapsed / ((java.util.Objects.requireNonNullElse(time.getMax(), 0)) - (java.util.Objects.requireNonNullElse(time.getMin(), 0)))) - amountQueued;
             if (amountToSpawn > 0) {
                 if (amountToSpawn + amountQueued > amount) {
                     amountToSpawn = amount - amountQueued;
@@ -151,7 +151,7 @@ public class WaveEntry {
     }
 
     private void reviseSpawnAngles(Spawner spawner) {
-        int angleRange = clampAngle(angle.max().get() - angle.min().orElse(0));
+        int angleRange = clampAngle(java.util.Objects.requireNonNull(angle.getMax()) - (java.util.Objects.requireNonNullElse(angle.getMin(), 0)));
         List<Integer> validAngles = getAllowedAngles(spawner, angleRange);
         if (!validAngles.isEmpty()) {
             int min = Util.getRandom(validAngles, spawner.getRandom());
@@ -162,7 +162,7 @@ public class WaveEntry {
         if (minPointsInRange > 1) {
             InvasionMod.LOGGER.warn("Can't find a direction with enough spawn points: " + minPointsInRange + ". Lowering requirement.");
             this.minPointsInRange = 1;
-        } else if (angle.max().get() - angle.min().orElse(0) < MAX_ANGLE) {
+        } else if (java.util.Objects.requireNonNull(angle.getMax()) - (java.util.Objects.requireNonNullElse(angle.getMin(), 0)) < MAX_ANGLE) {
             InvasionMod.LOGGER.warn("Can't find a direction with enough spawn points: " + minPointsInRange + ". Switching to 360 degree mode for this entry");
             angle = FULL_RANGE;
         } else {

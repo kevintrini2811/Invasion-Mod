@@ -9,7 +9,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 
 public class ScaffoldNodeFactory implements DynamicPathNodeNavigator.NodeFactory {
     private static final int MIN_SCAFFOLD_HEIGHT = 4;
@@ -55,7 +55,7 @@ public class ScaffoldNodeFactory implements DynamicPathNodeNavigator.NodeFactory
         if (ActionablePathNode.getAction(node.cameFrom) == PathAction.SCAFFOLD_UP && !nodeCache.avoidsBlock(world, positionAbove, stateAbove)) {
             Node n = nodeCache.getNode(node.x, node.y + 1, node.z, PathAction.SCAFFOLD_UP);
             if (!n.closed) {
-                n.type = PathType.WALKABLE;
+                n.type = BlockPathTypes.WALKABLE;
                 n.costMalus = n.type.getMalus();
                 successors[index++] = n;
             }
@@ -79,7 +79,7 @@ public class ScaffoldNodeFactory implements DynamicPathNodeNavigator.NodeFactory
 
                 Node n = nodeCache.getNode(node.x, node.y + 1, node.z, PathAction.SCAFFOLD_UP);
                 if (!n.closed) {
-                    n.type = PathType.WALKABLE;
+                    n.type = BlockPathTypes.WALKABLE;
                     n.costMalus = n.type.getMalus();
                     successors[index++] = n;
                 }

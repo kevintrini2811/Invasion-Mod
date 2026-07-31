@@ -5,7 +5,6 @@ import com.invasion.nexus.WorldNexusStorage;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.item.InvItems;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -31,7 +30,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 public class NexusBlock extends BaseEntityBlock {
-    private static final MapCodec<NexusBlock> CODEC = Block.simpleCodec(NexusBlock::new);
     public static final BooleanProperty LIT = BooleanProperty.create("lit");
 
     public NexusBlock(Properties settings) {
@@ -40,13 +38,8 @@ public class NexusBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected RenderShape getRenderShape(BlockState state) {
+    public RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -55,8 +48,9 @@ public class NexusBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected net.minecraft.world.ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level world,
-                                             BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level world, BlockPos pos,
+            Player player, InteractionHand hand, BlockHitResult hit) {
+        ItemStack stack = player.getItemInHand(hand);
 
         // SERVER: Nexus für die Commands merken
         if (!world.isClientSide()) {
@@ -86,17 +80,16 @@ public class NexusBlock extends BaseEntityBlock {
 
         // Vorhandenes Verhalten (GUI öffnen) beibehalten
         if (!stack.is(InvItems.MATERIAL_PROBE)
-                && !stack.is(InvItems.NEXUS_ADJUSTER)
-                && !stack.getItemHolder().is(InvItems.DEBUG_WAND)) {
+                && !stack.is(InvItems.NEXUS_ADJUSTER)) {
 
             MenuProvider factory = getMenuProvider(state, world, pos);
             if (factory != null) {
                 player.openMenu(factory);
             }
-            return net.minecraft.world.ItemInteractionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
-        return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.PASS;
     }
 
 
@@ -139,7 +132,7 @@ public class NexusBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
+    public void onRemove(BlockState state, Level world, BlockPos pos, BlockState newState, boolean moved) {
         if (!state.is(newState.getBlock())) {
             world.getBlockEntity(pos, InvBlockEntities.NEXUS).ifPresent(NexusBlockEntity::discard);
         }
@@ -153,7 +146,7 @@ public class NexusBlock extends BaseEntityBlock {
     }
 
     @Override
-    protected float getDestroyProgress(BlockState state, Player player, BlockGetter world, BlockPos pos) {
+    public float getDestroyProgress(BlockState state, Player player, BlockGetter world, BlockPos pos) {
         return state.getValue(LIT) ? -1 : super.getDestroyProgress(state, player, world, pos);
     }
 }

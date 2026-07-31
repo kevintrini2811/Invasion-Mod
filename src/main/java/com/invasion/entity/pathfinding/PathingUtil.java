@@ -10,22 +10,22 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 
 public interface PathingUtil {
-    Set<PathType> AVOIDED_TYPES = Set.of(
-            PathType.DAMAGE_CAUTIOUS,
-            PathType.UNPASSABLE_RAIL
+    Set<BlockPathTypes> AVOIDED_TYPES = Set.of(
+            BlockPathTypes.DAMAGE_CAUTIOUS,
+            BlockPathTypes.UNPASSABLE_RAIL
     );
-    Set<PathType> FIRE_DAMAGE_TYPES = Set.of(
-            PathType.DAMAGE_FIRE,
-            PathType.DANGER_FIRE,
-            PathType.LAVA
+    Set<BlockPathTypes> FIRE_DAMAGE_TYPES = Set.of(
+            BlockPathTypes.DAMAGE_FIRE,
+            BlockPathTypes.DANGER_FIRE,
+            BlockPathTypes.LAVA
     );
-    Set<PathType> WATER_DAMAGE_TYPES = Set.of(
-            PathType.WATER,
-            PathType.WATER_BORDER
+    Set<BlockPathTypes> WATER_DAMAGE_TYPES = Set.of(
+            BlockPathTypes.WATER,
+            BlockPathTypes.WATER_BORDER
     );
 
     static boolean hasAdjacentLadder(BlockGetter world, BlockPos pos) {
@@ -57,7 +57,8 @@ public interface PathingUtil {
             return true;
         }
 
-        PathType type = WalkNodeEvaluator.getPathTypeStatic(entity, pos);
+        BlockPathTypes type = WalkNodeEvaluator.getBlockPathTypeStatic(
+                entity.level(), pos.mutable());
         return AVOIDED_TYPES.contains(type)
                 || (!entity.fireImmune() && FIRE_DAMAGE_TYPES.contains(type))
                 || (!entity.canBreatheUnderwater() && WATER_DAMAGE_TYPES.contains(type));

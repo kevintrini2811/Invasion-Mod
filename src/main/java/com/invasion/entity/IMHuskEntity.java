@@ -32,9 +32,9 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(CONVERTING, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(CONVERTING, false);
     }
 
     public boolean isUnderWaterConverting() {

@@ -69,8 +69,8 @@ public class ThrowerEntity extends TieredIMMobEntity {
     private static final int THROW_ANIMATION_DURATION = 12;
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
         spawnAtLocation(InvItems.SMALL_REMNANTS);
     }
 
@@ -93,9 +93,9 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(THROW_ANIMATION_TICKS, 0);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(THROW_ANIMATION_TICKS, 0);
     }
 
     public static AttributeSupplier.Builder createT1V0Attributes() {
@@ -210,16 +210,8 @@ public class ThrowerEntity extends TieredIMMobEntity {
         }
     }
 
-    @Override
-    public float getAgeScale() {
-        if (isBig()) {
-            return 1.1F;
-        }
-        return super.getAgeScale();
-    }
-
     public float scaleAmount() {
-        return super.getScale() * getAgeScale();
+        return isBig() ? 1.1F : 1.0F;
     }
 
     @Override

@@ -57,17 +57,16 @@ public final class MobHeadArmorLayer<T extends LivingEntity, M extends EntityMod
         // whereas humanoid armor is centered on its pivot.
         poseStack.translate(0.0F, -0.62F, -0.25F);
         poseStack.scale(scale, scale, scale);
-        boolean inner = false;
-        var material = armor.getMaterial().value();
-        for (var layer : material.layers()) {
-            var texture = net.neoforged.neoforge.client.ClientHooks.getArmorTexture(
-                    entity, stack, layer, inner, EquipmentSlot.HEAD);
-            var model = net.neoforged.neoforge.client.ClientHooks.getArmorModel(
-                    entity, stack, EquipmentSlot.HEAD, armorModel);
-            model.renderToBuffer(poseStack,
-                    buffers.getBuffer(RenderType.armorCutoutNoCull(texture)),
-                    light, OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
-        }
+        String base = "textures/models/armor/"
+                + armor.getMaterial().getName() + "_layer_1.png";
+        String resolved = net.minecraftforge.client.ForgeHooksClient.getArmorTexture(
+                entity, stack, base, EquipmentSlot.HEAD, null);
+        var texture = new net.minecraft.resources.ResourceLocation(resolved);
+        var model = net.minecraftforge.client.ForgeHooksClient.getArmorModel(
+                entity, stack, EquipmentSlot.HEAD, armorModel);
+        model.renderToBuffer(poseStack,
+                buffers.getBuffer(RenderType.armorCutoutNoCull(texture)),
+                light, OverlayTexture.NO_OVERLAY, 1, 1, 1, 1);
         poseStack.popPose();
     }
 }

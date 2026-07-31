@@ -56,7 +56,9 @@ public class GoToNexusGoal extends Goal {
                 BlockPos target = nexus.getOrigin();
 
                 for (Direction i : Direction.Plane.HORIZONTAL) {
-                    if (mob.level().getBlockState(nexus.getOrigin().relative(i)).isPathfindable(PathComputationType.LAND)) {
+                    BlockPos candidate = nexus.getOrigin().relative(i);
+                    if (mob.level().getBlockState(candidate).isPathfindable(
+                            mob.level(), candidate, PathComputationType.LAND)) {
                         target = target.offset(i.getStepX(), 0, i.getStepZ());
                     }
                 }

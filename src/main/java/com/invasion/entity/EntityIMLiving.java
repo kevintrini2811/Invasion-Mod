@@ -135,13 +135,13 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     }
 
     protected void sunlightDamageTick() {
-        igniteForSeconds(8);
+        setSecondsOnFire(8);
     }
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        if (getRandom().nextInt(4) == 0) {
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        if (random.nextInt(4) == 0) {
             spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
     }

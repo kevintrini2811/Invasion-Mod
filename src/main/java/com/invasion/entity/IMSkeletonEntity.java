@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.ai.goal.AttackNexusGoal;
@@ -40,13 +41,13 @@ import net.minecraft.world.level.ServerLevelAccessor;
 public class IMSkeletonEntity extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker, Miner {
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        int arrows = getRandom().nextInt(3);
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        int arrows = random.nextInt(3);
         for (int i = 0; i < arrows; i++) {
             spawnAtLocation(Items.ARROW);
         }
-        if (getRandom().nextInt(3) == 2) {
+        if (random.nextInt(3) == 2) {
             spawnAtLocation(Items.BONE);
         }
     }
@@ -104,8 +105,10 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType spawnReason, @Nullable SpawnGroupData data) {
-        data = super.finalizeSpawn(world, difficulty, spawnReason, data);
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty,
+            MobSpawnType spawnReason, @Nullable SpawnGroupData data,
+            @Nullable CompoundTag entityTag) {
+        data = super.finalizeSpawn(world, difficulty, spawnReason, data, entityTag);
         setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
         return data;
     }
@@ -120,12 +123,12 @@ public class IMSkeletonEntity extends IMMobEntity
         double dZ = target.getZ() - getZ();
         double horLength = Math.sqrt(dX * dX + dZ * dZ);
         projectile.shoot(dX, dY + horLength * 0.2F, dZ, 1.1F, 12);
-        playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
+        playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (random.nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(projectile);
     }
 
     protected AbstractArrow createArrowProjectile(ItemStack arrow, float damageModifier, @Nullable ItemStack shotFrom) {
-        return ProjectileUtil.getMobArrow(this, arrow, damageModifier, shotFrom);
+        return ProjectileUtil.getMobArrow(this, arrow, damageModifier);
     }
 
     @Override
@@ -159,7 +162,7 @@ public class IMSkeletonEntity extends IMMobEntity
         double dZ = target.z - getZ();
         double horizontalDistance = Math.sqrt(dX * dX + dZ * dZ);
         projectile.shoot(dX, dY + horizontalDistance * 0.2F, dZ, 1.1F, 12);
-        playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (getRandom().nextFloat() * 0.4F + 0.8F));
+        playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (random.nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(projectile);
     }
 }

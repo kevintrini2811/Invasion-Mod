@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.level.pathfinder.WalkNodeEvaluator;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import com.invasion.block.BlockMetadata;
 import com.invasion.block.DestructableType;
@@ -80,7 +81,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
 
     public boolean avoidsBlock(BlockState state) {
         return !entity.isInvulnerable()
-                && ((!entity.fireImmune() && NodeEvaluator.isBurningBlock(state))
+                && ((!entity.fireImmune() && WalkNodeEvaluator.isBurningBlock(state))
                     || state.is(Blocks.BEDROCK)
                     || state.is(Blocks.CACTUS)
             );
@@ -259,7 +260,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
                 : collisionWidth == 2 ? PosUtils.OFFSET_ADJACENT_2
                 : PosUtils.ZERO) {
             BlockState state = terrainMap.getBlockState(mutable.set(pos).offset(offset));
-            if (!state.isAir() && !state.isPathfindable(PathComputationType.LAND)) {
+            if (!state.isAir() && !state.isPathfindable(entity.level(), pos, PathComputationType.LAND)) {
                 return true;
             }
         }
@@ -280,7 +281,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
     public final boolean canStandAt(BlockGetter world, BlockPos pos) {
         for (BlockPos p : BlockPos.betweenClosedStream(entity.getDimensions(entity.getPose()).makeBoundingBox(com.invasion.util.math.PosUtils.bottomCenter(pos))).toList()) {
             BlockState state = world.getBlockState(p);
-            if ((!state.isAir() && !state.isPathfindable(PathComputationType.LAND)) || avoidsBlock(state)) {
+            if ((!state.isAir() && !state.isPathfindable(entity.level(), pos, PathComputationType.LAND)) || avoidsBlock(state)) {
                 return false;
             }
         }
@@ -305,7 +306,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
             if (!state.isAir()) {
                 if (state.liquid()) {
                     liquidFlag = true;
-                } else if (!state.isPathfindable(PathComputationType.LAND)) {
+                } else if (!state.isPathfindable(entity.level(), pos, PathComputationType.LAND)) {
                     if (!isBlockDestructible(terrainMap, p, state)) {
                         return DestructableType.UNBREAKABLE;
                     }

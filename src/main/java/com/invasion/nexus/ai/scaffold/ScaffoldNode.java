@@ -12,7 +12,7 @@ public record ScaffoldNode(
     ) {
     public ScaffoldNode(CompoundTag compound) {
         this(
-            NbtUtils.readBlockPos(compound, "pos").orElse(BlockPos.ZERO),
+            NbtUtils.readBlockPos(compound.getCompound("pos")),
             Direction.from2DDataValue(compound.getInt("orientation")),
             compound.getInt("height")
         );

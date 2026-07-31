@@ -33,26 +33,4 @@ public class DazeParticle extends TextureSheetParticle {
         return ParticleRenderType.PARTICLE_SHEET_OPAQUE;
     }
 
-    @Override
-    public SingleQuadParticle.FacingCameraMode getFacingCameraMode() {
-        return SingleQuadParticle.FacingCameraMode.LOOKAT_Y;
-    }
-
-    @Override
-    public void render(VertexConsumer buffer, Camera camera, float tickDelta) {
-        super.render(buffer, camera, tickDelta);
-    }
-
-    @Override
-    protected void renderRotatedQuad(VertexConsumer buffer, Quaternionf rotation, float x, float y, float z, float tickDelta) {
-        for (int i = 0; i < 6; i++) {
-            float time = (age + (i * 10) + tickDelta) / 10F;
-            float dX = Mth.sin(time) * 0.5F;
-            float dZ = Mth.cos(time) * 0.5F;
-            float dY = Mth.sin(time * 2) * 0.1F;
-
-            super.renderRotatedQuad(buffer, rotation, x + dX, y + dY, z + dZ, tickDelta);
-        }
-    }
-
 }

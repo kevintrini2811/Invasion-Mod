@@ -16,7 +16,7 @@ public class JumpingSpiderEntity extends NexusSpiderEntity {
         return Spider.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.3F)
                 .add(Attributes.ATTACK_DAMAGE, 5)
-                .add(Attributes.GRAVITY, 0.043);
+;
     }
 
     @Override

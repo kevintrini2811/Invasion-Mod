@@ -8,7 +8,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.network.syncher.SynchedEntityData.Builder;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
@@ -52,8 +51,8 @@ public class TrapEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData(Builder builder) {
-        builder.define(TYPE, Type.EMPTY.getSerializedName());
+    protected void defineSynchedData() {
+        entityData.define(TYPE, Type.EMPTY.getSerializedName());
     }
 
     @Override
@@ -129,9 +128,9 @@ public class TrapEntity extends Entity {
                     l.stun(60);
                 }
             }
-            playSound(SoundEvents.ITEM_BREAK, 1.5F, getRandom().nextFloat() * 0.25F + 0.55F);
+            playSound(SoundEvents.ITEM_BREAK, 1.5F, random.nextFloat() * 0.25F + 0.55F);
         } else if (getTrapType() == Type.FIRE) {
-            playSound(SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.5F, 1.15F / (getRandom().nextFloat() * 0.3F + 1));
+            playSound(SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.5F, 1.15F / (random.nextFloat() * 0.3F + 1));
             doFireball(1.1F, 8);
         }
 
@@ -205,15 +204,15 @@ public class TrapEntity extends Entity {
         }
 
         for (Entity entity : level().getEntities(this, getBoundingBox().inflate(size))) {
-            entity.igniteForSeconds(8);
+            entity.setSecondsOnFire(8);
             entity.hurt(damageSources().onFire(), initialDamage);
         }
     }
 
     private void doRiftParticles() {
         for (int i = 0; i < 300; i++) {
-            double x = getRandom().triangle(0, 3);
-            double z = getRandom().triangle(0, 3);
+            double x = random.triangle(0, 3);
+            double z = random.triangle(0, 3);
             level().addParticle(ParticleTypes.PORTAL, getX() + x, getY() + 2, getZ() + z, -x / 3F, -2, -z / 3F);
         }
     }

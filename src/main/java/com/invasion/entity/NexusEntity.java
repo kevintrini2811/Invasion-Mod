@@ -16,18 +16,17 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.entity.EntityAccess;
 import net.minecraft.world.level.pathfinder.Path;
 
 public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, EntityAccess, Combatant<PathfinderMob> {
     @Deprecated
-    static CustomData createVariant(int flavour, int tier) {
+    static CompoundTag createVariant(int flavour, int tier) {
         CompoundTag nbt = new CompoundTag();
         nbt.putInt("flavour", flavour);
         nbt.putInt("tier", tier);
-        return CustomData.of(nbt);
+        return nbt;
     }
     float DEFAULT_AIR_RESISTANCE = 0.9995F;
     float DEFAULT_GROUND_FRICTION = 0.546F;
@@ -86,7 +85,7 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
 
     @Deprecated
     default void setGravity(float acceleration) {
-        asEntity().getAttribute(Attributes.GRAVITY).setBaseValue(acceleration);
+        asEntity().setNoGravity(acceleration <= 0.0F);
     }
 
     default void setAttackStrength(double attackStrength) {

@@ -8,7 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 
 public class SkeletonArrowRenderer extends ArrowRenderer<SkeletonArrowEntity, ArrowRenderState> {
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.withDefaultNamespace("textures/entity/projectiles/arrow.png");
+            new ResourceLocation("textures/entity/projectiles/arrow.png");
 
     public SkeletonArrowRenderer(EntityRendererProvider.Context context) {
         super(context);

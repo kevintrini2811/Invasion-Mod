@@ -31,7 +31,7 @@ public class TrapItem extends Item {
                     EntitySelector.NO_CREATIVE_OR_SPECTATOR).isEmpty()) {
                 if (!world.isClientSide()) {
                     world.addFreshEntity(trap);
-                    context.getItemInHand().consume(1, context.getPlayer());
+                    context.getItemInHand().shrink(1);
                 }
 
                 return InteractionResult.SUCCESS;

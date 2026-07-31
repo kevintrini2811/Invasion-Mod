@@ -15,13 +15,13 @@ record CustomToolMaterial(
         int enchantability,
         Ingredient repairIngredient) implements Tier {
     static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(
-            BlockTags.INCORRECT_FOR_GOLD_TOOL, 40, 12, 4, 22,
+            null, 40, 12, 4, 22,
             Ingredient.of(Items.GOLD_INGOT));
 
     @Override public int getUses() { return durability; }
     @Override public float getSpeed() { return miningSpeedMultiplier; }
     @Override public float getAttackDamageBonus() { return attackDamage; }
-    @Override public TagKey<Block> getIncorrectBlocksForDrops() { return inverseTag; }
+    @Override public int getLevel() { return 2; }
     @Override public int getEnchantmentValue() { return enchantability; }
     @Override public Ingredient getRepairIngredient() { return repairIngredient; }
 }

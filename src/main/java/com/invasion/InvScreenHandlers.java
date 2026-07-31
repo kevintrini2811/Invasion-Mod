@@ -11,7 +11,8 @@ public interface InvScreenHandlers {
     MenuType<NexusScreenHandler> NEXUS = register("nexus", new MenuType<>(NexusScreenHandler::new, FeatureFlags.VANILLA_SET));
 
     static <T extends AbstractContainerMenu> MenuType<T> register(String name, MenuType<T> type) {
-        return Registry.register(BuiltInRegistries.MENU, InvasionMod.id(name), type);
+        return InvasionMod.INSTANCE.register(
+                net.minecraft.core.registries.Registries.MENU, InvasionMod.id(name), type);
     }
 
     static void bootstrap() { }

@@ -56,7 +56,7 @@ public class ElectricityBoltEntityRenderer extends NoopRenderer<ElectricityBoltE
     }
 
     private static void drawBranchSegment(Matrix4f matrix, VertexConsumer buffer, Vector3f from, Vector3f to, float red, float green, float blue, float xOffset, float zOffset) {
-        buffer.addVertex(matrix, from.x + xOffset, from.y * 16, from.z + zOffset).setColor(red, green, blue, 0.6F);
-        buffer.addVertex(matrix, to.x + xOffset, to.y * 16, to.z + zOffset).setColor(red, green, blue, 0.6F);
+        buffer.vertex(matrix, from.x + xOffset, from.y * 16, from.z + zOffset).color(red, green, blue, 0.6F);
+        buffer.vertex(matrix, to.x + xOffset, to.y * 16, to.z + zOffset).color(red, green, blue, 0.6F);
     }
 }

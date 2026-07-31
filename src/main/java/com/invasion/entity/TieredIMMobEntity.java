@@ -21,10 +21,10 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(TIER, 1);
-        builder.define(FLAVOUR, 0);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(TIER, 1);
+        entityData.define(FLAVOUR, 0);
     }
 
     @Override

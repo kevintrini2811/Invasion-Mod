@@ -29,8 +29,8 @@ public final class BurrowerTailEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        builder.define(PARENT_ID, 0);
+    protected void defineSynchedData() {
+        entityData.define(PARENT_ID, 0);
     }
 
     @Override

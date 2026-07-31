@@ -1,7 +1,6 @@
 package com.invasion.entity;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.SynchedEntityData.Builder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +35,7 @@ public class SfxEntity extends Entity {
     }
 
     @Override
-    protected void defineSynchedData(Builder builder) {
+    protected void defineSynchedData() {
     }
 
     @Override

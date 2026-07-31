@@ -37,7 +37,7 @@ public class SpawnProxyEntity extends Mob {
 
     private boolean darkEnoughToSpawn(LevelAccessor world) {
         BlockPos pos = blockPosition();
-        return world.getBrightness(LightLayer.SKY, pos) <= getRandom().nextInt(32) && world.getMaxLocalRawBrightness(pos) <= getRandom().nextInt(8);
+        return world.getBrightness(LightLayer.SKY, pos) <= random.nextInt(32) && world.getMaxLocalRawBrightness(pos) <= random.nextInt(8);
     }
 
     public float getBlockPathWeight(LevelAccessor world, BlockPos pos) {

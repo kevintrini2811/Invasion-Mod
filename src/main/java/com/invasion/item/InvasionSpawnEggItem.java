@@ -12,15 +12,35 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.context.UseOnContext;
 
 public final class InvasionSpawnEggItem extends SpawnEggItem {
     private final EntityType<? extends Mob> entityType;
+    private final CompoundTag variantData;
 
     public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
             int primaryColor, int secondaryColor) {
         super(entityType, primaryColor, secondaryColor, properties);
         this.entityType = entityType;
+        this.variantData = null;
+    }
+
+    public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
+            int primaryColor, int secondaryColor, CompoundTag variantData) {
+        super(entityType, primaryColor, secondaryColor, properties);
+        this.entityType = entityType;
+        this.variantData = variantData.copy();
+    }
+
+    @Override
+    public ItemStack getDefaultInstance() {
+        ItemStack stack = super.getDefaultInstance();
+        if (variantData != null) {
+            stack.getOrCreateTag().put("EntityTag", variantData.copy());
+        }
+        return stack;
     }
 
     @Override

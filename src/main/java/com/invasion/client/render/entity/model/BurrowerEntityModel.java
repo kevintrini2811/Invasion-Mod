@@ -77,14 +77,16 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     }
 
     @Override
-    public void renderToBuffer(PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+    public void renderToBuffer(PoseStack matrices, VertexConsumer vertices,
+            int light, int overlay, float red, float green, float blue, float alpha) {
         for (int i = 0; i < segments.length; i++) {
             ModelPart segment = getPart(i);
             segment.setPos((float) segments[i].position().x,
                     (float) segments[i].position().y,
                     (float) segments[i].position().z);
             segment.setRotation(segments[i].rotation().x(), segments[i].rotation().y(), segments[i].rotation().z());
-            segment.render(matrices, vertices, light, overlay, color);
+            segment.render(matrices, vertices, light, overlay,
+                    red, green, blue, alpha);
         }
     }
 }

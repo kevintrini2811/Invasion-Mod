@@ -49,9 +49,9 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(SHEARED, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(SHEARED, false);
     }
 
     @Override
@@ -106,8 +106,7 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
                 shear(SoundSource.PLAYERS);
                 gameEvent(GameEvent.SHEAR, player);
                 stack.hurtAndBreak(1, player,
-                        hand == InteractionHand.MAIN_HAND
-                                ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+                        p -> p.broadcastBreakEvent(hand));
             }
             return InteractionResult.SUCCESS;
         }
@@ -117,7 +116,7 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
     @Override
     public void shear(SoundSource source) {
         level().playSound(
-                null, this, SoundEvents.BOGGED_SHEAR, source, 1.0F, 1.0F);
+                null, this, SoundEvents.SHEEP_SHEAR, source, 1.0F, 1.0F);
         setSheared(true);
     }
 
@@ -128,22 +127,22 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.BOGGED_AMBIENT;
+        return SoundEvents.SKELETON_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.BOGGED_HURT;
+        return SoundEvents.SKELETON_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.BOGGED_DEATH;
+        return SoundEvents.SKELETON_DEATH;
     }
 
     @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
-        playSound(SoundEvents.BOGGED_STEP, 0.15F, 1.0F);
+        playSound(SoundEvents.SKELETON_STEP, 0.15F, 1.0F);
     }
 
     private static final class BoggedKillWithArrowGoal

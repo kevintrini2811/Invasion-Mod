@@ -14,7 +14,9 @@ public interface InvBlockEntities {
     );
 
     private static <T extends BlockEntity> BlockEntityType<T> register(String name, BlockEntityType<T> type) {
-        return Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, InvasionMod.id(name), type);
+        return InvasionMod.INSTANCE.register(
+                net.minecraft.core.registries.Registries.BLOCK_ENTITY_TYPE,
+                InvasionMod.id(name), type);
     }
 
     static void bootstrap() { }

@@ -74,7 +74,7 @@ public class PounceGoal extends Goal {
         double a = Math.atan(delta.y / dXZ);
 
         if (Math.abs(a) > 0.4853981633974483D) {
-            double radius = (dXZ / ((1 - Math.tan(a)) / Math.cos(a))) * theEntity.getGravity();
+            double radius = (dXZ / ((1 - Math.tan(a)) / Math.cos(a))) * 0.08D;
             double power = 1D / Math.sqrt(1D / radius);
 
             if (power > minPower && power < maxPower) {

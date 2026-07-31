@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import com.invasion.InvTags;
 import com.invasion.InvasionMod;
 
-import net.neoforged.neoforge.common.Tags;
+import net.minecraftforge.common.Tags;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -39,28 +39,26 @@ public class BlockMetadata {
     public static final float HARD_COST = 3.2F;
 
     private static final Lookup<Float> BLOCK_COSTS = Util.make(new Lookup<>(), costs -> {
-        costs.put(BlockTags.AIR, AIR_COST);
         costs.put(BlockTags.CLIMBABLE, AIR_COST);
-        costs.put(Tags.Blocks.STONES, HARD_COST);
+        costs.put(Tags.Blocks.STONE, HARD_COST);
         costs.put(BlockTags.STONE_BRICKS, HARD_COST);
-        costs.put(Tags.Blocks.COBBLESTONES, HARD_COST);
+        costs.put(Tags.Blocks.COBBLESTONE, HARD_COST);
         costs.put(Blocks.MOSSY_COBBLESTONE, HARD_COST);
         costs.put(Blocks.BRICKS, HARD_COST);
         costs.put(Blocks.OBSIDIAN, HARD_COST);
         costs.put(BlockTags.DIRT, SOFT_COST);
         costs.put(BlockTags.SAND, SOFT_COST);
         costs.put(Blocks.GRAVEL, SOFT_COST);
-        costs.put(Tags.Blocks.GLASS_BLOCKS, SOFT_COST);
+        costs.put(Tags.Blocks.GLASS, SOFT_COST);
         costs.put(Tags.Blocks.GLASS_PANES, SOFT_COST);
         costs.put(BlockTags.LEAVES, SOFT_COST);
         costs.put(Blocks.IRON_DOOR, DOOR_COST);
         costs.put(Blocks.IRON_TRAPDOOR, DOOR_COST);
         costs.put(BlockTags.WOODEN_DOORS, SOFT_DOOR_COST);
         costs.put(BlockTags.WOODEN_TRAPDOORS, SOFT_DOOR_COST);
-        costs.put(Tags.Blocks.SANDSTONE_BLOCKS, HARD_COST);
-        costs.put(Tags.Blocks.SANDSTONE_SLABS, HARD_COST);
-        costs.put(Tags.Blocks.SANDSTONE_STAIRS, HARD_COST);
-        costs.put(Tags.Blocks.CONCRETES, HARD_COST);
+        costs.put(Tags.Blocks.SANDSTONE, HARD_COST);
+        costs.put(Tags.Blocks.SANDSTONE, HARD_COST);
+        costs.put(Tags.Blocks.SANDSTONE, HARD_COST);
         costs.put(BlockTags.LOGS, HARD_COST);
         costs.put(BlockTags.PLANKS, HARD_COST);
         costs.put(Tags.Blocks.ORES, HARD_COST);
@@ -80,10 +78,9 @@ public class BlockMetadata {
         costs.put(BlockTags.FLOWERS, AIR_COST);
     });
     private static final Lookup<Float> BLOCK_STRENGTHS = Util.make(new Lookup<>(), strengths -> {
-        strengths.put(BlockTags.AIR, AIR_STRENGTH);
-        strengths.put(Tags.Blocks.STONES, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.STONE, HARD_STRENGTH);
         strengths.put(BlockTags.STONE_BRICKS, HARD_STRENGTH);
-        strengths.put(Tags.Blocks.COBBLESTONES, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.COBBLESTONE, HARD_STRENGTH);
         strengths.put(Blocks.MOSSY_COBBLESTONE, HARD_STRENGTH);
         strengths.put(Blocks.BRICKS, HARD_STRENGTH);
         strengths.put(Blocks.OBSIDIAN, HEAVY_MATERIAL_STRENGTH);
@@ -94,16 +91,16 @@ public class BlockMetadata {
         strengths.put(Blocks.PODZOL, OVERGROWN_DIRT_STRENGTH);
         strengths.put(BlockTags.SAND, SOFT_STRENGTH);
         strengths.put(Blocks.GRAVEL, SOFT_STRENGTH);
-        strengths.put(Tags.Blocks.GLASS_BLOCKS, SOFT_STRENGTH);
+        strengths.put(Tags.Blocks.GLASS, SOFT_STRENGTH);
         strengths.put(Tags.Blocks.GLASS_PANES, SOFT_STRENGTH);
         strengths.put(BlockTags.LEAVES, OVERGROWTH_STRENGTH);
         strengths.put(BlockTags.CAVE_VINES, OVERGROWTH_STRENGTH);
         strengths.put(Blocks.IRON_DOOR, METAL_ENTRYWAY_STRENGTH);
         strengths.put(Blocks.IRON_TRAPDOOR, METAL_ENTRYWAY_STRENGTH);
         strengths.put(BlockTags.WOODEN_DOORS, HARD_STRENGTH);
-        strengths.put(Tags.Blocks.SANDSTONE_BLOCKS, HARD_STRENGTH);
-        strengths.put(Tags.Blocks.SANDSTONE_SLABS, HARD_STRENGTH);
-        strengths.put(Tags.Blocks.SANDSTONE_STAIRS, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.SANDSTONE, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.SANDSTONE, HARD_STRENGTH);
+        strengths.put(Tags.Blocks.SANDSTONE, HARD_STRENGTH);
         strengths.put(BlockTags.LOGS, HARD_STRENGTH);
         strengths.put(BlockTags.PLANKS, HARD_STRENGTH);
         strengths.put(Tags.Blocks.STORAGE_BLOCKS_GOLD, HARD_STRENGTH);
@@ -132,8 +129,7 @@ public class BlockMetadata {
     public static boolean isIndestructible(BlockState state) {
         return state.getBlock().defaultDestroyTime() < 0
                 || state.getPistonPushReaction() == PushReaction.BLOCK
-                || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock())
-                || state.is(Tags.Blocks.RELOCATION_NOT_SUPPORTED);
+                || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock());
     }
 
     public static Optional<Float> getCost(BlockState state) {

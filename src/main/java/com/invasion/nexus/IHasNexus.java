@@ -65,8 +65,11 @@ public interface IHasNexus {
             if (nexusId != null
                     && globalPos != null
                     && nexus == null
-                    && worldGetter.get() instanceof ServerLevel sw
-                    && sw.getServer().getLevel(globalPos.dimension()) instanceof ServerLevel world) {
+                    && worldGetter.get() instanceof ServerLevel sw) {
+                ServerLevel world = sw.getServer().getLevel(globalPos.dimension());
+                if (world == null) {
+                    return null;
+                }
                 nexus = WorldNexusStorage.of(world).getNexus(nexusId);
                 if (nexus == null) {
                     set(null);

@@ -7,14 +7,14 @@ import com.invasion.client.screen.NexusScreen;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.common.MinecraftForge;
 
 public final class InvasionModClient {
     private InvasionModClient() {
@@ -24,23 +24,23 @@ public final class InvasionModClient {
         modBus.addListener(InvasionModClient::clientSetup);
         modBus.addListener(InvasionModClient::registerRenderers);
         modBus.addListener(InvasionModClient::registerGuiLayers);
-        modBus.addListener(InvasionModClient::registerMenuScreens);
-        NeoForge.EVENT_BUS.addListener(InvasionModClient::onDisconnect);
+        MinecraftForge.EVENT_BUS.addListener(InvasionModClient::onDisconnect);
     }
 
     private static void clientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
             ItemProperties.register(InvItems.SEARING_BOW,
-                    ResourceLocation.withDefaultNamespace("pull"),
+                    new ResourceLocation("pull"),
                     (stack, level, entity, seed) -> entity == null
                             || entity.getUseItem() != stack ? 0.0F
-                            : (stack.getUseDuration(entity)
+                            : (stack.getUseDuration()
                                     - entity.getUseItemRemainingTicks()) / 20.0F);
             ItemProperties.register(InvItems.SEARING_BOW,
-                    ResourceLocation.withDefaultNamespace("pulling"),
+                    new ResourceLocation("pulling"),
                     (stack, level, entity, seed) -> entity != null
                             && entity.isUsingItem() && entity.getUseItem() == stack
                                     ? 1.0F : 0.0F);
+            MenuScreens.register(InvScreenHandlers.NEXUS, NexusScreen::new);
         });
     }
 
@@ -48,12 +48,8 @@ public final class InvasionModClient {
         InvRenderers.register(event);
     }
 
-    private static void registerGuiLayers(RegisterGuiLayersEvent event) {
+    private static void registerGuiLayers(RegisterGuiOverlaysEvent event) {
         NexusHud.register(event);
-    }
-
-    private static void registerMenuScreens(RegisterMenuScreensEvent event) {
-        event.register(InvScreenHandlers.NEXUS, NexusScreen::new);
     }
 
     private static void onDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {

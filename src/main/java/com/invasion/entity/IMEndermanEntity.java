@@ -41,7 +41,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 
 public final class IMEndermanEntity extends IMMobEntity {
@@ -52,8 +52,8 @@ public final class IMEndermanEntity extends IMMobEntity {
         super(type, level);
         flammability = 1;
         getNavigatorNew().setCanDestroyBlocks(true);
-        setPathfindingMalus(PathType.WATER, -1);
-        setPathfindingMalus(PathType.WATER_BORDER, -1);
+        setPathfindingMalus(BlockPathTypes.WATER, -1);
+        setPathfindingMalus(BlockPathTypes.WATER_BORDER, -1);
         setCanPickUpLoot(true);
     }
 
@@ -95,9 +95,9 @@ public final class IMEndermanEntity extends IMMobEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(CARRIED_BLOCK, Optional.empty());
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(CARRIED_BLOCK, Optional.empty());
     }
 
     @Override
@@ -174,7 +174,7 @@ public final class IMEndermanEntity extends IMMobEntity {
         }
 
         boolean damaged = super.hurt(source, amount);
-        if (damaged && source.getEntity() == null && getRandom().nextInt(10) != 0) {
+        if (damaged && source.getEntity() == null && random.nextInt(10) != 0) {
             teleportRandomly();
         }
         return damaged;
@@ -182,9 +182,9 @@ public final class IMEndermanEntity extends IMMobEntity {
 
     private boolean teleportRandomly() {
         return teleportSafely(
-                getX() + (getRandom().nextDouble() - 0.5) * 64,
-                getY() + getRandom().nextInt(64) - 32,
-                getZ() + (getRandom().nextDouble() - 0.5) * 64);
+                getX() + (random.nextDouble() - 0.5) * 64,
+                getY() + random.nextInt(64) - 32,
+                getZ() + (random.nextDouble() - 0.5) * 64);
     }
 
     private boolean teleportTowards(Entity target) {
@@ -193,9 +193,9 @@ public final class IMEndermanEntity extends IMMobEntity {
                 getY(0.5) - target.getEyeY(),
                 getZ() - target.getZ()).normalize();
         return teleportSafely(
-                getX() + (getRandom().nextDouble() - 0.5) * 8 - away.x * 16,
-                getY() + getRandom().nextInt(16) - 8 - away.y * 16,
-                getZ() + (getRandom().nextDouble() - 0.5) * 8 - away.z * 16);
+                getX() + (random.nextDouble() - 0.5) * 8 - away.x * 16,
+                getY() + random.nextInt(16) - 8 - away.y * 16,
+                getZ() + (random.nextDouble() - 0.5) * 8 - away.z * 16);
     }
 
     private boolean teleportSafely(double x, double y, double z) {
@@ -226,8 +226,8 @@ public final class IMEndermanEntity extends IMMobEntity {
     }
 
     @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
+    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
         getCarriedBlock().ifPresent(state -> {
             ItemStack stack = new ItemStack(state.getBlock().asItem());
             if (!stack.isEmpty()) {

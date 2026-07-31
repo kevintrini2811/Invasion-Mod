@@ -14,7 +14,7 @@ public class EntityIMPrimedTNT extends BoulderEntity {
     }
 
     @Override
-    protected ItemStack getDefaultPickupItem() {
+    protected ItemStack getPickupItem() {
         return ItemStack.EMPTY;
     }
 

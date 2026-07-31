@@ -26,7 +26,9 @@ public interface InvSounds {
 
     private static SoundEvent register(String name) {
         ResourceLocation id = InvasionMod.id(name);
-        return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
+        return InvasionMod.INSTANCE.register(
+                net.minecraft.core.registries.Registries.SOUND_EVENT, id,
+                SoundEvent.createVariableRangeEvent(id));
     }
 
     static void boostrap() {}

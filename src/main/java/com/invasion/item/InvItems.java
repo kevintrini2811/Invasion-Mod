@@ -3,6 +3,7 @@ package com.invasion.item;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.TrapEntity;
@@ -10,7 +11,6 @@ import com.invasion.entity.InvEntities;
 import com.invasion.entity.NexusEntity;
 import net.minecraft.Util;
 import net.minecraft.core.Registry;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -22,14 +22,16 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.nbt.CompoundTag;
-import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
+import net.minecraftforge.registries.RegisterEvent;
 
 public interface InvItems {
     List<Item> REGISTRY = new ArrayList<>();
     List<Item> SPAWN_EGGS = new ArrayList<>();
+    List<PendingItem> PENDING_ITEMS = new ArrayList<>();
 
     Item PHASE_CRYSTAL = register("phase_crystal", p -> new Item(p));
     Item RIFT_FLUX = register("rift_flux", p -> new Item(p));
@@ -114,10 +116,9 @@ public interface InvItems {
     Item TIER_TWO_ZOMBIE_PIGMAN_SPAWN_EGG = register("tier_two_pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 2)));
     Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
 
-    private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
+    private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CompoundTag data) {
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(
-                properties.component(DataComponents.ENTITY_DATA, data),
-                type, primaryColor, secondaryColor);
+                properties, type, primaryColor, secondaryColor, data);
         SPAWN_EGGS.add(egg);
         return egg;
     }
@@ -134,21 +135,26 @@ public interface InvItems {
         var key = ResourceKey.create(Registries.ITEM, id);
         T item = factory.apply(new Item.Properties());
         REGISTRY.add(item);
-        return Registry.register(BuiltInRegistries.ITEM, id, item);
+        PENDING_ITEMS.add(new PendingItem(id, item));
+        return item;
     }
 
-    static void bootstrap() {
+    static void bootstrap(RegisterEvent event) {
         if (InvasionMod.getConfig().debugMode) {
             register("debug_wand", p -> new DebugWandItem(p.stacksTo(1)));
         }
+        event.register(Registries.ITEM, helper ->
+                PENDING_ITEMS.forEach(entry -> helper.register(entry.id(), entry.item())));
     }
 
-    static void bootstrapCreativeTab() {
+    static void bootstrapCreativeTab(RegisterEvent event) {
         ResourceLocation tabId = InvasionMod.id("invasion_mod");
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabId, CreativeModeTab.builder().displayItems((context, entries) -> {
+        event.register(Registries.CREATIVE_MODE_TAB, helper -> helper.register(tabId, CreativeModeTab.builder().displayItems((context, entries) -> {
             REGISTRY.forEach(item -> entries.accept(item.getDefaultInstance()));
-        }).icon(NEXUS_CORE::getDefaultInstance).title(Component.translatable(Util.makeDescriptionId("itemGroup", tabId))).build());
+        }).icon(NEXUS_CORE::getDefaultInstance).title(Component.translatable(Util.makeDescriptionId("itemGroup", tabId))).build()));
     }
+
+    record PendingItem(ResourceLocation id, Item item) {}
 
     static void addCreativeItems(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {

@@ -29,8 +29,8 @@ public class MeleeFightGoal<T extends LivingEntity, E extends PathfinderMob & Ne
 	}
 
 	private boolean hasValidTarget() {
-	    return mob.getTarget() instanceof LivingEntity target
-                && target.isAlive()
+	    LivingEntity target = mob.getTarget();
+	    return target != null && target.isAlive()
                 && target.getClass().isAssignableFrom(getTargetClass());
 	}
 

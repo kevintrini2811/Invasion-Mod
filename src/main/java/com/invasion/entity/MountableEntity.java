@@ -23,7 +23,7 @@ public interface MountableEntity extends NexusEntity {
                         jockey.setBaby(true);
                     }
                     jockey.moveTo(self.getX(), self.getY(), self.getZ(), self.getYRot(), 0.0F);
-                    jockey.finalizeSpawn(world, difficulty, spawnReason, null);
+                    jockey.finalizeSpawn(world, difficulty, spawnReason, null, null);
                     if (jockey instanceof NexusEntity n) {
                         n.setNexus(getNexus());
                     }

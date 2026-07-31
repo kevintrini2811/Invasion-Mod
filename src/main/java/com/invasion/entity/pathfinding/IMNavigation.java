@@ -506,7 +506,7 @@ public class IMNavigation implements Navigation {
 			return null;
 		}
 
-		double distance = min + theEntity.level().getRandom().nextInt(max - min);
+		double distance = min + theEntity.level().random.nextInt(max - min);
 		int xi = Mth.floor(xOffset * (distance / h) + theEntity.getX());
 		int zi = Mth.floor(zOffset * (distance / h) + theEntity.getZ());
 		int y = Mth.floor(theEntity.getY());
