@@ -438,7 +438,7 @@ public class Nexus implements ControllableNexusAccess {
         if (hp <= 0) {
             if (mode == Mode.STARTED || mode == Mode.DEBUG) {
                 theEnd();
-                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
+                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld(), net.minecraft.world.entity.MobSpawnType.EVENT);
                 mob.setCustomName(InvBlocks.NEXUS_CORE.getName());
                 boundPlayers.sendMessage(source.getLocalizedDeathMessage(mob));
             }
@@ -459,7 +459,7 @@ public class Nexus implements ControllableNexusAccess {
                 return;
             }
         } else if (reason == RemovalReason.DISCARDED) {
-            if (combatant.asEntity().getType().create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT) instanceof Combatant<?> copy) {
+            if (combatant.asEntity().getType().create(getWorld(), net.minecraft.world.entity.MobSpawnType.EVENT) instanceof Combatant<?> copy) {
                 copy.asEntity().restoreFrom(combatant.asEntity());
                 copy.setNexus(this);
                 waveSpawner.askForRespawn(copy);
@@ -854,28 +854,28 @@ public class Nexus implements ControllableNexusAccess {
         this(world, storage,
                 compound.read("uuid", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
                 compound.read("pos", BlockPos.CODEC).orElseThrow());
-        activationTimer = compound.getIntOr("activationTimer", 0);
-        mode = Mode.forId(compound.getIntOr("mode", 0));
-        currentWave = compound.getIntOr("currentWave", 0);
-        nexusLevel = compound.getIntOr("nexusLevel", 0);
-        hp = compound.getIntOr("hp", 0);
-        nexusKills = compound.getIntOr("nexusKills", 0);
-        powerLevel = compound.getIntOr("powerLevel", 0);
-        lastPowerLevel = compound.getIntOr("lastPowerLevel", 0);
-        nextAttackTime = compound.getIntOr("nextAttackTime", 0);
-        daysToAttack = compound.getIntOr("daysToAttack", 0);
-        continuousAttack = compound.getBooleanOr("continuousAttack", false);
-        continuousAttackCount = compound.getIntOr("continuousAttackCount", 0);
-        activated = compound.getBooleanOr("activated", false);
-        paused = compound.getBooleanOr("paused", false);
-        mobsLeftInWave = compound.getIntOr("mobsLeftInWave", 0);
+        activationTimer = compound.getInt("activationTimer");
+        mode = Mode.forId(compound.getInt("mode"));
+        currentWave = compound.getInt("currentWave");
+        nexusLevel = compound.getInt("nexusLevel");
+        hp = compound.getInt("hp");
+        nexusKills = compound.getInt("nexusKills");
+        powerLevel = compound.getInt("powerLevel");
+        lastPowerLevel = compound.getInt("lastPowerLevel");
+        nextAttackTime = compound.getInt("nextAttackTime");
+        daysToAttack = compound.getInt("daysToAttack");
+        continuousAttack = compound.getBoolean("continuousAttack");
+        continuousAttackCount = compound.getInt("continuousAttackCount");
+        activated = compound.getBoolean("activated");
+        paused = compound.getBoolean("paused");
+        mobsLeftInWave = compound.getInt("mobsLeftInWave");
         lastMobsLeftInWave = compound.getIntOr("lastMobsLeftInWave", mobsLeftInWave);
-        mobsToKillInWave = compound.getIntOr("mobsToKillInWave", 0);
+        mobsToKillInWave = compound.getInt("mobsToKillInWave");
 
-        nexusItemStacks.readNbt(compound.getCompoundOrEmpty("inventory"), lookup);
-        boundPlayers.readNbt(compound.getCompoundOrEmpty("boundPlayers"), lookup);
-        waveSpawner.readNbt(compound.getCompoundOrEmpty("waveSpawner"), lookup);
-        attackerAI.readNbt(compound.getCompoundOrEmpty("ai"), lookup);
+        nexusItemStacks.readNbt(compound.getCompound("inventory"), lookup);
+        boundPlayers.readNbt(compound.getCompound("boundPlayers"), lookup);
+        waveSpawner.readNbt(compound.getCompound("waveSpawner"), lookup);
+        attackerAI.readNbt(compound.getCompound("ai"), lookup);
 
         boundingBoxToRadius = computeSpawnArea();
     }

@@ -4,19 +4,19 @@ import com.invasion.entity.IMWitherSkeletonEntity;
 import com.invasion.entity.EquipmentUtil;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.monster.skeleton.SkeletonModel;
+import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 
 public final class InvWitherSkeletonRenderer extends
         HumanoidMobRenderer<IMWitherSkeletonEntity, SkeletonRenderState,
                 SkeletonModel<SkeletonRenderState>> {
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace(
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/skeleton/wither_skeleton.png");
 
     public InvWitherSkeletonRenderer(EntityRendererProvider.Context context) {
@@ -61,7 +61,7 @@ public final class InvWitherSkeletonRenderer extends
     }
 
     @Override
-    public Identifier getTextureLocation(SkeletonRenderState state) {
+    public ResourceLocation getTextureLocation(SkeletonRenderState state) {
         return TEXTURE;
     }
 }

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -567,7 +567,7 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void generateSpawnPoints() {
-		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
+		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld(), net.minecraft.world.entity.MobSpawnType.EVENT);
 		zombie.setNexus(nexus);
 		List<SpawnPoint> spawnPoints = new ArrayList<>();
 		BlockPos origin = nexus.getOrigin();
@@ -620,7 +620,7 @@ public class IMWaveSpawner implements Spawner {
 	        InvasionMod.LOGGER.debug("[Spawn] Spawn point was outside of build limit {}", pos);
 	        return;
 	    }
-		entity.absSnapTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
+		entity.moveTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 0, 0);
 		if (entity.checkSpawnObstruction(nexus.getWorld()) && nexus.getWorld().noCollision(entity)) {
 			int angle = (int) (Math.atan2(nexus.getOrigin().getZ() - pos.getZ(), nexus.getOrigin().getX() - pos.getX()) * Mth.RAD_TO_DEG);
 			spawnPoints.add(new SpawnPoint(pos.immutable(), angle, SpawnType.HUMANOID));
@@ -630,8 +630,8 @@ public class IMWaveSpawner implements Spawner {
 
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
-        setRadius(compound.getIntOr("spawnRadius", 0));
-        elapsed = compound.getLongOr("elapsed", 0L);
+        setRadius(compound.getInt("spawnRadius"));
+        elapsed = compound.getLong("elapsed");
     }
 
     public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {

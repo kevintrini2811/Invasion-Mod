@@ -9,7 +9,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -21,7 +21,7 @@ import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
 import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -65,7 +65,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     @Override
     public SpawnGroupData finalizeSpawn(
             ServerLevelAccessor world, DifficultyInstance difficulty,
-            EntitySpawnReason reason, @Nullable SpawnGroupData data) {
+            MobSpawnType reason, @Nullable SpawnGroupData data) {
         data = super.finalizeSpawn(world, difficulty, reason, data);
         RandomSource random = world.getRandom();
         if (getMainHandItem().isEmpty() && random.nextFloat() > 0.9F) {

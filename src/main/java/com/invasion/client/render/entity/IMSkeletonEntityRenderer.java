@@ -1,13 +1,13 @@
 package com.invasion.client.render.entity;
 
 import com.invasion.entity.IMSkeletonEntity;
-import net.minecraft.client.model.monster.skeleton.SkeletonModel;
+import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Copy of SkeletonEntityRenderer with the entity class changed
@@ -15,7 +15,7 @@ import net.minecraft.resources.Identifier;
  * @see net.minecraft.client.renderer.entity.SkeletonRenderer
  */
 public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEntity, SkeletonModel<IMSkeletonEntity>> {
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
 
     public IMSkeletonEntityRenderer(EntityRendererProvider.Context context) {
         this(context, ModelLayers.SKELETON, ModelLayers.SKELETON_INNER_ARMOR, ModelLayers.SKELETON_OUTER_ARMOR);
@@ -31,7 +31,7 @@ public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEnti
     }
 
     @Override
-    public Identifier getTexture(IMSkeletonEntity abstractSkeletonEntity) {
+    public ResourceLocation getTexture(IMSkeletonEntity abstractSkeletonEntity) {
         return TEXTURE;
     }
 

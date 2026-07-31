@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.VegetationBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 
@@ -33,7 +33,7 @@ public final class CarryBlockingBlockGoal extends Goal {
     @Override
     public boolean canUse() {
         if (mob.isCarryingBlock() || mob.tickCount % 5 != 0
-                || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
+                || !((ServerLevel) mob.level()).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
             return false;
         }
         BlockPos next = findNextProbePosition();

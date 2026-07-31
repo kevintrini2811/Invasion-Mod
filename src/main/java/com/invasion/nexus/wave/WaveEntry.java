@@ -5,8 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.ChatFormatting;
-import net.minecraft.util.Util;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.Util;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.Nullable;
 

@@ -19,14 +19,13 @@ import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -110,13 +109,13 @@ public final class IMPhantomEntity extends Phantom
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    protected void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    protected void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -125,7 +124,7 @@ public final class IMPhantomEntity extends Phantom
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.PHANTOM.getDefaultLootTable()
+        net.minecraft.world.entity.EntityType.PHANTOM.getDefaultLootTable()
                 .ifPresent(lootTable -> dropFromLootTable(
                         level, source, causedByPlayer, lootTable));
     }
@@ -141,7 +140,7 @@ public final class IMPhantomEntity extends Phantom
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel level) {
+    protected void customServerAiStep() {
         if (!hasNexus()) {
             WorldNexusStorage.of(level).getNexus()
                     .filter(NexusAccess::isActive)
@@ -151,7 +150,7 @@ public final class IMPhantomEntity extends Phantom
                 && --unreachableTargetCooldown == 0) {
             temporarilyUnreachableTarget = null;
         }
-        super.customServerAiStep(level);
+        super.customServerAiStep();
     }
 
     private boolean isPlayerAlly(

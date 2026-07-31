@@ -1,8 +1,6 @@
 package com.invasion.entity;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.syncher.SynchedEntityData.Builder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -42,11 +40,11 @@ public class SfxEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput nbt) {
+    protected void readAdditionalSaveData(CompoundTag nbt) {
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput nbt) {
+    protected void addAdditionalSaveData(CompoundTag nbt) {
     }
 
     @Override

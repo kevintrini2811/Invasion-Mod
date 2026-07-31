@@ -2,7 +2,7 @@ package com.invasion.nexus.spawns;
 
 import com.invasion.nexus.EntityConstruct;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.util.RandomSource;
 
 public interface Spawner {

@@ -13,7 +13,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.resources.model.ModelManager;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import com.invasion.InvasionMod;
 import com.invasion.client.render.entity.model.LargeBipedEntityModel;
 import com.invasion.entity.AbstractIMZombieEntity;
@@ -27,7 +27,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
  * @see net.minecraft.client.renderer.entity.AbstractZombieRenderer
  */
 public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<AbstractIMZombieEntity, HumanoidModel<AbstractIMZombieEntity>> {
-    static final List<Identifier> TEXTURES = Stream.of(
+    static final List<ResourceLocation> TEXTURES = Stream.of(
             "textures/entity/zombie/old_zombie_t1.png",
             "textures/entity/zombie/zombie_t1.png",
             "textures/entity/zombie/zombie_t2.png",
@@ -75,14 +75,14 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
         matrices.scale(scale, (2 + scale) / 3F, scale);
     }
 
-    protected List<Identifier> getTextures() {
+    protected List<ResourceLocation> getTextures() {
         return TEXTURES;
     }
 
     @Override
-    public Identifier getTexture(AbstractIMZombieEntity entity) {
+    public ResourceLocation getTexture(AbstractIMZombieEntity entity) {
         int id = entity.getTextureId();
-        List<Identifier> textures = getTextures();
+        List<ResourceLocation> textures = getTextures();
         return textures.get(id < 0 || id >= textures.size() ? 0 : id);
     }
 

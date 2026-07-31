@@ -4,14 +4,11 @@ import com.invasion.InvScreenHandlers;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.client.render.InvRenderers;
 import com.invasion.client.screen.NexusScreen;
-import com.invasion.network.NexusHudPayload;
-import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.client.network.event.RegisterClientPayloadHandlersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 
 public final class InvasionModClient {
@@ -19,21 +16,14 @@ public final class InvasionModClient {
     }
 
     public static void register(IEventBus modBus) {
-        modBus.addListener(InvasionModClient::registerPayloadHandlers);
         modBus.addListener(InvasionModClient::registerRenderers);
         modBus.addListener(InvasionModClient::registerGuiLayers);
         modBus.addListener(InvasionModClient::registerMenuScreens);
         NeoForge.EVENT_BUS.addListener(InvasionModClient::onDisconnect);
     }
 
-    private static void registerPayloadHandlers(RegisterClientPayloadHandlersEvent event) {
-        event.register(NexusHudPayload.TYPE, (payload, context) -> NexusHud.update(payload));
-    }
-
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         InvRenderers.register(event);
-        event.registerBlockEntityRenderer(
-                InvBlockEntities.NEXUS, context -> new BeaconRenderer<>());
     }
 
     private static void registerGuiLayers(RegisterGuiLayersEvent event) {

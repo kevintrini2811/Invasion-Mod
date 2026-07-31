@@ -9,7 +9,7 @@ import com.invasion.InvTags;
 import com.invasion.InvasionMod;
 
 import net.neoforged.neoforge.common.Tags;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;

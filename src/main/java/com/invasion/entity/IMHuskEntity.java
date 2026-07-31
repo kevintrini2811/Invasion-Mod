@@ -11,14 +11,13 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 
 public final class IMHuskEntity extends EntityIMZombie {
     private static final EntityDataAccessor<Boolean> CONVERTING =
@@ -64,7 +63,7 @@ public final class IMHuskEntity extends EntityIMZombie {
 
     private void convertToIMZombie(ServerLevel world) {
         EntityIMZombie zombie = InvEntities.ZOMBIE.create(
-                world, EntitySpawnReason.CONVERSION);
+                world, MobSpawnType.CONVERSION);
         if (zombie == null) {
             return;
         }
@@ -101,8 +100,8 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel world, Entity target) {
-        boolean hit = super.doHurtTarget(world, target);
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
         if (hit && getMainHandItem().isEmpty()
                 && target instanceof LivingEntity living) {
             int duration = 140 * (int) world
@@ -137,7 +136,7 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putInt("InWaterTime", inWaterTime);
         if (isUnderWaterConverting()) {
@@ -146,9 +145,9 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        inWaterTime = input.getIntOr("InWaterTime", 0);
+        inWaterTime = input.getInt("InWaterTime");
         conversionTime = input.getIntOr(
                 "ZombieConversionTime", -1);
         entityData.set(CONVERTING, conversionTime >= 0);

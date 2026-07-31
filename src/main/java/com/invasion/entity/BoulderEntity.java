@@ -6,9 +6,7 @@ import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerLevel;
@@ -16,13 +14,13 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
@@ -68,7 +66,7 @@ public class BoulderEntity extends AbstractArrow {
     protected void onHitEntity(EntityHitResult hit) {
         if (level() instanceof ServerLevel serverLevel) {
             float damage = Math.min(14, Math.max(tickCount / 20.0F, 1) * 6);
-            if (hit.getEntity().hurtServer(serverLevel, damageSources().arrow(this, getOwner()), damage)) {
+            if (hit.getEntity().hurt(damageSources().arrow(this, getOwner()), damage)) {
                 playSound(InvSounds.ENTITY_BOULDER_LAND, 1, 0.9F / (getRandom().nextFloat() * 0.2F + 0.9F));
                 level().gameEvent(this, GameEvent.PROJECTILE_LAND, blockPosition());
                 discard();
@@ -97,7 +95,7 @@ public class BoulderEntity extends AbstractArrow {
                         discard();
                         return;
                     }
-                    if (serverLevel.getGameRules().get(GameRules.MOB_GRIEFING)) {
+                    if (serverLevel.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
                         level().explode(this, getX(), getY(), getZ(), 2, ExplosionInteraction.BLOCK);
                     }
                 }
@@ -106,13 +104,13 @@ public class BoulderEntity extends AbstractArrow {
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput nbt) {
+    public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
-        exploded = nbt.getBooleanOr("exploded", false);
+        exploded = nbt.getBoolean("exploded");
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput nbt) {
+    public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
         nbt.putBoolean("exploded", exploded);
     }

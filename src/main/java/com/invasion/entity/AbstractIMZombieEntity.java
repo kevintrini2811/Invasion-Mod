@@ -28,7 +28,7 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.server.level.ServerLevel;
@@ -62,7 +62,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
         if (isUsableWeapon(stack)) {
             return !isUsableWeapon(heldItem);
@@ -106,8 +106,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     @Override
-    public void customServerAiStep(ServerLevel world) {
-        super.customServerAiStep(world);
+    public void customServerAiStep() {
+        super.customServerAiStep();
 
         if (tickCount % 5 != 0) {
             return;
@@ -212,8 +212,8 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
-        return getTier() == 3 && isSprinting() ? chargeAttack(entity) : super.doHurtTarget(serverLevel, entity);
+    public boolean doHurtTarget(Entity entity) {
+        return getTier() == 3 && isSprinting() ? chargeAttack(entity) : super.doHurtTarget(entity);
     }
 
     protected boolean chargeAttack(Entity entity) {

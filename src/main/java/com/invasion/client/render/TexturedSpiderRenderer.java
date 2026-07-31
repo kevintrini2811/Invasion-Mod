@@ -3,17 +3,17 @@ package com.invasion.client.render;
 import com.invasion.entity.NexusSpiderEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.monster.spider.SpiderModel;
+import net.minecraft.client.model.SpiderModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 
 public final class TexturedSpiderRenderer<T extends NexusSpiderEntity>
         extends MobRenderer<T, InvasionSpiderRenderState, SpiderModel> {
-    private final Identifier texture;
+    private final ResourceLocation texture;
 
-    public TexturedSpiderRenderer(EntityRendererProvider.Context context, Identifier texture) {
+    public TexturedSpiderRenderer(EntityRendererProvider.Context context, ResourceLocation texture) {
         super(context, new SpiderModel(context.bakeLayer(ModelLayers.SPIDER)), 0.8F);
         this.texture = texture;
         addLayer(new HeadArmorLayer<>(
@@ -39,7 +39,7 @@ public final class TexturedSpiderRenderer<T extends NexusSpiderEntity>
     }
 
     @Override
-    public Identifier getTextureLocation(InvasionSpiderRenderState state) {
+    public ResourceLocation getTextureLocation(InvasionSpiderRenderState state) {
         return texture;
     }
 }

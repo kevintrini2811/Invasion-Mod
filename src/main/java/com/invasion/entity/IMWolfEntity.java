@@ -9,9 +9,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.server.level.ServerLevel;
@@ -25,7 +23,7 @@ import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +32,7 @@ import net.minecraft.world.entity.ai.goal.FollowOwnerGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.server.level.ServerLevel;
@@ -100,8 +98,8 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel serverLevel, Entity target) {
-        boolean success = super.doHurtTarget(serverLevel, target);
+    public boolean doHurtTarget(Entity target) {
+        boolean success = super.doHurtTarget(target);
         if (success) {
             heal(4);
         }
@@ -109,8 +107,8 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
-    public void customServerAiStep(ServerLevel world) {
-        super.customServerAiStep(world);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         updateWaveAttributes();
     }
 
@@ -183,7 +181,7 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
 
         return nexus.getPos().filter(center -> {
             IMWolfEntity wolf = InvEntities.WOLF.create(
-                    world, EntitySpawnReason.EVENT);
+                    world, MobSpawnType.EVENT);
             if (wolf == null) {
                 return false;
             }
@@ -293,13 +291,13 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         nexus.writeNbt(compound);
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
         nexus.readNbt(compound);
     }

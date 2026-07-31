@@ -21,17 +21,16 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 
 /**
  * Nexus-aware zombified piglin retaining vanilla anger propagation, water
@@ -133,7 +132,7 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         if (EquipmentUtil.isMeleeWeapon(stack)) {
             return canReplaceCurrentItem(
@@ -153,8 +152,8 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel world) {
-        super.customServerAiStep(world);
+    protected void customServerAiStep() {
+        super.customServerAiStep();
         if (tickCount % 5 != 0) {
             return;
         }
@@ -176,14 +175,14 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    protected void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putInt("tier", getTier());
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    protected void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         entityData.set(TIER, Math.clamp(input.getIntOr("tier", 1), 1, 2));
         applyTierAttributes();
@@ -205,12 +204,12 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.ZOMBIFIED_PIGLIN
+        net.minecraft.world.entity.EntityType.ZOMBIFIED_PIGLIN
                 .getDefaultLootTable()
                 .ifPresent(lootTable -> dropFromLootTable(
                         level, source, causedByPlayer, lootTable));
         if (getRandom().nextInt(4) == 0) {
-            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+            spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
     }
 }

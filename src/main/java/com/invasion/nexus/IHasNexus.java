@@ -13,8 +13,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
@@ -83,7 +81,7 @@ public interface IHasNexus {
             this.nexus = nexus;
         }
 
-        public void readNbt(ValueInput nbt) {
+        public void readNbt(CompoundTag nbt) {
             nexus = null;
             globalPos = nbt.read("globalPos", GlobalPos.CODEC).orElse(null);
             nexusId = nbt.read("nexusId", net.minecraft.core.UUIDUtil.CODEC).orElse(null);
@@ -93,7 +91,7 @@ public interface IHasNexus {
             return Optional.ofNullable(globalPos);
         }
 
-        public void writeNbt(ValueOutput nbt) {
+        public void writeNbt(CompoundTag nbt) {
             if (nexusId != null) {
                 nbt.store("nexusId", net.minecraft.core.UUIDUtil.CODEC, nexusId);
             }

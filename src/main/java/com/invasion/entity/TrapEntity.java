@@ -5,8 +5,6 @@ import java.util.Locale;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -221,13 +219,13 @@ public class TrapEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput compound) {
+    protected void readAdditionalSaveData(CompoundTag compound) {
         setTrapType(Type.of(compound.getStringOr("type", "")));
-        timeTriggered = compound.getIntOr("time_triggered", 0);
+        timeTriggered = compound.getInt("time_triggered");
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput compound) {
+    protected void addAdditionalSaveData(CompoundTag compound) {
         compound.putString("type", getTrapType().getSerializedName());
         compound.putInt("time_triggered", timeTriggered);
     }

@@ -4,7 +4,7 @@ import com.invasion.InvasionMod;
 import com.invasion.network.NexusHudPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
@@ -31,7 +31,7 @@ public final class NexusHud {
         state = payload;
     }
 
-    private static void render(GuiGraphicsExtractor graphics, net.minecraft.client.DeltaTracker deltaTracker) {
+    private static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker deltaTracker) {
         if (!state.active()) {
             return;
         }
@@ -46,9 +46,9 @@ public final class NexusHud {
         int totalWidth = waveWidth + separatorWidth + mobsWidth + separatorWidth + font.width(nexus);
         int x = (graphics.guiWidth() - totalWidth) / 2;
 
-        graphics.text(font, wave, x, 8, BLUE, true);
+        graphics.drawString(font, wave, x, 8, BLUE, true);
         int mobsX = x + waveWidth + separatorWidth;
-        graphics.text(font, mobs, mobsX, 8, GREEN, true);
-        graphics.text(font, nexus, mobsX + mobsWidth + separatorWidth, 8, RED, true);
+        graphics.drawString(font, mobs, mobsX, 8, GREEN, true);
+        graphics.drawString(font, nexus, mobsX + mobsWidth + separatorWidth, 8, RED, true);
     }
 }

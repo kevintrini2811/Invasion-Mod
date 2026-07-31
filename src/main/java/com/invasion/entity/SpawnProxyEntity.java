@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -21,7 +21,7 @@ public class SpawnProxyEntity extends Mob {
     public void tick() {
         if (!level().isClientSide()) {
             generateMobGroup(level(), entity -> {
-                entity.absSnapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+                entity.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
                 level().addFreshEntity(entity);
             });
         }
@@ -29,7 +29,7 @@ public class SpawnProxyEntity extends Mob {
     }
 
     @Override
-    public boolean checkSpawnRules(LevelAccessor world, EntitySpawnReason reason) {
+    public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason) {
         return darkEnoughToSpawn(world)
                 && getBlockPathWeight(world, blockPosition()) >= 0
                 && super.checkSpawnRules(world, reason);

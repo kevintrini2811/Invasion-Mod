@@ -1,7 +1,7 @@
 package com.invasion.client.render.entity.model;
 
 import com.invasion.entity.IMSkeletonEntity;
-import net.minecraft.client.model.monster.skeleton.SkeletonModel;
+import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.model.geom.ModelPart;
 
 /**

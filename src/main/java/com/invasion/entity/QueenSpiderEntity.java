@@ -5,11 +5,11 @@ import java.util.List;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.level.Level;
 import com.invasion.InvTags;
 import com.invasion.entity.ai.goal.LayEggGoal;
@@ -47,7 +47,7 @@ public class QueenSpiderEntity extends NexusSpiderEntity implements Reproducer {
                 .toList();
         for (int i = 0; i < offspringCount && !offspringTypes.isEmpty(); i++) {
             var type = offspringTypes.get(level().getRandom().nextInt(offspringTypes.size()));
-            Entity child = type.value().create(level(), EntitySpawnReason.EVENT);
+            Entity child = type.value().create(level(), MobSpawnType.EVENT);
             if (child == null) {
                 continue;
             }

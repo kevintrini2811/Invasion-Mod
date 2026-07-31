@@ -2,7 +2,7 @@ package com.invasion.nexus.wave;
 
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.wave.pool.Select;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;

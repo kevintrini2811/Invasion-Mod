@@ -9,7 +9,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.spider.Spider;
+import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.level.Level;
 
 public class IMCaveSpiderEntity extends NexusSpiderEntity {
@@ -31,15 +31,15 @@ public class IMCaveSpiderEntity extends NexusSpiderEntity {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel level, Entity target) {
-        if (!super.doHurtTarget(level, target)) {
+    public boolean doHurtTarget(Entity target) {
+        if (!super.doHurtTarget(target)) {
             return false;
         }
 
         if (target instanceof LivingEntity living) {
-            int poisonSeconds = level.getDifficulty() == Difficulty.HARD
+            int poisonSeconds = level().getDifficulty() == Difficulty.HARD
                     ? 15
-                    : level.getDifficulty() == Difficulty.NORMAL ? 7 : 0;
+                    : level().getDifficulty() == Difficulty.NORMAL ? 7 : 0;
             if (poisonSeconds > 0) {
                 living.addEffect(new MobEffectInstance(
                         MobEffects.POISON, poisonSeconds * 20, 0), this);

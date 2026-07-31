@@ -26,7 +26,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -40,7 +40,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.gameevent.GameEvent;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 
 public class ImpEnitty extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker {
@@ -94,8 +94,8 @@ public class ImpEnitty extends IMMobEntity
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
-        if (super.doHurtTarget(serverLevel, entity)) {
+    public boolean doHurtTarget(Entity entity) {
+        if (super.doHurtTarget(entity)) {
             entity.igniteForSeconds(3);
             return true;
         }
@@ -108,11 +108,11 @@ public class ImpEnitty extends IMMobEntity
         if (source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypes.LAVA)) {
             return false;
         }
-        return super.hurtServer(serverLevel, source, damage);
+        return super.hurt(source, damage);
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         return isUsableWeapon(stack)
                 && !isUsableWeapon(getMainHandItem());
     }
@@ -126,8 +126,8 @@ public class ImpEnitty extends IMMobEntity
     }
 
     @Override
-    public void customServerAiStep(ServerLevel world) {
-        super.customServerAiStep(world);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         if (isOnFire()
                 && !isInLava()
                 && world.getBlockStates(getBoundingBox().deflate(0.001D))
@@ -135,7 +135,7 @@ public class ImpEnitty extends IMMobEntity
             clearFire();
         }
         if (tickCount >= nextBlockIgnitionTick
-                && world.getGameRules().get(GameRules.MOB_GRIEFING)
+                && world.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
                 && tryIgniteNearbyBlock(world)) {
             nextBlockIgnitionTick = tickCount + BLOCK_IGNITION_COOLDOWN;
         }

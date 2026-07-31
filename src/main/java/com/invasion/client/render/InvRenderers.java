@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Registers a safe renderer for every custom entity while the legacy
@@ -37,12 +37,12 @@ public final class InvRenderers {
                 InvWitherSkeletonRenderer::new);
         event.registerEntityRenderer(InvEntities.SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
-                        Identifier.withDefaultNamespace("textures/entity/spider/spider.png")));
+                        ResourceLocation.withDefaultNamespace("textures/entity/spider/spider.png")));
         event.registerEntityRenderer(InvEntities.JUMPING_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/jumping_spider.png")));
         event.registerEntityRenderer(InvEntities.CAVE_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
-                        Identifier.withDefaultNamespace("textures/entity/spider/cave_spider.png")));
+                        ResourceLocation.withDefaultNamespace("textures/entity/spider/cave_spider.png")));
         event.registerEntityRenderer(InvEntities.QUEEN_SPIDER,
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/mother_spider.png")));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER,
@@ -75,11 +75,11 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.CREEPER, GenericCreeperRenderer::new);
     }
 
-    private static Identifier texture(String path) {
+    private static ResourceLocation texture(String path) {
         return InvasionMod.id("textures/" + path);
     }
 
-    private static Identifier vanilla(String path) {
-        return Identifier.withDefaultNamespace(path);
+    private static ResourceLocation vanilla(String path) {
+        return ResourceLocation.withDefaultNamespace(path);
     }
 }

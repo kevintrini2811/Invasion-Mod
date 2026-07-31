@@ -19,11 +19,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 @Deprecated
 public abstract class EntityIMLiving extends Monster implements NexusEntity, Stunnable {
@@ -73,7 +71,7 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
         super.aiStep();
         if (getBurnsInDay()
                 && !isInWaterOrRain()
-                && level().isBrightOutside()
+                && level().isDay()
                 && level().canSeeSky(blockPosition())) {
             sunlightDamageTick();
         }
@@ -85,7 +83,7 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
             damage *= flammability;
         }
 
-        return super.hurtServer(serverLevel, source, damage);
+        return super.hurt(source, damage);
     }
 
     @Override
@@ -144,12 +142,12 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getRandom().nextInt(4) == 0) {
-            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+            spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putInt("stunTimer", stunTimer);
         compound.putBoolean("countsTowardMobCap", countsTowardMobCap);
@@ -157,10 +155,10 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        stunTimer = compound.getIntOr("stunTimer", 0);
-        countsTowardMobCap = compound.getBooleanOr("countsTowardMobCap", false);
+        stunTimer = compound.getInt("stunTimer");
+        countsTowardMobCap = compound.getBoolean("countsTowardMobCap");
         nexus.readNbt(compound);
     }
 }

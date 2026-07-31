@@ -16,8 +16,6 @@ import com.invasion.entity.pathfinding.path.PathAction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -46,7 +44,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.entity.animal.feline.Cat;
+import net.minecraft.world.entity.animal.Cat;
 import net.minecraft.world.entity.animal.goat.Goat;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
@@ -97,7 +95,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
                 && isEquippableInSlot(stack, slot)
@@ -258,11 +256,11 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel world, DamageSource source, boolean causedByPlayer) {
-        spawnAtLocation(world, Items.GUNPOWDER);
+        spawnAtLocation(Items.GUNPOWDER);
         Entity entity = source.getEntity();
-        if (entity instanceof net.minecraft.world.entity.monster.skeleton.AbstractSkeleton
+        if (entity instanceof net.minecraft.world.entity.monster.AbstractSkeleton
                 || entity instanceof IMSkeletonEntity) {
-            spawnAtLocation(world, CLASSIC_MUSIC_DISCS[getRandom().nextInt(CLASSIC_MUSIC_DISCS.length)]);
+            spawnAtLocation(CLASSIC_MUSIC_DISCS[getRandom().nextInt(CLASSIC_MUSIC_DISCS.length)]);
         }
     }
 
@@ -304,7 +302,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel serverLevel, Entity target) {
+    public boolean doHurtTarget(Entity target) {
         return true;
     }
 
@@ -338,7 +336,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
 
     @Override
-    public void addAdditionalSaveData(ValueOutput nbt) {
+    public void addAdditionalSaveData(CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
         nbt.putShort("Fuse", (short)fuseTime);
         nbt.putInt("stationaryTicks", stationaryTicks);
@@ -346,11 +344,11 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput nbt) {
+    public void readAdditionalSaveData(CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
         fuseTime = nbt.getShortOr("Fuse", (short) fuseTime);
-        stationaryTicks = nbt.getIntOr("stationaryTicks", 0);
-        manuallyIgnited = nbt.getBooleanOr("ignited", false);
+        stationaryTicks = nbt.getInt("stationaryTicks");
+        manuallyIgnited = nbt.getBoolean("ignited");
     }
 
     @Override

@@ -3,24 +3,24 @@ package com.invasion.client.render;
 import com.invasion.entity.IMBoggedEntity;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.monster.skeleton.BoggedModel;
-import net.minecraft.client.model.monster.skeleton.SkeletonModel;
+import net.minecraft.client.model.BoggedModel;
+import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer;
 import net.minecraft.client.renderer.entity.state.BoggedRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.Items;
 
 public final class InvBoggedRenderer extends HumanoidMobRenderer<
         IMBoggedEntity, BoggedRenderState,
         SkeletonModel<BoggedRenderState>> {
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace(
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/skeleton/bogged.png");
-    private static final Identifier OVERLAY = Identifier.withDefaultNamespace(
+    private static final ResourceLocation OVERLAY = ResourceLocation.withDefaultNamespace(
             "textures/entity/skeleton/bogged_overlay.png");
 
     public InvBoggedRenderer(EntityRendererProvider.Context context) {
@@ -67,7 +67,7 @@ public final class InvBoggedRenderer extends HumanoidMobRenderer<
     }
 
     @Override
-    public Identifier getTextureLocation(BoggedRenderState state) {
+    public ResourceLocation getTextureLocation(BoggedRenderState state) {
         return TEXTURE;
     }
 }

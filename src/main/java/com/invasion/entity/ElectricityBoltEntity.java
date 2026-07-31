@@ -1,10 +1,8 @@
 package com.invasion.entity;
 
 import java.util.Arrays;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.syncher.SynchedEntityData.Builder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -136,11 +134,11 @@ public class ElectricityBoltEntity extends Entity {
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput nbt) {
+    protected void readAdditionalSaveData(CompoundTag nbt) {
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput nbt) {
+    protected void addAdditionalSaveData(CompoundTag nbt) {
     }
 
     @Override

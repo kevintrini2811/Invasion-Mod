@@ -17,9 +17,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
@@ -33,16 +33,16 @@ class StrangeBoneItem extends Item {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Level level = context.getLevel();
-        if (!level.getBlockState(context.getClickedPos()).is(InvBlocks.NEXUS_CORE)) {
+        if (!level().getBlockState(context.getClickedPos()).is(InvBlocks.NEXUS_CORE)) {
             return InteractionResult.PASS;
         }
-        if (level.isClientSide()) {
+        if (level().isClientSide()) {
             return InteractionResult.SUCCESS;
         }
 
         Player player = context.getPlayer();
         if (player == null
-                || !(level.getBlockEntity(context.getClickedPos()) instanceof NexusBlockEntity blockEntity)
+                || !(level().getBlockEntity(context.getClickedPos()) instanceof NexusBlockEntity blockEntity)
                 || !(blockEntity.getNexus() instanceof Nexus nexus)) {
             return InteractionResult.FAIL;
         }
@@ -90,7 +90,7 @@ class StrangeBoneItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        IMWolfEntity newWolf = InvEntities.WOLF.create(wolf.level(), EntitySpawnReason.CONVERSION);
+        IMWolfEntity newWolf = InvEntities.WOLF.create(wolf.level(), MobSpawnType.CONVERSION);
         if (newWolf == null) {
             return InteractionResult.FAIL;
         }

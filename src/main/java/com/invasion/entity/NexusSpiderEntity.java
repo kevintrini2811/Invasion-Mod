@@ -20,8 +20,6 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.particle.InvParticles;
 import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -32,7 +30,7 @@ import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.AgeableMob.AgeableMobGroupData;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -45,8 +43,8 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.entity.monster.spider.Spider;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.item.Items;
@@ -85,7 +83,7 @@ public class NexusSpiderEntity extends Spider
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
                 && isEquippableInSlot(stack, slot)
@@ -151,10 +149,10 @@ public class NexusSpiderEntity extends Spider
             return;
         }
         if (getRandom().nextInt(4) == 0) {
-            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+            spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
         if (getRandom().nextFloat() < 0.35F) {
-            spawnAtLocation(level, Items.STRING);
+            spawnAtLocation(Items.STRING);
         }
     }
 
@@ -246,7 +244,7 @@ public class NexusSpiderEntity extends Spider
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, EntitySpawnReason spawnReason, @Nullable SpawnGroupData entityData) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType spawnReason, @Nullable SpawnGroupData entityData) {
         if (entityData == null) {
             entityData = new NexusSpiderData(new AgeableMob.AgeableMobGroupData(true));
 
@@ -273,17 +271,17 @@ public class NexusSpiderEntity extends Spider
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putBoolean("isChild", isBaby());
         compound.putInt("ticksToGrow", ticksToGrow);
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        setBaby(compound.getBooleanOr("isChild", false));
-        ticksToGrow = compound.getIntOr("ticksToGrow", 0);
+        setBaby(compound.getBoolean("isChild"));
+        ticksToGrow = compound.getInt("ticksToGrow");
     }
 
     public static class NexusSpiderData extends SpiderEffectsGroupData {

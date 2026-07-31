@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.LevelReader;
 
 public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements PolarAngle, Comparable<PolarAngle> {
@@ -16,7 +16,7 @@ public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements Pol
     }
 
     public void applyTo(Entity entity) {
-        entity.absSnapTo(pos().getX() + 0.5, pos().getY() + 0.5, pos().getZ() + 0.5, angle, 0);
+        entity.moveTo(pos().getX() + 0.5, pos().getY() + 0.5, pos().getZ() + 0.5, angle, 0);
     }
 
     public boolean isValidFor(LevelReader world, Mob entity) {
@@ -30,7 +30,7 @@ public record SpawnPoint(BlockPos pos, int angle, SpawnType type) implements Pol
 
     public boolean trySpawnEntity(ServerLevel world, Mob entity) {
         if (isValidFor(world, entity)) {
-            entity.finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), EntitySpawnReason.STRUCTURE, null);
+            entity.finalizeSpawn(world, world.getCurrentDifficultyAt(entity.blockPosition()), MobSpawnType.STRUCTURE, null);
             world.addFreshEntityWithPassengers(entity);
             return true;
         }

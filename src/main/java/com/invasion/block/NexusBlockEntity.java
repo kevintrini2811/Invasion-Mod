@@ -1,7 +1,6 @@
 package com.invasion.block;
 
 import java.util.UUID;
-import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -18,10 +17,8 @@ import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BeaconBeamOwner;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.block.container.NexusScreenHandler;
@@ -29,10 +26,8 @@ import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.Nexus;
 import com.invasion.nexus.WorldNexusStorage;
 
-public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, MenuProvider, BeaconBeamOwner {
+public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, MenuProvider {
     private static final int[] SLOTS = {0, 1};
-    private static final List<BeaconBeamOwner.Section> BEAM_SECTIONS =
-            List.of(new BeaconBeamOwner.Section(0xFFFFFFFF));
 
     private UUID nexusId = UUID.randomUUID();
     private boolean beamActive;
@@ -57,14 +52,9 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
         beamActive = !beamActive;
         setChanged();
         if (level != null) {
-            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            level().sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
         }
         return beamActive;
-    }
-
-    @Override
-    public List<BeaconBeamOwner.Section> getBeamSections() {
-        return beamActive ? BEAM_SECTIONS : List.of();
     }
 
     @Override
@@ -171,17 +161,17 @@ public class NexusBlockEntity extends BlockEntity implements WorldlyContainer, M
     }
 
     @Override
-    protected void loadAdditional(ValueInput compound) {
-        super.loadAdditional(compound);
-        nexusId = compound.read("nexusId", net.minecraft.core.UUIDUtil.CODEC).orElse(UUID.randomUUID());
-        beamActive = compound.getBooleanOr("beamActive", false);
+    protected void loadAdditional(CompoundTag compound, HolderLookup.Provider lookup) {
+        super.loadAdditional(compound, lookup);
+        nexusId = compound.hasUUID("nexusId") ? compound.getUUID("nexusId") : UUID.randomUUID();
+        beamActive = compound.getBoolean("beamActive");
         nexus = null;
     }
 
     @Override
-    protected void saveAdditional(ValueOutput compound) {
-        super.saveAdditional(compound);
-        compound.store("nexusId", net.minecraft.core.UUIDUtil.CODEC, nexusId);
+    protected void saveAdditional(CompoundTag compound, HolderLookup.Provider lookup) {
+        super.saveAdditional(compound, lookup);
+        compound.putUUID("nexusId", nexusId);
         compound.putBoolean("beamActive", beamActive);
     }
 }

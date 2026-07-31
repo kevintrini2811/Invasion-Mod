@@ -1,17 +1,17 @@
 package com.invasion.entity;
 
 import java.util.List;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.ServerLevelAccessor;
 
 public interface MountableEntity extends NexusEntity {
-    default void generateJockey(ServerLevelAccessor world, int currentWave, DifficultyInstance difficulty, EntitySpawnReason spawnReason) {
+    default void generateJockey(ServerLevelAccessor world, int currentWave, DifficultyInstance difficulty, MobSpawnType spawnReason) {
         PathfinderMob self = asEntity();
         int jockyAttempsts = currentWave - 10;
         while (--jockyAttempsts > 0) {
@@ -22,7 +22,7 @@ public interface MountableEntity extends NexusEntity {
                     if (jockey instanceof NexusSpiderEntity) {
                         jockey.setBaby(true);
                     }
-                    jockey.absSnapTo(self.getX(), self.getY(), self.getZ(), self.getYRot(), 0.0F);
+                    jockey.moveTo(self.getX(), self.getY(), self.getZ(), self.getYRot(), 0.0F);
                     jockey.finalizeSpawn(world, difficulty, spawnReason, null);
                     if (jockey instanceof NexusEntity n) {
                         n.setNexus(getNexus());

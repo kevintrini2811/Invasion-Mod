@@ -17,7 +17,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -28,9 +28,9 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -44,10 +44,10 @@ public class IMSkeletonEntity extends IMMobEntity
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         int arrows = getRandom().nextInt(3);
         for (int i = 0; i < arrows; i++) {
-            spawnAtLocation(level, Items.ARROW);
+            spawnAtLocation(Items.ARROW);
         }
         if (getRandom().nextInt(3) == 2) {
-            spawnAtLocation(level, Items.BONE);
+            spawnAtLocation(Items.BONE);
         }
     }
 
@@ -104,7 +104,7 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, EntitySpawnReason spawnReason, @Nullable SpawnGroupData data) {
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor world, DifficultyInstance difficulty, MobSpawnType spawnReason, @Nullable SpawnGroupData data) {
         data = super.finalizeSpawn(world, difficulty, spawnReason, data);
         setItemInHand(InteractionHand.MAIN_HAND, Items.BOW.getDefaultInstance());
         return data;
@@ -129,7 +129,7 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot.isArmor()
                 && isEquippableInSlot(stack, slot)
@@ -137,8 +137,8 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    public void customServerAiStep(ServerLevel world) {
-        super.customServerAiStep(world);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         if (tickCount % 5 != 0) {
             return;
         }

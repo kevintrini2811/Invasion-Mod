@@ -7,7 +7,7 @@ import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Mob;
 
 /**
@@ -16,9 +16,9 @@ import net.minecraft.world.entity.Mob;
  */
 public final class GenericHumanoidMobRenderer<T extends Mob>
         extends HumanoidMobRenderer<T, HumanoidRenderState, HumanoidModel<HumanoidRenderState>> {
-    private final Identifier texture;
+    private final ResourceLocation texture;
 
-    public GenericHumanoidMobRenderer(EntityRendererProvider.Context context, Identifier texture, float shadowRadius) {
+    public GenericHumanoidMobRenderer(EntityRendererProvider.Context context, ResourceLocation texture, float shadowRadius) {
         super(
                 context,
                 new HumanoidModel<>(context.bakeLayer(ModelLayers.ZOMBIE)),
@@ -40,7 +40,7 @@ public final class GenericHumanoidMobRenderer<T extends Mob>
     }
 
     @Override
-    public Identifier getTextureLocation(HumanoidRenderState state) {
+    public ResourceLocation getTextureLocation(HumanoidRenderState state) {
         return texture;
     }
 }

@@ -15,7 +15,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.HitResult.Type;
 import com.invasion.InvSounds;
@@ -44,7 +44,7 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return ((net.minecraft.server.level.ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)
+        return ((net.minecraft.server.level.ServerLevel) mob.level()).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
                 && !navigation.isDone()
                 && mob.tickCount % 5 == 0
                 && mob.pick(1, 1, false).getType() == Type.BLOCK;

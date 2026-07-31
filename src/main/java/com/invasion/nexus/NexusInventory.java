@@ -99,8 +99,8 @@ public class NexusInventory extends SimpleContainer {
     }
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
-        accumulatedFlux = compound.getIntOr("accumulatedFlux", 0);
-        cookTime = compound.getIntOr("cookTime", 0);
+        accumulatedFlux = compound.getInt("accumulatedFlux");
+        cookTime = compound.getInt("cookTime");
         ItemStack.OPTIONAL_CODEC.listOf()
                 .parse(lookup.createSerializationContext(NbtOps.INSTANCE), compound.get("Items"))
                 .result()

@@ -14,23 +14,23 @@ import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.category.IRecipeCategory;
-import mezz.jei.api.recipe.types.IRecipeType;
+import mezz.jei.api.recipe.RecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 @JeiPlugin
 public final class InvasionJeiPlugin implements IModPlugin {
-    private static final Identifier PLUGIN_ID = InvasionMod.id("jei_plugin");
-    private static final IRecipeType<RiftFluxGeneration> RIFT_FLUX_GENERATION =
-            IRecipeType.create("invmod", "rift_flux_generation", RiftFluxGeneration.class);
+    private static final ResourceLocation PLUGIN_ID = InvasionMod.id("jei_plugin");
+    private static final RecipeType<RiftFluxGeneration> RIFT_FLUX_GENERATION =
+            RecipeType.create("invmod", "rift_flux_generation", RiftFluxGeneration.class);
     private static final RiftFluxGeneration RIFT_FLUX_RECIPE = new RiftFluxGeneration();
 
     @Override
-    public Identifier getPluginUid() {
+    public ResourceLocation getPluginUid() {
         return PLUGIN_ID;
     }
 
@@ -46,7 +46,7 @@ public final class InvasionJeiPlugin implements IModPlugin {
 
     @Override
     public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {
-        registration.addCraftingStation(RIFT_FLUX_GENERATION, InvItems.NEXUS_CORE);
+        registration.addRecipeCatalyst(InvItems.NEXUS_CORE, RIFT_FLUX_GENERATION);
     }
 
     private static final class RiftFluxGeneration {
@@ -62,7 +62,7 @@ public final class InvasionJeiPlugin implements IModPlugin {
         }
 
         @Override
-        public IRecipeType<RiftFluxGeneration> getRecipeType() {
+        public RecipeType<RiftFluxGeneration> getRecipeType() {
             return RIFT_FLUX_GENERATION;
         }
 
@@ -90,14 +90,14 @@ public final class InvasionJeiPlugin implements IModPlugin {
         public void setRecipe(IRecipeLayoutBuilder builder, RiftFluxGeneration recipe, IFocusGroup focuses) {
             builder.addInputSlot(1, 10)
                     .setStandardSlotBackground()
-                    .add(InvItems.NEXUS_CORE);
+                    .addItemLike(InvItems.NEXUS_CORE);
             builder.addOutputSlot(61, 10)
                     .setOutputSlotBackground()
-                    .add(InvItems.RIFT_FLUX);
+                    .addItemLike(InvItems.RIFT_FLUX);
         }
 
         @Override
-        public void draw(RiftFluxGeneration recipe, IRecipeSlotsView slots, GuiGraphicsExtractor graphics,
+        public void draw(RiftFluxGeneration recipe, IRecipeSlotsView slots, GuiGraphics graphics,
                 double mouseX, double mouseY) {
             arrow.draw(graphics, 27, 10);
         }

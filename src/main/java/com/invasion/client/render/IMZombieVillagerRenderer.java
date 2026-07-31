@@ -3,22 +3,22 @@ package com.invasion.client.render;
 import com.invasion.entity.IMZombieVillagerEntity;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.monster.zombie.BabyZombieVillagerModel;
-import net.minecraft.client.model.monster.zombie.ZombieVillagerModel;
+import net.minecraft.client.model.BabyZombieVillagerModel;
+import net.minecraft.client.model.ZombieVillagerModel;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.state.ZombieVillagerRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class IMZombieVillagerRenderer extends HumanoidMobRenderer<
         IMZombieVillagerEntity,
         ZombieVillagerRenderState,
         HumanoidModel<ZombieVillagerRenderState>> {
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace(
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/zombie_villager/zombie_villager.png");
-    private static final Identifier BABY_TEXTURE = Identifier.withDefaultNamespace(
+    private static final ResourceLocation BABY_TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/zombie_villager/zombie_villager_baby.png");
 
     public IMZombieVillagerRenderer(EntityRendererProvider.Context context) {
@@ -59,7 +59,7 @@ public final class IMZombieVillagerRenderer extends HumanoidMobRenderer<
     }
 
     @Override
-    public Identifier getTextureLocation(ZombieVillagerRenderState state) {
+    public ResourceLocation getTextureLocation(ZombieVillagerRenderState state) {
         return state.isBaby ? BABY_TEXTURE : TEXTURE;
     }
 }

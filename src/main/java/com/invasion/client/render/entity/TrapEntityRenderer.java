@@ -8,10 +8,10 @@ import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class TrapEntityRenderer extends EntityRenderer<TrapEntity> {
-	private static final Identifier TEXTURE = InvasionMod.id("textures/entity/trap.png");
+	private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/trap.png");
 
 	private final TrapEntityModel model;
 
@@ -32,7 +32,7 @@ public class TrapEntityRenderer extends EntityRenderer<TrapEntity> {
 	}
 
 	@Override
-    public Identifier getTexture(TrapEntity entity) {
+    public ResourceLocation getTexture(TrapEntity entity) {
 		return TEXTURE;
 	}
 }

@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.TntMinecartRenderer;
 import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
 
 public class TntEntityRenderer extends EntityRenderer<EntityIMPrimedTNT> {
@@ -35,7 +35,7 @@ public class TntEntityRenderer extends EntityRenderer<EntityIMPrimedTNT> {
 
     @SuppressWarnings("deprecation")
     @Override
-    public Identifier getTexture(EntityIMPrimedTNT tntEntity) {
+    public ResourceLocation getTexture(EntityIMPrimedTNT tntEntity) {
         return TextureAtlas.LOCATION_BLOCKS;
     }
 }

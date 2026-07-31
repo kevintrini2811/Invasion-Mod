@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.stream.Stream;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import com.invasion.InvasionMod;
 import com.invasion.client.render.entity.model.ThrowerEntityModel;
 import com.invasion.entity.ThrowerEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 public class ThrowerEntityRenderer extends HumanoidMobRenderer<ThrowerEntity, ThrowerEntityModel> {
-	private static final List<Identifier> TEXTURES = Stream.of(
+	private static final List<ResourceLocation> TEXTURES = Stream.of(
 	        "textures/entity/thrower/thrower.png",
 	        "textures/entity/thrower/thrower_brute.png"
     ).map(InvasionMod::id).toList();
@@ -26,7 +26,7 @@ public class ThrowerEntityRenderer extends HumanoidMobRenderer<ThrowerEntity, Th
     }
 
 	@Override
-    public Identifier getTexture(ThrowerEntity entity) {
+    public ResourceLocation getTexture(ThrowerEntity entity) {
 	    int id = entity.getTier() - 1;
 	    return TEXTURES.get(id < 0 || id >= TEXTURES.size() ? 0 : id);
 	}

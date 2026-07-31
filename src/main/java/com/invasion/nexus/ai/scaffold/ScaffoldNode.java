@@ -13,8 +13,8 @@ public record ScaffoldNode(
     public ScaffoldNode(CompoundTag compound) {
         this(
             compound.read("pos", BlockPos.CODEC).orElse(BlockPos.ZERO),
-            Direction.from2DDataValue(compound.getIntOr("orientation", 0)),
-            compound.getIntOr("height", 0)
+            Direction.from2DDataValue(compound.getInt("orientation")),
+            compound.getInt("height")
         );
     }
 

@@ -17,11 +17,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.animal.wolf.Wolf;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.animal.Wolf;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -57,12 +57,12 @@ class DebugWandItem extends Item {
         Zombie zombie2 = new Zombie(world);
         zombie2.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-        EntityTypes.WOLF.create(world, w -> {}, pos, EntitySpawnReason.COMMAND, true, false);
+        EntityTypes.WOLF.create(world, w -> {}, pos, MobSpawnType.COMMAND, true, false);
 
-        Entity entity1 = InvEntities.PIGMAN_ENGINEER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        Entity entity1 = InvEntities.PIGMAN_ENGINEER.create(world);
         entity1.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-        EntityIMZombie zombie = InvEntities.ZOMBIE.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        EntityIMZombie zombie = InvEntities.ZOMBIE.create(world);
         zombie.setNexus(nexus);
         zombie.setFlavour(0);
         zombie.setTier(1);
@@ -70,7 +70,7 @@ class DebugWandItem extends Item {
         zombie.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
         if (this.nexus != null) {
-            PigmanEngineerEntity entity = InvEntities.PIGMAN_ENGINEER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+            PigmanEngineerEntity entity = InvEntities.PIGMAN_ENGINEER.create(world);
             entity.setNexus(nexus);
             entity.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
@@ -80,30 +80,30 @@ class DebugWandItem extends Item {
             zombie.setTier(2);
             zombie.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-            ThrowerEntity thrower = InvEntities.THROWER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+            ThrowerEntity thrower = InvEntities.THROWER.create(world);
             thrower.setNexus(nexus);
             thrower.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-            IMCreeperEntity creep = InvEntities.CREEPER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+            IMCreeperEntity creep = InvEntities.CREEPER.create(world);
             creep.setNexus(nexus);
             creep.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-            NexusSpiderEntity spider = InvEntities.JUMPING_SPIDER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+            NexusSpiderEntity spider = InvEntities.JUMPING_SPIDER.create(world);
             spider.setNexus(nexus);
 
             spider.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-            IMSkeletonEntity skeleton = InvEntities.SKELETON.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+            IMSkeletonEntity skeleton = InvEntities.SKELETON.create(world);
             skeleton.setNexus(nexus);
             skeleton.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
         }
 
-        NexusSpiderEntity entity = InvEntities.QUEEN_SPIDER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        NexusSpiderEntity entity = InvEntities.QUEEN_SPIDER.create(world);
         entity.setNexus(nexus);
 
         entity.setPos(com.invasion.util.math.PosUtils.bottomCenter(pos));
 
-        IMCreeperEntity creep = InvEntities.CREEPER.create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        IMCreeperEntity creep = InvEntities.CREEPER.create(world);
         creep.setNexus(nexus);
         creep.setPos(150.5D, 64.0D, 271.5D);
 

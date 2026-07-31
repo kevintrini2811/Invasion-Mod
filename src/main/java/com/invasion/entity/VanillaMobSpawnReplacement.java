@@ -12,16 +12,16 @@ import com.invasion.nexus.WorldNexusStorage;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.skeleton.Bogged;
+import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.zombie.Drowned;
-import net.minecraft.world.entity.monster.zombie.Husk;
-import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
@@ -141,7 +141,7 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
-        T converted = targetType.create(world, EntitySpawnReason.CONVERSION);
+        T converted = targetType.create(world);
         if (converted == null) {
             return;
         }

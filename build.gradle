@@ -12,22 +12,20 @@ base {
 }
 
 tasks.named('jar') {
-    archiveFileName = "${project.name}-${project.version}-neo.jar"
+    archiveFileName = "${project.name}-${project.version}-1.21.1neo.jar"
 }
 
 java {
     withSourcesJar()
-    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
 }
 
 sourceSets {
     main {
         java {
-            // Kept in the repository while the pre-26.2 immediate-mode renderer is
-            // replaced with the new render-state submission API.
-            exclude 'com/invasion/client/render/entity/**'
-            exclude 'com/invasion/client/particle/**'
-            exclude 'com/invasion/mixin/client/**'
+            // Minecraft 26.2 render-state implementations. The 1.21.1 port uses
+            // the retained immediate-mode renderers under client/render/entity.
+            exclude 'com/invasion/client/render/*.java'
         }
     }
 }
@@ -81,6 +79,6 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 25
+    options.release = 21
     options.compilerArgs += ['-Xmaxerrs', '5000']
 }

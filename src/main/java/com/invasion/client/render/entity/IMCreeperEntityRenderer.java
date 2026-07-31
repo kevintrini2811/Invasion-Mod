@@ -2,7 +2,7 @@ package com.invasion.client.render.entity;
 
 import com.invasion.entity.IMCreeperEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.model.monster.creeper.CreeperModel;
+import net.minecraft.client.model.CreeperModel;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.CreeperPowerLayer;
 import net.minecraft.client.renderer.entity.layers.EnergySwirlLayer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
 /**
@@ -20,7 +20,7 @@ import net.minecraft.util.Mth;
  * @see net.minecraft.client.renderer.entity.CreeperRenderer
  */
 public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntity, CreeperModel<IMCreeperEntity>> {
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace("textures/entity/creeper/creeper.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper.png");
 
 	public IMCreeperEntityRenderer(EntityRendererProvider.Context context) {
         super(context, new CreeperModel<>(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);
@@ -44,7 +44,7 @@ public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntit
     }
 
     @Override
-    public Identifier getTexture(IMCreeperEntity creeperEntity) {
+    public ResourceLocation getTexture(IMCreeperEntity creeperEntity) {
         return TEXTURE;
     }
 
@@ -54,7 +54,7 @@ public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntit
      * @see net.minecraft.client.renderer.entity.layers.CreeperPowerLayer
      */
     private static final class ChargeFeature extends EnergySwirlLayer<IMCreeperEntity, CreeperModel<IMCreeperEntity>> {
-        private static final Identifier SKIN = Identifier.withDefaultNamespace("textures/entity/creeper/creeper_armor.png");
+        private static final ResourceLocation SKIN = ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper_armor.png");
         private final CreeperModel<IMCreeperEntity> model;
 
         public ChargeFeature(RenderLayerParent<IMCreeperEntity, CreeperModel<IMCreeperEntity>> context, EntityModelSet loader) {
@@ -68,7 +68,7 @@ public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntit
         }
 
         @Override
-        protected Identifier getTextureLocation() {
+        protected ResourceLocation getTextureLocation() {
             return SKIN;
         }
 

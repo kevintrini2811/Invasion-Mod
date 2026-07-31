@@ -2,7 +2,7 @@ package com.invasion;
 
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 
 public interface InvSounds {
@@ -25,7 +25,7 @@ public interface InvSounds {
     SoundEvent ENTITY_TRAP_COUNTDOWN = register("entity.trap.countdown");
 
     private static SoundEvent register(String name) {
-        Identifier id = InvasionMod.id(name);
+        ResourceLocation id = InvasionMod.id(name);
         return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
     }
 

@@ -6,7 +6,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;

@@ -39,8 +39,7 @@ import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
@@ -59,7 +58,7 @@ public final class IMEndermanEntity extends IMMobEntity {
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
                 && isEquippableInSlot(stack, slot)
@@ -155,8 +154,8 @@ public final class IMEndermanEntity extends IMMobEntity {
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel level) {
-        super.customServerAiStep(level);
+    protected void customServerAiStep() {
+        super.customServerAiStep();
         LivingEntity target = getTarget();
         if (target != null && distanceToSqr(target) > 256 && tickCount % 10 == 0) {
             teleportTowards(target);
@@ -174,7 +173,7 @@ public final class IMEndermanEntity extends IMMobEntity {
             return false;
         }
 
-        boolean damaged = super.hurtServer(level, source, amount);
+        boolean damaged = super.hurt(source, amount);
         if (damaged && source.getEntity() == null && getRandom().nextInt(10) != 0) {
             teleportRandomly();
         }
@@ -229,29 +228,29 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.ENDERMAN.getDefaultLootTable()
+        net.minecraft.world.entity.EntityType.ENDERMAN.getDefaultLootTable()
                 .ifPresent(lootTable -> dropFromLootTable(level, source, causedByPlayer, lootTable));
         getCarriedBlock().ifPresent(state -> {
             ItemStack stack = new ItemStack(state.getBlock().asItem());
             if (!stack.isEmpty()) {
-                spawnAtLocation(level, stack);
+                spawnAtLocation(stack);
             }
         });
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         getCarriedBlock().ifPresent(state ->
                 output.putString("carried_block", BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString()));
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         String id = input.getStringOr("carried_block", "");
         if (!id.isEmpty()) {
-            net.minecraft.resources.Identifier identifier = net.minecraft.resources.Identifier.tryParse(id);
+            net.minecraft.resources.ResourceLocation identifier = net.minecraft.resources.ResourceLocation.tryParse(id);
             if (identifier != null) {
                 BuiltInRegistries.BLOCK.getOptional(identifier)
                         .filter(block -> block != Blocks.AIR)

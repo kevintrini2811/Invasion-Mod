@@ -15,7 +15,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.PathNavigationRegion;
 import net.minecraft.server.level.ServerLevel;
@@ -55,7 +55,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     protected BlockPos previousNodePosition = BlockPos.ZERO;
 
     public boolean canDestroyBlocks() {
-        return canMineBlocks && (mob == null || ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING));
+        return canMineBlocks && (mob == null || ((ServerLevel) mob.level()).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING));
     }
 
     public void setCanDestroyBlocks(boolean flag) {

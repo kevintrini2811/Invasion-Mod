@@ -8,7 +8,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -59,7 +59,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
 
     public boolean canDestroyBlocks() {
         return canMin && entity.level() instanceof net.minecraft.server.level.ServerLevel serverLevel
-                && serverLevel.getGameRules().get(GameRules.MOB_GRIEFING);
+                && serverLevel.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
     }
 
     public void setCanDestroyBlocks(boolean flag) {

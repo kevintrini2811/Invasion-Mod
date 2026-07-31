@@ -20,7 +20,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.server.level.ServerLevel;
@@ -40,7 +40,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
@@ -71,7 +71,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+        spawnAtLocation(InvItems.SMALL_REMNANTS);
     }
 
     private int throwTime;
@@ -130,8 +130,8 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     @Override
-    public void customServerAiStep(ServerLevel serverLevel) {
-        super.customServerAiStep(serverLevel);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         throwTime--;
         int animationTicks = getThrowAnimationTicks();
         if (animationTicks > 0) {
@@ -317,7 +317,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel serverLevel, Entity entity) {
+    public boolean doHurtTarget(Entity entity) {
         float distance = entity.distanceTo(this);
         if (throwTime <= 0 && distance > 4) {
             throwTime = 120;
@@ -329,7 +329,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
                 return true;
             }
         }
-        return super.doHurtTarget(serverLevel, entity);
+        return super.doHurtTarget(entity);
     }
 
     public float getLaunchSpeed() {
@@ -337,7 +337,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     }
 
     public AbstractArrow createProjectile(int tier) {
-        return tier == 2 ? InvEntities.TNT.create(level(), EntitySpawnReason.EVENT) : InvEntities.BOULDER.create(level(), EntitySpawnReason.EVENT);
+        return tier == 2 ? InvEntities.TNT.create(level(), MobSpawnType.EVENT) : InvEntities.BOULDER.create(level(), MobSpawnType.EVENT);
     }
 
     public void throwProjectile(Vec3 targetPosition) {

@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +23,7 @@ public record EntityConstruct (
     }
 
     public Mob createMob(Level world, @Nullable NexusAccess nexus) {
-        Mob entity = entityType().create(world, net.minecraft.world.entity.EntitySpawnReason.EVENT);
+        Mob entity = entityType().create(world);
         if (entity instanceof BuildableMob b) {
             b.onSpawned(nexus, this);
         }
@@ -35,7 +35,7 @@ public record EntityConstruct (
             if (entity instanceof BuildableMob b) {
                 b.onSpawned(nexus, this);
             }
-        }, position, EntitySpawnReason.NATURAL, true, false);
+        }, position, MobSpawnType.NATURAL, true, false);
     }
 
     public interface BuildableMob {

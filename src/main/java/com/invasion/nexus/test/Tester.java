@@ -2,7 +2,7 @@ package com.invasion.nexus.test;
 
 import java.util.Random;
 import java.util.function.Consumer;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.core.BlockPos;
 import com.invasion.nexus.spawns.IMWaveSpawner;
 import com.invasion.nexus.spawns.SpawnPoint;

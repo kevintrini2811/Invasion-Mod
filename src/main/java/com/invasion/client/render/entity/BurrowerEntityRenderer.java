@@ -6,10 +6,10 @@ import com.invasion.entity.BurrowerEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity, BurrowerEntityModel> {
-    private static final Identifier TEXTURE = InvasionMod.id("textures/entity/burrower.png");
+    private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/burrower.png");
 
     public BurrowerEntityRenderer(Context ctx) {
         super(ctx, new BurrowerEntityModel(BurrowerEntityModel.getTexturedModelData2().bakeRoot()), 0.5F);
@@ -21,7 +21,7 @@ public class BurrowerEntityRenderer extends LivingEntityRenderer<BurrowerEntity,
     }
 
     @Override
-    public Identifier getTexture(BurrowerEntity entity) {
+    public ResourceLocation getTexture(BurrowerEntity entity) {
         return TEXTURE;
     }
 }

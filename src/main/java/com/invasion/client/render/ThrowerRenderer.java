@@ -6,11 +6,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class ThrowerRenderer
         extends HumanoidMobRenderer<ThrowerEntity, ThrowerRenderState, ThrowerModel> {
-    private static final List<Identifier> TEXTURES = List.of(
+    private static final List<ResourceLocation> TEXTURES = List.of(
             InvasionMod.id("textures/entity/thrower/thrower.png"),
             InvasionMod.id("textures/entity/thrower/thrower_brute.png"));
 
@@ -37,7 +37,7 @@ public final class ThrowerRenderer
     }
 
     @Override
-    public Identifier getTextureLocation(ThrowerRenderState state) {
+    public ResourceLocation getTextureLocation(ThrowerRenderState state) {
         int index = state.tier - 1;
         return TEXTURES.get(index >= 0 && index < TEXTURES.size() ? index : 0);
     }

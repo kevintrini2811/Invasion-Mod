@@ -3,18 +3,18 @@ package com.invasion.client.render;
 import com.invasion.entity.IMCreeperEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelLayers;
-import net.minecraft.client.model.monster.creeper.CreeperModel;
+import net.minecraft.client.model.CreeperModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.CreeperPowerLayer;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 
 public final class GenericCreeperRenderer
         extends MobRenderer<IMCreeperEntity, InvasionCreeperRenderState, CreeperModel> {
-    private static final Identifier TEXTURE =
-            Identifier.withDefaultNamespace("textures/entity/creeper/creeper.png");
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.withDefaultNamespace("textures/entity/creeper/creeper.png");
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public GenericCreeperRenderer(EntityRendererProvider.Context context) {
@@ -53,7 +53,7 @@ public final class GenericCreeperRenderer
     }
 
     @Override
-    public Identifier getTextureLocation(InvasionCreeperRenderState state) {
+    public ResourceLocation getTextureLocation(InvasionCreeperRenderState state) {
         return TEXTURE;
     }
 }

@@ -2,15 +2,13 @@ package com.invasion.entity;
 
 import java.util.List;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntitySpawnRequest;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -55,7 +53,7 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getRandom().nextInt(4) == 0) {
-            spawnAtLocation(level, InvItems.SMALL_REMNANTS);
+            spawnAtLocation(InvItems.SMALL_REMNANTS);
         }
     }
 
@@ -99,24 +97,24 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putInt("ticks", ticks);
         compound.putInt("hatchTime", hatchTime);
-        ValueOutput.ValueOutputList entities = compound.childrenList("contents");
+        CompoundTag.ValueOutputList entities = compound.childrenList("contents");
         for (Entity entity : contents) {
             entity.saveWithoutId(entities.addChild());
         }
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        ticks = compound.getIntOr("ticks", 0);
-        hatchTime = compound.getIntOr("hatchTime", 0);
+        ticks = compound.getInt("ticks");
+        hatchTime = compound.getInt("hatchTime");
         contents = compound.childrenListOrEmpty("contents").stream()
                 .flatMap(entity -> EntityType.create(entity, level(),
-                        new EntitySpawnRequest(EntitySpawnReason.LOAD, false)).stream())
+                        new EntitySpawnRequest(MobSpawnType.LOAD, false)).stream())
                 .toList();
     }
 

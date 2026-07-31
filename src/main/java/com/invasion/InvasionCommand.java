@@ -3,7 +3,7 @@ package com.invasion;
 import java.util.Map;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
+import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

@@ -3,8 +3,6 @@ package com.invasion.entity;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.NexusAccess;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -91,16 +89,16 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
     protected abstract void initTieredAttributes();
 
     @Override
-    public void addAdditionalSaveData(ValueOutput compound) {
+    public void addAdditionalSaveData(CompoundTag compound) {
         super.addAdditionalSaveData(compound);
         compound.putInt("tier", getTier());
         compound.putInt("flavour", getFlavour());
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput compound) {
+    public void readAdditionalSaveData(CompoundTag compound) {
         super.readAdditionalSaveData(compound);
-        setAppearance(compound.getIntOr("tier", 0), compound.getIntOr("flavour", 0));
+        setAppearance(compound.getInt("tier"), compound.getInt("flavour"));
     }
 
     @Override

@@ -59,9 +59,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getRandom().nextBoolean()) {
-            spawnAtLocation(level, Items.LEATHER);
+            spawnAtLocation(Items.LEATHER);
         } else {
-            spawnAtLocation(level, isOnFire() ? Items.COOKED_PORKCHOP : Items.PORKCHOP);
+            spawnAtLocation(isOnFire() ? Items.COOKED_PORKCHOP : Items.PORKCHOP);
         }
     }
 
@@ -143,8 +143,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     @Override
-    public void customServerAiStep(ServerLevel serverLevel) {
-        super.customServerAiStep(serverLevel);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         if (buildingTower && isTowerBuildInterrupted()) {
             returnToTowerBuildPosition();
         } else {
@@ -168,7 +168,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public boolean hurtServer(
             ServerLevel serverLevel, DamageSource source, float damage) {
-        boolean damaged = super.hurtServer(serverLevel, source, damage);
+        boolean damaged = super.hurt(source, damage);
         if (damaged && buildingTower) {
             if (source.getEntity() instanceof LivingEntity attacker
                     && attacker.isAlive()) {
@@ -179,7 +179,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     @Override
-    public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+    public boolean wantsToPickUp(ItemStack stack) {
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot.isArmor()
                 && isEquippableInSlot(stack, slot)

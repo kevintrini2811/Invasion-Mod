@@ -8,11 +8,11 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
-import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.renderer.state.level().CameraRenderState;
+import net.minecraft.resources.ResourceLocation;
 
 public class SpiderEggEntityRenderer extends EntityRenderer<SpiderEggEntity, EntityRenderState> {
-	private static final Identifier TEXTURE = InvasionMod.id("textures/entity/spider_egg.png");
+	private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/spider_egg.png");
 
 	private final EggModel model = new EggModel(EggModel.getTexturedModelData().bakeRoot());
 

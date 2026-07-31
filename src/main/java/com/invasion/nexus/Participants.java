@@ -193,9 +193,9 @@ public class Participants {
         }
 
         public Entry(CompoundTag compound) {
-            this(compound.getLongOr("time", 0L),
+            this(compound.getLong("time"),
                     compound.read("id", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
-                    compound.getBooleanOr("creativeAtBinding", false));
+                    compound.getBoolean("creativeAtBinding"));
         }
 
         public Player getEntity() {

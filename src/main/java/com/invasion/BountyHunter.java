@@ -5,17 +5,18 @@ import java.util.List;
 import java.util.UUID;
 
 import com.mojang.serialization.Codec;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Cleans up players that somehow get away
@@ -26,22 +27,17 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 public class BountyHunter extends SavedData {
     private static final int TICK_RATE = 3500;
     private static final Codec<List<UUID>> DEATH_LIST_CODEC = UUIDUtil.AUTHLIB_CODEC.listOf();
-    private static final Identifier ID = InvasionMod.id("nexus_bounty_hunter");
+    private static final ResourceLocation ID = InvasionMod.id("nexus_bounty_hunter");
 
-    public static SavedDataType<BountyHunter> getType(ServerLevel world) {
-        return new SavedDataType<>(
-                ID,
+    public static Factory<BountyHunter> getType(ServerLevel world) {
+        return new SavedData.Factory<>(
                 () -> new BountyHunter(world),
-                DEATH_LIST_CODEC.xmap(
-                        players -> new BountyHunter(world, players),
-                        hunter -> List.copyOf(hunter.players)
-                ),
-                DataFixTypes.LEVEL
-        );
+                (nbt, lookup) -> new BountyHunter(world, nbt, lookup),
+                DataFixTypes.LEVEL);
     }
 
     public static BountyHunter of(ServerLevel world) {
-        return world.getDataStorage().computeIfAbsent(getType(world));
+        return world.getDataStorage().computeIfAbsent(getType(world), ID.toDebugFileName());
     }
 
     private final List<UUID> players = new ArrayList<>();
@@ -53,9 +49,17 @@ public class BountyHunter extends SavedData {
         this.world = world;
     }
 
-    private BountyHunter(ServerLevel world, List<UUID> players) {
+    private BountyHunter(ServerLevel world, CompoundTag nbt, Provider lookup) {
         this(world);
-        this.players.addAll(players);
+        DEATH_LIST_CODEC.decode(NbtOps.INSTANCE, nbt.get("players"))
+                .result().map(Pair::getFirst).ifPresent(players::addAll);
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag nbt, Provider lookup) {
+        DEATH_LIST_CODEC.encodeStart(NbtOps.INSTANCE, players)
+                .result().ifPresent(data -> nbt.put("players", data));
+        return nbt;
     }
 
     public void tick() {

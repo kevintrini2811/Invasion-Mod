@@ -51,16 +51,16 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
@@ -70,7 +70,7 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getRandom().nextFloat() < 0.35F) {
-            spawnAtLocation(level, Items.GOLD_NUGGET);
+            spawnAtLocation(Items.GOLD_NUGGET);
         }
     }
 
@@ -143,7 +143,7 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
         super.aiStep();
         if (isCharging()) {
             boolean mobgriefing = level() instanceof ServerLevel serverLevel
-                    && serverLevel.getGameRules().get(GameRules.MOB_GRIEFING);
+                    && serverLevel.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
             boolean sound = false;
 
             BlockPos center = BlockPos.containing(getEyePosition(1).add(getViewVector(1).normalize()));

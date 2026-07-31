@@ -237,8 +237,8 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
     }
 
     @Override
-    public void customServerAiStep(ServerLevel serverLevel) {
-        super.customServerAiStep(serverLevel);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         terrainModifier.onUpdate();
     }
 

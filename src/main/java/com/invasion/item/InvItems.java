@@ -8,14 +8,14 @@ import com.invasion.block.InvBlocks;
 import com.invasion.entity.TrapEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.NexusEntity;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.BlockItem;
@@ -135,7 +135,7 @@ public interface InvItems {
     private static <T extends Item> T register(String name, Function<Item.Properties, T> factory) {
         var id = InvasionMod.id(name);
         var key = ResourceKey.create(Registries.ITEM, id);
-        T item = factory.apply(new Item.Properties().setId(key));
+        T item = factory.apply(new Item.Properties());
         REGISTRY.add(item);
         return Registry.register(BuiltInRegistries.ITEM, id, item);
     }
@@ -147,7 +147,7 @@ public interface InvItems {
     }
 
     static void bootstrapCreativeTab() {
-        Identifier tabId = InvasionMod.id("invasion_mod");
+        ResourceLocation tabId = InvasionMod.id("invasion_mod");
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, tabId, CreativeModeTab.builder().displayItems((context, entries) -> {
             REGISTRY.forEach(item -> entries.accept(item.getDefaultInstance()));
         }).icon(NEXUS_CORE::getDefaultInstance).title(Component.translatable(Util.makeDescriptionId("itemGroup", tabId))).build());

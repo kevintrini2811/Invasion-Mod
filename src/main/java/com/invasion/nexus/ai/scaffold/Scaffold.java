@@ -30,8 +30,8 @@ public class Scaffold {
     public Scaffold(CompoundTag compound, NexusAccess nexus) {
         this.nexus = nexus;
         node = new ScaffoldNode(compound);
-        initialCompletion = compound.getFloatOr("initialCompletion", 0.0F);
-        latestPercentCompleted = compound.getFloatOr("latestPercentCompleted", 0.0F);
+        initialCompletion = compound.getFloat("initialCompletion");
+        latestPercentCompleted = compound.getFloat("latestPercentCompleted");
         platforms = createPlatforms(node);
     }
 

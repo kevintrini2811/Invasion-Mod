@@ -11,7 +11,7 @@ import com.invasion.network.NexusHudPayload;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.particle.InvParticles;
 import com.invasion.util.ChatUtils;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -85,12 +85,15 @@ public class InvasionMod {
         return CONFIG;
     }
 
-    public static Identifier id(String name) {
-        return Identifier.fromNamespaceAndPath(MOD_ID, name);
+    public static ResourceLocation id(String name) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, name);
     }
 
     private void registerPayloads(RegisterPayloadHandlersEvent event) {
-        event.registrar("1").playToClient(NexusHudPayload.TYPE, NexusHudPayload.CODEC);
+        event.registrar("1").playToClient(
+                NexusHudPayload.TYPE,
+                NexusHudPayload.CODEC,
+                (payload, context) -> com.invasion.client.NexusHud.update(payload));
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

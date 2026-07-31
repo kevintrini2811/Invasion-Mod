@@ -7,11 +7,11 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.state.ArmedEntityRenderState;
 import net.minecraft.client.renderer.item.ItemModelResolver;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public final class ImpRenderer
         extends MobRenderer<ImpEnitty, ArmedEntityRenderState, ImpModel> {
-    private static final Identifier TEXTURE = InvasionMod.id("textures/entity/imp.png");
+    private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/imp.png");
     private final ItemModelResolver itemModelResolver;
 
     public ImpRenderer(EntityRendererProvider.Context context) {
@@ -34,7 +34,7 @@ public final class ImpRenderer
     }
 
     @Override
-    public Identifier getTextureLocation(ArmedEntityRenderState state) {
+    public ResourceLocation getTextureLocation(ArmedEntityRenderState state) {
         return TEXTURE;
     }
 }

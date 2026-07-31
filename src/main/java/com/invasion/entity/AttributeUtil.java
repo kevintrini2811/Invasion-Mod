@@ -3,13 +3,13 @@ package com.invasion.entity;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -18,7 +18,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import com.invasion.InvasionMod;
 
 public interface AttributeUtil {
-    Identifier NEXUS_WAVE_DIFFICULTY_BUFFS = InvasionMod.id("nexus_wave_difficulty_buff");
+    ResourceLocation NEXUS_WAVE_DIFFICULTY_BUFFS = InvasionMod.id("nexus_wave_difficulty_buff");
     List<Holder<Attribute>> TIER_SCALING_ATTRIBUTES = List.of(
             Attributes.ATTACK_DAMAGE,
             Attributes.ATTACK_KNOCKBACK,
@@ -37,19 +37,19 @@ public interface AttributeUtil {
         attributes.forEach(attribute -> toggleAttribute(entity, attribute, modifier, apply));
     }
 
-    static AttributeModifier addToBase(Identifier id, float amount) {
+    static AttributeModifier addToBase(ResourceLocation id, float amount) {
         return new AttributeModifier(id, amount, AttributeModifier.Operation.ADD_VALUE);
     }
 
-    static AttributeModifier addPercentage(Identifier id, float amount) {
+    static AttributeModifier addPercentage(ResourceLocation id, float amount) {
         return new AttributeModifier(id, amount / 100F, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
     }
 
-    static AttributeModifier multiplyTotal(Identifier id, float multiplier) {
+    static AttributeModifier multiplyTotal(ResourceLocation id, float multiplier) {
         return new AttributeModifier(id, multiplier - 1, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     }
 
-    static void applyNexusWaveComplications(Mob entity, ServerLevelAccessor world, int currentWave, DifficultyInstance difficulty, EntitySpawnReason spawnReason) {
+    static void applyNexusWaveComplications(Mob entity, ServerLevelAccessor world, int currentWave, DifficultyInstance difficulty, MobSpawnType spawnReason) {
         toggleAttribute(entity, TIER_SCALING_ATTRIBUTES, multiplyTotal(NEXUS_WAVE_DIFFICULTY_BUFFS, 1.0001F * currentWave), true);
 
         if (entity instanceof MountableEntity mountable) {

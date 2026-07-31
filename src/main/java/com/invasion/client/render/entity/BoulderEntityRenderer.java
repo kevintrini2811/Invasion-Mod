@@ -7,10 +7,10 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 public class BoulderEntityRenderer extends EntityRenderer<BoulderEntity> {
-	private static final Identifier TEXTURE = InvasionMod.id("textures/entity/boulder.png");
+	private static final ResourceLocation TEXTURE = InvasionMod.id("textures/entity/boulder.png");
 
     private final BoulderEntityModel model = new BoulderEntityModel(BoulderEntityModel.getTexturedModelData().bakeRoot());
 
@@ -25,7 +25,7 @@ public class BoulderEntityRenderer extends EntityRenderer<BoulderEntity> {
     }
 
     @Override
-    public Identifier getTexture(BoulderEntity entity) {
+    public ResourceLocation getTexture(BoulderEntity entity) {
         return TEXTURE;
     }
 }

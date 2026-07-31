@@ -3,12 +3,12 @@ package com.invasion.nexus.wave;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
 
 public interface EntityPatterns {
-    Map<Identifier, PatternType> REGISTRY = new HashMap<>();
+    Map<ResourceLocation, PatternType> REGISTRY = new HashMap<>();
 
     EntityPattern ZOMBIE_T1_ANY = register("zombie_t1_any", new EntityPattern.Builder(InvEntities.ZOMBIE).addTier(1, 1).addFlavour(0, 3).addFlavour(1, 1), 1);
     EntityPattern ZOMBIE_T2_ANY_BASIC = register("zombie_t2_any_basic", new EntityPattern.Builder(InvEntities.ZOMBIE).addTier(2, 1).addFlavour(0, 2).addFlavour(1, 1).addFlavour(2, 0.4F), 1);
@@ -53,25 +53,25 @@ public interface EntityPatterns {
     }
 
     static EntityPattern register(String name, EntityPattern.Builder builder, float spawnWeight) {
-        Identifier id = InvasionMod.id(name);
+        ResourceLocation id = InvasionMod.id(name);
         EntityPattern pattern = builder.build();
         REGISTRY.put(id, new PatternType(id, pattern, spawnWeight));
         return pattern;
     }
 
-    static EntityPattern getPattern(Identifier id) {
+    static EntityPattern getPattern(ResourceLocation id) {
         return getKey(id).map(PatternType::pattern).orElse(EntityPatterns.ZOMBIE_T1_ANY);
     }
 
-    static Optional<PatternType> getKey(Identifier id) {
+    static Optional<PatternType> getKey(ResourceLocation id) {
         return Optional.ofNullable(REGISTRY.get(id));
     }
 
-    static boolean isPatternNameValid(Identifier id) {
+    static boolean isPatternNameValid(ResourceLocation id) {
         return REGISTRY.containsKey(id);
     }
 
-    record PatternType(Identifier id, EntityPattern pattern, float defaultSpawnWeight) {
+    record PatternType(ResourceLocation id, EntityPattern pattern, float defaultSpawnWeight) {
         public float getNightMobSpawnWeight() {
             return InvasionMod.getConfig().getPropertyValueFloat("nm-spawnpool1-slot-" + id + "-weight", defaultSpawnWeight);
         }

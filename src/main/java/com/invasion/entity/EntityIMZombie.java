@@ -36,9 +36,9 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -48,8 +48,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
@@ -89,14 +88,14 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getRandom().nextFloat() < 0.35F) {
-            spawnAtLocation(level, Items.ROTTEN_FLESH);
+            spawnAtLocation(Items.ROTTEN_FLESH);
         }
         if (getTier() == 1 && getFlavour() == 1 && getRandom().nextFloat() < 0.2F) {
-            spawnAtLocation(level, Items.WOODEN_SWORD);
+            spawnAtLocation(Items.WOODEN_SWORD);
         } else if (getTier() == 2 && getFlavour() == 0 && getRandom().nextFloat() < 0.25F) {
-            spawnAtLocation(level, Items.IRON_CHESTPLATE);
+            spawnAtLocation(Items.IRON_CHESTPLATE);
         } else if (getTier() == 2 && getFlavour() == 1 && getRandom().nextFloat() < 0.25F) {
-            spawnAtLocation(level, Items.IRON_SWORD);
+            spawnAtLocation(Items.IRON_SWORD);
         }
     }
 
@@ -202,15 +201,15 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putBoolean("isBaby", isBaby());
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        setBaby(input.getBooleanOr("isBaby", false));
+        setBaby(input.getBoolean("isBaby"));
     }
 
     @Override
@@ -254,8 +253,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         }
     }
     @Override
-    public void customServerAiStep(ServerLevel serverLevel) {
-        super.customServerAiStep(serverLevel);
+    public void customServerAiStep() {
+        super.customServerAiStep();
 
         terrainModifier.onUpdate();
 
