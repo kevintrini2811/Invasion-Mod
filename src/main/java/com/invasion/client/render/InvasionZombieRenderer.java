@@ -7,8 +7,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.List;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
-import net.minecraft.client.model.monster.zombie.BabyZombieModel;
 import net.minecraft.client.model.monster.zombie.ZombieModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
@@ -43,8 +44,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         super(
                 context,
                 new ZombieModel<>(context.bakeLayer(ModelLayers.ZOMBIE)),
-                new BabyZombieModel<>(
-                        context.bakeLayer(ModelLayers.ZOMBIE_BABY)),
+                new ZombieModel<>(createLegacyUvBabyLayer().bakeRoot()),
                 0.5F);
         normalModel = model;
         bruteModel = new LargeZombieModel(LargeZombieModel.createBodyLayer().bakeRoot());
@@ -120,6 +120,13 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
 
     private static Identifier texture(String path) {
         return InvasionMod.id("textures/" + path);
+    }
+
+    private static LayerDefinition createLegacyUvBabyLayer() {
+        MeshDefinition adultMesh = HumanoidModel.createMesh(
+                CubeDeformation.NONE, 0.0F);
+        return LayerDefinition.create(
+                HumanoidModel.BABY_TRANSFORMER.apply(adultMesh), 64, 64);
     }
 
     private final class VariantArmorLayer extends HumanoidArmorLayer<
