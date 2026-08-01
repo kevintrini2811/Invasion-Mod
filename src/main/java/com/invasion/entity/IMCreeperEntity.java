@@ -342,6 +342,13 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
                         NEXUS_EXPLOSION_DAMAGE_PER_TIER * Math.max(getTier(), 1));
             }
             level().explode(this, getX(), getY(), getZ(), explosionPower, false, ExplosionInteraction.MOB);
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                ItemStack equipment = getItemBySlot(slot);
+                if (!equipment.isEmpty()) {
+                    spawnAtLocation((ServerLevel) level(), equipment);
+                    setItemSlot(slot, ItemStack.EMPTY);
+                }
+            }
             discard();
         }
     }
