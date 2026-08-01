@@ -75,7 +75,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 state -> state.brute && state.isBaby
                         ? state.headEquipment
                         : ItemStack.EMPTY,
-                -1.5F, -2.0F, 0.0F, 0.7F));
+                -1.5F, -1.0F, 0.0F, 0.65F));
 
         HumanoidModel<InvasionZombieRenderState> emptyHead =
                 new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
@@ -156,6 +156,23 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                         64, 32).bakeRoot()));
     }
 
+    private static ArmorModelSet<HumanoidModel<InvasionZombieRenderState>>
+            createDoubleSizeBabyBruteFeetArmor() {
+        ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> armor =
+                createLegacyUvBabyArmor();
+        HumanoidModel<InvasionZombieRenderState> feet = armor.feet();
+        feet.rightLeg.xScale = 2.0F;
+        feet.rightLeg.yScale = 2.0F;
+        feet.rightLeg.zScale = 2.0F;
+        feet.leftLeg.xScale = 2.0F;
+        feet.leftLeg.yScale = 2.0F;
+        feet.leftLeg.zScale = 2.0F;
+        feet.rightLeg.setInitialPose(feet.rightLeg.storePose());
+        feet.leftLeg.setInitialPose(feet.leftLeg.storePose());
+        return new ArmorModelSet<>(
+                armor.head(), armor.chest(), armor.legs(), feet);
+    }
+
     private final class VariantArmorLayer extends HumanoidArmorLayer<
             InvasionZombieRenderState,
             HumanoidModel<InvasionZombieRenderState>,
@@ -165,6 +182,10 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 InvasionZombieRenderState,
                 HumanoidModel<InvasionZombieRenderState>,
                 HumanoidModel<InvasionZombieRenderState>> legacyBabyLayer;
+        private final HumanoidArmorLayer<
+                InvasionZombieRenderState,
+                HumanoidModel<InvasionZombieRenderState>,
+                HumanoidModel<InvasionZombieRenderState>> babyBruteFeetLayer;
 
         VariantArmorLayer(
                 InvasionZombieRenderer<T> parent,
@@ -185,6 +206,15 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                             babyArmor,
                             babyArmor,
                             context.getEquipmentRenderer());
+            ArmorModelSet<HumanoidModel<InvasionZombieRenderState>>
+                    babyBruteFeetArmor = createDoubleSizeBabyBruteFeetArmor();
+            babyBruteFeetLayer = bruteLayer
+                    ? null
+                    : new HumanoidArmorLayer<>(
+                            parent,
+                            babyBruteFeetArmor,
+                            babyBruteFeetArmor,
+                            context.getEquipmentRenderer());
         }
 
         @Override
@@ -198,15 +228,31 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                     // already baby-scaled armor geometry.
                     state.isBaby = false;
                     ItemStack headEquipment = state.headEquipment;
+                    ItemStack chestEquipment = state.chestEquipment;
+                    ItemStack legsEquipment = state.legsEquipment;
+                    ItemStack feetEquipment = state.feetEquipment;
                     if (state.brute) {
                         state.headEquipment = ItemStack.EMPTY;
+                        state.feetEquipment = ItemStack.EMPTY;
                     }
                     try {
                         legacyBabyLayer.submit(
                                 poseStack, collector, light,
                                 state, yRot, xRot);
+                        if (state.brute) {
+                            state.headEquipment = ItemStack.EMPTY;
+                            state.chestEquipment = ItemStack.EMPTY;
+                            state.legsEquipment = ItemStack.EMPTY;
+                            state.feetEquipment = feetEquipment;
+                            babyBruteFeetLayer.submit(
+                                    poseStack, collector, light,
+                                    state, yRot, xRot);
+                        }
                     } finally {
                         state.headEquipment = headEquipment;
+                        state.chestEquipment = chestEquipment;
+                        state.legsEquipment = legsEquipment;
+                        state.feetEquipment = feetEquipment;
                         state.isBaby = true;
                     }
                 } else {
