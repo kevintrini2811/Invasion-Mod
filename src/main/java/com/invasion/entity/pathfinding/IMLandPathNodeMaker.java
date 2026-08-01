@@ -253,7 +253,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
         if (state.isAir() || !canDestroyBlocks() || BlockMetadata.isIndestructible(state) || PathingUtil.hasAdjacentLadder(world, pos)) {
             return false;
         }
-        return state.is(BlockTags.DOORS) || state.is(BlockTags.TRAPDOORS) || state.isRedstoneConductor(world, pos);
+        return true;
     }
 
     public boolean avoidsBlock(Mob entity, CollisionGetter world, BlockPos pos, BlockState state) {

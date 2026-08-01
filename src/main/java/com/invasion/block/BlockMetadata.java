@@ -18,7 +18,6 @@ import net.minecraft.world.level.CollisionGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.material.PushReaction;
 
 public class BlockMetadata {
     public static final float AIR_STRENGTH = 0.01F;
@@ -125,15 +124,13 @@ public class BlockMetadata {
     private static final List<Block> UNDESTRUCTABLE_BLOCKS = List.of(
             Blocks.BEDROCK,
             Blocks.COMMAND_BLOCK, Blocks.CHAIN_COMMAND_BLOCK, Blocks.REPEATING_COMMAND_BLOCK,
-            Blocks.END_PORTAL_FRAME, Blocks.LADDER, Blocks.CHEST,
+            Blocks.END_PORTAL_FRAME, Blocks.LADDER,
             Blocks.NETHER_PORTAL, Blocks.END_GATEWAY, Blocks.END_PORTAL
     );
 
     public static boolean isIndestructible(BlockState state) {
         return state.getBlock().defaultDestroyTime() < 0
-                || state.getPistonPushReaction() == PushReaction.BLOCK
-                || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock())
-                || state.is(Tags.Blocks.RELOCATION_NOT_SUPPORTED);
+                || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock());
     }
 
     public static Optional<Float> getCost(BlockState state) {
