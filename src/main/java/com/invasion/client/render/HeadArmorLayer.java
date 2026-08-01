@@ -3,6 +3,8 @@ package com.invasion.client.render;
 import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.function.Function;
 import net.minecraft.client.model.EntityModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer;
@@ -73,14 +75,19 @@ public final class HeadArmorLayer<
         // entity overwrite this helmet's pose.
         HeadArmorModel<S> armorModel = new HeadArmorModel<>(
                 HeadArmorModel.createBodyLayer().bakeRoot());
-        armorModel.head.loadPose(
-                getParentModel().root().getChild("head").storePose());
-        armorModel.head.y += offsetY;
-        armorModel.head.z += offsetZ;
-        armorModel.head.xScale *= scale;
-        armorModel.head.yScale *= scale;
-        armorModel.head.zScale *= scale;
-        armorModel.head.setInitialPose(armorModel.head.storePose());
+        ModelPart parentHead = getParentModel().root().getChild("head");
+        PartPose helmetPose = new PartPose(
+                parentHead.x,
+                parentHead.y + offsetY,
+                parentHead.z + offsetZ,
+                parentHead.xRot,
+                parentHead.yRot,
+                parentHead.zRot,
+                parentHead.xScale * scale,
+                parentHead.yScale * scale,
+                parentHead.zScale * scale);
+        armorModel.head.loadPose(helmetPose);
+        armorModel.head.setInitialPose(helmetPose);
 
         equipmentRenderer.renderLayers(
                 EquipmentClientInfo.LayerType.HUMANOID,
