@@ -9,6 +9,8 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public abstract class TieredIMMobEntity extends IMMobEntity {
@@ -100,7 +102,24 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
     @Override
     public void readAdditionalSaveData(ValueInput compound) {
         super.readAdditionalSaveData(compound);
-        setAppearance(compound.getIntOr("tier", 0), compound.getIntOr("flavour", 0));
+        EquipmentSlot[] slots = EquipmentSlot.values();
+        ItemStack[] equipment = new ItemStack[slots.length];
+        float[] dropChances = new float[slots.length];
+        for (int i = 0; i < slots.length; i++) {
+            equipment[i] = getItemBySlot(slots[i]).copy();
+            dropChances[i] = getDropChances().byEquipment(slots[i]);
+        }
+
+        setAppearance(
+                compound.getIntOr("tier", 0),
+                compound.getIntOr("flavour", 0));
+
+        // Applying the saved tier rebuilds attributes and default loadout.
+        // Restore the equipment that Mob already decoded from this save.
+        for (int i = 0; i < slots.length; i++) {
+            setItemSlot(slots[i], equipment[i]);
+            setDropChance(slots[i], dropChances[i]);
+        }
     }
 
     @Override
