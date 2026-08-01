@@ -236,6 +236,12 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     public void tick() {
         super.tick();
+        if (!level().isClientSide()
+                && getType() == InvEntities.ZOMBIE
+                && level().getBlockState(blockPosition()).is(Blocks.SOUL_FIRE)) {
+            EntityIMSpeedyZombie.convertFrom(this);
+            return;
+        }
         if (!level().isClientSide() && isTar() && isOnFire()) {
             // Tar keeps burning until it actually enters water. Refreshing a
             // short duration here prevents the normal fire timer from
