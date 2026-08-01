@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.HumanoidArm;
 import com.invasion.InvasionMod;
 import com.invasion.client.render.entity.model.LargeBipedEntityModel;
 import com.invasion.entity.AbstractIMZombieEntity;
@@ -77,7 +78,7 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
     }
 
     private boolean usesBruteModel(AbstractIMZombieEntity entity) {
-        return isBrute(entity) && !entity.isBaby();
+        return isBrute(entity);
     }
 
     protected boolean isBrute(AbstractIMZombieEntity entity) {
@@ -155,6 +156,17 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
 
         public boolean isAttacking(AbstractIMZombieEntity entity) {
             return entity.isAggressive();
+        }
+
+        @Override
+        public void translateToHand(HumanoidArm arm, PoseStack matrices) {
+            super.translateToHand(arm, matrices);
+            if (young) {
+                matrices.translate(
+                        arm == HumanoidArm.RIGHT ? -0.0625F : 0.0625F,
+                        0.25F,
+                        0.0F);
+            }
         }
     }
 }
