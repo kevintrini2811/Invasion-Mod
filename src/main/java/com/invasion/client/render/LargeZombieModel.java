@@ -44,7 +44,7 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
         if (state.isBaby) {
             poseStack.translate(
                     arm == HumanoidArm.RIGHT ? -0.0625F : 0.0625F,
-                    0.0625F,
+                    0.25F,
                     0.0F);
         }
     }
