@@ -1,6 +1,7 @@
 package com.invasion.client.render.entity.model;
 
 import com.invasion.entity.ThrowerEntity;
+import net.minecraft.util.Mth;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartNames;
@@ -51,5 +52,11 @@ public class ThrowerEntityModel extends HumanoidModel<ThrowerEntity> {
         leftLeg.setPos(3, 22, 0);
         leftArm.setPos(6, 16, -1);
         rightArm.setPos(-6, 16, 0);
+        if (entity.isThrowing()) {
+            leftArm.xRot = -Mth.PI;
+            rightArm.xRot = -Mth.PI;
+            leftArm.zRot = -0.12F;
+            rightArm.zRot = 0.12F;
+        }
     }
 }
