@@ -68,7 +68,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 this, normalArmor, babyArmor, context, false));
         addLayer(new HeadArmorLayer<>(
                 this, context,
-                state -> state.brute
+                state -> state.brute && !state.isBaby
                         ? state.headEquipment
                         : ItemStack.EMPTY,
                 0.0F, 0.0F, 0.7F));
@@ -158,6 +158,9 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         @Override
         public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light,
                 InvasionZombieRenderState state, float yRot, float xRot) {
+            if (state.brute && state.isBaby) {
+                return;
+            }
             boolean usesBruteModel = state.brute && !state.isBaby;
             if (usesBruteModel == bruteLayer) {
                 super.submit(poseStack, collector, light, state, yRot, xRot);
