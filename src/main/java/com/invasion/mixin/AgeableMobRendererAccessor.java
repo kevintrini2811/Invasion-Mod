@@ -11,4 +11,8 @@ public interface AgeableMobRendererAccessor {
     @Accessor("adultModel")
     @Mutable
     void invasion$setAdultModel(EntityModel<?> model);
+
+    @Accessor("babyModel")
+    @Mutable
+    void invasion$setBabyModel(EntityModel<?> model);
 }
