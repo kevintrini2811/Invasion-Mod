@@ -47,6 +47,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     private int haltingTicks;
     private int stuckTime;
+    private Vec3 lastProgressPos = Vec3.ZERO;
     private boolean climbingLadder;
     private boolean gravityBeforeLadder;
     private boolean overridingGravityForLadder;
@@ -230,7 +231,13 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         tickObjectives();
         tickFollowing();
 
-        stuckTime++;
+        Vec3 progressPos = mob.position();
+        if (progressPos.distanceToSqr(lastProgressPos) > 0.01D) {
+            lastProgressPos = progressPos;
+            stuckTime = 0;
+        } else {
+            stuckTime++;
+        }
 
         if (mob instanceof Stunnable l && l.isStunned()) {
             return;

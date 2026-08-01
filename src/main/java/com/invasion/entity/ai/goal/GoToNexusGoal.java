@@ -8,7 +8,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
@@ -19,7 +18,7 @@ import com.invasion.nexus.NexusAccess;
 
 public class GoToNexusGoal extends Goal {
     private static final int STUCK_REPATH_TIMEOUT = 20 * 10;
-    private static final int ENGINEER_MAX_REPATH_DELAY = 20 * 3;
+    private static final int MAX_REPATH_DELAY = 20 * 3;
 
     private PathfinderMob mob;
     private final NexusEntity nexusEntity;
@@ -78,9 +77,7 @@ public class GoToNexusGoal extends Goal {
                 int retryDelay =
                         40 * Math.min(pathFailedCount, 25)
                                 + mob.getRandom().nextInt(10);
-                pathRequestTimer = mob instanceof PigmanEngineerEntity
-                        ? Math.min(retryDelay, ENGINEER_MAX_REPATH_DELAY)
-                        : retryDelay;
+                pathRequestTimer = Math.min(retryDelay, MAX_REPATH_DELAY);
             } else {
                 pathFailedCount = 0;
                 pathRequestTimer = 20;
@@ -93,18 +90,6 @@ public class GoToNexusGoal extends Goal {
 
     @Override
     public void tick() {
-        // An engineer at the end of a short bridge path must wait for another
-        // buildable path. Directly steering it at the nexus walks it off the
-        // final plank without giving the bridge action a chance to run.
-        if (pathFailedCount > 1 && !(mob instanceof PigmanEngineerEntity)) {
-            @Nullable
-            NexusAccess nexus = nexusEntity.getNexus();
-            if (nexus != null) {
-                Vec3 target = com.invasion.util.math.PosUtils.center(nexus.getOrigin());
-                mob.getMoveControl().setWantedPosition(target.x, target.y, target.z, 1);
-                mob.setTarget(null);
-            }
-        }
         // Engineers intentionally stop while their terrain modifier builds a
         // path node. Repathing here used to cancel that job and discard the
         // ladder-tower path before the engineer could climb it.
