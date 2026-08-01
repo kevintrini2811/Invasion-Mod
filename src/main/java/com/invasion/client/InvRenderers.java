@@ -14,6 +14,7 @@ import com.invasion.client.render.entity.PigmanEngineerEntityRenderer;
 import com.invasion.client.render.entity.ThrowerEntityRenderer;
 import com.invasion.client.render.entity.TntEntityRenderer;
 import com.invasion.client.render.entity.SpiderEggEntityRenderer;
+import com.invasion.client.render.entity.SpeedyZombieEntityRenderer;
 import com.invasion.client.render.entity.TrapEntityRenderer;
 import com.invasion.client.render.entity.ZombiePigmanEntityRenderer;
 import com.invasion.client.render.entity.VariantMobRenderers;
@@ -28,6 +29,9 @@ public final class InvRenderers {
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(InvEntities.ZOMBIE, AbstractIMZombieEntityRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.SPEEDY_ZOMBIE,
+                SpeedyZombieEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.HUSK, VariantMobRenderers.Husk::new);
         event.registerEntityRenderer(InvEntities.DROWNED, VariantMobRenderers.Drowned::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER, VariantMobRenderers.ZombieVillager::new);
