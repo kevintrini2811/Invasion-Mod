@@ -1,5 +1,7 @@
 package com.invasion.client.render;
 
+import java.util.Set;
+import net.minecraft.client.model.BabyModelTransform;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartNames;
@@ -13,6 +15,10 @@ import net.minecraft.world.entity.EquipmentSlot;
 
 public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderState> {
     private static final String LEGACY_HAT = "legacy_hat";
+    private static final BabyModelTransform BABY_TRANSFORMER =
+            new BabyModelTransform(
+                    true, 16.0F, 0.0F, 2.0F, 2.0F, 24.0F,
+                    Set.of(PartNames.HEAD, LEGACY_HAT));
     private final ModelPart legacyHat;
 
     public LargeZombieModel(ModelPart root) {
@@ -31,6 +37,16 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
     }
 
     public static LayerDefinition createBodyLayer(CubeDeformation dilation) {
+        return LayerDefinition.create(createMesh(dilation), 64, 64);
+    }
+
+    public static LayerDefinition createBabyBodyLayer() {
+        return LayerDefinition.create(
+                BABY_TRANSFORMER.apply(createMesh(CubeDeformation.NONE)),
+                64, 64);
+    }
+
+    private static MeshDefinition createMesh(CubeDeformation dilation) {
         MeshDefinition data = new MeshDefinition();
         PartDefinition root = data.getRoot();
         PartDefinition head = root.addOrReplaceChild(PartNames.HEAD,
@@ -49,7 +65,7 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
         root.addOrReplaceChild(PartNames.LEFT_ARM, CubeListBuilder.create().texOffs(46, 15).mirror().addBox(-1, -2, -2, 4, 12, 4, dilation), PartPose.offset(6, 2, 0));
         root.addOrReplaceChild(PartNames.RIGHT_LEG, CubeListBuilder.create().texOffs(0, 16).addBox(-2, 0, -2, 4, 12, 4, dilation), PartPose.offset(-2, 12, 0));
         root.addOrReplaceChild(PartNames.LEFT_LEG, CubeListBuilder.create().texOffs(0, 16).mirror().addBox(-2, 0, -2, 4, 12, 4, dilation), PartPose.offset(2, 12, 0));
-        return LayerDefinition.create(data, 64, 64);
+        return data;
     }
 
     public static LayerDefinition createArmorBodyLayer(
