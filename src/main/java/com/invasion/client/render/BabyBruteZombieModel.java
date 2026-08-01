@@ -83,8 +83,8 @@ public final class BabyBruteZombieModel
             PoseStack poseStack) {
         super.translateToHand(state, arm, poseStack);
         poseStack.translate(
-                arm == HumanoidArm.RIGHT ? -0.0625F : 0.0625F,
-                0.0F,
+                arm == HumanoidArm.RIGHT ? -0.125F : 0.0F,
+                0.1875F,
                 0.0F);
     }
 }
