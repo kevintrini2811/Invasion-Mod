@@ -1,5 +1,6 @@
 package com.invasion.client.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.util.Set;
 import net.minecraft.client.model.BabyModelTransform;
 import net.minecraft.client.model.HumanoidModel;
@@ -11,7 +12,9 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
 
 public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderState> {
     private static final String LEGACY_HAT = "legacy_hat";
@@ -30,6 +33,20 @@ public final class LargeZombieModel extends HumanoidModel<InvasionZombieRenderSt
     public void setupAnim(InvasionZombieRenderState state) {
         super.setupAnim(state);
         legacyHat.loadPose(head.storePose());
+    }
+
+    @Override
+    public void translateToHand(
+            HumanoidRenderState state,
+            HumanoidArm arm,
+            PoseStack poseStack) {
+        super.translateToHand(state, arm, poseStack);
+        if (state.isBaby) {
+            poseStack.translate(
+                    arm == HumanoidArm.RIGHT ? -0.0625F : 0.0625F,
+                    0.0625F,
+                    0.0F);
+        }
     }
 
     public static LayerDefinition createBodyLayer() {

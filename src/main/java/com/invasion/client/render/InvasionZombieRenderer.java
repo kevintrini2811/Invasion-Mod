@@ -68,7 +68,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 state -> state.brute
                         ? state.headEquipment
                         : ItemStack.EMPTY,
-                0.0F, 0.0F, 0.7F));
+                0.0F, 0.0F, 0.6F));
 
         HumanoidModel<InvasionZombieRenderState> emptyHead =
                 new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
@@ -154,7 +154,18 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 InvasionZombieRenderState state, float yRot, float xRot) {
             boolean usesBruteModel = state.brute && !state.isBaby;
             if (usesBruteModel == bruteLayer) {
-                super.submit(poseStack, collector, light, state, yRot, xRot);
+                if (state.brute && state.isBaby) {
+                    ItemStack headEquipment = state.headEquipment;
+                    state.headEquipment = ItemStack.EMPTY;
+                    try {
+                        super.submit(
+                                poseStack, collector, light, state, yRot, xRot);
+                    } finally {
+                        state.headEquipment = headEquipment;
+                    }
+                } else {
+                    super.submit(poseStack, collector, light, state, yRot, xRot);
+                }
             }
         }
     }
