@@ -113,7 +113,9 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     private void updateWaveAttributes() {
-        int wave = hasNexus() ? Math.max(0, getNexus().getProgressionLevel()) : 0;
+        int wave = hasNexus()
+                ? Math.max(0, getNexus().getProgressionLevel()) / 2
+                : 0;
         double desiredHealth = (isTame() ? TAMED_BASE_HEALTH : 8.0D) + wave;
         double desiredDamage = BASE_ATTACK_DAMAGE + wave;
         var maxHealth = getAttribute(Attributes.MAX_HEALTH);
