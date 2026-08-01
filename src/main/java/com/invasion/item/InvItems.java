@@ -71,7 +71,7 @@ public interface InvItems {
             "speedy_zombie_spawn_egg",
             p -> createSpawnEgg(
                     p, InvEntities.SPEEDY_ZOMBIE,
-                    0x00B9C7, 0x102B31,
+                    0x049DAD, 0x003C41,
                     NexusEntity.createVariant(0, 1)));
     Item HUSK_SPAWN_EGG = register(
             "husk_spawn_egg",
