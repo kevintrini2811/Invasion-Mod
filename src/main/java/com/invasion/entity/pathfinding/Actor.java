@@ -93,7 +93,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
         if (state.isAir() || !canDestroyBlocks() || BlockMetadata.isIndestructible(state) || PathingUtil.hasAdjacentLadder(world, pos)) {
             return false;
         }
-        return state.is(BlockTags.DOORS) || state.is(BlockTags.TRAPDOORS) || state.isRedstoneConductor(world, pos);
+        return true;
     }
 
     @Override
