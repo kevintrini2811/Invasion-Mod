@@ -90,6 +90,9 @@ public class MineBlockGoal extends Goal {
             float speedMultiplier = mob instanceof Miner miner
                     ? miner.getDiggingSpeedMultiplier()
                     : 1.0F;
+            if (mob.isInWater()) {
+                speedMultiplier *= 0.5F;
+            }
             float speed = getDiggingSpeed(mob, breakingState, pos)
                     * speedMultiplier * 10;
             breakProgress += speed;
