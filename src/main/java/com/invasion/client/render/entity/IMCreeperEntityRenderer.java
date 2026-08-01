@@ -21,7 +21,7 @@ public class IMCreeperEntityRenderer extends LivingEntityRenderer<IMCreeperEntit
         super(context, new CreeperModel<>(context.bakeLayer(ModelLayers.CREEPER)), 0.5F);
         addLayer(new MobHeadArmorLayer<>(this, context,
                 creeper -> getModel().root().getChild("head"),
-                1.4F, -0.875F, 0.0F));
+                1.3F, -1.0F, 0.0F));
     }
 
     @Override
