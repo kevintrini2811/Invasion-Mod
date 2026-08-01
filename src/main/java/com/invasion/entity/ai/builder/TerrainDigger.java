@@ -29,6 +29,7 @@ public class TerrainDigger implements ITerrainDig, Notifiable {
     @SuppressWarnings("deprecation")
     @Override
     public boolean askClearPosition(BlockPos pos, Notifiable onFinished, float costMultiplier) {
+        costMultiplier = adjustForWater(costMultiplier);
         List<ModifyBlockEntry> removals = new ArrayList<>();
         for (BlockPos removal : digger.getBlockRemovalOrder(pos)) {
             BlockState state = digger.getTerrain().getBlockState(removal);
@@ -48,7 +49,14 @@ public class TerrainDigger implements ITerrainDig, Notifiable {
 
     @Override
     public boolean askRemoveBlock(BlockPos pos, Notifiable onFinished, float costMultiplier) {
+        costMultiplier = adjustForWater(costMultiplier);
         return digger.canClearBlock(pos) && modifier.requestTask(onFinished, this, ModifyBlockEntry.ofDeletion(pos, (int) (costMultiplier * digger.getBlockRemovalCost(pos) / digRate)));
+    }
+
+    private float adjustForWater(float costMultiplier) {
+        return digger.asEntity().isInWater()
+                ? costMultiplier * 2.0F
+                : costMultiplier;
     }
 
     @Override
