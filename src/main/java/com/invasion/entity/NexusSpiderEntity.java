@@ -147,6 +147,7 @@ public class NexusSpiderEntity extends Spider
 
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (isBaby()) {
             return;
         }
