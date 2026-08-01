@@ -18,7 +18,6 @@ import net.minecraft.world.item.equipment.Equippable;
 public final class HeadArmorLayer<
         S extends LivingEntityRenderState,
         M extends EntityModel<? super S>> extends RenderLayer<S, M> {
-    private final HeadArmorModel<S> armorModel;
     private final EquipmentLayerRenderer equipmentRenderer;
     private final Function<S, ItemStack> helmet;
     private final float offsetY;
@@ -49,8 +48,6 @@ public final class HeadArmorLayer<
             float offsetZ,
             float scale) {
         super(parent);
-        armorModel = new HeadArmorModel<>(
-                HeadArmorModel.createBodyLayer().bakeRoot());
         equipmentRenderer = context.getEquipmentRenderer();
         this.helmet = helmet;
         this.offsetY = offsetY;
@@ -71,7 +68,11 @@ public final class HeadArmorLayer<
             return;
         }
 
-        armorModel.resetPose();
+        // Submitted equipment nodes retain their model until the render queue
+        // is consumed. A shared mutable model would therefore let the next
+        // entity overwrite this helmet's pose.
+        HeadArmorModel<S> armorModel = new HeadArmorModel<>(
+                HeadArmorModel.createBodyLayer().bakeRoot());
         armorModel.head.loadPose(
                 getParentModel().root().getChild("head").storePose());
         armorModel.head.y += offsetY;
