@@ -201,13 +201,14 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
-        output.putBoolean("isBaby", isBaby());
+        output.putBoolean("IsBaby", isBaby());
     }
 
     @Override
     public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
-        setBaby(input.getBooleanOr("isBaby", false));
+        setBaby(input.getBooleanOr("IsBaby", false)
+                || input.getBooleanOr("isBaby", false));
     }
 
     @Override
