@@ -142,6 +142,10 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
             HumanoidModel<InvasionZombieRenderState>,
             HumanoidModel<InvasionZombieRenderState>> {
         private final boolean bruteLayer;
+        private final HumanoidArmorLayer<
+                InvasionZombieRenderState,
+                HumanoidModel<InvasionZombieRenderState>,
+                HumanoidModel<InvasionZombieRenderState>> legacyBabyLayer;
 
         VariantArmorLayer(
                 InvasionZombieRenderer<T> parent,
@@ -155,6 +159,13 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                     babyArmor,
                     context.getEquipmentRenderer());
             this.bruteLayer = bruteLayer;
+            legacyBabyLayer = bruteLayer
+                    ? null
+                    : new HumanoidArmorLayer<>(
+                            parent,
+                            babyArmor,
+                            babyArmor,
+                            context.getEquipmentRenderer());
         }
 
         @Override
@@ -162,7 +173,23 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 InvasionZombieRenderState state, float yRot, float xRot) {
             boolean usesBruteModel = state.brute && !state.isBaby;
             if (usesBruteModel == bruteLayer) {
-                super.submit(poseStack, collector, light, state, yRot, xRot);
+                if (state.isBaby && legacyBabyLayer != null) {
+                    // The mod skins use the classic adult armor UV layout.
+                    // Select its equipment texture while retaining the
+                    // already baby-scaled armor geometry.
+                    state.isBaby = false;
+                    try {
+                        legacyBabyLayer.submit(
+                                poseStack, collector, light,
+                                state, yRot, xRot);
+                    } finally {
+                        state.isBaby = true;
+                    }
+                } else {
+                    super.submit(
+                            poseStack, collector, light,
+                            state, yRot, xRot);
+                }
             }
         }
     }
