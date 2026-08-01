@@ -21,6 +21,7 @@ public final class HeadArmorLayer<
     private final HeadArmorModel<S> armorModel;
     private final EquipmentLayerRenderer equipmentRenderer;
     private final Function<S, ItemStack> helmet;
+    private final float offsetX;
     private final float offsetY;
     private final float offsetZ;
     private final float scale;
@@ -29,7 +30,7 @@ public final class HeadArmorLayer<
             RenderLayerParent<S, M> parent,
             net.minecraft.client.renderer.entity.EntityRendererProvider.Context context,
             Function<S, ItemStack> helmet) {
-        this(parent, context, helmet, 0.0F, 0.0F, 1.0F);
+        this(parent, context, helmet, 0.0F, 0.0F, 0.0F, 1.0F);
     }
 
     public HeadArmorLayer(
@@ -38,7 +39,7 @@ public final class HeadArmorLayer<
             Function<S, ItemStack> helmet,
             float offsetY,
             float offsetZ) {
-        this(parent, context, helmet, offsetY, offsetZ, 1.0F);
+        this(parent, context, helmet, 0.0F, offsetY, offsetZ, 1.0F);
     }
 
     public HeadArmorLayer(
@@ -48,11 +49,23 @@ public final class HeadArmorLayer<
             float offsetY,
             float offsetZ,
             float scale) {
+        this(parent, context, helmet, 0.0F, offsetY, offsetZ, scale);
+    }
+
+    public HeadArmorLayer(
+            RenderLayerParent<S, M> parent,
+            net.minecraft.client.renderer.entity.EntityRendererProvider.Context context,
+            Function<S, ItemStack> helmet,
+            float offsetX,
+            float offsetY,
+            float offsetZ,
+            float scale) {
         super(parent);
         armorModel = new HeadArmorModel<>(
                 HeadArmorModel.createBodyLayer().bakeRoot());
         equipmentRenderer = context.getEquipmentRenderer();
         this.helmet = helmet;
+        this.offsetX = offsetX;
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
         this.scale = scale;
@@ -74,6 +87,7 @@ public final class HeadArmorLayer<
         armorModel.resetPose();
         armorModel.head.loadPose(
                 getParentModel().root().getChild("head").storePose());
+        armorModel.head.x += offsetX;
         armorModel.head.y += offsetY;
         armorModel.head.z += offsetZ;
         armorModel.head.xScale *= scale;

@@ -70,6 +70,12 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                         ? state.headEquipment
                         : ItemStack.EMPTY,
                 0.0F, 0.0F, 0.7F));
+        addLayer(new HeadArmorLayer<>(
+                this, context,
+                state -> state.brute && state.isBaby
+                        ? state.headEquipment
+                        : ItemStack.EMPTY,
+                -1.5F, -2.0F, 0.0F, 0.7F));
 
         HumanoidModel<InvasionZombieRenderState> emptyHead =
                 new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
@@ -191,11 +197,16 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                     // Select its equipment texture while retaining the
                     // already baby-scaled armor geometry.
                     state.isBaby = false;
+                    ItemStack headEquipment = state.headEquipment;
+                    if (state.brute) {
+                        state.headEquipment = ItemStack.EMPTY;
+                    }
                     try {
                         legacyBabyLayer.submit(
                                 poseStack, collector, light,
                                 state, yRot, xRot);
                     } finally {
+                        state.headEquipment = headEquipment;
                         state.isBaby = true;
                     }
                 } else {
