@@ -8,10 +8,13 @@ import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -25,7 +28,16 @@ public final class InvasionModClient {
         modBus.addListener(InvasionModClient::registerRenderers);
         modBus.addListener(InvasionModClient::registerGuiLayers);
         modBus.addListener(InvasionModClient::registerMenuScreens);
+        modBus.addListener(InvasionModClient::registerItemColors);
         NeoForge.EVENT_BUS.addListener(InvasionModClient::onDisconnect);
+    }
+
+    private static void registerItemColors(
+            RegisterColorHandlersEvent.Item event) {
+        event.register(
+                (stack, tintIndex) -> ((SpawnEggItem) stack.getItem())
+                        .getColor(tintIndex),
+                InvItems.SPAWN_EGGS.toArray(Item[]::new));
     }
 
     private static void clientSetup(FMLClientSetupEvent event) {
