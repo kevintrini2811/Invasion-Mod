@@ -256,6 +256,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
         spawnAtLocation(Items.GUNPOWDER);
         Entity entity = source.getEntity();
         if (entity instanceof net.minecraft.world.entity.monster.AbstractSkeleton
