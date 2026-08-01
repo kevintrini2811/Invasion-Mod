@@ -3,6 +3,7 @@ package com.invasion.entity.ai.goal;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Optional;
+import com.invasion.block.InvBlocks;
 import com.invasion.entity.IMEndermanEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -57,6 +58,9 @@ public final class CarryBlockingBlockGoal extends Goal {
 
     private static boolean canCarry(BlockState state) {
         if (state.isAir()) {
+            return false;
+        }
+        if (state.is(InvBlocks.NEXUS_CORE)) {
             return false;
         }
         if (state.getBlock() instanceof SnowLayerBlock) {
