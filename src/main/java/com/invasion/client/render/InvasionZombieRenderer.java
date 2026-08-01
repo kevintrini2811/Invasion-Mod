@@ -75,7 +75,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 state -> state.brute && state.isBaby
                         ? state.headEquipment
                         : ItemStack.EMPTY,
-                -1.5F, -1.0F, 0.0F, 0.65F));
+                -1.5F, -1.0F, 0.0F, 0.6F));
 
         HumanoidModel<InvasionZombieRenderState> emptyHead =
                 new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
@@ -167,6 +167,8 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         feet.leftLeg.xScale = 2.0F;
         feet.leftLeg.yScale = 2.0F;
         feet.leftLeg.zScale = 2.0F;
+        feet.rightLeg.y -= 2.0F;
+        feet.leftLeg.y -= 2.0F;
         feet.rightLeg.setInitialPose(feet.rightLeg.storePose());
         feet.leftLeg.setInitialPose(feet.leftLeg.storePose());
         return new ArmorModelSet<>(
