@@ -34,13 +34,9 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
             texture("entity/zombie_pigman/zombie_pigman.png"),
             texture("entity/zombie_pigman/zombie_pigman.png"),
             texture("entity/zombie_pigman/zombie_pigman_t3.png"));
-    private static final ResourceLocation BABY_BRUTE_TEXTURE =
-            texture("entity/zombie/zombie_brute_baby.png");
 
     private final HumanoidModel<InvasionZombieRenderState> normalModel;
     private final HumanoidModel<InvasionZombieRenderState> bruteModel;
-    private final HumanoidModel<InvasionZombieRenderState> normalBabyModel;
-    private final HumanoidModel<InvasionZombieRenderState> babyBruteModel;
     private final boolean pigman;
 
     public InvasionZombieRenderer(EntityRendererProvider.Context context, boolean pigman) {
@@ -52,10 +48,6 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 0.5F);
         normalModel = model;
         bruteModel = new LargeZombieModel(LargeZombieModel.createBodyLayer().bakeRoot());
-        normalBabyModel = new BabyZombieModel<>(
-                context.bakeLayer(ModelLayers.ZOMBIE_BABY));
-        babyBruteModel = new BabyBruteZombieModel(
-                BabyBruteZombieModel.createBodyLayer().bakeRoot());
         this.pigman = pigman;
 
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> normalArmor = ArmorModelSet.bake(
@@ -68,7 +60,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 this, normalArmor, babyArmor, context, false));
         addLayer(new HeadArmorLayer<>(
                 this, context,
-                state -> state.brute && !state.isBaby
+                state -> state.brute
                         ? state.headEquipment
                         : ItemStack.EMPTY,
                 0.0F, 0.0F, 0.7F));
@@ -110,8 +102,6 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         // Select the legacy brute model at the source so its 10x5 torso is retained.
         ((AgeableMobRendererAccessor) (Object) this).invasion$setAdultModel(
                 state.brute ? bruteModel : normalModel);
-        ((AgeableMobRendererAccessor) (Object) this).invasion$setBabyModel(
-                state.brute ? babyBruteModel : normalBabyModel);
         super.submit(state, poseStack, collector, cameraState);
     }
 
@@ -123,9 +113,6 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
 
     @Override
     public ResourceLocation getTextureLocation(InvasionZombieRenderState state) {
-        if (!pigman && state.brute && state.isBaby) {
-            return BABY_BRUTE_TEXTURE;
-        }
         List<ResourceLocation> textures = pigman ? PIGMAN_TEXTURES : ZOMBIE_TEXTURES;
         int index = state.textureId;
         return textures.get(index >= 0 && index < textures.size() ? index : 0);
@@ -158,9 +145,6 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         @Override
         public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light,
                 InvasionZombieRenderState state, float yRot, float xRot) {
-            if (state.brute && state.isBaby) {
-                return;
-            }
             boolean usesBruteModel = state.brute && !state.isBaby;
             if (usesBruteModel == bruteLayer) {
                 super.submit(poseStack, collector, light, state, yRot, xRot);
