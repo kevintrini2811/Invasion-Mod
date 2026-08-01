@@ -68,7 +68,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 state -> state.brute
                         ? state.headEquipment
                         : ItemStack.EMPTY,
-                0.0F, 0.0F, 0.55F));
+                0.0F, 0.0F, 0.35F));
 
         HumanoidModel<InvasionZombieRenderState> emptyHead =
                 new LargeZombieModel(LargeZombieModel.createArmorBodyLayer(
