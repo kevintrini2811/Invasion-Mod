@@ -134,6 +134,10 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
         this.countsTowardMobCap = countsTowardMobCap;
     }
 
+    public final boolean countsTowardMobCap() {
+        return countsTowardMobCap;
+    }
+
     protected void sunlightDamageTick() {
         setSecondsOnFire(8);
     }
