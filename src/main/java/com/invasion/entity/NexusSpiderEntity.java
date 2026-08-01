@@ -35,6 +35,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -91,6 +92,22 @@ public class NexusSpiderEntity extends Spider
         return slot == EquipmentSlot.HEAD
                 && isEquippableInSlot(stack, slot)
                 && canReplaceCurrentItem(stack, getItemBySlot(slot), slot);
+    }
+
+    @Override
+    protected void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
+        if (tickCount % 5 != 0) {
+            return;
+        }
+        for (ItemEntity item : world.getEntitiesOfClass(
+                ItemEntity.class,
+                getBoundingBox().inflate(1.25D),
+                candidate -> !candidate.hasPickUpDelay()
+                        && wantsToPickUp(world, candidate.getItem()))) {
+            com.invasion.compat.AsyncCompatibility.pickUpEquipment(
+                    this, world, item);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {

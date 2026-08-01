@@ -25,6 +25,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -158,6 +159,16 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected void customServerAiStep(ServerLevel level) {
         super.customServerAiStep(level);
+        if (tickCount % 5 == 0) {
+            for (ItemEntity item : level.getEntitiesOfClass(
+                    ItemEntity.class,
+                    getBoundingBox().inflate(1.25D),
+                    candidate -> !candidate.hasPickUpDelay()
+                            && wantsToPickUp(level, candidate.getItem()))) {
+                com.invasion.compat.AsyncCompatibility.pickUpEquipment(
+                        this, level, item);
+            }
+        }
         LivingEntity target = getTarget();
         if (target != null && distanceToSqr(target) > 256 && tickCount % 10 == 0) {
             teleportTowards(target);
