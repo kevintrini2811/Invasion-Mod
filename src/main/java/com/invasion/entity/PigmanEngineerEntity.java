@@ -54,6 +54,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private static final int BRIDGE_PLANK_BUILD_TIME = 45;
     private static final int TOWER_PLANK_BUILD_TIME = 45;
     private static final int TOWER_LADDER_BUILD_TIME = 25;
+    private static final int TOWER_INTERRUPTION_TIMEOUT = 20 * 10;
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
@@ -69,6 +70,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private boolean buildingTower;
     private int towerBuildCooldown;
+    private int towerInterruptedTicks;
     private BlockPos towerBuildPosition;
 
 
@@ -147,8 +149,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         super.customServerAiStep();
         ServerLevel serverLevel = (ServerLevel) level();
         if (buildingTower && isTowerBuildInterrupted()) {
-            returnToTowerBuildPosition();
+            towerInterruptedTicks++;
+            if (towerInterruptedTicks >= TOWER_INTERRUPTION_TIMEOUT) {
+                cancelStalledTowerBuild();
+            } else {
+                returnToTowerBuildPosition();
+            }
         } else {
+            towerInterruptedTicks = 0;
             terrainModifier.onUpdate();
         }
         towerBuildCooldown = Math.max(0, towerBuildCooldown - 1);
@@ -387,11 +395,13 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         stopHorizontalMovementForTower();
         buildingTower = true;
+        towerInterruptedTicks = 0;
         towerBuildPosition = basePos;
         boolean accepted = terrainModifier.requestTask(
                 entries,
                 status -> {
                     buildingTower = false;
+                    towerInterruptedTicks = 0;
                     towerBuildPosition = null;
                     towerBuildCooldown = status == Notifiable.Status.SUCCESS
                             ? 20
@@ -405,6 +415,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 null);
         if (!accepted) {
             buildingTower = false;
+            towerInterruptedTicks = 0;
             towerBuildPosition = null;
         }
         return accepted;
@@ -445,8 +456,16 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             return;
         }
         if (getNavigation() instanceof BuilderIMMobNavigation navigation) {
-            navigation.returnToTowerBuild(towerBuildPosition);
+            if (navigation.isDone() || towerInterruptedTicks % 20 == 1) {
+                navigation.returnToTowerBuild(towerBuildPosition);
+            }
         }
+    }
+
+    private void cancelStalledTowerBuild() {
+        terrainModifier.cancelTask(Notifiable.Status.OUT_OF_RANGE);
+        getNavigation().stop();
+        towerBuildCooldown = 80;
     }
 
     private boolean canBuildTowerAt(BlockPos ladderBase, BlockPos towerBase) {
