@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer;
+import net.minecraft.client.renderer.entity.layers.EnderEyesLayer;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -129,6 +130,7 @@ public final class VariantMobRenderers {
         private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace("textures/entity/enderman/enderman.png");
         public Enderman(EntityRendererProvider.Context c) {
             super(c, new EndermanModel<>(c.bakeLayer(ModelLayers.ENDERMAN)), 0.5F);
+            addLayer(new EnderEyesLayer<>(this));
             addLayer(new EndermanCarriedBlockLayer(this,
                     c.getBlockRenderDispatcher()));
             addLayer(new HumanoidArmorLayer<>(this,
@@ -137,6 +139,13 @@ public final class VariantMobRenderers {
                     new HumanoidModel<IMEndermanEntity>(
                             c.bakeLayer(ModelLayers.ZOMBIE_OUTER_ARMOR)),
                     c.getModelManager()));
+        }
+        @Override
+        public void render(IMEndermanEntity entity, float yaw, float tickDelta,
+                PoseStack pose, MultiBufferSource buffers, int light) {
+            model.carrying = entity.isCarryingBlock();
+            model.creepy = entity.isAggressive();
+            super.render(entity, yaw, tickDelta, pose, buffers, light);
         }
         @Override public ResourceLocation getTextureLocation(IMEndermanEntity e) { return TEXTURE; }
     }
