@@ -6,7 +6,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 
 /** A standard IM zombie with twice the movement and mining speed. */
 public final class EntityIMSpeedyZombie extends EntityIMZombie {
@@ -25,6 +28,27 @@ public final class EntityIMSpeedyZombie extends EntityIMZombie {
     @Override
     public float getDiggingSpeedMultiplier() {
         return 2.0F;
+    }
+
+    private boolean isInSoulFire() {
+        return level().getBlockState(blockPosition()).is(Blocks.SOUL_FIRE);
+    }
+
+    @Override
+    public boolean hurtServer(
+            ServerLevel world, DamageSource source, float damage) {
+        if (source.is(DamageTypeTags.IS_FIRE) && isInSoulFire()) {
+            return false;
+        }
+        return super.hurtServer(world, source, damage);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (isInSoulFire()) {
+            setRemainingFireTicks(0);
+        }
     }
 
     public static void convertFrom(EntityIMZombie source) {
