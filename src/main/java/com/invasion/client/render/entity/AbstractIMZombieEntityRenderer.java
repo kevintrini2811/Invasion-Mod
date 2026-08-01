@@ -72,8 +72,12 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
 
     @Override
     public void render(AbstractIMZombieEntity entity, float yaw, float tickDelta, PoseStack matrices, MultiBufferSource vertices, int light) {
-        this.model = isBrute(entity) ? bigModel : normalModel;
+        this.model = usesBruteModel(entity) ? bigModel : normalModel;
         super.render(entity, yaw, tickDelta, matrices, vertices, light);
+    }
+
+    private boolean usesBruteModel(AbstractIMZombieEntity entity) {
+        return isBrute(entity) && !entity.isBaby();
     }
 
     protected boolean isBrute(AbstractIMZombieEntity entity) {
