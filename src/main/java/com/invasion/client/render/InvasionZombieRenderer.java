@@ -52,10 +52,8 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
 
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> normalArmor = ArmorModelSet.bake(
                 ModelLayers.ZOMBIE_ARMOR, context.getModelSet(), HumanoidModel::new);
-        ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> babyArmor = ArmorModelSet.bake(
-                ModelLayers.ZOMBIE_BABY_ARMOR,
-                context.getModelSet(),
-                HumanoidModel::new);
+        ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> babyArmor =
+                createLegacyUvBabyArmor();
         addLayer(new VariantArmorLayer(
                 this, normalArmor, babyArmor, context, false));
         addLayer(new HeadArmorLayer<>(
@@ -127,6 +125,16 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 CubeDeformation.NONE, 0.0F);
         return LayerDefinition.create(
                 HumanoidModel.BABY_TRANSFORMER.apply(adultMesh), 64, 64);
+    }
+
+    private static ArmorModelSet<HumanoidModel<InvasionZombieRenderState>>
+            createLegacyUvBabyArmor() {
+        return HumanoidModel.createArmorMeshSet(
+                        new CubeDeformation(0.5F),
+                        new CubeDeformation(1.0F))
+                .map(mesh -> new HumanoidModel<>(LayerDefinition.create(
+                        HumanoidModel.BABY_TRANSFORMER.apply(mesh),
+                        64, 32).bakeRoot()));
     }
 
     private final class VariantArmorLayer extends HumanoidArmorLayer<
