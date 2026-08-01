@@ -15,6 +15,12 @@ public final class SpeedyZombieEntityRenderer
     }
 
     @Override
+    protected boolean isBrute(AbstractIMZombieEntity entity) {
+        // The supplied skin targets the standard humanoid zombie geometry.
+        return false;
+    }
+
+    @Override
     public ResourceLocation getTextureLocation(AbstractIMZombieEntity entity) {
         return TEXTURE;
     }
