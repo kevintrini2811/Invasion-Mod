@@ -66,7 +66,7 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 state -> state.brute && !state.isBaby
                         ? state.headEquipment
                         : ItemStack.EMPTY,
-                0.0F, 0.0F, 0.7F));
+                -1.0F, 0.0F, 0.8F));
         addLayer(new HeadArmorLayer<>(
                 this, context,
                 state -> state.brute && state.isBaby
