@@ -6,6 +6,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider.Context;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.resources.ResourceLocation;
 
 public class PigmanEngineerEntityRenderer extends HumanoidMobRenderer<PigmanEngineerEntity, HumanoidModel<PigmanEngineerEntity>> {
@@ -13,6 +14,11 @@ public class PigmanEngineerEntityRenderer extends HumanoidMobRenderer<PigmanEngi
 
     public PigmanEngineerEntityRenderer(Context ctx) {
         super(ctx, new HumanoidModel<>(ctx.bakeLayer(ModelLayers.ZOMBIE)), 0.5F);
+        addLayer(new HumanoidArmorLayer<>(
+                this,
+                new HumanoidModel<>(ctx.bakeLayer(ModelLayers.ZOMBIE_INNER_ARMOR)),
+                new HumanoidModel<>(ctx.bakeLayer(ModelLayers.ZOMBIE_OUTER_ARMOR)),
+                ctx.getModelManager()));
     }
 
     @Override
