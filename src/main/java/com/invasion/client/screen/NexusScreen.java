@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Inventory;
 
 public class NexusScreen extends AbstractContainerScreen<NexusScreenHandler> {
     private static final Identifier BACKGROUND = InvasionMod.id("textures/gui/nexus.png");
+    private static final int TEXT_COLOR = 0xFF404040;
 
     public NexusScreen(NexusScreenHandler container, Inventory inventory, Component title) {
         super(container, inventory, title);
@@ -19,33 +20,33 @@ public class NexusScreen extends AbstractContainerScreen<NexusScreenHandler> {
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor context, int mouseX, int mouseY) {
-        context.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0x404040, false);
+        context.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT_COLOR, false);
         context.text(font, Component.translatable("invmod.gui.nexus.title",
-                menu.getLevel()), 46, 6, 0x404040, false);
+                menu.getLevel()), 46, 6, TEXT_COLOR, false);
         context.text(font, Component.translatable("invmod.gui.nexus.mobskilled",
-                menu.getKills()), 96, 60, 0x404040, false);
-        context.text(font, "R: " + menu.getSpawnRadius(), 142, 72, 0x404040, false);
+                menu.getKills()), 96, 60, TEXT_COLOR, false);
+        context.text(font, "R: " + menu.getSpawnRadius(), 142, 72, TEXT_COLOR, false);
 
         if (menu.getMode() == Mode.STARTED || menu.getMode() == Mode.WAITING || menu.getMode() == Mode.DEBUG) {
             context.text(font, Component.translatable("invmod.gui.nexus.activated"),
-                    13, 62, 4210752, false);
+                    13, 62, TEXT_COLOR, false);
             context.text(font, menu.getMode() == Mode.DEBUG
                             ? Component.translatable("invmod.gui.nexus.debug")
                             : Component.translatable("invmod.gui.nexus.wave",
                                     menu.getCurrentWave()),
-                    55, 37, 0x404040, false);
+                    55, 37, TEXT_COLOR, false);
         } else if (menu.getMode() == Mode.CONTINUOUS) {
             context.text(font, Component.translatable("invmod.gui.nexus.power"),
-                    56, 31, 4210752, false);
-            context.text(font, "" + menu.getPowerLevel(), 61, 44, 0x404040, false);
+                    56, 31, TEXT_COLOR, false);
+            context.text(font, "" + menu.getPowerLevel(), 61, 44, TEXT_COLOR, false);
         }
 
         if (menu.isActivating() && menu.getMode() == Mode.STOPPED) {
             context.text(font, Component.translatable("invmod.gui.nexus.activating"),
-                    13, 62, 0x404040, false);
+                    13, 62, TEXT_COLOR, false);
             if (menu.getMode() != Mode.STABLE) {
                 context.text(font, Component.translatable("invmod.gui.nexus.areyousure"),
-                        8, 72, 0x404040, false);
+                        8, 72, TEXT_COLOR, false);
             }
         }
     }
