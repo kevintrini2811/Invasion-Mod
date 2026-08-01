@@ -59,6 +59,24 @@ public final class VanillaMobSpawnReplacement {
         if (!(event.getLevel() instanceof ServerLevel world)) {
             return;
         }
+
+        // EntityJoinLevelEvent can run while a saved nexus is still being
+        // restored. Periodically checking loaded entities makes sure those
+        // mobs are not permanently missed once the nexus is active.
+        if (world.getGameTime() % 20L == 0L
+                && WorldNexusStorage.of(world).getNexus()
+                        .filter(nexus -> nexus.isActive())
+                        .isPresent()) {
+            Set<UUID> pending = PENDING.computeIfAbsent(
+                    world, ignored -> new HashSet<>());
+            for (Entity entity : world.getAllEntities()) {
+                if (entity instanceof Mob mob
+                        && isReplaceableType(mob.getType())) {
+                    pending.add(mob.getUUID());
+                }
+            }
+        }
+
         Set<UUID> pending = PENDING.remove(world);
         if (pending == null || pending.isEmpty()) {
             return;
@@ -87,6 +105,8 @@ public final class VanillaMobSpawnReplacement {
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
         if (mob.getType() == EntityType.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
+        } else if (mob.getType() == EntityType.ZOMBIE_VILLAGER) {
+            convert(mob, InvEntities.ZOMBIE_VILLAGER, nexus);
         } else if (mob.getType() == EntityType.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityType.DROWNED) {
@@ -116,6 +136,7 @@ public final class VanillaMobSpawnReplacement {
 
     private static boolean isReplaceableType(EntityType<?> type) {
         return type == EntityType.ZOMBIE
+                || type == EntityType.ZOMBIE_VILLAGER
                 || type == EntityType.HUSK
                 || type == EntityType.DROWNED
                 || type == EntityType.ZOMBIFIED_PIGLIN
