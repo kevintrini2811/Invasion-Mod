@@ -200,13 +200,13 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
-        output.putBoolean("isBaby", isBaby());
+        output.putBoolean("IsBaby", isBaby());
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        setBaby(input.getBoolean("isBaby"));
+        setBaby(input.getBoolean("IsBaby") || input.getBoolean("isBaby"));
     }
 
     @Override
