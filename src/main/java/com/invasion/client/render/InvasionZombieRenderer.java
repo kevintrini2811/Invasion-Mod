@@ -38,6 +38,8 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
 
     private final HumanoidModel<InvasionZombieRenderState> normalModel;
     private final HumanoidModel<InvasionZombieRenderState> bruteModel;
+    private final HumanoidModel<InvasionZombieRenderState> normalBabyModel;
+    private final HumanoidModel<InvasionZombieRenderState> bruteBabyModel;
     private final boolean pigman;
 
     public InvasionZombieRenderer(EntityRendererProvider.Context context, boolean pigman) {
@@ -48,6 +50,9 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                 0.5F);
         normalModel = model;
         bruteModel = new LargeZombieModel(LargeZombieModel.createBodyLayer().bakeRoot());
+        normalBabyModel = new ZombieModel<>(createLegacyUvBabyLayer().bakeRoot());
+        bruteBabyModel = new LargeZombieModel(
+                LargeZombieModel.createBabyBodyLayer().bakeRoot());
         this.pigman = pigman;
 
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> normalArmor = ArmorModelSet.bake(
@@ -100,6 +105,8 @@ public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         // Select the legacy brute model at the source so its 10x5 torso is retained.
         ((AgeableMobRendererAccessor) (Object) this).invasion$setAdultModel(
                 state.brute ? bruteModel : normalModel);
+        ((AgeableMobRendererAccessor) (Object) this).invasion$setBabyModel(
+                state.brute ? bruteBabyModel : normalBabyModel);
         super.submit(state, poseStack, collector, cameraState);
     }
 
