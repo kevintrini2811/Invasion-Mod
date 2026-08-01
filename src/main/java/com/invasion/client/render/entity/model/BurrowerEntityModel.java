@@ -64,6 +64,10 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
                             .multiply(POSITION_TRANSFORM),
                     segment.rotation());
         }
+
+        // Keep the head aligned with the smoothed body chain instead of the
+        // separately synchronized navigation rotation.
+        segments[0] = new PosRotate3D(Vec3.ZERO, segments[1].rotation());
     }
 
     protected ModelPart getPart(int i) {

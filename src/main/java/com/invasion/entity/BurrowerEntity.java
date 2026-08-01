@@ -58,6 +58,7 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     public BurrowerEntity(EntityType<BurrowerEntity> type, Level world) {
         super(type, world);
+        setNoGravity(true);
         Arrays.fill(segments3D, PosRotate3D.ZERO);
         Arrays.fill(segments3DLastTick, PosRotate3D.ZERO);
         getNavigatorNew().setCanDestroyBlocks(true);
