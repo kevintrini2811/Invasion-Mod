@@ -21,7 +21,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 
-public final class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
+public class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         extends HumanoidMobRenderer<T, InvasionZombieRenderState, HumanoidModel<InvasionZombieRenderState>> {
     private static final List<Identifier> ZOMBIE_TEXTURES = List.of(
             texture("entity/zombie/old_zombie_t1.png"),

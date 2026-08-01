@@ -64,6 +64,7 @@
   "itemGroup.invmod.invasion_mod": "Invasion Mod",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.speedy_zombie": "IM Speedy Zombie",
     "entity.invmod.husk": "IM Wüstenzombie",
     "entity.invmod.drowned": "IM Ertrunkener",
     "entity.invmod.zombie_villager": "IM Zombie-Dorfbewohner",

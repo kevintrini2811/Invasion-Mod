@@ -21,6 +21,9 @@ public final class InvRenderers {
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(InvEntities.ZOMBIE,
                 context -> new InvasionZombieRenderer<>(context, false));
+        event.registerEntityRenderer(
+                InvEntities.SPEEDY_ZOMBIE,
+                SpeedyZombieRenderer::new);
         event.registerEntityRenderer(InvEntities.HUSK, InvHuskRenderer::new);
         event.registerEntityRenderer(InvEntities.DROWNED, InvDrownedRenderer::new);
         event.registerEntityRenderer(
