@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import com.invasion.entity.NexusEntity;
+import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.WorldNexusStorage;
 
 import net.minecraft.server.level.ServerLevel;
@@ -67,9 +68,11 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
                                 player.getBoundingBox().inflate(16),
                                 mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()))
                         .forEach(mob -> {
-                            if (mob instanceof NexusEntity nexusMob) {
+                            if (mob instanceof IHasNexus nexusMob) {
                                 nexusMob.setNexus(nexus);
-                                nexusMob.resetHealth();
+                                if (mob instanceof NexusEntity configuredMob) {
+                                    configuredMob.resetHealth();
+                                }
                             }
                         }));
         return result;
