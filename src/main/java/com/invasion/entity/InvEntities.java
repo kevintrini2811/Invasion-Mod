@@ -12,6 +12,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
@@ -106,6 +107,9 @@ public interface InvEntities {
                     .sized(0.7F, 0.7F).clientTrackingRange(10).updateInterval(2).noSummon().noSave());
     EntityType<ImpEnitty> IMP = register("imp", EntityType.Builder.<ImpEnitty>of(ImpEnitty::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).clientTrackingRange(8));
+    EntityType<IMBlazeEntity> BLAZE = register("blaze",
+            EntityType.Builder.<IMBlazeEntity>of(IMBlazeEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(0.6F, 1.8F).clientTrackingRange(8));
     EntityType<IMEndermanEntity> ENDERMAN = register("enderman", EntityType.Builder.<IMEndermanEntity>of(IMEndermanEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 2.9F).clientTrackingRange(8));
     EntityType<IMPhantomEntity> PHANTOM = register(
@@ -182,6 +186,7 @@ public interface InvEntities {
         event.put(THROWER, ThrowerEntity.createT1V0Attributes().build());
         event.put(BURROWER, BurrowerEntity.createAttributes().build());
         event.put(IMP, ImpEnitty.createAttributes().build());
+        event.put(BLAZE, Blaze.createAttributes().build());
         event.put(ENDERMAN, IMEndermanEntity.createAttributes().build());
         event.put(PHANTOM, IMPhantomEntity.createAttributes().build());
         event.put(WOLF, IMWolfEntity.createAttributes().build());

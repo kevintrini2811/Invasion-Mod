@@ -154,6 +154,9 @@ public class WaveBuilder {
         EntityPattern tierThreePigman = waveNumber >= 15
                 ? EntityPatterns.ZOMBIE_PIGMAN_T3_WITH_ZOGLIN
                 : EntityPatterns.ZOMBIE_PIGMAN_T3_ANY;
+        EntityPattern imp = waveNumber >= 13
+                ? EntityPatterns.IMP_T1_WITH_BLAZE
+                : EntityPatterns.IMP_T1;
 
         // Hilfsfunktion: Nur ins Log schreiben (kein Chat)
         java.util.function.Consumer<String> announce = msg ->
@@ -174,7 +177,7 @@ public class WaveBuilder {
                     .entry(EntityPatterns.THROWER_T2, 0.5F)
                     .entry(EntityPatterns.BURROWER, 0.15F)
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F)
-                    .entry(EntityPatterns.IMP_T1, 2F)
+                    .entry(imp, 2F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.2F)
                     .entry(EntityPatterns.PHANTOM_T1, 0.12F);
 
@@ -219,7 +222,7 @@ public class WaveBuilder {
                         .entry(EntityPatterns.BURROWER, 0.12F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 0.5F)
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.42F)
-                        .entry(EntityPatterns.IMP_T1, 0.4F)
+                        .entry(imp, 0.4F)
                         .entry(EntityPatterns.PHANTOM_T1, 0.08F)
                         .begin((int) (timeScale * 65000))
                         .end((int) (timeScale * 67000))
