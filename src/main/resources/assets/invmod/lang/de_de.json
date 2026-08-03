@@ -157,6 +157,8 @@
   "invmod.message.bone.debugfailed": "Der Nexus konnte nicht im Debug-Modus aktiviert werden.",
     "entity.invmod.blaze": "IM Blaze",
     "item.invmod.blaze_spawn_egg": "IM-Blaze-Spawn-Ei",
+    "entity.invmod.silverfish": "IM-Silberfisch",
+    "item.invmod.silverfish_spawn_egg": "IM-Silberfisch-Spawn-Ei",
 
     "invmod.subtitle.nexus_chimes": "Nexus erklingt",
   "invmod.subtitle.nexus_rumbles": "Nexus rumort",

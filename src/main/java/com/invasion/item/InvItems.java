@@ -109,6 +109,8 @@ public interface InvItems {
     Item IMP_SPAWN_EGG = register("imp_spawn_egg", p -> createSpawnEgg(p, InvEntities.IMP, 0xB40113, 0xFF0000));
     Item BLAZE_SPAWN_EGG = register("blaze_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.BLAZE, 0xF6B201, 0xFFF87E));
+    Item SILVERFISH_SPAWN_EGG = register("silverfish_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.SILVERFISH, 0x6E6E6E, 0x303030));
     Item ENDERMAN_SPAWN_EGG = register("enderman_spawn_egg", p -> createSpawnEgg(p, InvEntities.ENDERMAN, 0x161616, 0xE079FA));
     Item PHANTOM_SPAWN_EGG = register("phantom_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.PHANTOM, 0x43518A, 0x88A3BE));

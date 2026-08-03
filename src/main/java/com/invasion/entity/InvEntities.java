@@ -13,6 +13,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
@@ -118,6 +119,11 @@ public interface InvEntities {
             EntityType.Builder.<IMBlazeEntity>of(IMBlazeEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(0.6F, 1.8F).eyeHeight(1.53F)
                     .clientTrackingRange(8));
+    EntityType<IMSilverfishEntity> SILVERFISH = register("silverfish",
+            EntityType.Builder.<IMSilverfishEntity>of(
+                            IMSilverfishEntity::new, MobCategory.MONSTER)
+                    .sized(0.4F, 0.3F).eyeHeight(0.13F)
+                    .clientTrackingRange(8));
     EntityType<IMEndermanEntity> ENDERMAN = register("enderman", EntityType.Builder.<IMEndermanEntity>of(IMEndermanEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 2.9F).eyeHeight(2.55F).clientTrackingRange(8));
     EntityType<IMPhantomEntity> PHANTOM = register(
@@ -195,6 +201,7 @@ public interface InvEntities {
         event.put(BURROWER, BurrowerEntity.createAttributes().build());
         event.put(IMP, ImpEnitty.createAttributes().build());
         event.put(BLAZE, net.minecraft.world.entity.monster.Blaze.createAttributes().build());
+        event.put(SILVERFISH, Silverfish.createAttributes().build());
         event.put(ENDERMAN, IMEndermanEntity.createAttributes().build());
         event.put(PHANTOM, IMPhantomEntity.createAttributes().build());
         event.put(WOLF, IMWolfEntity.createAttributes().build());
