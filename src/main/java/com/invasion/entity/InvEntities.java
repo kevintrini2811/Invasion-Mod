@@ -195,6 +195,7 @@ public interface InvEntities {
     }
 
     static void bootstrap() {
+        IMBlazeEntity.bootstrap();
         InvasionConfig config = InvasionMod.getConfig();
 
         if (config.maxNightMobs != 70) {

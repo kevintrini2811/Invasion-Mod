@@ -5,6 +5,7 @@ import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.VanillaMobSpawnReplacement;
+import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
@@ -74,6 +75,7 @@ public class InvasionMod {
         MinecraftForge.EVENT_BUS.addListener(this::fuelBurnTime);
 
         VanillaMobSpawnReplacement.bootstrap();
+        NexusBoundMobLifecycle.bootstrap();
         VillagerResurrectionHandler.bootstrap();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {

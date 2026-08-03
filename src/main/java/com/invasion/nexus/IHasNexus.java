@@ -78,6 +78,11 @@ public interface IHasNexus {
             return nexus;
         }
 
+        /** True while saved Nexus identity still exists, even if it cannot resolve. */
+        public boolean hasBinding() {
+            return nexusId != null;
+        }
+
         public void set(@Nullable NexusAccess nexus) {
             nexusId = nexus == null ? null : nexus.getUuid();
             globalPos = nexus == null ? null : GlobalPos.of(nexus.getWorld().dimension(), nexus.getOrigin());
