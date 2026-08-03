@@ -211,6 +211,7 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(BURROWER, BurrowerEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(IMP, ImpEnitty.createAttributes());
         FabricDefaultAttributeRegistry.register(BLAZE, net.minecraft.world.entity.monster.Blaze.createAttributes());
+        FabricDefaultAttributeRegistry.register(SILVERFISH, Silverfish.createAttributes());
         FabricDefaultAttributeRegistry.register(ENDERMAN, IMEndermanEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(PHANTOM, IMPhantomEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(WOLF, IMWolfEntity.createAttributes());
