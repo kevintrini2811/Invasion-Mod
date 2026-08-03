@@ -4,6 +4,7 @@ import com.invasion.block.InvBlocks;
 import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.entity.InvEntities;
+import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
 import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.VillagerResurrectionHandler;
@@ -83,6 +84,7 @@ public class InvasionMod {
         MinecraftForge.EVENT_BUS.addListener(this::playerChangedDimension);
         MinecraftForge.EVENT_BUS.addListener(this::fuelBurnTime);
 
+        BoundIMMobRegistry.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
         NexusBoundMobLifecycle.bootstrap();
         VillagerResurrectionHandler.bootstrap();

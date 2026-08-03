@@ -6,6 +6,7 @@ import net.minecraft.world.entity.EntitySelector;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import com.invasion.InvasionMod;
+import com.invasion.entity.BoundIMMobRegistry;
 
 public interface Combatant<T extends LivingEntity> extends IHasNexus {
     Predicate<Entity> PREDICATE = EntitySelector.LIVING_ENTITY_STILL_ALIVE.and(EntitySelector.NO_CREATIVE_OR_SPECTATOR).and(i -> i instanceof Combatant);
@@ -14,6 +15,12 @@ public interface Combatant<T extends LivingEntity> extends IHasNexus {
     String getLegacyName();
 
     T asEntity();
+
+    @Override
+    default void setNexus(NexusAccess nexus) {
+        getNexusHandle().set(nexus);
+        BoundIMMobRegistry.update(asEntity(), nexus);
+    }
 
     default void resetHealth() {
         T self = asEntity();
