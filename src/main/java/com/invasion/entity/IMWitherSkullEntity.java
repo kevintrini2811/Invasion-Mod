@@ -34,16 +34,24 @@ public final class IMWitherSkullEntity extends WitherSkull {
 
     @Override
     protected void onHit(HitResult hitResult) {
-        if (level() instanceof ServerLevel
+        IMWitherEntity nexusWither = level() instanceof ServerLevel
                 && hitResult instanceof BlockHitResult blockHit
                 && getOwner() instanceof IMWitherEntity wither
                 && wither.hasNexus()
                 && wither.getNexus().isActive()
                 && blockHit.getBlockPos().equals(
-                        wither.getNexus().getOrigin())) {
-            wither.getNexus().damage(
-                    damageSources().witherSkull(this, wither), NEXUS_DAMAGE);
-        }
+                        wither.getNexus().getOrigin())
+                ? wither
+                : null;
+
+        // Resolve and discard the projectile before Nexus damage can end the
+        // invasion and synchronously remove its owner. Continuing vanilla hit
+        // handling with an already removed owner can stall the server tick.
         super.onHit(hitResult);
+
+        if (nexusWither != null && nexusWither.hasNexus()) {
+            nexusWither.getNexus().damage(
+                    damageSources().witherSkull(this, nexusWither), NEXUS_DAMAGE);
+        }
     }
 }
