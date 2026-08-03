@@ -6,20 +6,19 @@ import java.util.Optional;
 import com.invasion.InvMobEffects;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownSplashPotion;
+import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.HitResult;
 
-public final class IMWitchPotionEntity extends ThrownSplashPotion {
+public final class IMWitchPotionEntity extends ThrownPotion {
     private static final int SUPPORT_DURATION = 20 * 20;
     private static final int HARM_DURATION = 10 * 20;
     private Type invasionType = Type.HEALING;
@@ -41,28 +40,30 @@ public final class IMWitchPotionEntity extends ThrownSplashPotion {
     private static ItemStack createPotionStack(Type type) {
         ItemStack stack = new ItemStack(Items.SPLASH_POTION);
         stack.set(DataComponents.POTION_CONTENTS, new PotionContents(
-                Optional.empty(), Optional.of(type.color), List.of(),
-                Optional.of(type.translationKey)));
+                Optional.empty(), Optional.of(type.color), List.of()));
         return stack;
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putInt("invasionPotionType", invasionType.ordinal());
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         Type[] values = Type.values();
         invasionType = values[Math.clamp(
-                input.getIntOr("invasionPotionType", 0), 0, values.length - 1)];
+                input.getInt("invasionPotionType"), 0, values.length - 1)];
     }
 
     @Override
-    public void onHitAsPotion(
-            ServerLevel level, ItemStack stack, HitResult hitResult) {
+    protected void onHit(HitResult hitResult) {
+        super.onHit(hitResult);
+        if (!(level() instanceof ServerLevel level)) {
+            return;
+        }
         for (LivingEntity entity : level.getEntitiesOfClass(
                 LivingEntity.class, getBoundingBox().inflate(4.0D, 2.0D, 4.0D),
                 LivingEntity::isAlive)) {
@@ -87,9 +88,9 @@ public final class IMWitchPotionEntity extends ThrownSplashPotion {
             case STRENGTH -> entity.addEffect(new MobEffectInstance(
                     InvMobEffects.INVASION_STRENGTH, SUPPORT_DURATION), getOwner());
             case SPEED -> entity.addEffect(new MobEffectInstance(
-                    MobEffects.SPEED, SUPPORT_DURATION, 1), getOwner());
+                    MobEffects.MOVEMENT_SPEED, SUPPORT_DURATION, 1), getOwner());
             case HASTE -> entity.addEffect(new MobEffectInstance(
-                    MobEffects.HASTE, SUPPORT_DURATION, 1), getOwner());
+                    MobEffects.DIG_SPEED, SUPPORT_DURATION, 1), getOwner());
             default -> {
             }
         }
@@ -100,7 +101,7 @@ public final class IMWitchPotionEntity extends ThrownSplashPotion {
         STRENGTH(true, 0xB61E1E, "invasion_strength", null),
         SPEED(true, 0x7CAFC6, "invasion_speed", null),
         HASTE(true, 0xD9C043, "invasion_haste", null),
-        NAUSEA(false, 0x551D4A, "invasion_nausea", MobEffects.NAUSEA),
+        NAUSEA(false, 0x551D4A, "invasion_nausea", MobEffects.CONFUSION),
         POISON(false, 0x4E9331, "invasion_poison", MobEffects.POISON),
         WITHER(false, 0x352A27, "invasion_wither", MobEffects.WITHER),
         BLINDNESS(false, 0x1F1F23, "invasion_blindness", MobEffects.BLINDNESS),

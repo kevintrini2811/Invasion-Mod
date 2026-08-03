@@ -25,8 +25,7 @@ public final class InvMobEffects {
     private static Holder<MobEffect> register(String name, MobEffect effect) {
         var id = InvasionMod.id(name);
         var key = ResourceKey.create(BuiltInRegistries.MOB_EFFECT.key(), id);
-        Registry.register(BuiltInRegistries.MOB_EFFECT, id, effect);
-        return BuiltInRegistries.MOB_EFFECT.get(key).orElseThrow();
+        return Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, key, effect);
     }
 
     public static void bootstrap() {
