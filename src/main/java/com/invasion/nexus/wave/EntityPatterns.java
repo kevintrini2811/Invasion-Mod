@@ -51,6 +51,9 @@ public interface EntityPatterns {
     EntityPattern CREEPER_T1_BASIC = register("creeper_t1_basic", new EntityPattern.Builder(InvEntities.CREEPER).addTier(1, 1));
 
     EntityPattern IMP_T1 = register("imp_t1", new EntityPattern.Builder(InvEntities.IMP).addTier(1, 1));
+    EntityPattern IMP_T1_WITH_BLAZE = register("imp_t1_with_blaze",
+            new EntityPattern.Builder(InvEntities.IMP)
+                    .addType(InvEntities.BLAZE, 0.25F).addTier(1, 1));
     EntityPattern ENDERMAN_T1 = register("enderman_t1", new EntityPattern.Builder(InvEntities.ENDERMAN).addTier(1, 1));
     EntityPattern PHANTOM_T1 = register("phantom_t1",
             new EntityPattern.Builder(InvEntities.PHANTOM).addTier(1, 1));

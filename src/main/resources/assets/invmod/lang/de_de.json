@@ -155,7 +155,10 @@
   "invmod.message.bone.debugactivated": "Nexus im Debug-Modus aktiviert. Es werden keine Wellen erzeugt.",
   "invmod.message.bone.debugdisabled": "Debug-Modus des Nexus beendet.",
   "invmod.message.bone.debugfailed": "Der Nexus konnte nicht im Debug-Modus aktiviert werden.",
-  "invmod.subtitle.nexus_chimes": "Nexus erklingt",
+    "entity.invmod.blaze": "IM Blaze",
+    "item.invmod.blaze_spawn_egg": "IM-Blaze-Spawn-Ei",
+
+    "invmod.subtitle.nexus_chimes": "Nexus erklingt",
   "invmod.subtitle.nexus_rumbles": "Nexus rumort",
   "invmod.subtitle.enemy_explodes": "Gegner explodiert",
   "invmod.subtitle.enemy_crashes": "Gegner schlägt auf",
