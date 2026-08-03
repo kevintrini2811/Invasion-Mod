@@ -24,10 +24,13 @@ import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
+    private static final Map<ServerLevel, Set<UUID>> LOADED_REPLACEABLE =
+            new HashMap<>();
     private static boolean converting;
 
     private VanillaMobSpawnReplacement() {
@@ -35,6 +38,7 @@ public final class VanillaMobSpawnReplacement {
 
     public static void bootstrap() {
         NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
+        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::removeVanillaMob);
         NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
     }
 
@@ -43,16 +47,30 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
         net.minecraft.world.entity.Entity entity = event.getEntity();
-        if (converting
-                || !(entity instanceof Mob mob)
-                || !isReplaceableType(mob.getType())
-                || WorldNexusStorage.of(world).getNexus()
-                        .filter(nexus -> nexus.isActive())
-                        .isEmpty()) {
+        if (converting || !(entity instanceof Mob mob)
+                || !isReplaceableType(mob.getType())) {
             return;
         }
+        LOADED_REPLACEABLE.computeIfAbsent(
+                world, ignored -> new HashSet<>()).add(mob.getUUID());
+        if (WorldNexusStorage.of(world).getNexus()
+                .filter(nexus -> nexus.isActive()).isPresent()) {
+            PENDING.computeIfAbsent(
+                    world, ignored -> new HashSet<>()).add(mob.getUUID());
+        }
+    }
 
-        PENDING.computeIfAbsent(world, ignored -> new HashSet<>()).add(mob.getUUID());
+    private static void removeVanillaMob(EntityLeaveLevelEvent event) {
+        if (!(event.getLevel() instanceof ServerLevel world)) {
+            return;
+        }
+        Set<UUID> loaded = LOADED_REPLACEABLE.get(world);
+        if (loaded != null) {
+            loaded.remove(event.getEntity().getUUID());
+            if (loaded.isEmpty()) {
+                LOADED_REPLACEABLE.remove(world);
+            }
+        }
     }
 
     private static void processQueue(LevelTickEvent.Post event) {
@@ -65,14 +83,10 @@ public final class VanillaMobSpawnReplacement {
                 && WorldNexusStorage.of(world).getNexus()
                         .filter(nexus -> nexus.isActive())
                         .isPresent()) {
-            Set<UUID> pending = PENDING.computeIfAbsent(
-                    world, ignored -> new HashSet<>());
-            for (Entity entity : world.getAllEntities()) {
-                if (entity.getType() == EntityTypes.WITHER
-                        || entity.getType() == EntityTypes.BLAZE
-                        || entity.getType() == EntityTypes.SILVERFISH) {
-                    pending.add(entity.getUUID());
-                }
+            Set<UUID> loaded = LOADED_REPLACEABLE.get(world);
+            if (loaded != null && !loaded.isEmpty()) {
+                PENDING.computeIfAbsent(world, ignored -> new HashSet<>())
+                        .addAll(loaded);
             }
         }
 

@@ -776,10 +776,11 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void bindExistingImMobs() {
-        for (net.minecraft.world.entity.Entity entity
-                : ((ServerLevel)getWorld()).getAllEntities()) {
-            if (entity instanceof Combatant<?> combatant
-                    && entity instanceof LivingEntity living
+        for (Combatant<?> combatant
+                : com.invasion.entity.BoundIMMobRegistry.loaded(
+                        (ServerLevel)getWorld())) {
+            net.minecraft.world.entity.Entity entity = combatant.asEntity();
+            if (entity instanceof LivingEntity living
                     && living.isAlive()
                     && !entity.isRemoved()
                     && !(entity instanceof com.invasion.entity.IMWolfEntity)) {
@@ -829,10 +830,11 @@ public class Nexus implements ControllableNexusAccess {
 
     private void killAllMobs() {
         DamageSource source = getWorld().damageSources().magic();
-        for (net.minecraft.world.entity.Entity entity
-                : ((ServerLevel)getWorld()).getAllEntities()) {
+        for (Combatant<?> combatant
+                : com.invasion.entity.BoundIMMobRegistry.bound(
+                        (ServerLevel)getWorld())) {
+            net.minecraft.world.entity.Entity entity = combatant.asEntity();
             if (entity instanceof LivingEntity mob
-                    && entity instanceof Combatant<?> combatant
                     && !(entity instanceof com.invasion.entity.IMWolfEntity)
                     && combatant.getNexus() == this) {
                 mob.hurt(source, mob.getMaxHealth());

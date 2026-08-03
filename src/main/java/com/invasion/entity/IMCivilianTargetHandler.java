@@ -30,9 +30,9 @@ public final class IMCivilianTargetHandler {
                 || level.getGameTime() % 10L != 0L) {
             return;
         }
-        for (net.minecraft.world.entity.Entity entity : level.getAllEntities()) {
+        for (Combatant<?> combatant : BoundIMMobRegistry.activeBound(level)) {
+            LivingEntity entity = combatant.asEntity();
             if (!(entity instanceof Mob mob)
-                    || !(entity instanceof Combatant<?>)
                     || entity instanceof IMWolfEntity
                     || !mob.isAlive()
                     || mob.getTarget() != null && mob.getTarget().isAlive()) {
