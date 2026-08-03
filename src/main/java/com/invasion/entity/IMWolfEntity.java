@@ -26,6 +26,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +37,6 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
@@ -51,6 +51,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.item.InvItems;
+import com.invasion.nexus.Combatant;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
@@ -79,7 +80,14 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     protected void registerGoals() {
         super.registerGoals();
         goalSelector.removeAllGoals(goal -> goal instanceof FollowOwnerGoal);
-        targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(this, Monster.class, true));
+        targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(
+                this,
+                LivingEntity.class,
+                10,
+                true,
+                false,
+                (target, level) -> target instanceof Combatant<?>
+                        && !(target instanceof IMWolfEntity)));
     }
 
     @Override
