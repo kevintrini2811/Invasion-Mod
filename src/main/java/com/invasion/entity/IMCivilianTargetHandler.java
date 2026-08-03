@@ -10,8 +10,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
 /** Gives every hostile IM mob the shared civilian target set. */
 public final class IMCivilianTargetHandler {
@@ -21,12 +20,12 @@ public final class IMCivilianTargetHandler {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(IMCivilianTargetHandler::tick);
+        ServerTickEvents.START_LEVEL_TICK.register(
+                IMCivilianTargetHandler::tick);
     }
 
-    private static void tick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level)
-                || level.getGameTime() % 10L != 0L) {
+    private static void tick(ServerLevel level) {
+        if (level.getGameTime() % 10L != 0L) {
             return;
         }
         for (net.minecraft.world.entity.Entity entity : level.getAllEntities()) {

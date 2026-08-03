@@ -5,10 +5,10 @@ import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 
 /** Releases IM Silverfish when a permanently infected host dies. */
 public final class InfectionDeathHandler {
@@ -16,11 +16,12 @@ public final class InfectionDeathHandler {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(InfectionDeathHandler::onLivingDeath);
+        ServerLivingEntityEvents.AFTER_DEATH.register(
+                InfectionDeathHandler::onLivingDeath);
     }
 
-    private static void onLivingDeath(LivingDeathEvent event) {
-        LivingEntity host = event.getEntity();
+    private static void onLivingDeath(
+            LivingEntity host, DamageSource damageSource) {
         if (!(host.level() instanceof ServerLevel level)
                 || !host.entityTags().contains(IMSilverfishEntity.INFECTED_TAG)) {
             return;
