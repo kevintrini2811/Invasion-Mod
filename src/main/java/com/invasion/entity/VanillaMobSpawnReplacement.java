@@ -131,6 +131,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.PHANTOM, nexus);
         } else if (mob.getType() == EntityType.ZOGLIN) {
             convert(mob, InvEntities.ZOGLIN, nexus);
+        } else if (mob.getType() == EntityType.WITHER) {
+            convert(mob, InvEntities.WITHER, nexus);
         }
     }
 
@@ -148,7 +150,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.CAVE_SPIDER
                 || type == EntityType.ENDERMAN
                 || type == EntityType.PHANTOM
-                || type == EntityType.ZOGLIN;
+                || type == EntityType.ZOGLIN
+                || type == EntityType.WITHER;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -214,7 +217,9 @@ public final class VanillaMobSpawnReplacement {
             converted.setPersistenceRequired();
         }
         converted.setNexus(nexus);
-        double reducedMaxHealth = converted.getMaxHealth() * 0.3D;
+        double reducedMaxHealth = converted instanceof IMWitherEntity
+                ? 150.0D
+                : converted.getMaxHealth() * 0.3D;
         converted.getAttribute(Attributes.MAX_HEALTH).setBaseValue(reducedMaxHealth);
         converted.setHealth((float)reducedMaxHealth);
         if (converted instanceof EntityIMLiving imMob) {
