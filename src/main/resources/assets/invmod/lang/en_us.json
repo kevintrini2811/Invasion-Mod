@@ -165,6 +165,9 @@
     "invmod.message.bone.debugdisabled": "Nexus debug mode disabled.",
     "invmod.message.bone.debugfailed": "The Nexus could not be activated in debug mode.",
 
+    "entity.invmod.blaze": "IM Blaze",
+    "item.invmod.blaze_spawn_egg": "IM Blaze Spawn Egg",
+
     "invmod.subtitle.nexus_chimes": "Nexus Chimes",
     "invmod.subtitle.nexus_rumbles": "Nexus Rumbles",
     "invmod.subtitle.enemy_explodes": "Enemy Explodes",
