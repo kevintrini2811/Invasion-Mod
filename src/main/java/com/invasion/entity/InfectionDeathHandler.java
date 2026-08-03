@@ -5,7 +5,6 @@ import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -22,7 +21,7 @@ public final class InfectionDeathHandler {
     private static void onLivingDeath(LivingDeathEvent event) {
         LivingEntity host = event.getEntity();
         if (!(host.level() instanceof ServerLevel level)
-                || !host.entityTags().contains(IMSilverfishEntity.INFECTED_TAG)) {
+                || !host.getTags().contains(IMSilverfishEntity.INFECTED_TAG)) {
             return;
         }
 
@@ -35,12 +34,11 @@ public final class InfectionDeathHandler {
                         .filter(NexusAccess::isActive).orElse(null);
         int amount = 1 + level.getRandom().nextInt(4);
         for (int i = 0; i < amount; i++) {
-            IMSilverfishEntity silverfish = InvEntities.SILVERFISH.create(
-                    level, EntitySpawnReason.TRIGGERED);
+            IMSilverfishEntity silverfish = InvEntities.SILVERFISH.create(level);
             if (silverfish == null) {
                 continue;
             }
-            silverfish.snapTo(
+            silverfish.moveTo(
                     host.getX() + (level.getRandom().nextDouble() - 0.5D) * 0.8D,
                     host.getY() + 0.1D,
                     host.getZ() + (level.getRandom().nextDouble() - 0.5D) * 0.8D,
