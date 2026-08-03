@@ -1,5 +1,6 @@
 package com.invasion.nexus;
 
+import com.invasion.entity.IMSilverfishEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -26,6 +27,7 @@ public record EntityConstruct (
         Mob entity = entityType().create(world);
         if (entity instanceof BuildableMob b) {
             b.onSpawned(nexus, this);
+            applyWaveInfection(entity, nexus);
         }
         return entity;
     }
@@ -34,11 +36,23 @@ public record EntityConstruct (
         return entityType().create(world, entity -> {
             if (entity instanceof BuildableMob b) {
                 b.onSpawned(nexus, this);
+                applyWaveInfection(entity, nexus);
             }
         }, position, MobSpawnType.NATURAL, true, false);
     }
 
     public interface BuildableMob {
         void onSpawned(NexusAccess nexus, EntityConstruct spawnConditions);
+    }
+
+    private static void applyWaveInfection(
+            Mob entity, @Nullable NexusAccess nexus) {
+        if (nexus == null || entity instanceof IMSilverfishEntity) {
+            return;
+        }
+        int chancePercent = Math.clamp(nexus.getProgressionLevel() - 9, 0, 100);
+        if (entity.getRandom().nextInt(100) < chancePercent) {
+            entity.addTag(IMSilverfishEntity.INFECTED_TAG);
+        }
     }
 }
