@@ -62,6 +62,9 @@ public interface InvEntities {
                     .clientTrackingRange(8));
     EntityType<EntityIMZombiePigman> ZOMBIE_PIGMAN = register("zombie_pigman", EntityType.Builder.<EntityIMZombiePigman>of(EntityIMZombiePigman::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F) .clientTrackingRange(8));
+    EntityType<IMZoglinEntity> ZOGLIN = register("zoglin",
+            EntityType.Builder.<IMZoglinEntity>of(IMZoglinEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(1.3964844F, 1.4F).clientTrackingRange(8));
     EntityType<IMZombifiedPiglinEntity> ZOMBIFIED_PIGLIN = register(
             "zombified_piglin",
             EntityType.Builder.<IMZombifiedPiglinEntity>of(
@@ -154,6 +157,7 @@ public interface InvEntities {
         event.put(
                 ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes().build());
+        event.put(ZOGLIN, IMZoglinEntity.createAttributes().build());
         event.put(
                 ZOMBIFIED_PIGLIN,
                 IMZombifiedPiglinEntity.createIMAttributes().build());

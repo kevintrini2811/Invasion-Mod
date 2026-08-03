@@ -19,6 +19,13 @@ public interface EntityPatterns {
     EntityPattern ZOMBIE_PIGMAN_T1_ANY = register("zombie_pigman_t1_any", new EntityPattern.Builder(InvEntities.ZOMBIE_PIGMAN).addTier(1, 1).addFlavour(0, 1));
     EntityPattern ZOMBIE_PIGMAN_T2_ANY = register("zombie_pigman_t2_any", new EntityPattern.Builder(InvEntities.ZOMBIE_PIGMAN).addTier(2, 1).addFlavour(0, 1));
     EntityPattern ZOMBIE_PIGMAN_T3_ANY = register("zombie_pigman_t3_any", new EntityPattern.Builder(InvEntities.ZOMBIE_PIGMAN).addTier(3, 1).addFlavour(0, 1));
+    EntityPattern ZOMBIE_PIGMAN_T3_WITH_ZOGLIN = register(
+            "zombie_pigman_t3_with_zoglin",
+            new EntityPattern.Builder(InvEntities.ZOMBIE_PIGMAN)
+                    // The builder's initial pigman has weight 1; 0.25 gives
+                    // the Zoglin exactly 0.25 / 1.25 = 20% of this slot.
+                    .addType(InvEntities.ZOGLIN, 0.25F)
+                    .addTier(3, 1).addFlavour(0, 1));
 
     EntityPattern CAVE_SPIDER_T1 = register("cave_spider_t1", new EntityPattern.Builder(InvEntities.CAVE_SPIDER), 0.35F);
     EntityPattern SPIDER_T1_ANY = register("spider_t1_any", new EntityPattern.Builder(InvEntities.SPIDER)
