@@ -21,7 +21,7 @@ import net.minecraft.world.phys.HitResult;
 
 public final class IMWitchPotionEntity extends ThrownSplashPotion {
     private static final int SUPPORT_DURATION = 20 * 20;
-    private static final int HARM_DURATION = 5 * 20;
+    private static final int HARM_DURATION = 10 * 20;
     private Type invasionType = Type.HEALING;
 
     public IMWitchPotionEntity(
