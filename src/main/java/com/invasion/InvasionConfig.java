@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
+import com.invasion.entity.IMZoglinEntity;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.IMCaveSpiderEntity;
 import com.invasion.entity.IMEndermanEntity;
@@ -52,6 +53,7 @@ public class InvasionConfig extends Config {
         m.put("IMZombiePigman-T1", 20);
         m.put("IMZombiePigman-T2", 30);
         m.put("IMZombiePigman-T3", 65);
+        m.put("IMZoglin-T1", 65);
         m.put("IMEnderman-T1", 40);
     });
     private static final boolean DEFAULT_NIGHT_SPAWNS_ENABLED = false;
@@ -104,7 +106,9 @@ public class InvasionConfig extends Config {
     public int getHealth(Combatant<?> mob) {
         String healthKey;
         int healthMultiplier = 1;
-        if (mob instanceof IMZombifiedPiglinEntity piglin) {
+        if (mob instanceof IMZoglinEntity) {
+            healthKey = "IMZoglin-T1";
+        } else if (mob instanceof IMZombifiedPiglinEntity piglin) {
             healthKey = "IMZombiePigman-T" + piglin.getTier();
         } else if (mob instanceof EntityIMZombiePigman pigman) {
             healthKey = "IMZombiePigman-T" + pigman.getTier();
