@@ -146,6 +146,10 @@ public final class IMBlazeEntity extends Blaze
                         flightTarget.z, 1.0D);
                 Vec3 approach = flightTarget.subtract(position()).normalize();
                 Vec3 velocity = getDeltaMovement().add(approach.scale(0.025D));
+                if (flightTarget.y > getY() + 1.0D) {
+                    velocity = new Vec3(
+                            velocity.x, Math.max(velocity.y, 0.22D), velocity.z);
+                }
                 double horizontalSpeed = velocity.horizontalDistance();
                 if (horizontalSpeed > 0.35D) {
                     double scale = 0.35D / horizontalSpeed;
@@ -174,7 +178,7 @@ public final class IMBlazeEntity extends Blaze
 
         private Vec3 findFlightTarget(
                 Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
-            BlockHitResult hit = findBlockingHit(nexusTarget);
+            BlockHitResult hit = findWallHit(nexusTarget);
             if (hit.getType() != HitResult.Type.BLOCK
                     || hit.getBlockPos().equals(nexusPos)) {
                 return nexusTarget.add(0.0D, 2.0D, 0.0D);
@@ -204,15 +208,19 @@ public final class IMBlazeEntity extends Blaze
             return nexusTarget.add(0.0D, 2.0D, 0.0D);
         }
 
-        private BlockHitResult findBlockingHit(Vec3 nexusTarget) {
+        private BlockHitResult findWallHit(Vec3 nexusTarget) {
+            Vec3 horizontalTarget = new Vec3(
+                    nexusTarget.x, getEyeY(), nexusTarget.z);
             return level().clip(new ClipContext(
-                    getEyePosition(), nexusTarget, ClipContext.Block.COLLIDER,
+                    getEyePosition(), horizontalTarget, ClipContext.Block.COLLIDER,
                     ClipContext.Fluid.NONE, IMBlazeEntity.this));
         }
 
         @Nullable
         private Vec3 findShotTarget(Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
-            BlockHitResult hit = findBlockingHit(nexusTarget);
+            BlockHitResult hit = level().clip(new ClipContext(
+                    getEyePosition(), nexusTarget, ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE, IMBlazeEntity.this));
             if (hit.getType() != HitResult.Type.BLOCK
                     || hit.getBlockPos().equals(nexusPos)) {
                 return nexusTarget;
