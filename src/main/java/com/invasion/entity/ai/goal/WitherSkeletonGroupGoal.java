@@ -3,7 +3,11 @@ package com.invasion.entity.ai.goal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.WeakHashMap;
 
 import com.invasion.entity.IMWitherEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
@@ -22,6 +26,7 @@ public final class WitherSkeletonGroupGoal extends Goal {
 
     private final IMWitherSkeletonEntity skeleton;
     private List<IMWitherSkeletonEntity> group = List.of();
+    private IMWitherSkeletonEntity leader;
 
     public WitherSkeletonGroupGoal(IMWitherSkeletonEntity skeleton) {
         this.skeleton = skeleton;
@@ -58,9 +63,6 @@ public final class WitherSkeletonGroupGoal extends Goal {
             return;
         }
 
-        IMWitherSkeletonEntity leader = group.stream()
-                .min(Comparator.comparing(Entity::getUUID))
-                .orElse(skeleton);
         if (leader != skeleton) {
             skeleton.setGroupLeaderWaiting(false);
             // Let IMMobNavigation follow the moving leader. Unlike replacing
@@ -101,20 +103,13 @@ public final class WitherSkeletonGroupGoal extends Goal {
                 || skeleton.getNexus().isDiscarded()
                 || !skeleton.getNexus().isActive()) {
             group = List.of();
+            leader = null;
             return;
         }
-        List<IMWitherSkeletonEntity> candidates = new ArrayList<>();
-        for (Entity entity : level.getAllEntities()) {
-            if (entity instanceof IMWitherSkeletonEntity candidate
-                    && candidate.isAlive()
-                    && !candidate.isRemoved()
-                    && candidate.hasNexus()
-                    && candidate.getNexus().getUuid().equals(
-                            skeleton.getNexus().getUuid())) {
-                candidates.add(candidate);
-            }
-        }
-        group = List.copyOf(candidates);
+        GroupSnapshot snapshot = GroupCoordinator.get(
+                level, skeleton.getNexus().getUuid());
+        group = snapshot.members();
+        leader = snapshot.leader();
     }
 
     private void merge(List<IMWitherSkeletonEntity> members) {
@@ -162,5 +157,67 @@ public final class WitherSkeletonGroupGoal extends Goal {
 
     private double getZ() {
         return skeleton.getZ();
+    }
+
+    private record GroupSnapshot(
+            List<IMWitherSkeletonEntity> members,
+            IMWitherSkeletonEntity leader) {
+        private static final GroupSnapshot EMPTY =
+                new GroupSnapshot(List.of(), null);
+    }
+
+    private record LevelSnapshot(
+            long gameTime, Map<UUID, GroupSnapshot> groups) {
+    }
+
+    /** Builds one shared group index per level tick instead of per skeleton. */
+    private static final class GroupCoordinator {
+        private static final Map<ServerLevel, LevelSnapshot> LEVELS =
+                new WeakHashMap<>();
+
+        private GroupCoordinator() {
+        }
+
+        private static synchronized GroupSnapshot get(
+                ServerLevel level, UUID nexusId) {
+            long gameTime = level.getGameTime();
+            LevelSnapshot snapshot = LEVELS.get(level);
+            if (snapshot == null || snapshot.gameTime() != gameTime) {
+                snapshot = build(level, gameTime);
+                LEVELS.put(level, snapshot);
+            }
+            return snapshot.groups().getOrDefault(
+                    nexusId, GroupSnapshot.EMPTY);
+        }
+
+        private static LevelSnapshot build(ServerLevel level, long gameTime) {
+            Map<UUID, List<IMWitherSkeletonEntity>> members = new HashMap<>();
+            for (Entity entity : level.getAllEntities()) {
+                if (!(entity instanceof IMWitherSkeletonEntity candidate)
+                        || !candidate.isAlive()
+                        || candidate.isRemoved()
+                        || !candidate.hasNexus()) {
+                    continue;
+                }
+                NexusAccess nexus = candidate.getNexus();
+                if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
+                    continue;
+                }
+                members.computeIfAbsent(nexus.getUuid(), ignored ->
+                        new ArrayList<>()).add(candidate);
+            }
+
+            Map<UUID, GroupSnapshot> groups = new HashMap<>();
+            members.forEach((nexusId, candidates) -> {
+                List<IMWitherSkeletonEntity> sharedMembers =
+                        List.copyOf(candidates);
+                IMWitherSkeletonEntity sharedLeader = sharedMembers.stream()
+                        .min(Comparator.comparing(Entity::getUUID))
+                        .orElse(null);
+                groups.put(nexusId,
+                        new GroupSnapshot(sharedMembers, sharedLeader));
+            });
+            return new LevelSnapshot(gameTime, Map.copyOf(groups));
+        }
     }
 }
