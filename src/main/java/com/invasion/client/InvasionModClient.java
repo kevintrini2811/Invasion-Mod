@@ -8,6 +8,7 @@ import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
@@ -35,8 +36,8 @@ public final class InvasionModClient {
     private static void registerItemColors(
             RegisterColorHandlersEvent.Item event) {
         event.register(
-                (stack, tintIndex) -> ((SpawnEggItem) stack.getItem())
-                        .getColor(tintIndex),
+                (stack, tintIndex) -> FastColor.ARGB32.opaque(
+                        ((SpawnEggItem) stack.getItem()).getColor(tintIndex)),
                 InvItems.SPAWN_EGGS.toArray(Item[]::new));
     }
 
