@@ -120,7 +120,7 @@ public final class IMBlazeEntity extends Blaze
 
         @Override
         public boolean canUse() {
-            return hasNexus() && getNexus().isActive();
+            return hasNexus() && getNexus().isActive() && getTarget() == null;
         }
 
         @Override

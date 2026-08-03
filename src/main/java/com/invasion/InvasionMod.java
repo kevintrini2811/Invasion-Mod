@@ -8,6 +8,7 @@ import com.invasion.entity.VanillaMobSpawnReplacement;
 import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.entity.InfectionDeathHandler;
+import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
 import com.invasion.nexus.WorldNexusStorage;
@@ -73,6 +74,7 @@ public class InvasionMod {
         NexusBoundMobLifecycle.bootstrap();
         VillagerResurrectionHandler.bootstrap();
         InfectionDeathHandler.bootstrap();
+        IMCivilianTargetHandler.bootstrap();
 
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
             InvasionModClient.register(modBus);
