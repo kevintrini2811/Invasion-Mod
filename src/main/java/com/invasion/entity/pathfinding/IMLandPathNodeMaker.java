@@ -280,6 +280,21 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
         return false;
     }
 
+    /**
+     * Checks whether an impact attack may break a block without enabling the
+     * entity's normal mining navigation.
+     */
+    public static boolean canImpactDestroyBlock(PathfinderMob entity, BlockPos pos) {
+        if (!(entity.level() instanceof ServerLevel level)
+                || !level.getGameRules().get(GameRules.MOB_GRIEFING)) {
+            return false;
+        }
+        BlockState state = level.getBlockState(pos);
+        return !state.isAir()
+                && !BlockMetadata.isIndestructible(state)
+                && !PathingUtil.hasAdjacentLadder(level, pos);
+    }
+
     public static boolean avoidsBlock(PathfinderMob entity, BlockPos pos) {
         if (entity.getNavigation().getNodeEvaluator() instanceof IMLandPathNodeMaker maker) {
             return maker.avoidsBlock(entity, entity.level(), pos, entity.level().getBlockState(pos));
