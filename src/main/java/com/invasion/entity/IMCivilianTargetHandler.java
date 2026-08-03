@@ -7,11 +7,11 @@ import com.invasion.nexus.Combatant;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
 
 /** Gives every hostile IM mob the shared civilian target set. */
 public final class IMCivilianTargetHandler {
@@ -21,11 +21,12 @@ public final class IMCivilianTargetHandler {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(IMCivilianTargetHandler::tick);
+        MinecraftForge.EVENT_BUS.addListener(IMCivilianTargetHandler::tick);
     }
 
-    private static void tick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level)
+    private static void tick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END
+                || !(event.level instanceof ServerLevel level)
                 || level.getGameTime() % 10L != 0L) {
             return;
         }

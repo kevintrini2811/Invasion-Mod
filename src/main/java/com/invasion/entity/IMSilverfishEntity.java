@@ -12,6 +12,7 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
@@ -26,15 +27,13 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.gamerules.GameRules;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.GameRules;
 
 /** Silverfish support unit. It is registered but intentionally absent from waves. */
 public final class IMSilverfishEntity extends Silverfish
@@ -63,7 +62,7 @@ public final class IMSilverfishEntity extends Silverfish
         goalSelector.addGoal(9, new RandomLookAroundGoal(this));
         targetSelector.addGoal(0, new NearestAttackableTargetGoal<>(
                 this, Player.class, 10, true, false,
-                (player, world) -> distanceToSqr(player) <= 8.0D * 8.0D));
+                player -> distanceToSqr(player) <= 8.0D * 8.0D));
     }
 
     @Override
@@ -88,13 +87,13 @@ public final class IMSilverfishEntity extends Silverfish
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -112,7 +111,7 @@ public final class IMSilverfishEntity extends Silverfish
     private void infect(LivingEntity target) {
         target.addTag(INFECTED_TAG);
         if (level() instanceof ServerLevel serverLevel) {
-            serverLevel.sendParticles(ParticleTypes.INFESTED,
+            serverLevel.sendParticles(ParticleTypes.PORTAL,
                     target.getX(), target.getY(0.5D), target.getZ(),
                     12, 0.35D, 0.35D, 0.35D, 0.02D);
         }
@@ -131,7 +130,8 @@ public final class IMSilverfishEntity extends Silverfish
         @Override
         public boolean canUse() {
             if (!(level() instanceof ServerLevel serverLevel)
-                    || !serverLevel.getGameRules().get(GameRules.MOB_GRIEFING)
+                    || !serverLevel.getGameRules().getBoolean(
+                            GameRules.RULE_MOBGRIEFING)
                     || searchCooldown-- > 0) {
                 return false;
             }
@@ -258,7 +258,7 @@ public final class IMSilverfishEntity extends Silverfish
 
         private boolean isCandidate(LivingEntity candidate) {
             if (candidate instanceof Silverfish
-                    || candidate.entityTags().contains(INFECTED_TAG)
+                    || candidate.getTags().contains(INFECTED_TAG)
                     || candidate instanceof Player) {
                 return false;
             }
@@ -269,7 +269,7 @@ public final class IMSilverfishEntity extends Silverfish
             return candidate instanceof IMWolfEntity
                     || candidate instanceof AbstractGolem
                     || candidate instanceof OwnableEntity ownable
-                            && ownable.getRootOwner() instanceof Player;
+                            && ownable.getOwner() instanceof Player;
         }
     }
 
