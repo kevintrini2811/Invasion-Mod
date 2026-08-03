@@ -15,6 +15,7 @@ import com.invasion.client.render.entity.ThrowerEntityRenderer;
 import com.invasion.client.render.entity.TntEntityRenderer;
 import com.invasion.client.render.entity.SpiderEggEntityRenderer;
 import com.invasion.client.render.entity.SpeedyZombieEntityRenderer;
+import com.invasion.client.render.entity.SkeletonArrowEntityRenderer;
 import com.invasion.client.render.entity.TrapEntityRenderer;
 import com.invasion.client.render.entity.ZombiePigmanEntityRenderer;
 import com.invasion.client.render.entity.VariantMobRenderers;
@@ -25,6 +26,8 @@ import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
+import net.minecraft.client.renderer.entity.WitchRenderer;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 
 public final class InvRenderers {
@@ -44,6 +47,9 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.WITHER, WitherBossRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
+        event.registerEntityRenderer(InvEntities.WITCH, WitchRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.WITCH_POTION, ThrownItemRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIFIED_PIGLIN, VariantMobRenderers.ZombifiedPiglin::new);
         event.registerEntityRenderer(InvEntities.SKELETON, IMSkeletonEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.STRAY, VariantMobRenderers.Stray::new);
@@ -66,7 +72,8 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.BURROWER, BurrowerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.BURROWER_TAIL, NoopRenderer::new);
         event.registerEntityRenderer(InvEntities.BOULDER, BoulderEntityRenderer::new);
-        event.registerEntityRenderer(InvEntities.SKELETON_ARROW, NoopRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.SKELETON_ARROW, SkeletonArrowEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.TNT, TntEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.WOLF, IMWolfEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.TRAP, TrapEntityRenderer::new);
