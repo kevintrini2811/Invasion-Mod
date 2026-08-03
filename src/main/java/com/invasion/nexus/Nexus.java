@@ -414,7 +414,7 @@ public class Nexus implements ControllableNexusAccess {
             killAllMobs();
             waveSpawner.stop();
             currentWave = wave;
-            waveSpawner.beginNextWave(currentWave);
+            beginWave(currentWave);
             initializeWaveProgress();
             waveDelayTimer = -1L;
             nexusLevel = Math.max(nexusLevel, currentWave);
@@ -522,8 +522,9 @@ public class Nexus implements ControllableNexusAccess {
         try {
             paused = false; // falls vorher pausiert war
             boundingBoxToRadius = computeSpawnArea();
+            bindExistingImMobs();
             currentWave = startWave;
-            waveSpawner.beginNextWave(currentWave);
+            beginWave(currentWave);
             initializeWaveProgress();
             setMode(mode == Mode.STOPPED ? Mode.STARTED : Mode.WAITING);
             boundPlayers.bindPlayers(boundingBoxToRadius);
@@ -555,6 +556,7 @@ public class Nexus implements ControllableNexusAccess {
         mobsLeftInWave = 0;
         lastMobsLeftInWave = 0;
         boundingBoxToRadius = computeSpawnArea();
+        bindExistingImMobs();
         boundPlayers.bindPlayers(boundingBoxToRadius);
         regenerateHealth();
         activated = true;
@@ -569,6 +571,7 @@ public class Nexus implements ControllableNexusAccess {
             return;
         }
         boundingBoxToRadius = getChunkBox(getWorld());
+        bindExistingImMobs();
         setMode(Mode.CONTINUOUS);
         regenerateHealth();
         lastPowerLevel = powerLevel;
@@ -597,7 +600,7 @@ public class Nexus implements ControllableNexusAccess {
                         waveDelayTimer += elapsed;
                         if (waveDelayTimer > waveDelay) {
                             currentWave += 1;
-                            waveSpawner.beginNextWave(currentWave);
+                            beginWave(currentWave);
                             initializeWaveProgress();
                             waveDelayTimer = -1L;
                             boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
@@ -645,7 +648,7 @@ public class Nexus implements ControllableNexusAccess {
                     Wave wave = waveBuilder.generateWave(difficulty, tierLevel, WAVE_DURATION);
                     continuousAttackCount++;
                     mobsLeftInWave = (lastMobsLeftInWave = mobsToKillInWave = (int) (wave.getTotalMobAmount() * 0.8F));
-                    waveSpawner.beginNextWave(wave);
+                    beginWave(wave);
                     continuousAttack = true;
                     int days = getWorld().random.nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
                     nextAttackTime = (int) ((currentTime / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
@@ -771,6 +774,29 @@ public class Nexus implements ControllableNexusAccess {
         List<PathfinderMob> entities = getWorld().getEntitiesOfClass(PathfinderMob.class, boundingBoxToRadius.inflate(10, 128, 10), Combatant.PREDICATE);
         InvasionMod.log("Acquired " + entities.size() + " entities after state restore");
         return entities.size();
+    }
+
+    private void bindExistingImMobs() {
+        for (net.minecraft.world.entity.Entity entity
+                : ((ServerLevel)getWorld()).getAllEntities()) {
+            if (entity instanceof Combatant<?> combatant
+                    && entity instanceof LivingEntity living
+                    && living.isAlive()
+                    && !entity.isRemoved()
+                    && !(entity instanceof com.invasion.entity.IMWolfEntity)) {
+                combatant.setNexus(this);
+            }
+        }
+    }
+
+    private void beginWave(int wave) throws WaveSpawnerException {
+        bindExistingImMobs();
+        waveSpawner.beginNextWave(wave);
+    }
+
+    private void beginWave(Wave wave) throws WaveSpawnerException {
+        bindExistingImMobs();
+        waveSpawner.beginNextWave(wave);
     }
 
     private void initializeWaveProgress() {
