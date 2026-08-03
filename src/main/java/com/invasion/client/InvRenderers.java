@@ -21,6 +21,8 @@ import com.invasion.client.render.entity.VariantMobRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
+import net.minecraft.client.renderer.entity.WitherBossRenderer;
+import net.minecraft.client.renderer.entity.WitherSkullRenderer;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 
 public final class InvRenderers {
@@ -37,6 +39,9 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER, VariantMobRenderers.ZombieVillager::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOGLIN, IMZoglinRenderer::new);
+        event.registerEntityRenderer(InvEntities.WITHER, WitherBossRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIFIED_PIGLIN, VariantMobRenderers.ZombifiedPiglin::new);
         event.registerEntityRenderer(InvEntities.SKELETON, IMSkeletonEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.STRAY, VariantMobRenderers.Stray::new);
