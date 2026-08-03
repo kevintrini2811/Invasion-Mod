@@ -13,6 +13,7 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -21,13 +22,11 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
-import net.minecraft.world.entity.animal.golem.AbstractGolem;
+import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.monster.Witch;
-import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 /** Nexus support caster that prioritizes nearby player-aligned targets. */
 public final class IMWitchEntity extends Witch
@@ -78,13 +77,13 @@ public final class IMWitchEntity extends Witch
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -109,7 +108,7 @@ public final class IMWitchEntity extends Witch
             return true;
         }
         if (candidate instanceof OwnableEntity ownable
-                && ownable.getRootOwner() instanceof Player) {
+                && ownable.getOwner() instanceof Player) {
             return true;
         }
         return level.players().stream().anyMatch(candidate::isAlliedTo);
@@ -193,10 +192,10 @@ public final class IMWitchEntity extends Witch
             if (!ally.hasEffect(InvMobEffects.INVASION_STRENGTH)) {
                 missing.add(IMWitchPotionEntity.Type.STRENGTH);
             }
-            if (!ally.hasEffect(MobEffects.SPEED)) {
+            if (!ally.hasEffect(MobEffects.MOVEMENT_SPEED)) {
                 missing.add(IMWitchPotionEntity.Type.SPEED);
             }
-            if (!ally.hasEffect(MobEffects.HASTE)) {
+            if (!ally.hasEffect(MobEffects.DIG_SPEED)) {
                 missing.add(IMWitchPotionEntity.Type.HASTE);
             }
             return missing.isEmpty()
