@@ -45,9 +45,9 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(GROUP_LEADER_WAITING, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(GROUP_LEADER_WAITING, false);
     }
 
     public boolean isGroupLeaderWaiting() {
