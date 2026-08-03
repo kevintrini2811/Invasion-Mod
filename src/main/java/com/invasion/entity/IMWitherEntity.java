@@ -95,9 +95,6 @@ public final class IMWitherEntity extends WitherBoss
                     .filter(NexusAccess::isActive)
                     .ifPresent(this::setNexus);
         }
-        // Also reject targets assigned by external hooks or retaliation logic.
-        // Vanilla's independent side-head attacks continue to work.
-        setTarget(null);
         super.customServerAiStep();
         attackNexus(level);
     }

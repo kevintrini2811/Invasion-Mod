@@ -137,7 +137,7 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.WITHER, nexus);
         } else if (mob.getType() == EntityType.BLAZE) {
             convert(mob, InvEntities.BLAZE, nexus);
-        } else if (mob.getType() == EntityTypes.SILVERFISH) {
+        } else if (mob.getType() == EntityType.SILVERFISH) {
             convert(mob, InvEntities.SILVERFISH, nexus);
         }
     }
