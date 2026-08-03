@@ -82,8 +82,7 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
     protected void registerGoals() {
         super.registerGoals();
         goalSelector.addGoal(0, new PredicatedGoal(
-                new EntityAIKillWithArrow<>(
-                        this, LivingEntity.class, 70, 16.0F),
+                new BoggedKillWithArrowGoal(this),
                 () -> getMainHandItem().is(Items.BOW)));
         goalSelector.addGoal(2, new PredicatedGoal(
                 new SkeletonAttackNexusGoal<>(this),
@@ -161,4 +160,18 @@ public final class IMBoggedEntity extends IMSkeletonEntity implements Shearable 
         playSound(SoundEvents.BOGGED_STEP, 0.15F, 1.0F);
     }
 
+    private static final class BoggedKillWithArrowGoal
+            extends EntityAIKillWithArrow<LivingEntity> {
+        private final IMBoggedEntity bogged;
+
+        private BoggedKillWithArrowGoal(IMBoggedEntity bogged) {
+            super(bogged, LivingEntity.class, 70, 16.0F);
+            this.bogged = bogged;
+        }
+
+        @Override
+        protected int getAttackDelay() {
+            return bogged.level().getDifficulty().getId() >= 3 ? 50 : 70;
+        }
+    }
 }
