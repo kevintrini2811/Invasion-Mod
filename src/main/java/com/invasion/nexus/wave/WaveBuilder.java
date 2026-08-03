@@ -150,6 +150,9 @@ public class WaveBuilder {
         float timeScale = 1 + (waveNumber - 11) * 0.04F;
 
         var builder = Wave.builder((int) (timeScale * 120000), (int) (timeScale * 35000));
+        EntityPattern tierThreePigman = waveNumber >= 15
+                ? EntityPatterns.ZOMBIE_PIGMAN_T3_WITH_ZOGLIN
+                : EntityPatterns.ZOMBIE_PIGMAN_T3_ANY;
 
         // Hilfsfunktion: Nur ins Log schreiben (kein Chat)
         java.util.function.Consumer<String> announce = msg ->
@@ -164,7 +167,7 @@ public class WaveBuilder {
                     .entry(EntityPatterns.ZOMBIE_T3_ANY, 5F)
                     .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 50F)
                     .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 10F)
-                    .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 3F)
+                    .entry(tierThreePigman, 3F)
                     .entry(EntityPatterns.SKELETON_T1_ANY, 30F)
                     .entry(EntityPatterns.THROWER_T1, 5F)
                     .entry(EntityPatterns.THROWER_T2, 0.5F)
@@ -205,7 +208,7 @@ public class WaveBuilder {
                 WaveEntry.random()
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 1.5F)
                         .entry(EntityPatterns.ZOMBIE_PIGMAN_T2_ANY, 0.7F)
-                        .entry(EntityPatterns.ZOMBIE_PIGMAN_T3_ANY, 0.35F)
+                        .entry(tierThreePigman, 0.35F)
                         .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 1.5F)
                         .entry(EntityPatterns.SPIDER_T2_ANY, 1F)
                         .entry(EntityPatterns.ZOMBIE_T1_ANY, 1F)
