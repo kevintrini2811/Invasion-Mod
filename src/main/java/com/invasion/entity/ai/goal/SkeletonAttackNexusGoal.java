@@ -59,6 +59,11 @@ public class SkeletonAttackNexusGoal<T extends PathfinderMob & NexusEntity & Ran
 
     @Override
     public void tick() {
+        // Group merging clears the Nexus binding before the old running goals
+        // are stopped at the end of the current AI tick.
+        if (!skeleton.hasNexus()) {
+            return;
+        }
         Vec3 target = nexusTarget();
         skeleton.getLookControl().setLookAt(target.x, target.y, target.z);
         skeleton.getNavigatorNew().haltForTick();
