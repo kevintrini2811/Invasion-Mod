@@ -100,8 +100,8 @@ public final class IMWitchEntity extends Witch
     }
 
     static boolean isPlayerAlly(LivingEntity candidate, ServerLevel level) {
-        if (candidate instanceof Player) {
-            return true;
+        if (candidate instanceof Player player) {
+            return !player.isCreative() && !player.isSpectator();
         }
         if (candidate instanceof AbstractVillager
                 || candidate instanceof AbstractGolem
