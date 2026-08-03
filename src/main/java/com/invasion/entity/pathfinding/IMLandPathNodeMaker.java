@@ -35,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.Debug;
 import com.invasion.InvasionMod;
 import com.invasion.block.BlockMetadata;
+import com.invasion.block.InvBlocks;
 import com.invasion.entity.pathfinding.DynamicPathNodeNavigator.NodeFactory;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
@@ -304,6 +305,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
         }
         BlockState state = level.getBlockState(pos);
         return !state.isAir()
+                && !state.is(InvBlocks.NEXUS_CORE)
                 && !BlockMetadata.isIndestructible(state)
                 && !PathingUtil.hasAdjacentLadder(level, pos);
     }
