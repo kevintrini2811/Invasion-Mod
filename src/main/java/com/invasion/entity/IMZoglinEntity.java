@@ -16,6 +16,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -40,6 +41,8 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
     private boolean charging;
     private Vec3 lastProgressPosition;
     private Vec3 dashDirection = Vec3.ZERO;
+    private LivingEntity dashTarget;
+    private boolean hitDashTarget;
     private int stuckTicks;
     private int dashCooldown;
     private int dashTicks;
@@ -100,10 +103,12 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
                     dashDirection.z * DASH_SPEED);
             hurtMarked = true;
             destroyDashObstacles(level);
+            hitDashTarget(level);
             dashTicks--;
             if (dashTicks == 0) {
                 setCharging(false);
                 dashCooldown = DASH_COOLDOWN_TICKS;
+                dashTarget = null;
                 lastProgressPosition = position();
             }
             return;
@@ -114,7 +119,25 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
             lastProgressPosition = position();
             return;
         }
-        if (!hasNexus() || isStunned() || !onGround()) {
+        if (isStunned() || !onGround()) {
+            stuckTicks = 0;
+            lastProgressPosition = position();
+            return;
+        }
+
+        LivingEntity target = getTarget();
+        if (target != null && target.isAlive()) {
+            double distance = distanceToSqr(target);
+            if (distance >= 25.0D && distance <= 400.0D) {
+                Vec3 direction = target.position().subtract(position())
+                        .multiply(1.0D, 0.0D, 1.0D);
+                if (direction.lengthSqr() >= 1.0E-4D) {
+                    startDash(direction, target);
+                    return;
+                }
+            }
+        }
+        if (!hasNexus()) {
             stuckTicks = 0;
             lastProgressPosition = position();
             return;
@@ -139,10 +162,26 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
             stuckTicks = 0;
             return;
         }
-        dashDirection = direction.normalize();
-        dashTicks = DASH_DURATION_TICKS;
+        startDash(direction, null);
         stuckTicks = 0;
+    }
+
+    private void startDash(Vec3 direction, LivingEntity target) {
+        dashDirection = direction.normalize();
+        dashTarget = target;
+        hitDashTarget = false;
+        dashTicks = DASH_DURATION_TICKS;
+        getNavigation().stop();
         setCharging(true);
+    }
+
+    private void hitDashTarget(ServerLevel level) {
+        if (hitDashTarget || dashTarget == null || !dashTarget.isAlive()) {
+            return;
+        }
+        if (getBoundingBox().inflate(0.35D).intersects(dashTarget.getBoundingBox())) {
+            hitDashTarget = doHurtTarget(level, dashTarget);
+        }
     }
 
     private void destroyDashObstacles(ServerLevel level) {
