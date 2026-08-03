@@ -7,6 +7,7 @@ import com.invasion.entity.IMBoggedEntity;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.IMZombifiedPiglinEntity;
+import com.invasion.entity.IMWitherSkeletonEntity;
 import net.minecraft.client.model.EndermanModel;
 import net.minecraft.client.model.SkeletonModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -114,9 +115,39 @@ public final class VariantMobRenderers {
         }
     }
     public static final class WitherSkeleton extends SkeletonVariant {
-        public WitherSkeleton(EntityRendererProvider.Context c) { super(c, "textures/entity/skeleton/wither_skeleton.png"); }
+        public WitherSkeleton(EntityRendererProvider.Context c) {
+            super(c, "textures/entity/skeleton/wither_skeleton.png",
+                    new IMWitherSkeletonModel(c.bakeLayer(ModelLayers.WITHER_SKELETON)),
+                    ModelLayers.WITHER_SKELETON_INNER_ARMOR,
+                    ModelLayers.WITHER_SKELETON_OUTER_ARMOR);
+        }
         @Override protected void scale(com.invasion.entity.IMSkeletonEntity e, PoseStack p, float f) {
             p.scale(1.2F, 1.2F, 1.2F);
+        }
+    }
+
+    private static final class IMWitherSkeletonModel
+            extends SkeletonModel<IMSkeletonEntity> {
+        IMWitherSkeletonModel(ModelPart root) {
+            super(root);
+        }
+
+        @Override
+        public void setupAnim(IMSkeletonEntity entity, float limbSwing,
+                float limbSwingAmount, float ageInTicks, float netHeadYaw,
+                float headPitch) {
+            super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks,
+                    netHeadYaw, headPitch);
+            if (!(entity instanceof IMWitherSkeletonEntity witherSkeleton)
+                    || !witherSkeleton.isGroupLeaderWaiting()) {
+                return;
+            }
+            rightArm.xRot = -(float) Math.PI;
+            leftArm.xRot = -(float) Math.PI;
+            rightArm.yRot = 0.0F;
+            leftArm.yRot = 0.0F;
+            rightArm.zRot = -0.12F;
+            leftArm.zRot = 0.12F;
         }
     }
 
