@@ -1,5 +1,11 @@
 package com.invasion.entity;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.Combatant;
@@ -22,10 +28,13 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 
 /** A Nexus-bound Blaze retaining the complete vanilla Blaze behaviour. */
 public final class IMBlazeEntity extends Blaze
         implements Combatant<Blaze>, EntityConstruct.BuildableMob {
+    private static final Map<ServerLevel, Set<SmallFireball>> FIREBALLS =
+            new WeakHashMap<>();
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
 
     public IMBlazeEntity(EntityType<? extends Blaze> type, Level level) {
@@ -33,6 +42,19 @@ public final class IMBlazeEntity extends Blaze
     }
 
     public static void bootstrap() {
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (entity instanceof SmallFireball fireball) {
+                FIREBALLS.computeIfAbsent(level, ignored ->
+                        Collections.newSetFromMap(new IdentityHashMap<>()))
+                        .add(fireball);
+            }
+        });
+        ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
+            Set<SmallFireball> fireballs = FIREBALLS.get(level);
+            if (fireballs != null && entity instanceof SmallFireball fireball) {
+                fireballs.remove(fireball);
+            }
+        });
         ServerTickEvents.START_LEVEL_TICK.register(IMBlazeEntity::checkProjectileImpacts);
     }
 
@@ -94,9 +116,12 @@ public final class IMBlazeEntity extends Blaze
     }
 
     private static void checkProjectileImpacts(ServerLevel level) {
-        for (net.minecraft.world.entity.Entity entity : level.getAllEntities()) {
-            if (!(entity instanceof SmallFireball fireball)
-                    || !(fireball.getOwner() instanceof IMBlazeEntity blaze)) {
+        Set<SmallFireball> fireballs = FIREBALLS.get(level);
+        if (fireballs == null || fireballs.isEmpty()) {
+            return;
+        }
+        for (SmallFireball fireball : Set.copyOf(fireballs)) {
+            if (!(fireball.getOwner() instanceof IMBlazeEntity blaze)) {
                 continue;
             }
             NexusAccess nexus = blaze.getNexus();
