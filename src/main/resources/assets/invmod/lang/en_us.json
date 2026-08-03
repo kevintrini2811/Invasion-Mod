@@ -167,6 +167,8 @@
 
     "entity.invmod.blaze": "IM Blaze",
     "item.invmod.blaze_spawn_egg": "IM Blaze Spawn Egg",
+    "entity.invmod.silverfish": "IM Silverfish",
+    "item.invmod.silverfish_spawn_egg": "IM Silverfish Spawn Egg",
 
     "invmod.subtitle.nexus_chimes": "Nexus Chimes",
     "invmod.subtitle.nexus_rumbles": "Nexus Rumbles",
