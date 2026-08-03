@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.neoforged.neoforge.common.NeoForge;
@@ -51,6 +52,7 @@ public final class IMCivilianTargetHandler {
     private static boolean isCivilian(LivingEntity entity) {
         return entity instanceof AbstractVillager
                 || entity instanceof AbstractPiglin
-                || entity instanceof Pig;
+                || entity instanceof Pig
+                || entity instanceof Hoglin;
     }
 }

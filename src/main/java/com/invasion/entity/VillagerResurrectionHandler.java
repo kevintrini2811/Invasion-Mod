@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import com.invasion.nexus.Combatant;
 import net.neoforged.neoforge.common.NeoForge;
@@ -25,7 +26,8 @@ public final class VillagerResurrectionHandler {
         if (!(entity instanceof Mob victim)
                 || !(victim instanceof AbstractVillager
                         || victim instanceof AbstractPiglin
-                        || victim instanceof Pig)
+                        || victim instanceof Pig
+                        || victim instanceof Hoglin)
                 || !(victim.level() instanceof ServerLevel world)
                 || !(source.getEntity() instanceof Combatant<?> killer)
                 || !killer.hasNexus()) {
@@ -36,7 +38,9 @@ public final class VillagerResurrectionHandler {
                 ? InvEntities.ZOMBIE_VILLAGER.create(world)
                 : victim instanceof AbstractPiglin
                         ? InvEntities.ZOMBIFIED_PIGLIN.create(world)
-                        : InvEntities.ZOMBIE_PIGMAN.create(world);
+                        : victim instanceof Hoglin
+                                ? InvEntities.ZOGLIN.create(world)
+                                : InvEntities.ZOMBIE_PIGMAN.create(world);
         if (zombie == null) {
             return;
         }
