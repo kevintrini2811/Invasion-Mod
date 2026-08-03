@@ -84,6 +84,12 @@ public interface InvEntities {
                             IMWitherEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(0.9F, 3.5F)
                     .clientTrackingRange(10));
+    EntityType<IMWitherSkullEntity> WITHER_SKULL = register(
+            "wither_skull",
+            EntityType.Builder.<IMWitherSkullEntity>of(
+                            IMWitherSkullEntity::new, MobCategory.MISC)
+                    .sized(0.3125F, 0.3125F).clientTrackingRange(4)
+                    .updateInterval(10));
     EntityType<IMZombifiedPiglinEntity> ZOMBIFIED_PIGLIN = register(
             "zombified_piglin",
             EntityType.Builder.<IMZombifiedPiglinEntity>of(

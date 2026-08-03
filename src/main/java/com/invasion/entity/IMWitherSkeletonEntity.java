@@ -7,6 +7,7 @@ import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
+import com.invasion.entity.ai.goal.WitherSkeletonGroupGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -71,6 +72,7 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(0, new MineBlockGoal(this));
+        goalSelector.addGoal(1, new WitherSkeletonGroupGoal(this));
         goalSelector.addGoal(2, new PredicatedGoal(
                 new SkeletonAttackNexusGoal<>(this),
                 this::isHoldingRangedWeapon));
