@@ -156,7 +156,7 @@ public final class IMWitchEntity extends Witch
             LivingEntity ally = nearest(level, FOLLOW_RANGE,
                     candidate -> candidate instanceof Combatant<?> combatant
                             && !(candidate instanceof IMWolfEntity)
-                            && candidate != IMWitchEntity.this
+                            && !(candidate instanceof IMWitchEntity)
                             && combatant.getNexus() == getNexus());
             if (ally == null) {
                 return;
