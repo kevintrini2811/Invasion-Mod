@@ -26,7 +26,6 @@ import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.monster.hoglin.HoglinBase;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -157,17 +156,14 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
 
         AABB dashBox = getBoundingBox().move(direction.normalize().scale(getBbWidth()));
         boolean brokeBlock = false;
-        boolean mobGriefing = level.getGameRules().get(GameRules.MOB_GRIEFING);
         for (BlockPos pos : BlockPos.betweenClosed(
                 BlockPos.containing(dashBox.minX, dashBox.minY, dashBox.minZ),
                 BlockPos.containing(dashBox.maxX, dashBox.maxY, dashBox.maxZ))) {
-            if (!IMLandPathNodeMaker.canMineBlock(this, pos)) {
+            if (!IMLandPathNodeMaker.canImpactDestroyBlock(this, pos)) {
                 continue;
             }
             brokeBlock = true;
-            if (mobGriefing) {
-                level.destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
-            }
+            level.destroyBlock(pos, InvasionMod.getConfig().destructedBlocksDrop);
             level.sendParticles(ParticleTypes.CLOUD,
                     pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D,
                     4, 0.35D, 0.35D, 0.35D, 0.05D);
