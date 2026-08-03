@@ -10,14 +10,12 @@ import com.invasion.nexus.NexusAccess;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Blaze;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -65,13 +63,13 @@ public final class IMBlazeEntity extends Blaze
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -90,8 +88,8 @@ public final class IMBlazeEntity extends Blaze
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        EntityTypes.BLAZE.getDefaultLootTable().ifPresent(lootTable ->
-                dropFromLootTable(level, source, causedByPlayer, lootTable));
+        VanillaLoot.drop(level, this, EntityType.BLAZE, source,
+                causedByPlayer ? lastHurtByPlayer : null);
     }
 
     private static void onProjectileImpact(ProjectileImpactEvent event) {
@@ -205,7 +203,7 @@ public final class IMBlazeEntity extends Blaze
 
             net.minecraft.core.BlockPos wall = hit.getBlockPos();
             int startY = Math.max(wall.getY() + 1, blockPosition().getY());
-            for (int y = startY; y < level().getMaxY() - 1; y++) {
+            for (int y = startY; y < level().getMaxBuildHeight() - 1; y++) {
                 net.minecraft.core.BlockPos lower = new net.minecraft.core.BlockPos(
                         wall.getX(), y, wall.getZ());
                 net.minecraft.core.BlockPos upper = lower.above();
