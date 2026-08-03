@@ -10,13 +10,12 @@ import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.util.math.PosUtils;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 
 /** A nexus-bound Wither whose skull barrage can damage the Nexus. */
@@ -70,24 +69,25 @@ public final class IMWitherEntity extends WitherBoss
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel level) {
+    protected void customServerAiStep() {
+        ServerLevel level = (ServerLevel) level();
         NexusAccess currentNexus = getNexus();
         if (currentNexus != null
                 && (currentNexus.isDiscarded() || !currentNexus.isActive())) {
             setNexus(null);
-            kill(level);
+            kill();
             return;
         }
         if (!hasNexus()) {
@@ -98,7 +98,7 @@ public final class IMWitherEntity extends WitherBoss
         // Also reject targets assigned by external hooks or retaliation logic.
         // Vanilla's independent side-head attacks continue to work.
         setTarget(null);
-        super.customServerAiStep(level);
+        super.customServerAiStep();
         attackNexus(level);
     }
 

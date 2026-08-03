@@ -13,7 +13,6 @@ import com.invasion.util.math.PosUtils;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.ai.goal.Goal;
 
 /** Coordinates IM Wither Skeleton groups and merges complete groups of four. */
@@ -125,12 +124,11 @@ public final class WitherSkeletonGroupGoal extends Goal {
         double y = members.stream().mapToDouble(Entity::getY).average().orElse(getY());
         double z = members.stream().mapToDouble(Entity::getZ).average().orElse(getZ());
 
-        IMWitherEntity wither = InvEntities.WITHER.create(
-                level, EntitySpawnReason.CONVERSION);
+        IMWitherEntity wither = InvEntities.WITHER.create(level);
         if (wither == null) {
             return;
         }
-        wither.snapTo(x, y, z, skeleton.getYRot(), 0.0F);
+        wither.moveTo(x, y, z, skeleton.getYRot(), 0.0F);
         wither.setNexus(nexus);
         wither.setMergedHealth(health);
         if (!level.addFreshEntity(wither)) {
