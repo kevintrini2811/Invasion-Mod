@@ -69,7 +69,8 @@ public final class VanillaMobSpawnReplacement {
                     world, ignored -> new HashSet<>());
             for (Entity entity : world.getAllEntities()) {
                 if (entity.getType() == EntityTypes.WITHER
-                        || entity.getType() == EntityTypes.BLAZE) {
+                        || entity.getType() == EntityTypes.BLAZE
+                        || entity.getType() == EntityTypes.SILVERFISH) {
                     pending.add(entity.getUUID());
                 }
             }
@@ -135,6 +136,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.WITHER, nexus);
         } else if (mob.getType() == EntityTypes.BLAZE) {
             convert(mob, InvEntities.BLAZE, nexus);
+        } else if (mob.getType() == EntityTypes.SILVERFISH) {
+            convert(mob, InvEntities.SILVERFISH, nexus);
         }
     }
 
@@ -155,7 +158,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.PHANTOM
                 || type == EntityTypes.ZOGLIN
                 || type == EntityTypes.WITHER
-                || type == EntityTypes.BLAZE;
+                || type == EntityTypes.BLAZE
+                || type == EntityTypes.SILVERFISH;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
