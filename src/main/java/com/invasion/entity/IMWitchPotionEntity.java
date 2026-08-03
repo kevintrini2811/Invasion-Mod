@@ -71,7 +71,8 @@ public final class IMWitchPotionEntity extends ThrownSplashPotion {
             }
             if (invasionType.support) {
                 if (entity instanceof com.invasion.nexus.Combatant<?>
-                        && !(entity instanceof IMWolfEntity)) {
+                        && !(entity instanceof IMWolfEntity)
+                        && !(entity instanceof IMWitchEntity)) {
                     applySupport(entity);
                 }
             } else if (IMWitchEntity.isPlayerAlly(entity, level)) {
