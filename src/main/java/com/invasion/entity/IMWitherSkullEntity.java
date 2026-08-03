@@ -23,7 +23,11 @@ public final class IMWitherSkullEntity extends WitherSkull {
         this(InvEntities.WITHER_SKULL, level);
         setOwner(owner);
         setPos(owner.getX(), owner.getEyeY(), owner.getZ());
-        setDeltaMovement(direction.normalize().scale(0.1D));
+        Vec3 movement = direction.normalize().scale(0.1D);
+        xPower = movement.x;
+        yPower = movement.y;
+        zPower = movement.z;
+        setDeltaMovement(movement);
     }
 
     @Override
