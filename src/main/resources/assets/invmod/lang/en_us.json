@@ -164,5 +164,7 @@
   "invmod.subtitle.thrower_rages": "Thrower Rages",
   "invmod.subtitle.boulder_lands": "Boulder Hits Ground",
   "invmod.subtitle.spider_egg_hatches": "Spider Egg Hatches",
-  "invmod.subtitle.lightning_zaps": "Lightning Zaps"
+  "invmod.subtitle.lightning_zaps": "Lightning Zaps",
+  "entity.invmod.silverfish": "IM Silverfish",
+  "item.invmod.silverfish_spawn_egg": "IM Silverfish Spawn Egg"
 }

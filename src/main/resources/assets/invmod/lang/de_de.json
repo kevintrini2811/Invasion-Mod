@@ -164,5 +164,7 @@
   "invmod.subtitle.thrower_rages": "Werfer wütet",
   "invmod.subtitle.boulder_lands": "Felsbrocken schlägt auf",
   "invmod.subtitle.spider_egg_hatches": "Spinnenei schlüpft",
-  "invmod.subtitle.lightning_zaps": "Blitz knistert"
+  "invmod.subtitle.lightning_zaps": "Blitz knistert",
+  "entity.invmod.silverfish": "IM Silberfisch",
+  "item.invmod.silverfish_spawn_egg": "IM-Silberfisch-Spawn-Ei"
 }
