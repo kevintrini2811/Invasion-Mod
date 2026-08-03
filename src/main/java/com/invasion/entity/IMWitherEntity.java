@@ -14,7 +14,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
-import net.minecraft.world.entity.projectile.hurtingprojectile.WitherSkull;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -26,7 +25,6 @@ public final class IMWitherEntity extends WitherBoss
     private static final double MAX_NEXUS_ATTACK_DISTANCE_SQUARED = 64.0D * 64.0D;
     private static final double NEXUS_HOVER_DISTANCE_SQUARED = 12.0D * 12.0D;
     private static final int NEXUS_ATTACK_INTERVAL = 60;
-    private static final int NEXUS_ATTACK_DAMAGE = 8;
 
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     private int nexusAttackCooldown;
@@ -77,6 +75,13 @@ public final class IMWitherEntity extends WitherBoss
 
     @Override
     protected void customServerAiStep(ServerLevel level) {
+        NexusAccess currentNexus = getNexus();
+        if (currentNexus != null
+                && (currentNexus.isDiscarded() || !currentNexus.isActive())) {
+            setNexus(null);
+            kill(level);
+            return;
+        }
         if (!hasNexus()) {
             WorldNexusStorage.of(level).getNexus()
                     .filter(NexusAccess::isActive)
@@ -109,13 +114,22 @@ public final class IMWitherEntity extends WitherBoss
 
         Vec3 origin = new Vec3(getX(), getEyeY(), getZ());
         Vec3 direction = target.subtract(origin).normalize();
-        WitherSkull skull = new WitherSkull(level, this, direction);
-        skull.setOwner(this);
-        skull.setPos(origin.x, origin.y, origin.z);
+        IMWitherSkullEntity skull = new IMWitherSkullEntity(
+                level, this, direction);
         level.addFreshEntity(skull);
         level.levelEvent(null, 1024, blockPosition(), 0);
-        targetNexus.damage(damageSources().mobAttack(this), NEXUS_ATTACK_DAMAGE);
         nexusAttackCooldown = NEXUS_ATTACK_INTERVAL;
+    }
+
+    @Override
+    public boolean canAttack(net.minecraft.world.entity.LivingEntity target) {
+        return !(target instanceof Combatant<?>) && super.canAttack(target);
+    }
+
+    public void setMergedHealth(double health) {
+        double clampedHealth = Math.max(1.0D, health);
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(clampedHealth);
+        setHealth((float) clampedHealth);
     }
 
     @Override
