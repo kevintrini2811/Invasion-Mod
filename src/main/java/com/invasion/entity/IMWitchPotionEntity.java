@@ -1,12 +1,9 @@
 package com.invasion.entity;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.invasion.InvMobEffects;
 
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Mth;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -14,7 +11,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 
@@ -39,8 +35,7 @@ public final class IMWitchPotionEntity extends ThrownPotion {
 
     private static ItemStack createPotionStack(Type type) {
         ItemStack stack = new ItemStack(Items.SPLASH_POTION);
-        stack.set(DataComponents.POTION_CONTENTS, new PotionContents(
-                Optional.empty(), Optional.of(type.color), List.of()));
+        stack.getOrCreateTag().putInt("CustomPotionColor", type.color);
         return stack;
     }
 
@@ -54,13 +49,12 @@ public final class IMWitchPotionEntity extends ThrownPotion {
     public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         Type[] values = Type.values();
-        invasionType = values[Math.clamp(
+        invasionType = values[Mth.clamp(
                 input.getInt("invasionPotionType"), 0, values.length - 1)];
     }
 
     @Override
     protected void onHit(HitResult hitResult) {
-        super.onHit(hitResult);
         if (!(level() instanceof ServerLevel level)) {
             return;
         }
@@ -80,6 +74,8 @@ public final class IMWitchPotionEntity extends ThrownPotion {
                         invasionType.effect, HARM_DURATION), getOwner());
             }
         }
+        level.levelEvent(2002, blockPosition(), invasionType.color);
+        discard();
     }
 
     private void applySupport(LivingEntity entity) {
@@ -110,10 +106,10 @@ public final class IMWitchPotionEntity extends ThrownPotion {
         final boolean support;
         final int color;
         final String translationKey;
-        final net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect;
+        final net.minecraft.world.effect.MobEffect effect;
 
         Type(boolean support, int color, String translationKey,
-                net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect) {
+                net.minecraft.world.effect.MobEffect effect) {
             this.support = support;
             this.color = color;
             this.translationKey = translationKey;

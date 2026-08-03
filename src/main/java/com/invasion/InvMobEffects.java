@@ -1,31 +1,27 @@
 package com.invasion;
 
-import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 
 public final class InvMobEffects {
-    public static final Holder<MobEffect> INVASION_STRENGTH = register(
+    public static final MobEffect INVASION_STRENGTH = register(
             "invasion_strength",
             new InvasionEffect(MobEffectCategory.BENEFICIAL, 0xB61E1E)
                     .addAttributeModifier(
                             Attributes.ATTACK_DAMAGE,
-                            InvasionMod.id("invasion_strength"),
+                            "8dfe7e65-29d2-4a5f-a730-777fa51a5e11",
                             1.0D,
-                            AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+                            AttributeModifier.Operation.MULTIPLY_TOTAL));
 
     private InvMobEffects() {
     }
 
-    private static Holder<MobEffect> register(String name, MobEffect effect) {
+    private static MobEffect register(String name, MobEffect effect) {
         var id = InvasionMod.id(name);
-        var key = ResourceKey.create(BuiltInRegistries.MOB_EFFECT.key(), id);
-        return Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, key, effect);
+        return InvasionMod.INSTANCE.register(Registries.MOB_EFFECT, id, effect);
     }
 
     public static void bootstrap() {
