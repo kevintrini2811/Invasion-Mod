@@ -46,6 +46,11 @@ public final class WitherSkeletonGroupGoal extends Goal {
     }
 
     @Override
+    public void stop() {
+        skeleton.setGroupLeaderWaiting(false);
+    }
+
+    @Override
     public void tick() {
         refreshGroup();
         if (group.size() < 2) {
@@ -56,11 +61,13 @@ public final class WitherSkeletonGroupGoal extends Goal {
                 .min(Comparator.comparing(Entity::getUUID))
                 .orElse(skeleton);
         if (leader != skeleton) {
+            skeleton.setGroupLeaderWaiting(false);
             skeleton.getNavigation().moveTo(leader, 1.2D);
             return;
         }
 
         skeleton.getNavigation().stop();
+        skeleton.setGroupLeaderWaiting(true);
         List<IMWitherSkeletonEntity> mergeMembers = group.stream()
                 .sorted(Comparator.comparingDouble(skeleton::distanceToSqr))
                 .limit(REQUIRED_MEMBERS)
