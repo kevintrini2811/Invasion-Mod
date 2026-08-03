@@ -11,6 +11,9 @@ import com.invasion.entity.ai.goal.WitherSkeletonGroupGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -30,10 +33,29 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
+    private static final EntityDataAccessor<Boolean> GROUP_LEADER_WAITING =
+            SynchedEntityData.defineId(
+                    IMWitherSkeletonEntity.class,
+                    EntityDataSerializers.BOOLEAN);
+
     public IMWitherSkeletonEntity(
             EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);
         getNavigatorNew().setCanDestroyBlocks(true);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(GROUP_LEADER_WAITING, false);
+    }
+
+    public boolean isGroupLeaderWaiting() {
+        return entityData.get(GROUP_LEADER_WAITING);
+    }
+
+    public void setGroupLeaderWaiting(boolean waiting) {
+        entityData.set(GROUP_LEADER_WAITING, waiting);
     }
 
     public boolean isHoldingRangedWeapon() {
