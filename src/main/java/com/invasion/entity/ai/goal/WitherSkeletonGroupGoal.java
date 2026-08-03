@@ -106,8 +106,7 @@ public final class WitherSkeletonGroupGoal extends Goal {
             leader = null;
             return;
         }
-        GroupSnapshot snapshot = GroupCoordinator.get(
-                level, skeleton.getNexus().getUuid());
+        GroupSnapshot snapshot = GroupCoordinator.get(level, skeleton);
         group = snapshot.members();
         leader = snapshot.leader();
     }
@@ -179,15 +178,26 @@ public final class WitherSkeletonGroupGoal extends Goal {
         }
 
         private static synchronized GroupSnapshot get(
-                ServerLevel level, UUID nexusId) {
+                ServerLevel level, IMWitherSkeletonEntity skeleton) {
             long gameTime = level.getGameTime();
             LevelSnapshot snapshot = LEVELS.get(level);
-            if (snapshot == null || snapshot.gameTime() != gameTime) {
+            UUID nexusId = skeleton.getNexus().getUuid();
+            GroupSnapshot group = snapshot == null
+                    ? GroupSnapshot.EMPTY
+                    : snapshot.groups().getOrDefault(
+                            nexusId, GroupSnapshot.EMPTY);
+            // Wave spawning can add more skeletons after the first goal check
+            // in a tick. Rebuild when the caller was not present yet instead
+            // of serving that incomplete same-tick snapshot indefinitely.
+            if (snapshot == null
+                    || snapshot.gameTime() != gameTime
+                    || !group.members().contains(skeleton)) {
                 snapshot = build(level, gameTime);
                 LEVELS.put(level, snapshot);
+                group = snapshot.groups().getOrDefault(
+                        nexusId, GroupSnapshot.EMPTY);
             }
-            return snapshot.groups().getOrDefault(
-                    nexusId, GroupSnapshot.EMPTY);
+            return group;
         }
 
         private static LevelSnapshot build(ServerLevel level, long gameTime) {
