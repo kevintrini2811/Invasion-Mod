@@ -41,10 +41,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     private boolean continuingEngineerBridge;
     @Nullable
     private BlockPos lastCompletedBridgeTarget;
-    private int lastLoggedBridgePath;
-    private int lastLoggedBridgeNode = -1;
-    private PathAction lastLoggedBridgeAction = PathAction.NONE;
-
     private int haltingTicks;
     private int stuckTime;
     private boolean climbingLadder;
@@ -161,14 +157,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         lastEngineerProgressPos = mob.position();
         lastActionResult = result;
         if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] build finished: entity={}, path={}, node={}, result={}, pos={}",
-                    mob.getId(),
-                    path == null ? 0 : System.identityHashCode(path),
-                    activeTaskNodeIndex,
-                    result,
-                    mob.blockPosition()
-            );
             if (result != Status.SUCCESS) {
                 continuingEngineerBridge = false;
                 lastCompletedBridgeTarget = null;
@@ -239,13 +227,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         if (waitingForNotify == 1
                 && continuingEngineerBridge
                 && mob instanceof PigmanEngineerEntity engineer) {
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] build timed out: entity={}, path={}, node={}, pos={}",
-                    mob.getId(),
-                    path == null ? 0 : System.identityHashCode(path),
-                    activeTaskNodeIndex,
-                    mob.blockPosition()
-            );
             engineer.cancelStalledTerrainTask(Status.OUT_OF_RANGE);
             stop();
         }
@@ -332,7 +313,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
         PathAction currentAction = getCurrentWorkingAction();
         int nodeIndex = getPath().getNextNodeIndex();
-        logEngineerBridgeTransition(currentAction, nodeIndex);
 
         if (currentAction != PathAction.NONE
                 && completedTaskNodeIndex == nodeIndex
@@ -347,14 +327,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                     currentAction, getPath().getNextNodePos());
             if (!captureCompletedBridgeTarget(moveTarget)) {
                 if (++completedBridgeMoveTicks >= 20 * 3) {
-                    InvasionMod.LOGGER.warn(
-                            "[EngineerBridge] failed to enter completed bridge step; repathing: entity={}, path={}, node={}, target={}, pos={}",
-                            mob.getId(),
-                            System.identityHashCode(getPath()),
-                            nodeIndex,
-                            moveTarget,
-                            mob.blockPosition()
-                    );
                     abandonStalledBridgePath();
                     return;
                 }
@@ -405,13 +377,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
         if (waitingForNotify > 0
                 && engineerTaskStartTick >= 0
                 && mob.tickCount - engineerTaskStartTick >= 20 * 12) {
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] terrain task exceeded absolute timeout; repathing: entity={}, path={}, node={}, pos={}",
-                    mob.getId(),
-                    path == null ? 0 : System.identityHashCode(path),
-                    activeTaskNodeIndex,
-                    mob.blockPosition()
-            );
             engineer.cancelStalledTerrainTask(Status.OUT_OF_RANGE);
             abandonStalledBridgePath();
             return;
@@ -439,13 +404,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
         if (++engineerIdleTicks >= 20 * 5) {
             boolean missingPath = path == null;
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] engineer made no movement progress; repathing: entity={}, path={}, node={}, pos={}",
-                    mob.getId(),
-                    path == null ? 0 : System.identityHashCode(path),
-                    path == null ? -1 : path.getNextNodeIndex(),
-                    mob.blockPosition()
-            );
             abandonStalledBridgePath();
             if (missingPath && ++engineerMissingPathRecoveries >= 3) {
                 boolean escaped = engineer.tryEscapeMissingPath();
@@ -460,15 +418,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                         towerStarted = engineer.tryStartTowerBuild();
                     }
                 }
-                InvasionMod.LOGGER.warn(
-                        "[EngineerBridge] escalating missing-path recovery: entity={}, attempt={}, escaped={}, bridged={}, tower={}, pos={}",
-                        mob.getId(),
-                        engineerMissingPathRecoveries,
-                        escaped,
-                        bridged,
-                        towerStarted,
-                        mob.blockPosition()
-                );
                 if (escaped || bridged || towerStarted) {
                     engineerMissingPathRecoveries = 0;
                 }
@@ -611,34 +560,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     public void stop() {
         finishLadderClimb();
         super.stop();
-    }
-
-    private void logEngineerBridgeTransition(PathAction action, int nodeIndex) {
-        if (!(mob instanceof PigmanEngineerEntity)
-                || (!continuingEngineerBridge && action.getType() != PathAction.Type.BRIDGE)) {
-            return;
-        }
-
-        int pathId = System.identityHashCode(getPath());
-        if (pathId != lastLoggedBridgePath
-                || nodeIndex != lastLoggedBridgeNode
-                || action != lastLoggedBridgeAction) {
-            lastLoggedBridgePath = pathId;
-            lastLoggedBridgeNode = nodeIndex;
-            lastLoggedBridgeAction = action;
-            BlockPos nodePos = getPath().getNextNodePos();
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] path state: entity={}, path={}, node={}/{}, action={}, nodePos={}, mobPos={}, requiresBridge={}",
-                    mob.getId(),
-                    pathId,
-                    nodeIndex,
-                    getPath().getNodeCount(),
-                    action,
-                    nodePos,
-                    mob.blockPosition(),
-                    requiresBridgeAt(nodePos)
-            );
-        }
     }
 
     private boolean hasReachedCompletedActionNode(PathAction action, BlockPos nodePos) {
@@ -811,14 +732,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     @Override
     public boolean moveTo(Path path, double speed) {
         if (mob instanceof PigmanEngineerEntity && isWaitingForTask()) {
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] rejected path replacement during build: entity={}, currentPath={}, requestedPath={}, node={}, pos={}",
-                    mob.getId(),
-                    getPath() == null ? 0 : System.identityHashCode(getPath()),
-                    System.identityHashCode(path),
-                    getPath() == null ? -1 : getPath().getNextNodeIndex(),
-                    mob.blockPosition()
-            );
             return false;
         }
         if (continuingEngineerBridge
@@ -839,17 +752,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
             }
             Path currentPath = getPath();
             if (currentPath != null && currentPath != previousPath) {
-                if (continuingEngineerBridge && mob instanceof PigmanEngineerEntity) {
-                    InvasionMod.LOGGER.warn(
-                            "[EngineerBridge] path replaced: entity={}, oldPath={}, newPath={}, nodes={}, target={}, pos={}",
-                            mob.getId(),
-                            previousPath == null ? 0 : System.identityHashCode(previousPath),
-                            System.identityHashCode(currentPath),
-                            currentPath.getNodeCount(),
-                            currentPath.getTarget(),
-                            mob.blockPosition()
-                    );
-                }
                 activeTaskNodeIndex = -1;
                 completedTaskNodeIndex = -1;
                 completedBridgeMoveTicks = 0;
@@ -861,13 +763,6 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
     @Override
     public void recomputePath() {
         if (mob instanceof PigmanEngineerEntity && isWaitingForTask()) {
-            InvasionMod.LOGGER.warn(
-                    "[EngineerBridge] rejected automatic recomputation during build: entity={}, path={}, node={}, pos={}",
-                    mob.getId(),
-                    path == null ? 0 : System.identityHashCode(path),
-                    path == null ? -1 : path.getNextNodeIndex(),
-                    mob.blockPosition()
-            );
             return;
         }
         super.recomputePath();
