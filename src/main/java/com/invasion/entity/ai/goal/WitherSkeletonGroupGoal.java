@@ -47,6 +47,7 @@ public final class WitherSkeletonGroupGoal extends Goal {
 
     @Override
     public void stop() {
+        skeleton.getNavigatorNew().autoPathToEntity(null);
         skeleton.setGroupLeaderWaiting(false);
     }
 
@@ -62,10 +63,14 @@ public final class WitherSkeletonGroupGoal extends Goal {
                 .orElse(skeleton);
         if (leader != skeleton) {
             skeleton.setGroupLeaderWaiting(false);
-            skeleton.getNavigation().moveTo(leader, 1.2D);
+            // Let IMMobNavigation follow the moving leader. Unlike replacing
+            // the path here every tick, this preserves an active ladder climb
+            // and repaths once the skeleton has safely reached the top.
+            skeleton.getNavigatorNew().autoPathToEntity(leader);
             return;
         }
 
+        skeleton.getNavigatorNew().autoPathToEntity(null);
         if (group.size() < REQUIRED_MEMBERS) {
             // No fourth member is currently expected. Keep the incomplete
             // group together, but let its leader continue towards the Nexus.
