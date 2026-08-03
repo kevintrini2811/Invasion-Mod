@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.VanillaMobSpawnReplacement;
+import com.invasion.entity.NexusBoundMobLifecycle;
+import com.invasion.entity.IMBlazeEntity;
 import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.WorldNexusStorage;
@@ -53,6 +55,8 @@ public class InvasionMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        NexusBoundMobLifecycle.bootstrap();
+        IMBlazeEntity.bootstrap();
         PayloadTypeRegistry.clientboundPlay().register(NexusHudPayload.TYPE, NexusHudPayload.CODEC);
         CONFIG.loadConfig(FabricLoader.getInstance().getConfigDir().resolve("invasion_config.cfg").toFile());
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> {

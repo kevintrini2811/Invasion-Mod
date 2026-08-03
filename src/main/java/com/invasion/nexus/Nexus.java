@@ -805,9 +805,15 @@ public class Nexus implements ControllableNexusAccess {
 
     private void killAllMobs() {
         DamageSource source = getWorld().damageSources().magic();
-        for (LivingEntity mob : getWorld().getEntitiesOfClass(LivingEntity.class, boundingBoxToRadius, Combatant.PREDICATE)) {
-            mob.hurt(source, mob.getMaxHealth());
-            mob.kill((ServerLevel) mob.level());
+        for (net.minecraft.world.entity.Entity entity
+                : ((ServerLevel)getWorld()).getAllEntities()) {
+            if (entity instanceof LivingEntity mob
+                    && entity instanceof Combatant<?> combatant
+                    && !(entity instanceof com.invasion.entity.IMWolfEntity)
+                    && combatant.getNexus() == this) {
+                mob.hurt(source, mob.getMaxHealth());
+                mob.kill((ServerLevel) mob.level());
+            }
         }
     }
 
