@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.nexus.WorldNexusStorage;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -73,9 +74,22 @@ public final class BoundIMMobRegistry {
     }
 
     private static void onJoin(EntityJoinLevelEvent event) {
-        if (event.getEntity() instanceof Combatant<?> combatant) {
-            update(event.getEntity(), combatant.getNexus());
+        if (!(event.getLevel() instanceof ServerLevel level)
+                || !(event.getEntity() instanceof Combatant<?> combatant)) {
+            return;
         }
+        NexusAccess nexus = combatant.getNexus();
+        if (nexus == null) {
+            nexus = WorldNexusStorage.of(level).getNexus()
+                    .filter(candidate -> candidate.isActive()
+                            && !candidate.isDiscarded())
+                    .orElse(null);
+            if (nexus != null) {
+                combatant.setNexus(nexus);
+                return;
+            }
+        }
+        update(event.getEntity(), nexus);
     }
 
     private static synchronized void onLeave(EntityLeaveLevelEvent event) {
