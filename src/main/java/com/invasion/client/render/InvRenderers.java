@@ -31,6 +31,7 @@ public final class InvRenderers {
                 IMZombieVillagerRenderer::new);
         EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
+        EntityRendererRegistry.register(InvEntities.ZOGLIN, IMZoglinRenderer::new);
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOGGED, InvBoggedRenderer::new);
         EntityRendererRegistry.register(InvEntities.PARCHED, InvParchedRenderer::new);

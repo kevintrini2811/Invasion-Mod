@@ -123,6 +123,8 @@ public interface InvItems {
                     p, InvEntities.ZOMBIFIED_PIGLIN, 0xEA9393, 0x4C7129));
     Item TIER_TWO_ZOMBIE_PIGMAN_SPAWN_EGG = register("tier_two_pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 2)));
     Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
+    Item ZOGLIN_SPAWN_EGG = register("zoglin_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.ZOGLIN, 0xC66E55, 0x5F6464));
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
