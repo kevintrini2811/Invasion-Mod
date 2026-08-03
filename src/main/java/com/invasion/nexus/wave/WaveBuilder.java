@@ -180,6 +180,7 @@ public class WaveBuilder {
                     .entry(imp, 2F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.2F)
                     .entry(EntityPatterns.PHANTOM_T1, 0.12F);
+            entry.entry(EntityPatterns.WITCH, 0.05F);
 
             entry.end((int) (timeScale * 30000))
                     .amount((int) (mobScale * 8))

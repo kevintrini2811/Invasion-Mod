@@ -111,6 +111,8 @@ public class InvasionMod {
             InvBlocks.bootstrap();
         } else if (event.getRegistryKey() == Registries.ENTITY_TYPE) {
             InvEntities.bootstrap();
+        } else if (event.getRegistryKey() == Registries.MOB_EFFECT) {
+            InvMobEffects.bootstrap();
         } else if (event.getRegistryKey() == Registries.ITEM) {
             InvItems.bootstrap();
         } else if (event.getRegistryKey() == Registries.BLOCK_ENTITY_TYPE) {
