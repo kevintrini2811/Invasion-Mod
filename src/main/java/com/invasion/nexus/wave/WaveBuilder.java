@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.invasion.InvasionMod;
+import com.invasion.entity.InvEntities;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.nexus.wave.pool.Select;
@@ -242,6 +243,20 @@ public class WaveBuilder {
                         .angle(45)
                         .minSpawns(2)
         );
+
+        if (waveNumber >= 20 && waveNumber % 5 == 0) {
+            int healthScalingSteps = (waveNumber - 20) / 5;
+            EntityPattern wither = new EntityPattern.Builder(InvEntities.WITHER)
+                    .addTier(healthScalingSteps, 1)
+                    .build();
+            builder.entry(WaveEntry.finite()
+                    .entry(wither, 1)
+                    .begin((int) (timeScale * 105000))
+                    .end((int) (timeScale * 106000))
+                    .amount(1)
+                    .granularity(500)
+                    .minSpawns(1));
+        }
 
         return builder;
     }

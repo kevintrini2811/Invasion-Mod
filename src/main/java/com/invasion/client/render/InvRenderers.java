@@ -5,6 +5,7 @@ import com.invasion.entity.InvEntities;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
+import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
@@ -32,6 +33,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
         EntityRendererRegistry.register(InvEntities.ZOGLIN, IMZoglinRenderer::new);
+        EntityRendererRegistry.register(InvEntities.WITHER, WitherBossRenderer::new);
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOGGED, InvBoggedRenderer::new);
         EntityRendererRegistry.register(InvEntities.PARCHED, InvParchedRenderer::new);
