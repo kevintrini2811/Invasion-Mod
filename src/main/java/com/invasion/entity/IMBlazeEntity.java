@@ -10,19 +10,17 @@ import com.invasion.nexus.NexusAccess;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Blaze;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.ProjectileImpactEvent;
 
 /** A Nexus-bound Blaze retaining the complete vanilla Blaze behaviour. */
 public final class IMBlazeEntity extends Blaze
@@ -34,7 +32,7 @@ public final class IMBlazeEntity extends Blaze
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(IMBlazeEntity::onProjectileImpact);
+        MinecraftForge.EVENT_BUS.addListener(IMBlazeEntity::onProjectileImpact);
     }
 
     @Override
@@ -65,13 +63,13 @@ public final class IMBlazeEntity extends Blaze
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -88,10 +86,10 @@ public final class IMBlazeEntity extends Blaze
 
     @Override
     protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        EntityTypes.BLAZE.getDefaultLootTable().ifPresent(lootTable ->
-                dropFromLootTable(level, source, causedByPlayer, lootTable));
+            DamageSource source, int looting, boolean causedByPlayer) {
+        super.dropCustomDeathLoot(source, looting, causedByPlayer);
+        VanillaLoot.drop(this, EntityType.BLAZE, source,
+                causedByPlayer ? lastHurtByPlayer : null);
     }
 
     private static void onProjectileImpact(ProjectileImpactEvent event) {
@@ -177,8 +175,10 @@ public final class IMBlazeEntity extends Blaze
                 return;
             }
             Vec3 direction = shotTarget.subtract(getX(), getY(0.5D), getZ());
-            SmallFireball fireball = new SmallFireball(level(), IMBlazeEntity.this,
-                    direction.normalize());
+            direction = direction.normalize();
+            SmallFireball fireball = new SmallFireball(
+                    level(), IMBlazeEntity.this,
+                    direction.x, direction.y, direction.z);
             fireball.setPos(getX(), getY(0.5D) + 0.5D, getZ());
             level().addFreshEntity(fireball);
             level().levelEvent(null, 1018, blockPosition(), 0);
@@ -205,7 +205,7 @@ public final class IMBlazeEntity extends Blaze
 
             net.minecraft.core.BlockPos wall = hit.getBlockPos();
             int startY = Math.max(wall.getY() + 1, blockPosition().getY());
-            for (int y = startY; y < level().getMaxY() - 1; y++) {
+            for (int y = startY; y < level().getMaxBuildHeight() - 1; y++) {
                 net.minecraft.core.BlockPos lower = new net.minecraft.core.BlockPos(
                         wall.getX(), y, wall.getZ());
                 net.minecraft.core.BlockPos upper = lower.above();
