@@ -59,6 +59,22 @@ public final class VanillaMobSpawnReplacement {
         if (!(event.getLevel() instanceof ServerLevel world)) {
             return;
         }
+
+        // A Wither may already be loaded when the Nexus is activated. Queue
+        // those existing bosses as well so "all vanilla Withers" is literal.
+        if (world.getGameTime() % 20L == 0L
+                && WorldNexusStorage.of(world).getNexus()
+                        .filter(nexus -> nexus.isActive())
+                        .isPresent()) {
+            Set<UUID> pending = PENDING.computeIfAbsent(
+                    world, ignored -> new HashSet<>());
+            for (Entity entity : world.getAllEntities()) {
+                if (entity.getType() == EntityTypes.WITHER) {
+                    pending.add(entity.getUUID());
+                }
+            }
+        }
+
         Set<UUID> pending = PENDING.remove(world);
         if (pending == null || pending.isEmpty()) {
             return;
@@ -115,6 +131,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.PHANTOM, nexus);
         } else if (mob.getType() == EntityTypes.ZOGLIN) {
             convert(mob, InvEntities.ZOGLIN, nexus);
+        } else if (mob.getType() == EntityTypes.WITHER) {
+            convert(mob, InvEntities.WITHER, nexus);
         }
     }
 
@@ -133,7 +151,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.CAVE_SPIDER
                 || type == EntityTypes.ENDERMAN
                 || type == EntityTypes.PHANTOM
-                || type == EntityTypes.ZOGLIN;
+                || type == EntityTypes.ZOGLIN
+                || type == EntityTypes.WITHER;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -208,7 +227,9 @@ public final class VanillaMobSpawnReplacement {
             converted.setPersistenceRequired();
         }
         converted.setNexus(nexus);
-        double reducedMaxHealth = converted.getMaxHealth() * 0.3D;
+        double reducedMaxHealth = converted instanceof IMWitherEntity
+                ? 150.0D
+                : converted.getMaxHealth() * 0.3D;
         converted.getAttribute(Attributes.MAX_HEALTH).setBaseValue(reducedMaxHealth);
         converted.setHealth((float)reducedMaxHealth);
         if (converted instanceof EntityIMLiving imMob) {

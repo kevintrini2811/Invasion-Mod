@@ -54,6 +54,8 @@ public interface EntityPatterns {
     EntityPattern ENDERMAN_T1 = register("enderman_t1", new EntityPattern.Builder(InvEntities.ENDERMAN).addTier(1, 1));
     EntityPattern PHANTOM_T1 = register("phantom_t1",
             new EntityPattern.Builder(InvEntities.PHANTOM).addTier(1, 1));
+    EntityPattern WITHER = register("wither",
+            new EntityPattern.Builder(InvEntities.WITHER).addTier(0, 1));
 
     static EntityPattern register(String name, EntityPattern.Builder builder) {
         return register(name, builder, 0);

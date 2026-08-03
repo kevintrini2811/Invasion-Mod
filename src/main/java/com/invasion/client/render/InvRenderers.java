@@ -5,6 +5,7 @@ import com.invasion.entity.InvEntities;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
+import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
@@ -32,6 +33,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN,
                 context -> new InvasionZombieRenderer<>(context, true));
         event.registerEntityRenderer(InvEntities.ZOGLIN, IMZoglinRenderer::new);
+        event.registerEntityRenderer(InvEntities.WITHER, WitherBossRenderer::new);
         event.registerEntityRenderer(InvEntities.SKELETON, InvSkeletonRenderer::new);
         event.registerEntityRenderer(InvEntities.BOGGED, InvBoggedRenderer::new);
         event.registerEntityRenderer(InvEntities.PARCHED, InvParchedRenderer::new);
