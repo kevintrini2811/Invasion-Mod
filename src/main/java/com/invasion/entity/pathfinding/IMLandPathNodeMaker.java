@@ -287,7 +287,7 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
      */
     public static boolean canImpactDestroyBlock(PathfinderMob entity, BlockPos pos) {
         if (!(entity.level() instanceof ServerLevel level)
-                || !level.getGameRules().get(GameRules.MOB_GRIEFING)) {
+                || !level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
             return false;
         }
         BlockState state = level.getBlockState(pos);

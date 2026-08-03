@@ -23,7 +23,7 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.hoglin.HoglinBase;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -180,7 +180,7 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
             return;
         }
         if (getBoundingBox().inflate(0.35D).intersects(dashTarget.getBoundingBox())) {
-            hitDashTarget = doHurtTarget(level, dashTarget);
+            hitDashTarget = doHurtTarget(dashTarget);
         }
     }
 
@@ -217,14 +217,14 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel level, Entity target) {
+    public boolean doHurtTarget(Entity target) {
         if (!(target instanceof net.minecraft.world.entity.LivingEntity living)) {
             return false;
         }
         attackAnimationRemainingTicks = ATTACK_ANIMATION_DURATION;
-        level.broadcastEntityEvent(this, (byte) 4);
+        level().broadcastEntityEvent(this, (byte) 4);
         playSound(SoundEvents.ZOGLIN_ATTACK, 1.0F, getVoicePitch());
-        return HoglinBase.hurtAndThrowTarget(level, this, living);
+        return HoglinBase.hurtAndThrowTarget(this, living);
     }
 
     @Override
