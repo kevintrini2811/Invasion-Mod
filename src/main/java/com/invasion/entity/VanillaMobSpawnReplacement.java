@@ -129,6 +129,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.ENDERMAN, nexus);
         } else if (mob.getType() == EntityType.PHANTOM) {
             convert(mob, InvEntities.PHANTOM, nexus);
+        } else if (mob.getType() == EntityType.ZOGLIN) {
+            convert(mob, InvEntities.ZOGLIN, nexus);
         }
     }
 
@@ -145,7 +147,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.SPIDER
                 || type == EntityType.CAVE_SPIDER
                 || type == EntityType.ENDERMAN
-                || type == EntityType.PHANTOM;
+                || type == EntityType.PHANTOM
+                || type == EntityType.ZOGLIN;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
