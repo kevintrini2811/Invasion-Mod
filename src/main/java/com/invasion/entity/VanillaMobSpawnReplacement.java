@@ -52,6 +52,7 @@ public final class VanillaMobSpawnReplacement {
     }
 
     private static void processQueue(ServerLevel world) {
+        // These mobs may already be loaded when the Nexus is activated.
         if (world.getGameTime() % 20L == 0L
                 && WorldNexusStorage.of(world).getNexus()
                         .filter(nexus -> nexus.isActive())
@@ -59,7 +60,8 @@ public final class VanillaMobSpawnReplacement {
             Set<UUID> pending = PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>());
             for (Entity entity : world.getAllEntities()) {
-                if (entity.getType() == EntityTypes.WITHER) {
+                if (entity.getType() == EntityTypes.WITHER
+                        || entity.getType() == EntityTypes.BLAZE) {
                     pending.add(entity.getUUID());
                 }
             }
@@ -122,6 +124,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.ZOGLIN, nexus);
         } else if (mob.getType() == EntityTypes.WITHER) {
             convert(mob, InvEntities.WITHER, nexus);
+        } else if (mob.getType() == EntityTypes.BLAZE) {
+            convert(mob, InvEntities.BLAZE, nexus);
         }
     }
 
@@ -141,7 +145,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.ENDERMAN
                 || type == EntityTypes.PHANTOM
                 || type == EntityTypes.ZOGLIN
-                || type == EntityTypes.WITHER;
+                || type == EntityTypes.WITHER
+                || type == EntityTypes.BLAZE;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
