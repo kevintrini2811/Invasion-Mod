@@ -1,5 +1,6 @@
 package com.invasion.entity.ai.goal;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -8,15 +9,15 @@ import com.invasion.entity.IMWitherEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.util.math.PosUtils;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.ai.goal.Goal;
 
-/** Pulls nearby IM Wither Skeletons together and merges groups of four. */
+/** Coordinates IM Wither Skeleton groups and merges complete groups of four. */
 public final class WitherSkeletonGroupGoal extends Goal {
-    private static final double SEARCH_RANGE = 24.0D;
     private static final double MERGE_DISTANCE_SQUARED = 3.5D * 3.5D;
     private static final int REQUIRED_MEMBERS = 4;
 
@@ -66,6 +67,16 @@ public final class WitherSkeletonGroupGoal extends Goal {
             return;
         }
 
+        if (group.size() < REQUIRED_MEMBERS) {
+            // No fourth member is currently expected. Keep the incomplete
+            // group together, but let its leader continue towards the Nexus.
+            skeleton.setGroupLeaderWaiting(false);
+            var target = PosUtils.center(skeleton.getNexus().getOrigin());
+            skeleton.getNavigation().moveTo(
+                    target.x, target.y, target.z, 1.0D);
+            return;
+        }
+
         skeleton.getNavigation().stop();
         skeleton.setGroupLeaderWaiting(true);
         List<IMWitherSkeletonEntity> mergeMembers = group.stream()
@@ -88,14 +99,18 @@ public final class WitherSkeletonGroupGoal extends Goal {
             group = List.of();
             return;
         }
-        group = level.getEntitiesOfClass(
-                IMWitherSkeletonEntity.class,
-                skeleton.getBoundingBox().inflate(SEARCH_RANGE),
-                candidate -> candidate.isAlive()
-                        && !candidate.isRemoved()
-                        && candidate.hasNexus()
-                        && candidate.getNexus().getUuid().equals(
-                                skeleton.getNexus().getUuid()));
+        List<IMWitherSkeletonEntity> candidates = new ArrayList<>();
+        for (Entity entity : level.getAllEntities()) {
+            if (entity instanceof IMWitherSkeletonEntity candidate
+                    && candidate.isAlive()
+                    && !candidate.isRemoved()
+                    && candidate.hasNexus()
+                    && candidate.getNexus().getUuid().equals(
+                            skeleton.getNexus().getUuid())) {
+                candidates.add(candidate);
+            }
+        }
+        group = List.copyOf(candidates);
     }
 
     private void merge(List<IMWitherSkeletonEntity> members) {
