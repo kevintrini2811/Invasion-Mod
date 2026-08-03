@@ -17,6 +17,7 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Silverfish;
+import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.phys.Vec3;
 
 public interface InvEntities {
@@ -46,6 +47,11 @@ public interface InvEntities {
                             IMWitherSkeletonEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(0.7F, 2.4F).eyeHeight(2.1F)
                     .ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMWitchEntity> WITCH = register("witch",
+            EntityType.Builder.<IMWitchEntity>of(
+                            IMWitchEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F).eyeHeight(1.62F)
+                    .ridingOffset(-0.45F).clientTrackingRange(8));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<EntityIMSpeedyZombie> SPEEDY_ZOMBIE = register(
@@ -92,6 +98,12 @@ public interface InvEntities {
             EntityType.Builder.<IMWitherSkullEntity>of(
                             IMWitherSkullEntity::new, MobCategory.MISC)
                     .sized(0.3125F, 0.3125F).clientTrackingRange(4)
+                    .updateInterval(10));
+    EntityType<IMWitchPotionEntity> WITCH_POTION = register(
+            "witch_potion",
+            EntityType.Builder.<IMWitchPotionEntity>of(
+                            IMWitchPotionEntity::new, MobCategory.MISC)
+                    .sized(0.25F, 0.25F).clientTrackingRange(4)
                     .updateInterval(10));
     EntityType<IMZombifiedPiglinEntity> ZOMBIFIED_PIGLIN = register(
             "zombified_piglin",
@@ -185,6 +197,7 @@ public interface InvEntities {
                 STRAY, IMSkeletonEntity.createIMSkeletonAttributes());
         FabricDefaultAttributeRegistry.register(
                 WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
+        FabricDefaultAttributeRegistry.register(WITCH, Witch.createAttributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(
                 SPEEDY_ZOMBIE,

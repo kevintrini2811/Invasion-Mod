@@ -31,6 +31,7 @@ public interface Waves {
             .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
             .entry(EntityPatterns.ENDERMAN_T1, 0.035F)
             .entry(EntityPatterns.PHANTOM_T1, 0.025F)
+            .entry(EntityPatterns.WITCH, 0.04F)
             .entry(EntityPatterns.CREEPER_T1_BASIC, 0.084F);
     Select.PoolBuilder<EntityPattern, Float> WAVE_FIVE_BASE_POOL = Select.<EntityPattern>random()
             .entry(EntityPatterns.ZOMBIE_T1_ANY, 3F)
@@ -54,6 +55,7 @@ public interface Waves {
             .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
             .entry(EntityPatterns.ENDERMAN_T1, 0.03F)
             .entry(EntityPatterns.PHANTOM_T1, 0.025F)
+            .entry(EntityPatterns.WITCH, 0.035F)
             .entry(EntityPatterns.CREEPER_T1_BASIC, 0.064F);
     Wave.Builder WAVE_1 = register(Wave.builder(110000, 15000)
             .entry(WaveEntry.random()
@@ -162,6 +164,7 @@ public interface Waves {
                     .entry(EntityPatterns.SKELETON_T1_ANY, 0.7F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.032F)
                     .entry(EntityPatterns.PHANTOM_T1, 0.028F)
+                    .entry(EntityPatterns.WITCH, 0.04F)
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.074F).end(30000).amount(7).granularity(2000).angle(45).minSpawns(5))
             .entry(WaveEntry.finite()
                     .entry(EntityPatterns.SPIDER_T2_ANY, 1)
@@ -208,6 +211,7 @@ public interface Waves {
                     .entry(EntityPatterns.THROWER_T1, 0.1F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.04F)
                     .entry(EntityPatterns.PHANTOM_T1, 0.03F)
+                    .entry(EntityPatterns.WITCH, 0.045F)
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.064F)
                     .end(30000).amount(7).granularity(2000).angle(45).minSpawns(5))
             .entry(WaveEntry.finite()

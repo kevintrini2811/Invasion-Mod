@@ -54,6 +54,7 @@ public class InvasionConfig extends Config {
         m.put("IMZombiePigman-T2", 30);
         m.put("IMZombiePigman-T3", 65);
         m.put("IMZoglin-T1", 65);
+        m.put("IMWitch-T1", 26);
         m.put("IMEnderman-T1", 40);
     });
     private static final boolean DEFAULT_NIGHT_SPAWNS_ENABLED = false;

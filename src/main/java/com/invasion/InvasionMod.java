@@ -93,6 +93,7 @@ public class InvasionMod implements ModInitializer {
         InvItems.bootstrap();
         InvSounds.boostrap();
         InvEntities.bootstrap();
+        InvMobEffects.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
         VillagerResurrectionHandler.bootstrap();
         InfectionDeathHandler.bootstrap();
