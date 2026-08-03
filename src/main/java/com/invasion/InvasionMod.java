@@ -2,6 +2,7 @@ package com.invasion;
 
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.entity.InfectionDeathHandler;
+import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.util.ChatUtils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -95,6 +96,7 @@ public class InvasionMod implements ModInitializer {
         VanillaMobSpawnReplacement.bootstrap();
         VillagerResurrectionHandler.bootstrap();
         InfectionDeathHandler.bootstrap();
+        IMCivilianTargetHandler.bootstrap();
         InvParticles.bootstrap();
         InvScreenHandlers.bootstrap();
     }

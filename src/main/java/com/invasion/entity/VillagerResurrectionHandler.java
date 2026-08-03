@@ -5,7 +5,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import com.invasion.nexus.Combatant;
 
 public final class VillagerResurrectionHandler {
@@ -17,33 +20,44 @@ public final class VillagerResurrectionHandler {
                 VillagerResurrectionHandler::afterDeath);
     }
 
-    private static void afterDeath(Entity victim, DamageSource source) {
-        if (!(victim instanceof AbstractVillager villager)
-                || !(villager.level() instanceof ServerLevel world)
+    private static void afterDeath(Entity entity, DamageSource source) {
+        if (!(entity instanceof Mob victim)
+                || !(victim instanceof AbstractVillager
+                        || victim instanceof AbstractPiglin
+                        || victim instanceof Pig)
+                || !(victim.level() instanceof ServerLevel world)
                 || !(source.getEntity() instanceof Combatant<?> killer)
                 || !killer.hasNexus()) {
             return;
         }
 
-        IMZombieVillagerEntity zombie = InvEntities.ZOMBIE_VILLAGER.create(
-                world, EntitySpawnReason.CONVERSION);
+        Mob zombie = victim instanceof AbstractVillager
+                ? InvEntities.ZOMBIE_VILLAGER.create(
+                        world, EntitySpawnReason.CONVERSION)
+                : victim instanceof AbstractPiglin
+                        ? InvEntities.ZOMBIFIED_PIGLIN.create(
+                                world, EntitySpawnReason.CONVERSION)
+                        : InvEntities.ZOMBIE_PIGMAN.create(
+                                world, EntitySpawnReason.CONVERSION);
         if (zombie == null) {
             return;
         }
 
         zombie.snapTo(
-                villager.getX(), villager.getY(), villager.getZ(),
-                villager.getYRot(), villager.getXRot());
-        zombie.setDeltaMovement(villager.getDeltaMovement());
-        zombie.setBaby(villager.isBaby());
-        zombie.setCustomName(villager.getCustomName());
-        zombie.setCustomNameVisible(villager.isCustomNameVisible());
-        zombie.setNoAi(villager.isNoAi());
-        if (villager.isPersistenceRequired()) {
+                victim.getX(), victim.getY(), victim.getZ(),
+                victim.getYRot(), victim.getXRot());
+        zombie.setDeltaMovement(victim.getDeltaMovement());
+        zombie.setBaby(victim.isBaby());
+        zombie.setCustomName(victim.getCustomName());
+        zombie.setCustomNameVisible(victim.isCustomNameVisible());
+        zombie.setNoAi(victim.isNoAi());
+        if (victim.isPersistenceRequired()) {
             zombie.setPersistenceRequired();
         }
-        zombie.setNexus(killer.getNexus());
-        zombie.resetHealth();
+        if (zombie instanceof Combatant<?> combatant) {
+            combatant.setNexus(killer.getNexus());
+            combatant.resetHealth();
+        }
         world.addFreshEntity(zombie);
     }
 }
