@@ -283,7 +283,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
                 followingEntity = null;
             } else {
                 if (isDone() || (followingEntity.position().distanceTo(lastFollowingEntityPos) / (6 + mob.position().distanceTo(lastFollowingEntityPos)) > 0.1D)) {
-                    Path newPath = createPath(followingEntity, (int)mob.distanceTo(followingEntity) + 1);
+                    // The second parameter is the accepted distance from the
+                    // target, not the pathfinding search range. Using the
+                    // current distance made a follower count its starting
+                    // position as already reached and produced no movement.
+                    Path newPath = createPath(followingEntity, 0);
                     if (newPath != null && moveTo(newPath, 1)) {
                         lastFollowingEntityPos = followingEntity.position();
                     }
