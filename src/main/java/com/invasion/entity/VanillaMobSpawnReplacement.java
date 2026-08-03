@@ -244,7 +244,6 @@ public final class VanillaMobSpawnReplacement {
         if (source.isPersistenceRequired()) {
             converted.setPersistenceRequired();
         }
-        converted.setNexus(nexus);
         double reducedMaxHealth = converted instanceof IMWitherEntity
                 ? 150.0D
                 : converted.getMaxHealth() * 0.3D;
@@ -263,6 +262,10 @@ public final class VanillaMobSpawnReplacement {
         if (!world.addFreshEntity(converted)) {
             return;
         }
+        // Bind only after the replacement has joined the level. This makes
+        // setNexus update the loaded/bound registry against the final entity
+        // lifecycle state instead of relying on a pre-spawn registration.
+        converted.setNexus(nexus);
         if (vehicle != null && !vehicle.isRemoved()) {
             converted.startRiding(vehicle);
         }
