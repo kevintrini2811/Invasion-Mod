@@ -5,8 +5,12 @@ import com.invasion.block.InvBlockEntities;
 import com.invasion.client.render.InvRenderers;
 import com.invasion.client.screen.NexusScreen;
 import com.invasion.item.InvItems;
+import com.invasion.entity.InvEntities;
 import com.invasion.network.NexusHudPayload;
 import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.client.renderer.entity.EntityRenderers;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.renderer.entity.WitchRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.item.Item;
@@ -43,6 +47,9 @@ public final class InvasionModClient {
 
     private static void clientSetup(FMLClientSetupEvent event) {
         event.enqueueWork(() -> {
+            EntityRenderers.register(InvEntities.WITCH, WitchRenderer::new);
+            EntityRenderers.register(
+                    InvEntities.WITCH_POTION, ThrownItemRenderer::new);
             ItemProperties.register(InvItems.SEARING_BOW,
                     ResourceLocation.withDefaultNamespace("pull"),
                     (stack, level, entity, seed) -> entity == null
