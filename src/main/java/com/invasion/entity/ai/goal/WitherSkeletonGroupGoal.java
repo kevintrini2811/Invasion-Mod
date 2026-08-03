@@ -12,6 +12,8 @@ import java.util.WeakHashMap;
 import com.invasion.entity.IMWitherEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
 import com.invasion.entity.InvEntities;
+import com.invasion.entity.BoundIMMobRegistry;
+import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.util.math.PosUtils;
 
@@ -202,7 +204,8 @@ public final class WitherSkeletonGroupGoal extends Goal {
 
         private static LevelSnapshot build(ServerLevel level, long gameTime) {
             Map<UUID, List<IMWitherSkeletonEntity>> members = new HashMap<>();
-            for (Entity entity : level.getAllEntities()) {
+            for (Combatant<?> combatant : BoundIMMobRegistry.activeBound(level)) {
+                Entity entity = combatant.asEntity();
                 if (!(entity instanceof IMWitherSkeletonEntity candidate)
                         || !candidate.isAlive()
                         || candidate.isRemoved()
