@@ -9,6 +9,8 @@ import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
+import net.minecraft.client.renderer.entity.WitchRenderer;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
@@ -36,6 +38,9 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.WITHER, WitherBossRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
+        event.registerEntityRenderer(InvEntities.WITCH, WitchRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.WITCH_POTION, ThrownItemRenderer::new);
         event.registerEntityRenderer(InvEntities.SKELETON, InvSkeletonRenderer::new);
         event.registerEntityRenderer(InvEntities.PARCHED, InvParchedRenderer::new);
         event.registerEntityRenderer(InvEntities.STRAY, InvStrayRenderer::new);
