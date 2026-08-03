@@ -126,11 +126,11 @@ public interface InvEntities {
 
     private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
         var id = InvasionMod.id(name);
-        var key = ResourceKey.create(Registries.ENTITY_TYPE, id);
-        // Forge/NeoForge 1.20.1 assigns the registry name itself. Supplying a
-        // data-fixer key here creates an additional intrusive holder which is
-        // never bound and makes the entity registry fail while freezing.
-        return InvasionMod.INSTANCE.register(Registries.ENTITY_TYPE, id, builder.build(null));
+        // The 1.20.1 builder passes this name to the vanilla data-fixer lookup.
+        // A null name only appeared to work with ModernFix because it bypasses
+        // that lookup during startup.
+        return InvasionMod.INSTANCE.register(
+                Registries.ENTITY_TYPE, id, builder.build(id.toString()));
     }
 
     private static <T extends Entity> EntityType.Builder<T> betaFeature(EntityType.Builder<T> builder) {
