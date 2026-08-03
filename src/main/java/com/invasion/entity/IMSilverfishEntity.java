@@ -13,6 +13,8 @@ import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -119,6 +121,7 @@ public final class IMSilverfishEntity extends Silverfish
 
     private final class TransformUnbreakableBlockGoal extends Goal {
         @Nullable private BlockPos target;
+        @Nullable private BlockPos approach;
         private int searchCooldown;
 
         private TransformUnbreakableBlockGoal() {
@@ -134,52 +137,82 @@ public final class IMSilverfishEntity extends Silverfish
             }
             searchCooldown = 20;
             target = findClosestUnbreakableBlock(serverLevel);
-            return target != null;
+            return target != null && approach != null;
         }
 
         @Override
         public boolean canContinueToUse() {
-            return target != null && isUnbreakableTarget(target);
+            return target != null && approach != null
+                    && isUnbreakableTarget(target)
+                    && (isWithinTransformRange() || !getNavigation().isDone());
         }
 
         @Override
         public void start() {
-            getNavigation().moveTo(target.getX() + 0.5D,
-                    target.getY() + 0.5D, target.getZ() + 0.5D, 1.2D);
+            if (!isWithinTransformRange()) {
+                getNavigation().moveTo(approach.getX() + 0.5D,
+                        approach.getY(), approach.getZ() + 0.5D, 1.2D);
+            }
         }
 
         @Override
         public void tick() {
             if (target == null) return;
-            if (distanceToSqr(target.getX() + 0.5D,
-                    target.getY() + 0.5D, target.getZ() + 0.5D) <= 4.0D) {
+            if (isWithinTransformRange()) {
                 level().setBlockAndUpdate(target, Blocks.STONE.defaultBlockState());
                 discard();
-            } else if (getNavigation().isDone()) {
-                start();
             }
+        }
+
+        private boolean isWithinTransformRange() {
+            return target != null && distanceToSqr(target.getX() + 0.5D,
+                    target.getY() + 0.5D, target.getZ() + 0.5D) <= 4.0D;
         }
 
         @Nullable
         private BlockPos findClosestUnbreakableBlock(ServerLevel level) {
             BlockPos best = null;
+            approach = null;
             double bestDistance = Double.MAX_VALUE;
             for (BlockPos pos : BlockPos.withinManhattan(
                     blockPosition(), 12, 6, 12)) {
                 if (!isUnbreakableTarget(pos)) continue;
+                BlockPos candidateApproach = findApproach(pos);
+                if (candidateApproach == null) continue;
                 double distance = pos.distSqr(blockPosition());
                 if (distance < bestDistance) {
                     best = pos.immutable();
+                    approach = candidateApproach;
                     bestDistance = distance;
                 }
             }
             return best;
         }
 
+        @Nullable
+        private BlockPos findApproach(BlockPos block) {
+            if (distanceToSqr(block.getX() + 0.5D,
+                    block.getY() + 0.5D, block.getZ() + 0.5D) <= 4.0D) {
+                return blockPosition();
+            }
+            for (Direction direction : Direction.values()) {
+                BlockPos candidate = block.relative(direction);
+                if (!level().getBlockState(candidate)
+                                .getCollisionShape(level(), candidate).isEmpty()) {
+                    continue;
+                }
+                if (getNavigation().createPath(candidate, 0) != null) {
+                    return candidate.immutable();
+                }
+            }
+            return null;
+        }
+
         private boolean isUnbreakableTarget(BlockPos pos) {
             BlockState state = level().getBlockState(pos);
             return !state.isAir()
                     && !state.is(InvBlocks.NEXUS_CORE)
+                    && !state.is(BlockTags.CLIMBABLE)
                     && (state.getDestroySpeed(level(), pos) < 0.0F
                             || BlockMetadata.isIndestructible(state));
         }
@@ -224,14 +257,13 @@ public final class IMSilverfishEntity extends Silverfish
         }
 
         private boolean isCandidate(LivingEntity candidate) {
-            if (candidate == IMSilverfishEntity.this
+            if (candidate instanceof Silverfish
                     || candidate.entityTags().contains(INFECTED_TAG)
                     || candidate instanceof Player) {
                 return false;
             }
             if (invasionMob) {
                 return candidate instanceof Combatant<?>
-                        && !(candidate instanceof IMSilverfishEntity)
                         && !(candidate instanceof IMWolfEntity);
             }
             return candidate instanceof IMWolfEntity
