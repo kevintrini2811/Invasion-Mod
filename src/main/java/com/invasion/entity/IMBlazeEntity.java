@@ -111,6 +111,8 @@ public final class IMBlazeEntity extends Blaze
     private final class AttackNexusGoal extends Goal {
         private static final double ATTACK_RANGE_SQUARED = 32.0D * 32.0D;
         private int attackCooldown;
+        @Nullable
+        private Vec3 wallCrossingTarget;
 
         private AttackNexusGoal() {
             setFlags(java.util.EnumSet.of(Flag.MOVE, Flag.LOOK));
@@ -132,6 +134,11 @@ public final class IMBlazeEntity extends Blaze
         }
 
         @Override
+        public void stop() {
+            wallCrossingTarget = null;
+        }
+
+        @Override
         public void tick() {
             NexusAccess nexus = getNexus();
             if (nexus == null) {
@@ -148,7 +155,9 @@ public final class IMBlazeEntity extends Blaze
                 Vec3 velocity = getDeltaMovement().add(approach.scale(0.025D));
                 if (flightTarget.y > getY() + 1.0D) {
                     velocity = new Vec3(
-                            velocity.x, Math.max(velocity.y, 0.22D), velocity.z);
+                            velocity.x,
+                            velocity.y + (0.3D - velocity.y) * 0.3D,
+                            velocity.z);
                 }
                 double horizontalSpeed = velocity.horizontalDistance();
                 if (horizontalSpeed > 0.35D) {
@@ -178,6 +187,16 @@ public final class IMBlazeEntity extends Blaze
 
         private Vec3 findFlightTarget(
                 Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
+            if (wallCrossingTarget != null) {
+                double horizontalDistanceSquared =
+                        distanceToSqr(wallCrossingTarget.x, getY(), wallCrossingTarget.z);
+                if (horizontalDistanceSquared > 1.5D * 1.5D
+                        || getY() < wallCrossingTarget.y - 1.5D) {
+                    return wallCrossingTarget;
+                }
+                wallCrossingTarget = null;
+            }
+
             BlockHitResult hit = findWallHit(nexusTarget);
             if (hit.getType() != HitResult.Type.BLOCK
                     || hit.getBlockPos().equals(nexusPos)) {
@@ -197,12 +216,15 @@ public final class IMBlazeEntity extends Blaze
                     Vec3 acrossWall = nexusTarget.subtract(Vec3.atCenterOf(wall));
                     acrossWall = new Vec3(acrossWall.x, 0.0D, acrossWall.z);
                     if (acrossWall.lengthSqr() > 0.0D) {
-                        acrossWall = acrossWall.normalize().scale(1.5D);
+                        // Keep flying beyond the edge instead of immediately
+                        // descending as soon as the top becomes visible.
+                        acrossWall = acrossWall.normalize().scale(4.0D);
                     }
-                    return new Vec3(
+                    wallCrossingTarget = new Vec3(
                             wall.getX() + 0.5D + acrossWall.x,
                             y + 1.0D,
                             wall.getZ() + 0.5D + acrossWall.z);
+                    return wallCrossingTarget;
                 }
             }
             return nexusTarget.add(0.0D, 2.0D, 0.0D);
