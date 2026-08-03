@@ -147,10 +147,11 @@ public final class IMBlazeEntity extends Blaze
             Vec3 nexusTarget = Vec3.atCenterOf(nexus.getOrigin());
             getLookControl().setLookAt(nexusTarget.x, nexusTarget.y, nexusTarget.z);
             if (distanceToSqr(nexusTarget) > 8.0D * 8.0D) {
+                Vec3 flightTarget = findFlightTarget(nexusTarget, nexus.getOrigin());
                 getMoveControl().setWantedPosition(
-                        nexusTarget.x, nexusTarget.y + 2.0D,
-                        nexusTarget.z, 1.0D);
-                Vec3 approach = nexusTarget.subtract(position()).normalize();
+                        flightTarget.x, flightTarget.y,
+                        flightTarget.z, 1.0D);
+                Vec3 approach = flightTarget.subtract(position()).normalize();
                 Vec3 velocity = getDeltaMovement().add(approach.scale(0.025D));
                 double horizontalSpeed = velocity.horizontalDistance();
                 if (horizontalSpeed > 0.35D) {
@@ -178,11 +179,47 @@ public final class IMBlazeEntity extends Blaze
             attackCooldown = 60;
         }
 
-        @Nullable
-        private Vec3 findShotTarget(Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
-            BlockHitResult hit = level().clip(new ClipContext(
+        private Vec3 findFlightTarget(
+                Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
+            BlockHitResult hit = findBlockingHit(nexusTarget);
+            if (hit.getType() != HitResult.Type.BLOCK
+                    || hit.getBlockPos().equals(nexusPos)) {
+                return nexusTarget.add(0.0D, 2.0D, 0.0D);
+            }
+
+            net.minecraft.core.BlockPos wall = hit.getBlockPos();
+            int startY = Math.max(wall.getY() + 1, blockPosition().getY());
+            for (int y = startY; y < level().getMaxY() - 1; y++) {
+                net.minecraft.core.BlockPos lower = new net.minecraft.core.BlockPos(
+                        wall.getX(), y, wall.getZ());
+                net.minecraft.core.BlockPos upper = lower.above();
+                if (level().getBlockState(lower)
+                                .getCollisionShape(level(), lower).isEmpty()
+                        && level().getBlockState(upper)
+                                .getCollisionShape(level(), upper).isEmpty()) {
+                    Vec3 acrossWall = nexusTarget.subtract(Vec3.atCenterOf(wall));
+                    acrossWall = new Vec3(acrossWall.x, 0.0D, acrossWall.z);
+                    if (acrossWall.lengthSqr() > 0.0D) {
+                        acrossWall = acrossWall.normalize().scale(1.5D);
+                    }
+                    return new Vec3(
+                            wall.getX() + 0.5D + acrossWall.x,
+                            y + 1.0D,
+                            wall.getZ() + 0.5D + acrossWall.z);
+                }
+            }
+            return nexusTarget.add(0.0D, 2.0D, 0.0D);
+        }
+
+        private BlockHitResult findBlockingHit(Vec3 nexusTarget) {
+            return level().clip(new ClipContext(
                     getEyePosition(), nexusTarget, ClipContext.Block.COLLIDER,
                     ClipContext.Fluid.NONE, IMBlazeEntity.this));
+        }
+
+        @Nullable
+        private Vec3 findShotTarget(Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
+            BlockHitResult hit = findBlockingHit(nexusTarget);
             if (hit.getType() != HitResult.Type.BLOCK
                     || hit.getBlockPos().equals(nexusPos)) {
                 return nexusTarget;
