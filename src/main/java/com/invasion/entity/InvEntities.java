@@ -73,6 +73,11 @@ public interface InvEntities {
             EntityType.Builder.<IMZoglinEntity>of(IMZoglinEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(1.3964844F, 1.4F)
                     .passengerAttachments(1.49375F).clientTrackingRange(8));
+    EntityType<IMWitherEntity> WITHER = register("wither",
+            EntityType.Builder.<IMWitherEntity>of(
+                            IMWitherEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(0.9F, 3.5F)
+                    .clientTrackingRange(10));
     EntityType<IMZombifiedPiglinEntity> ZOMBIFIED_PIGLIN = register(
             "zombified_piglin",
             EntityType.Builder.<IMZombifiedPiglinEntity>of(
@@ -166,6 +171,7 @@ public interface InvEntities {
                 ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes().build());
         event.put(ZOGLIN, IMZoglinEntity.createAttributes().build());
+        event.put(WITHER, IMWitherEntity.createAttributes().build());
         event.put(
                 ZOMBIFIED_PIGLIN,
                 IMZombifiedPiglinEntity.createIMAttributes().build());

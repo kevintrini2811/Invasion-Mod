@@ -5,6 +5,7 @@ import com.invasion.entity.InvEntities;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
+import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
@@ -35,6 +36,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(
                 InvEntities.WITHER_SKELETON,
                 InvWitherSkeletonRenderer::new);
+        event.registerEntityRenderer(InvEntities.WITHER, WitherBossRenderer::new);
         event.registerEntityRenderer(InvEntities.SPIDER,
                 context -> new TexturedSpiderRenderer<>(context,
                         ResourceLocation.withDefaultNamespace("textures/entity/spider/spider.png")));
