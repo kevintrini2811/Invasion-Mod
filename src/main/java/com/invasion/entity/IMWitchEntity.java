@@ -44,6 +44,12 @@ public final class IMWitchEntity extends Witch
 
     @Override
     protected void registerGoals() {
+        // Witch.aiStep() always updates two private goals initialized by the
+        // vanilla implementation. Initialize them before replacing the
+        // registered behavior with the Nexus support AI.
+        super.registerGoals();
+        goalSelector.removeAllGoals(goal -> true);
+        targetSelector.removeAllGoals(goal -> true);
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new WitchSupportGoal());
         goalSelector.addGoal(7, new RandomStrollGoal(this, 0.8D));
