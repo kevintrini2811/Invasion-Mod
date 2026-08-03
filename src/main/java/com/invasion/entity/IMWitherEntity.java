@@ -38,6 +38,14 @@ public final class IMWitherEntity extends WitherBoss
     }
 
     @Override
+    protected void registerGoals() {
+        super.registerGoals();
+        // The side heads may fire at nearby enemies, but no living entity may
+        // become a navigation target and pull the Wither away from the Nexus.
+        targetSelector.removeAllGoals(goal -> true);
+    }
+
+    @Override
     public IHasNexus.Handle getNexusHandle() {
         return nexus;
     }
@@ -87,6 +95,9 @@ public final class IMWitherEntity extends WitherBoss
                     .filter(NexusAccess::isActive)
                     .ifPresent(this::setNexus);
         }
+        // Also reject targets assigned by external hooks or retaliation logic.
+        // Vanilla's independent side-head attacks continue to work.
+        setTarget(null);
         super.customServerAiStep(level);
         attackNexus(level);
     }
