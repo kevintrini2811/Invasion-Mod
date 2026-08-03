@@ -20,6 +20,7 @@ import com.invasion.client.render.entity.ZombiePigmanEntityRenderer;
 import com.invasion.client.render.entity.VariantMobRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
+import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
@@ -57,6 +58,7 @@ public final class InvRenderers {
                 context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.IMP, ImpEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.BLAZE, BlazeRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMAN, VariantMobRenderers.Enderman::new);
         event.registerEntityRenderer(InvEntities.PHANTOM, PhantomRenderer::new);
         event.registerEntityRenderer(InvEntities.THROWER, ThrowerEntityRenderer::new);
