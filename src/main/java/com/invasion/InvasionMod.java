@@ -1,6 +1,7 @@
 package com.invasion;
 
 import com.invasion.compat.AsyncCompatibility;
+import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.util.ChatUtils;
@@ -57,6 +58,7 @@ public class InvasionMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        BoundIMMobRegistry.bootstrap();
         NexusBoundMobLifecycle.bootstrap();
         IMBlazeEntity.bootstrap();
         PayloadTypeRegistry.clientboundPlay().register(NexusHudPayload.TYPE, NexusHudPayload.CODEC);

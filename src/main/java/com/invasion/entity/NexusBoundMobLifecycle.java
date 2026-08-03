@@ -17,10 +17,9 @@ public final class NexusBoundMobLifecycle {
     }
 
     private static void tick(ServerLevel level) {
-        for (net.minecraft.world.entity.Entity entity : level.getAllEntities()) {
-            if (!(entity instanceof LivingEntity living)
-                    || !(entity instanceof Combatant<?> combatant)
-                    || entity instanceof IMWolfEntity
+        for (Combatant<?> combatant : BoundIMMobRegistry.bound(level)) {
+            LivingEntity living = combatant.asEntity();
+            if (living instanceof IMWolfEntity
                     || !combatant.getNexusHandle().hasBinding()) {
                 continue;
             }
