@@ -24,6 +24,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -55,6 +57,11 @@ public class InvasionMod {
     private static final InvasionConfig CONFIG = new InvasionConfig();
     private RegisterEvent activeRegisterEvent;
     private final List<PendingRegistration<?, ?>> pendingRegistrations = new ArrayList<>();
+
+    public InvasionMod() {
+        this(FMLJavaModLoadingContext.get().getModEventBus(),
+                ModLoadingContext.get().getActiveContainer());
+    }
 
     public InvasionMod(IEventBus modBus, ModContainer container) {
         INSTANCE = this;
