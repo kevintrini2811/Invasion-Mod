@@ -82,7 +82,7 @@ public interface InvEntities {
     EntityType<IMWardenEntity> WARDEN = register("warden",
             EntityType.Builder.<IMWardenEntity>of(
                             IMWardenEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(0.9F, 2.9F).eyeHeight(2.55F)
+                    .fireImmune().sized(0.9F, 2.9F)
                     .clientTrackingRange(16));
     EntityType<IMWitherSkullEntity> WITHER_SKULL = register(
             "wither_skull",

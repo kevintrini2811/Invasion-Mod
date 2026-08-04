@@ -11,18 +11,16 @@ import com.invasion.util.math.PosUtils;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -71,24 +69,25 @@ public final class IMWardenEntity extends Warden
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel level) {
+    protected void customServerAiStep() {
+        ServerLevel level = (ServerLevel) level();
         NexusAccess currentNexus = getNexus();
         if (currentNexus != null
                 && (currentNexus.isDiscarded() || !currentNexus.isActive())) {
             setNexus(null);
-            kill(level);
+            kill();
             return;
         }
         if (!hasNexus()) {
@@ -97,7 +96,7 @@ public final class IMWardenEntity extends Warden
                     .ifPresent(this::setNexus);
         }
 
-        super.customServerAiStep(level);
+        super.customServerAiStep();
         consumeExperienceOrbs(level);
         approachAndAttackNexus(level);
     }
@@ -162,8 +161,7 @@ public final class IMWardenEntity extends Warden
 
     private void fireSonicBoomAtNexus(
             ServerLevel level, NexusAccess targetNexus, Vec3 target) {
-        Vec3 source = position().add(getAttachments().get(
-                EntityAttachment.WARDEN_CHEST, 0, getYRot()));
+        Vec3 source = position().add(0.0D, 1.6D, 0.0D);
         Vec3 delta = target.subtract(source);
         Vec3 direction = delta.normalize();
         int steps = Mth.floor(delta.length()) + 7;
@@ -200,10 +198,9 @@ public final class IMWardenEntity extends Warden
     }
 
     @Override
-    public boolean hurtServer(
-            ServerLevel level, DamageSource source, float damage) {
+    public boolean hurt(DamageSource source, float damage) {
         cancelNexusSonicBoom();
-        return super.hurtServer(level, source, damage);
+        return super.hurt(source, damage);
     }
 
     @Override
