@@ -62,6 +62,7 @@ public final class IMEndermiteEntity extends Endermite
             double y = living.getY() + random.nextInt(33) - 16;
             double z = living.getZ() + Math.sin(angle) * distance;
             if (living.randomTeleport(x, y, z, true)) {
+                kill(level);
                 return true;
             }
         }
