@@ -8,6 +8,7 @@ import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.BreezeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
+import net.minecraft.client.renderer.entity.EndermiteRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
@@ -68,6 +69,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.BLAZE, BlazeRenderer::new);
         EntityRendererRegistry.register(InvEntities.BREEZE, BreezeRenderer::new);
         EntityRendererRegistry.register(InvEntities.SILVERFISH, SilverfishRenderer::new);
+        EntityRendererRegistry.register(InvEntities.ENDERMITE, EndermiteRenderer::new);
         EntityRendererRegistry.register(InvEntities.ENDERMAN, IMEndermanRenderer::new);
         EntityRendererRegistry.register(InvEntities.PHANTOM, PhantomRenderer::new);
         EntityRendererRegistry.register(

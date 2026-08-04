@@ -8,9 +8,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.EnderMan;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 
-/** Releases IM Silverfish when a permanently infected host dies. */
+/** Releases IM support parasites when a permanently infected host dies. */
 public final class InfectionDeathHandler {
     private InfectionDeathHandler() {
     }
@@ -36,18 +37,23 @@ public final class InfectionDeathHandler {
                         .filter(NexusAccess::isActive).orElse(null);
         int amount = 1 + level.getRandom().nextInt(4);
         for (int i = 0; i < amount; i++) {
-            IMSilverfishEntity silverfish = InvEntities.SILVERFISH.create(
-                    level, EntitySpawnReason.TRIGGERED);
-            if (silverfish == null) {
+            LivingEntity parasite = host instanceof EnderMan
+                    ? InvEntities.ENDERMITE.create(
+                            level, EntitySpawnReason.TRIGGERED)
+                    : InvEntities.SILVERFISH.create(
+                            level, EntitySpawnReason.TRIGGERED);
+            if (parasite == null) {
                 continue;
             }
-            silverfish.snapTo(
+            parasite.snapTo(
                     host.getX() + (level.getRandom().nextDouble() - 0.5D) * 0.8D,
                     host.getY() + 0.1D,
                     host.getZ() + (level.getRandom().nextDouble() - 0.5D) * 0.8D,
                     level.getRandom().nextFloat() * 360.0F, 0.0F);
-            silverfish.setNexus(nexus);
-            level.addFreshEntity(silverfish);
+            if (parasite instanceof IHasNexus nexusMob) {
+                nexusMob.setNexus(nexus);
+            }
+            level.addFreshEntity(parasite);
         }
     }
 }
