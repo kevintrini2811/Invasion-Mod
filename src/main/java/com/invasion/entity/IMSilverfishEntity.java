@@ -131,10 +131,12 @@ public final class IMSilverfishEntity extends Silverfish
         @Nullable private BlockPos bestCandidate;
         @Nullable private BlockPos bestCandidateApproach;
         @Nullable private BlockPos searchOrigin;
+        @Nullable private BlockPos rejectedTarget;
         @Nullable private Path cachedPath;
         private double bestCandidateDistance;
         private int searchTicksRemaining;
         private int searchCooldown;
+        private int rejectedTargetCooldown;
 
         private TransformUnbreakableBlockGoal() {
             setFlags(EnumSet.of(Flag.MOVE));
@@ -150,8 +152,10 @@ public final class IMSilverfishEntity extends Silverfish
             }
             if (searchCooldown > 0) {
                 searchCooldown--;
+                tickRejectedTargetCooldown();
                 return false;
             }
+            tickRejectedTargetCooldown();
             if (searchTicksRemaining == 0) {
                 beginSearch();
             }
@@ -208,6 +212,9 @@ public final class IMSilverfishEntity extends Silverfish
                                 - VERTICAL_SEARCH_RANGE,
                         getRandom().nextInt(HORIZONTAL_SEARCH_RANGE * 2 + 1)
                                 - HORIZONTAL_SEARCH_RANGE);
+                if (pos.equals(rejectedTarget)) {
+                    continue;
+                }
                 if (!isUnbreakableTarget(pos)) {
                     continue;
                 }
@@ -239,7 +246,18 @@ public final class IMSilverfishEntity extends Silverfish
                 return true;
             }
             cachedPath = getNavigation().createPath(approach, 0);
-            return cachedPath != null;
+            if (cachedPath != null && cachedPath.canReach()) {
+                rejectedTarget = null;
+                rejectedTargetCooldown = 0;
+                return true;
+            }
+            rejectedTarget = target;
+            rejectedTargetCooldown = SEARCH_RESULT_CACHE_TICKS * 2;
+            target = null;
+            approach = null;
+            cachedPath = null;
+            searchCooldown = 20;
+            return false;
         }
 
         @Nullable
@@ -273,6 +291,13 @@ public final class IMSilverfishEntity extends Silverfish
             searchOrigin = null;
             cachedPath = null;
             searchTicksRemaining = 0;
+        }
+
+        private void tickRejectedTargetCooldown() {
+            if (rejectedTargetCooldown > 0
+                    && --rejectedTargetCooldown == 0) {
+                rejectedTarget = null;
+            }
         }
 
         private boolean isUnbreakableTarget(BlockPos pos) {
