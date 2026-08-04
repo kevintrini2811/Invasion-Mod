@@ -12,10 +12,14 @@ base {
 }
 
 tasks.named('jar') {
-    archiveFileName = "${project.name}-${project.version}-1.20.1neo.jar"
+    archiveFileName = "${project.name}-${project.version}-1.20.1forge-neoforge.jar"
     manifest {
         attributes 'MixinConfigs': 'invasion.mixin.json'
     }
+}
+
+tasks.matching { it.name == 'reobfJar' }.configureEach {
+    archiveFileName = "${project.name}-${project.version}-1.20.1forge-neoforge.jar"
 }
 
 java {
