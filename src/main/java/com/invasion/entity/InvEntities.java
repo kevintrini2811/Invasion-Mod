@@ -137,6 +137,11 @@ public interface InvEntities {
             EntityType.Builder.<IMBlazeEntity>of(IMBlazeEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(0.6F, 1.8F).eyeHeight(1.53F)
                     .clientTrackingRange(8));
+    EntityType<IMBreezeEntity> BREEZE = register("breeze",
+            EntityType.Builder.<IMBreezeEntity>of(
+                            IMBreezeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.77F).eyeHeight(1.3452F)
+                    .clientTrackingRange(10));
     EntityType<IMSilverfishEntity> SILVERFISH = register("silverfish",
             EntityType.Builder.<IMSilverfishEntity>of(
                             IMSilverfishEntity::new, MobCategory.MONSTER)
@@ -222,6 +227,9 @@ public interface InvEntities {
         event.put(BURROWER, BurrowerEntity.createAttributes().build());
         event.put(IMP, ImpEnitty.createAttributes().build());
         event.put(BLAZE, net.minecraft.world.entity.monster.Blaze.createAttributes().build());
+        event.put(BREEZE,
+                net.minecraft.world.entity.monster.breeze.Breeze
+                        .createAttributes().build());
         event.put(SILVERFISH, Silverfish.createAttributes().build());
         event.put(ENDERMAN, IMEndermanEntity.createAttributes().build());
         event.put(PHANTOM, IMPhantomEntity.createAttributes().build());
@@ -232,6 +240,7 @@ public interface InvEntities {
 
     static void bootstrap() {
         IMBlazeEntity.bootstrap();
+        IMBreezeEntity.bootstrap();
         InvasionConfig config = InvasionMod.getConfig();
 
         if (config.maxNightMobs != 70) {
