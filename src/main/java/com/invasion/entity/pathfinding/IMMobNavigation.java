@@ -267,6 +267,9 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     // TODO: Shouldn't this be a goal instead?
     protected void tickObjectives() {
+        if (mob.getTarget() != null && !mob.getTarget().isAlive()) {
+            mob.setTarget(null);
+        }
         if (mob.getTarget() != null) {
             transitionAIGoal(Goal.TARGET_ENTITY);
         } else if (mob instanceof IHasNexus i && i.hasNexus()) {
