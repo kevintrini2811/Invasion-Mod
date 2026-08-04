@@ -143,7 +143,7 @@ public class IMSkeletonEntity extends IMMobEntity
     public void customServerAiStep() {
         super.customServerAiStep();
         ServerLevel world = (ServerLevel) level();
-        if (tickCount % 5 != 0) {
+        if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
         }
         for (ItemEntity item : world.getEntitiesOfClass(

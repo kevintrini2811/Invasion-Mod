@@ -110,7 +110,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         super.customServerAiStep();
         ServerLevel world = (ServerLevel) level();
 
-        if (tickCount % 5 != 0) {
+        if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
         }
 
