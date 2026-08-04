@@ -265,15 +265,8 @@ public class IMWaveSpawner implements Spawner {
 		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
-		for (int j = 0; j < spawnTries; j++) {
-		    @Nullable
-			final SpawnPoint spawnPoint = (java.util.Objects.requireNonNullElse(angle.getMax(), EntityPattern.MAX_VALID_ANGLE)) - (java.util.Objects.requireNonNullElse(angle.getMin(), EntityPattern.MAX_ANGLE)) >= 360
-				        ? spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID)
-		                : spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID, angle);
-
-			if (spawnPoint == null) {
-				return false;
-			}
+		for (SpawnPoint spawnPoint : spawnPointContainer.getRandomSpawnPoints(
+				SpawnType.HUMANOID, angle, spawnTries)) {
 			if (!permitSpawns) {
 				successfulSpawns++;
 				if (debugMode) {
