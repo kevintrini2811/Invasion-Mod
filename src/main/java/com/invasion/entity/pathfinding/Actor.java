@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.NodeEvaluator;
 import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.phys.AABB;
 import com.invasion.block.BlockMetadata;
 import com.invasion.block.DestructableType;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
@@ -278,7 +279,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
     }
 
     public final boolean canStandAt(BlockGetter world, BlockPos pos) {
-        for (BlockPos p : BlockPos.betweenClosedStream(entity.getDimensions(entity.getPose()).makeBoundingBox(com.invasion.util.math.PosUtils.bottomCenter(pos))).toList()) {
+        for (BlockPos p : occupiedPositions(pos)) {
             BlockState state = world.getBlockState(p);
             if ((!state.isAir() && !state.isPathfindable(PathComputationType.LAND)) || avoidsBlock(state)) {
                 return false;
@@ -300,7 +301,7 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
         boolean destructibleFlag = false;
         boolean liquidFlag = false;
 
-        for (BlockPos p : BlockPos.betweenClosedStream(entity.getDimensions(entity.getPose()).makeBoundingBox(com.invasion.util.math.PosUtils.bottomCenter(pos))).toList()) {
+        for (BlockPos p : occupiedPositions(pos)) {
             BlockState state = terrainMap.getBlockState(p);
             if (!state.isAir()) {
                 if (state.liquid()) {
@@ -323,5 +324,14 @@ public class Actor<T extends Entity> implements IMPathNodeMaker {
             }
         }
         return destructibleFlag ? DestructableType.DESTRUCTABLE : liquidFlag ? DestructableType.FLUID : DestructableType.TERRAIN;
+    }
+
+    private Iterable<BlockPos> occupiedPositions(BlockPos pos) {
+        AABB bounds = entity.getDimensions(entity.getPose()).makeBoundingBox(
+                PosUtils.bottomCenter(pos));
+        return BlockPos.betweenClosed(
+                Mth.floor(bounds.minX), Mth.floor(bounds.minY),
+                Mth.floor(bounds.minZ), Mth.floor(bounds.maxX),
+                Mth.floor(bounds.maxY), Mth.floor(bounds.maxZ));
     }
 }
