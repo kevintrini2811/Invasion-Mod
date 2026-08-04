@@ -258,10 +258,6 @@ public class IMWaveSpawner implements Spawner {
 
 	@Override
 	public boolean attemptSpawn(EntityConstruct mobConstruct, Ints angle) {
-		if (!permitSpawns) {
-			return false;
-		}
-
 		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
