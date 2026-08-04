@@ -19,6 +19,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.skeleton.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
@@ -152,6 +153,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.BLAZE, nexus);
         } else if (mob.getType() == EntityTypes.SILVERFISH) {
             convert(mob, InvEntities.SILVERFISH, nexus);
+        } else if (mob.getType() == EntityTypes.SLIME) {
+            convert(mob, InvEntities.SLIME, nexus);
         }
     }
 
@@ -173,7 +176,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.ZOGLIN
                 || type == EntityTypes.WITHER
                 || type == EntityTypes.BLAZE
-                || type == EntityTypes.SILVERFISH;
+                || type == EntityTypes.SILVERFISH
+                || type == EntityTypes.SLIME;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -238,6 +242,10 @@ public final class VanillaMobSpawnReplacement {
         if (source instanceof Phantom phantom
                 && converted instanceof IMPhantomEntity imPhantom) {
             imPhantom.setPhantomSize(phantom.getPhantomSize());
+        }
+        if (source instanceof Slime slime
+                && converted instanceof IMSlimeEntity imSlime) {
+            imSlime.setSize(slime.getSize(), true);
         }
         if (converted instanceof AbstractIMZombieEntity) {
             converted.setCanPickUpLoot(
