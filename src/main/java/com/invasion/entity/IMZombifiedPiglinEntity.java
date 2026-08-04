@@ -205,8 +205,6 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        VanillaLoot.drop(level, this, EntityType.ZOMBIFIED_PIGLIN, source,
-                causedByPlayer ? lastHurtByPlayer : null);
         if (getRandom().nextInt(4) == 0) {
             spawnAtLocation(InvItems.SMALL_REMNANTS);
         }

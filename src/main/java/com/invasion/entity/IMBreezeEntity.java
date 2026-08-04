@@ -100,14 +100,6 @@ public final class IMBreezeEntity extends Breeze
         updateBlazeFlight();
     }
 
-    @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        VanillaLoot.drop(level, this, EntityType.BREEZE, source,
-                causedByPlayer ? lastHurtByPlayer : null);
-    }
-
     private void updateBlazeFlight() {
         Vec3 objective = null;
         LivingEntity attackTarget = getTarget();
