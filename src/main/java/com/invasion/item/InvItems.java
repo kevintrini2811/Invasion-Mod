@@ -37,7 +37,7 @@ public interface InvItems {
 
     Item INFUSED_SWORD = register("infused_sword", InfusedSwordItem::new);
     Item SEARING_BOW = register("searing_bow", p -> new SearingBowItem(p.durability(384)));
-    Item ENGY_HAMMER = register("engineer_hammer", p -> new Item(p));
+    Item ENGY_HAMMER = register("engineer_hammer", EngineerHammerItem::new);
 
     Item EMPTY_TRAP = register("empty_trap", p -> new Item(p));
     Item RIFT_TRAP = register("rift_trap", p -> new TrapItem(p, TrapEntity.Type.RIFT));
