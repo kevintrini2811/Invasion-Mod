@@ -273,13 +273,14 @@ public class IMWaveSpawner implements Spawner {
 			}
 
 			EntityConstruct spawnConstruct =
-					replaceSkeletonWithEnvironmentalVariant(
+					replaceSlimeWithMagmaCube(
+						replaceSkeletonWithEnvironmentalVariant(
 							replaceZombieWithEnvironmentalVariant(
 									mobConstruct,
 									(ServerLevel) nexus.getWorld(),
 									spawnPoint.pos()),
 							(ServerLevel) nexus.getWorld(),
-							spawnPoint.pos());
+							spawnPoint.pos()));
 			Mob mob = spawnConstruct.createMob(nexus);
 			equipRandomWaveWeapon(mob);
 			equipRandomWaveArmor(mob);
@@ -302,6 +303,23 @@ public class IMWaveSpawner implements Spawner {
 			}
 		}
 		return false;
+	}
+
+	private EntityConstruct replaceSlimeWithMagmaCube(
+			EntityConstruct construct) {
+		if (construct.entityType() != InvEntities.SLIME
+				|| nexus.getCurrentWave() < 8
+				|| getRandom().nextInt(5) != 0) {
+			return construct;
+		}
+		return new EntityConstruct(
+				InvEntities.MAGMA_CUBE,
+				construct.texture(),
+				construct.tier(),
+				construct.flavour(),
+				construct.scaling(),
+				construct.minAngle(),
+				construct.maxAngle());
 	}
 
 	private EntityConstruct replaceZombieWithEnvironmentalVariant(

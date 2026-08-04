@@ -32,6 +32,8 @@ public final class NexusBoundMobLifecycle {
             if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
                 if (living instanceof IMSlimeEntity slime) {
                     slime.suppressSplitOnNexusDeath();
+                } else if (living instanceof IMMagmaCubeEntity magmaCube) {
+                    magmaCube.suppressSplitOnNexusDeath();
                 }
                 combatant.setNexus(null);
                 living.kill();
