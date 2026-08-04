@@ -20,6 +20,7 @@ public class WaveEntry {
     static final int DEFAULT_NEXT_ALERT_TIME = Integer.MAX_VALUE;
     static final int MAX_ANGLE = 360;
     static final int MAX_VALID_ANGLE = 180;
+    private static final int BLOCKED_SPAWN_RETRY_DELAY = 1000;
     static final Ints FULL_RANGE = Ints.between(-MAX_VALID_ANGLE, MAX_VALID_ANGLE);
 
     static int wrapAngle(int angle) {
@@ -45,6 +46,7 @@ public class WaveEntry {
     private int amountQueued;
     private int elapsed;
     private int toNextSpawn;
+    private int spawnRetryDelay;
 
     private int minPointsInRange;
     private int nextAlert = DEFAULT_NEXT_ALERT_TIME;
@@ -65,6 +67,7 @@ public class WaveEntry {
     }
 
     public int doNextSpawns(int elapsedMillis, Spawner spawner) {
+        spawnRetryDelay = Math.max(0, spawnRetryDelay - elapsedMillis);
         toNextSpawn -= elapsedMillis;
         if (nextAlert <= elapsed - toNextSpawn) {
             sendNextAlert(spawner);
@@ -99,7 +102,7 @@ public class WaveEntry {
             }
         }
 
-        if (!spawnList.isEmpty()) {
+        if (!spawnList.isEmpty() && spawnRetryDelay == 0) {
             int numberOfSpawns = 0;
             if (spawner.getNumberOfPointsInRange(angle, SpawnType.HUMANOID) >= minPointsInRange) {
                 for (int i = spawnList.size() - 1; i >= 0; i--) {
@@ -107,6 +110,9 @@ public class WaveEntry {
                         numberOfSpawns++;
                         spawnList.remove(i);
                     }
+                }
+                if (!spawnList.isEmpty()) {
+                    spawnRetryDelay = BLOCKED_SPAWN_RETRY_DELAY;
                 }
             } else {
                 reviseSpawnAngles(spawner);
@@ -119,6 +125,7 @@ public class WaveEntry {
     public void resetToBeginning() {
         elapsed = 0;
         amountQueued = 0;
+        spawnRetryDelay = 0;
         mobPool.reset();
     }
 
