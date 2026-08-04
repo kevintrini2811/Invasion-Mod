@@ -10,7 +10,11 @@ import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.util.math.PosUtils;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -26,12 +30,15 @@ import net.minecraft.world.phys.Vec3;
 public final class IMWardenEntity extends Warden
         implements Combatant<Warden>, EntityConstruct.BuildableMob {
     private static final double ORB_PICKUP_RANGE = 2.5D;
-    private static final double NEXUS_ATTACK_RANGE_SQUARED = 4.0D * 4.0D;
-    private static final int NEXUS_ATTACK_INTERVAL = 20;
-    private static final int NEXUS_DAMAGE = 2;
+    private static final double SONIC_BOOM_HORIZONTAL_RANGE = 15.0D;
+    private static final double SONIC_BOOM_VERTICAL_RANGE = 20.0D;
+    private static final int SONIC_BOOM_CHARGE_TICKS = 34;
+    private static final int SONIC_BOOM_COOLDOWN_TICKS = 40;
+    private static final int SONIC_BOOM_NEXUS_DAMAGE = 10;
 
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
-    private int nexusAttackCooldown;
+    private int nexusSonicBoomCharge;
+    private int nexusSonicBoomCooldown;
 
     public IMWardenEntity(EntityType<? extends Warden> type, Level level) {
         super(type, level);
@@ -92,7 +99,7 @@ public final class IMWardenEntity extends Warden
 
         super.customServerAiStep(level);
         consumeExperienceOrbs(level);
-        approachAndAttackNexus();
+        approachAndAttackNexus(level);
     }
 
     private void consumeExperienceOrbs(ServerLevel level) {
@@ -110,29 +117,69 @@ public final class IMWardenEntity extends Warden
         }
     }
 
-    private void approachAndAttackNexus() {
+    private void approachAndAttackNexus(ServerLevel level) {
+        if (nexusSonicBoomCooldown > 0) {
+            nexusSonicBoomCooldown--;
+        }
         NexusAccess targetNexus = getNexus();
         if (targetNexus == null || !targetNexus.isActive()
                 || isOccupiedByVanillaWardenAi()) {
+            cancelNexusSonicBoom();
             return;
         }
 
         Vec3 target = PosUtils.center(targetNexus.getOrigin());
-        double distanceSquared = distanceToSqr(target);
-        if (distanceSquared > NEXUS_ATTACK_RANGE_SQUARED) {
+        if (!isWithinSonicBoomRange(target)) {
+            cancelNexusSonicBoom();
             getNavigation().moveTo(target.x, target.y, target.z, 1.0D);
             return;
         }
 
         getNavigation().stop();
         getLookControl().setLookAt(target.x, target.y, target.z);
-        if (nexusAttackCooldown > 0) {
-            nexusAttackCooldown--;
+        if (nexusSonicBoomCooldown > 0) {
             return;
         }
-        swing(InteractionHand.MAIN_HAND);
-        targetNexus.damage(damageSources().mobAttack(this), NEXUS_DAMAGE);
-        nexusAttackCooldown = NEXUS_ATTACK_INTERVAL;
+        if (nexusSonicBoomCharge == 0) {
+            nexusSonicBoomCharge = SONIC_BOOM_CHARGE_TICKS;
+            level.broadcastEntityEvent(this, (byte) 62);
+            playSound(SoundEvents.WARDEN_SONIC_CHARGE, 3.0F, 1.0F);
+            return;
+        }
+        if (--nexusSonicBoomCharge == 0) {
+            fireSonicBoomAtNexus(level, targetNexus, target);
+            nexusSonicBoomCooldown = SONIC_BOOM_COOLDOWN_TICKS;
+        }
+    }
+
+    private boolean isWithinSonicBoomRange(Vec3 target) {
+        double horizontalDistanceSquared = target.subtract(position())
+                .multiply(1.0D, 0.0D, 1.0D).lengthSqr();
+        return horizontalDistanceSquared
+                        <= SONIC_BOOM_HORIZONTAL_RANGE * SONIC_BOOM_HORIZONTAL_RANGE
+                && Math.abs(target.y - getY()) <= SONIC_BOOM_VERTICAL_RANGE;
+    }
+
+    private void fireSonicBoomAtNexus(
+            ServerLevel level, NexusAccess targetNexus, Vec3 target) {
+        Vec3 source = position().add(getAttachments().get(
+                EntityAttachment.WARDEN_CHEST, 0, getYRot()));
+        Vec3 delta = target.subtract(source);
+        Vec3 direction = delta.normalize();
+        int steps = Mth.floor(delta.length()) + 7;
+        for (int i = 1; i < steps; i++) {
+            Vec3 particle = source.add(direction.scale(i));
+            level.sendParticles(ParticleTypes.SONIC_BOOM,
+                    particle.x, particle.y, particle.z,
+                    1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+        playSound(SoundEvents.WARDEN_SONIC_BOOM, 3.0F, 1.0F);
+        targetNexus.damage(
+                damageSources().sonicBoom(this), SONIC_BOOM_NEXUS_DAMAGE);
+    }
+
+    private void cancelNexusSonicBoom() {
+        nexusSonicBoomCharge = 0;
     }
 
     private boolean isOccupiedByVanillaWardenAi() {
@@ -150,6 +197,13 @@ public final class IMWardenEntity extends Warden
     @Override
     public boolean canTargetEntity(net.minecraft.world.entity.Entity target) {
         return !(target instanceof Combatant<?>) && super.canTargetEntity(target);
+    }
+
+    @Override
+    public boolean hurtServer(
+            ServerLevel level, DamageSource source, float damage) {
+        cancelNexusSonicBoom();
+        return super.hurtServer(level, source, damage);
     }
 
     @Override
