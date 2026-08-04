@@ -301,7 +301,6 @@ public class IMWaveSpawner implements Spawner {
                 return true;
 			}
 		}
-		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mobConstruct.entityType().getDescription().getString() + "' after " + spawnTries + " tries");
 		return false;
 	}
 
