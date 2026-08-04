@@ -8,6 +8,7 @@ import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.mixin.SlimeMoveControlAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -231,8 +232,10 @@ public final class IMSlimeEntity extends Slime
                     * (180.0D / Math.PI)) - 90.0F;
 
             getLookControl().setLookAt(targetX, targetY, targetZ);
-            setYRot(direction);
-            getMoveControl().setWantedPosition(targetX, targetY, targetZ, 1.0D);
+            SlimeMoveControlAccessor control =
+                    (SlimeMoveControlAccessor)getMoveControl();
+            control.invasion$setDirection(direction, true);
+            control.invasion$setWantedMovement(1.0D);
 
             double attackRange = Math.max(2.0D,
                     getBbWidth() * 0.5D + 1.0D);
