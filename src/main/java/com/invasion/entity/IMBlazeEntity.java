@@ -84,14 +84,6 @@ public final class IMBlazeEntity extends Blaze
         return hasNexus() || super.requiresCustomPersistence();
     }
 
-    @Override
-    protected void dropCustomDeathLoot(
-            DamageSource source, int looting, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(source, looting, causedByPlayer);
-        VanillaLoot.drop(this, EntityType.BLAZE, source,
-                causedByPlayer ? lastHurtByPlayer : null);
-    }
-
     private static void onProjectileImpact(ProjectileImpactEvent event) {
         if (!(event.getProjectile() instanceof SmallFireball fireball)
                 || !(fireball.getOwner() instanceof IMBlazeEntity blaze)

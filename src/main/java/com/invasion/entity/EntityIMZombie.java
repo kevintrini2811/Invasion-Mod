@@ -87,9 +87,6 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
         super.dropCustomDeathLoot(source, looting, causedByPlayer);
-        if (random.nextFloat() < 0.35F) {
-            spawnAtLocation(Items.ROTTEN_FLESH);
-        }
         if (getTier() == 1 && getFlavour() == 1 && random.nextFloat() < 0.2F) {
             spawnAtLocation(Items.WOODEN_SWORD);
         } else if (getTier() == 2 && getFlavour() == 0 && random.nextFloat() < 0.25F) {

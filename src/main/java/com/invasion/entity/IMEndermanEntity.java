@@ -228,8 +228,6 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
         super.dropCustomDeathLoot(source, looting, causedByPlayer);
-        VanillaLoot.drop(this, EntityType.ENDERMAN, source,
-                causedByPlayer ? lastHurtByPlayer : null);
         getCarriedBlock().ifPresent(state -> {
             ItemStack stack = new ItemStack(state.getBlock().asItem());
             if (!stack.isEmpty()) {

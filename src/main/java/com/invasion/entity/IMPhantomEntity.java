@@ -131,13 +131,6 @@ public final class IMPhantomEntity extends Phantom
     }
 
     @Override
-    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(source, looting, causedByPlayer);
-        VanillaLoot.drop(this, EntityType.PHANTOM, source,
-                causedByPlayer ? lastHurtByPlayer : null);
-    }
-
-    @Override
     public boolean removeWhenFarAway(double distanceSquared) {
         return !hasNexus();
     }

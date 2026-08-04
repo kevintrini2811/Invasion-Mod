@@ -66,14 +66,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 
 public class EntityIMZombiePigman extends AbstractIMZombieEntity {
-    @Override
-    protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(source, looting, causedByPlayer);
-        if (random.nextFloat() < 0.35F) {
-            spawnAtLocation(Items.GOLD_NUGGET);
-        }
-    }
-
     private static final EntityDataAccessor<Boolean> CHARGING = SynchedEntityData.defineId(EntityIMZombiePigman.class, EntityDataSerializers.BOOLEAN);
 
     public EntityIMZombiePigman(EntityType<EntityIMZombiePigman> type, Level world) {
