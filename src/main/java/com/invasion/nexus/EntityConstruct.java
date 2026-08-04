@@ -1,6 +1,7 @@
 package com.invasion.nexus;
 
 import com.invasion.entity.IMSilverfishEntity;
+import com.invasion.entity.IMEndermiteEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
@@ -47,7 +48,8 @@ public record EntityConstruct (
 
     private static void applyWaveInfection(
             Mob entity, @Nullable NexusAccess nexus) {
-        if (nexus == null || entity instanceof IMSilverfishEntity) {
+        if (nexus == null || entity instanceof IMSilverfishEntity
+                || entity instanceof IMEndermiteEntity) {
             return;
         }
         int chancePercent = Math.clamp(nexus.getProgressionLevel() - 9, 0, 100);
