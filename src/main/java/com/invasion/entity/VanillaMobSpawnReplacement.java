@@ -14,13 +14,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Drowned;
 import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -154,6 +154,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.BLAZE, nexus);
         } else if (mob.getType() == EntityType.SILVERFISH) {
             convert(mob, InvEntities.SILVERFISH, nexus);
+        } else if (mob.getType() == EntityType.SLIME) {
+            convert(mob, InvEntities.SLIME, nexus);
         }
     }
 
@@ -175,7 +177,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.ZOGLIN
                 || type == EntityType.WITHER
                 || type == EntityType.BLAZE
-                || type == EntityType.SILVERFISH;
+                || type == EntityType.SILVERFISH
+                || type == EntityType.SLIME;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -237,6 +240,10 @@ public final class VanillaMobSpawnReplacement {
         if (source instanceof Phantom phantom
                 && converted instanceof IMPhantomEntity imPhantom) {
             imPhantom.setPhantomSize(phantom.getPhantomSize());
+        }
+        if (source instanceof Slime slime
+                && converted instanceof IMSlimeEntity imSlime) {
+            imSlime.setSize(slime.getSize(), true);
         }
         if (converted instanceof AbstractIMZombieEntity) {
             converted.setCanPickUpLoot(true);
