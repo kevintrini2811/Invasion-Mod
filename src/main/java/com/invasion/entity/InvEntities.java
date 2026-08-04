@@ -19,6 +19,7 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.entity.monster.cubemob.Slime;
+import net.minecraft.world.entity.monster.cubemob.MagmaCube;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.phys.Vec3;
 
@@ -161,6 +162,11 @@ public interface InvEntities {
                             IMSlimeEntity::new, MobCategory.MONSTER)
                     .sized(0.52F, 0.52F).eyeHeight(0.325F)
                     .spawnDimensionsScale(4.0F).clientTrackingRange(10));
+    EntityType<IMMagmaCubeEntity> MAGMA_CUBE = register("magma_cube",
+            EntityType.Builder.<IMMagmaCubeEntity>of(
+                            IMMagmaCubeEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(0.52F, 0.52F).eyeHeight(0.325F)
+                    .spawnDimensionsScale(4.0F).clientTrackingRange(10));
     EntityType<IMEndermanEntity> ENDERMAN = register("enderman", EntityType.Builder.<IMEndermanEntity>of(IMEndermanEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 2.9F).eyeHeight(2.55F).clientTrackingRange(8));
     EntityType<IMPhantomEntity> PHANTOM = register(
@@ -249,6 +255,8 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(SLIME,
                 net.minecraft.world.entity.monster.Monster
                         .createMonsterAttributes());
+        FabricDefaultAttributeRegistry.register(
+                MAGMA_CUBE, MagmaCube.createAttributes());
         FabricDefaultAttributeRegistry.register(ENDERMAN, IMEndermanEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(PHANTOM, IMPhantomEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(WOLF, IMWolfEntity.createAttributes());

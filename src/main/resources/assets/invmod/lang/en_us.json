@@ -178,6 +178,8 @@
     "item.invmod.endermite_spawn_egg": "IM Endermite Spawn Egg",
     "entity.invmod.slime": "IM Slime",
     "item.invmod.slime_spawn_egg": "IM Slime Spawn Egg",
+    "entity.invmod.magma_cube": "IM Magma Cube",
+    "item.invmod.magma_cube_spawn_egg": "IM Magma Cube Spawn Egg",
 
     "invmod.subtitle.nexus_chimes": "Nexus Chimes",
     "invmod.subtitle.nexus_rumbles": "Nexus Rumbles",

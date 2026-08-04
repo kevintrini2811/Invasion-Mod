@@ -1,44 +1,34 @@
 package com.invasion.entity;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.cubemob.AbstractCubeMob;
-import net.minecraft.world.entity.monster.cubemob.Slime;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.monster.cubemob.MagmaCube;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
-/** A Nexus-bound slime that absorbs loose items and releases them on death. */
-public final class IMSlimeEntity extends Slime
-        implements Combatant<Slime>, EntityConstruct.BuildableMob {
-    private static final Codec<List<ItemStack>> ABSORBED_ITEMS_CODEC =
-            ItemStack.CODEC.listOf();
-
+/** Nexus-bound magma cube that consumes and destroys loose items. */
+public final class IMMagmaCubeEntity extends MagmaCube
+        implements Combatant<MagmaCube>, EntityConstruct.BuildableMob {
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
-    private final List<ItemStack> absorbedItems = new ArrayList<>();
     private boolean suppressNexusDeathSplit;
 
-    public IMSlimeEntity(EntityType<? extends Slime> type, Level level) {
+    public IMMagmaCubeEntity(
+            EntityType<? extends MagmaCube> type, Level level) {
         super(type, level);
         setCanPickUpLoot(false);
     }
@@ -49,13 +39,13 @@ public final class IMSlimeEntity extends Slime
     }
 
     @Override
-    public Slime asEntity() {
+    public MagmaCube asEntity() {
         return this;
     }
 
     @Override
     public String getLegacyName() {
-        return "IMSlime-T1";
+        return "IMMagmaCube-T1";
     }
 
     @Override
@@ -73,9 +63,6 @@ public final class IMSlimeEntity extends Slime
 
     @Override
     protected void customServerAiStep(ServerLevel level) {
-        if (isInLava() && convertToMagmaCube(level)) {
-            return;
-        }
         super.customServerAiStep(level);
         if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
@@ -87,70 +74,29 @@ public final class IMSlimeEntity extends Slime
                 getBoundingBox().inflate(pickupRadius),
                 candidate -> !candidate.hasPickUpDelay()
                         && !candidate.getItem().isEmpty())) {
-            ItemStack stack = item.getItem().copy();
-            take(item, stack.getCount());
-            absorbedItems.add(stack);
+            take(item, item.getItem().getCount());
             item.discard();
         }
-    }
-
-    private boolean convertToMagmaCube(ServerLevel level) {
-        BlockPos lavaPos = blockPosition();
-        if (!level.getFluidState(lavaPos).is(FluidTags.LAVA)) {
-            lavaPos = lavaPos.below();
-        }
-        if (!level.getFluidState(lavaPos).is(FluidTags.LAVA)) {
-            return false;
-        }
-
-        IMMagmaCubeEntity magmaCube = InvEntities.MAGMA_CUBE.create(
-                level, EntitySpawnReason.CONVERSION);
-        if (magmaCube == null) {
-            return false;
-        }
-        float healthRatio = getHealth() / getMaxHealth();
-        magmaCube.snapTo(getX(), getY(), getZ(), getYRot(), getXRot());
-        magmaCube.setDeltaMovement(getDeltaMovement());
-        magmaCube.setSize(getSize(), true);
-        magmaCube.setHealth(Math.max(1.0F,
-                magmaCube.getMaxHealth() * healthRatio));
-        magmaCube.setCustomName(getCustomName());
-        magmaCube.setCustomNameVisible(isCustomNameVisible());
-        magmaCube.setNoAi(isNoAi());
-        if (isPersistenceRequired()) {
-            magmaCube.setPersistenceRequired();
-        }
-
-        if (!level.addFreshEntity(magmaCube)) {
-            return false;
-        }
-        magmaCube.setNexus(getNexus());
-        level.setBlockAndUpdate(lavaPos, Blocks.AIR.defaultBlockState());
-        discard();
-        return true;
     }
 
     @Override
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        for (ItemStack stack : absorbedItems) {
-            spawnAtLocation(level, stack);
-        }
-        absorbedItems.clear();
+        net.minecraft.world.entity.EntityTypes.MAGMA_CUBE.getDefaultLootTable()
+                .ifPresent(lootTable -> dropFromLootTable(
+                        level, source, causedByPlayer, lootTable));
     }
 
     @Override
     protected void setUpSplitCube(
             AbstractCubeMob cubeMob, int halfSize, float xd, float zd) {
         super.setUpSplitCube(cubeMob, halfSize, xd, zd);
-        if (cubeMob instanceof IMSlimeEntity slime) {
-            slime.absorbedItems.clear();
-            slime.setNexus(getNexus());
+        if (cubeMob instanceof IMMagmaCubeEntity magmaCube) {
+            magmaCube.setNexus(getNexus());
         }
     }
 
-    /** Prevents offspring when this slime is removed as part of Nexus cleanup. */
     public void suppressSplitOnNexusDeath() {
         suppressNexusDeathSplit = true;
     }
@@ -164,16 +110,12 @@ public final class IMSlimeEntity extends Slime
     protected void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
-        output.store("AbsorbedItems", ABSORBED_ITEMS_CODEC, absorbedItems);
     }
 
     @Override
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
-        absorbedItems.clear();
-        input.read("AbsorbedItems", ABSORBED_ITEMS_CODEC)
-                .ifPresent(absorbedItems::addAll);
     }
 
     @Override
@@ -204,8 +146,6 @@ public final class IMSlimeEntity extends Slime
         private int attackCooldown;
 
         private AttackNexusGoal() {
-            // The vanilla keep-jumping goal retains MOVE and JUMP control. This
-            // goal only steers those jumps, just like the slime attack goal.
             setFlags(EnumSet.of(Flag.LOOK));
         }
 
@@ -236,10 +176,10 @@ public final class IMSlimeEntity extends Slime
             if (targetNexus == null) {
                 return;
             }
-
-            double targetX = targetNexus.getOrigin().getX() + 0.5D;
-            double targetY = targetNexus.getOrigin().getY() + 0.5D;
-            double targetZ = targetNexus.getOrigin().getZ() + 0.5D;
+            BlockPos pos = targetNexus.getOrigin();
+            double targetX = pos.getX() + 0.5D;
+            double targetY = pos.getY() + 0.5D;
+            double targetZ = pos.getZ() + 0.5D;
             double dx = targetX - getX();
             double dz = targetZ - getZ();
             float direction = (float)(Mth.atan2(dz, dx)
@@ -257,7 +197,7 @@ public final class IMSlimeEntity extends Slime
                     <= attackRange * attackRange
                     && --attackCooldown <= 0) {
                 targetNexus.damage(damageSources().mobAttack(
-                        IMSlimeEntity.this), Math.max(1, getSize()));
+                        IMMagmaCubeEntity.this), Math.max(1, getSize()));
                 attackCooldown = 20;
             }
         }
