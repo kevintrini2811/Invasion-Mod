@@ -102,6 +102,7 @@ public class WaveBuilder {
                         .entry(EntityPatterns.IMP_T1, 0.35F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * Math.max(weights[5], 0.03F))
                         .entry(EntityPatterns.ENDERMAN_T1, 0.15F * Math.max(weights[4], 0.05F))
+                        .entry(EntityPatterns.WITCH, 0.15F * Math.max(weights[4], 0.05F))
                         .entry(EntityPatterns.PHANTOM_T1, 0.08F * Math.max(weights[3], 0.05F))
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.7F * Math.max(weights[3], 0.1F)), weight * 0.1666667F);
     }
@@ -134,6 +135,7 @@ public class WaveBuilder {
                         .entry(EntityPatterns.IMP_T1, 0.25F)
                         .entry(EntityPatterns.ZOMBIE_T3_ANY, 1.1F * Math.max(weights[5], 0.03F))
                         .entry(EntityPatterns.ENDERMAN_T1, 0.12F * Math.max(weights[4], 0.05F))
+                        .entry(EntityPatterns.WITCH, 0.12F * Math.max(weights[4], 0.05F))
                         .entry(EntityPatterns.PHANTOM_T1, 0.06F * Math.max(weights[3], 0.05F))
                         .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F * Math.max(weights[3], 0.1F)), 1F);
     }
@@ -179,8 +181,8 @@ public class WaveBuilder {
                     .entry(EntityPatterns.CREEPER_T1_BASIC, 0.8F)
                     .entry(imp, 2F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.2F)
+                    .entry(EntityPatterns.WITCH, 0.2F)
                     .entry(EntityPatterns.PHANTOM_T1, 0.12F);
-            entry.entry(EntityPatterns.WITCH, 0.05F);
 
             entry.end((int) (timeScale * 30000))
                     .amount((int) (mobScale * 8))
@@ -198,6 +200,7 @@ public class WaveBuilder {
                 .entry(EntityPatterns.PIGMAN_ENGINEER_T1_ANY, 1F)
                 .entry(EntityPatterns.BURROWER, 0.2F)
                 .entry(EntityPatterns.ENDERMAN_T1, 0.08F)
+                .entry(EntityPatterns.WITCH, 0.08F)
                 .entry(EntityPatterns.PHANTOM_T1, 0.05F);
 
         builder.entry(
