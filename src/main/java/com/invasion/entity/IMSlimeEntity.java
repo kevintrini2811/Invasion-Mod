@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import com.invasion.nexus.Combatant;
@@ -9,8 +10,10 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 import com.mojang.serialization.Codec;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.cubemob.AbstractCubeMob;
 import net.minecraft.world.entity.monster.cubemob.Slime;
@@ -54,6 +57,12 @@ public final class IMSlimeEntity extends Slime
             @Nullable NexusAccess nexus, EntityConstruct spawnConditions) {
         setNexus(nexus);
         setSize(1 << getRandom().nextInt(3), true);
+    }
+
+    @Override
+    protected void addBehaviourGoals() {
+        super.addBehaviourGoals();
+        goalSelector.addGoal(3, new AttackNexusGoal());
     }
 
     @Override
@@ -121,5 +130,67 @@ public final class IMSlimeEntity extends Slime
     public boolean requiresCustomPersistence() {
         return hasNexus() || super.requiresCustomPersistence();
     }
-}
 
+    private final class AttackNexusGoal extends Goal {
+        private int attackCooldown;
+
+        private AttackNexusGoal() {
+            // The vanilla keep-jumping goal retains MOVE and JUMP control. This
+            // goal only steers those jumps, just like the slime attack goal.
+            setFlags(EnumSet.of(Flag.LOOK));
+        }
+
+        @Override
+        public boolean canUse() {
+            return hasNexus() && getNexus().isActive()
+                    && (getTarget() == null || !getTarget().isAlive());
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return canUse();
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void start() {
+            attackCooldown = 0;
+        }
+
+        @Override
+        public void tick() {
+            NexusAccess targetNexus = getNexus();
+            if (targetNexus == null) {
+                return;
+            }
+
+            double targetX = targetNexus.getOrigin().getX() + 0.5D;
+            double targetY = targetNexus.getOrigin().getY() + 0.5D;
+            double targetZ = targetNexus.getOrigin().getZ() + 0.5D;
+            double dx = targetX - getX();
+            double dz = targetZ - getZ();
+            float direction = (float)(Mth.atan2(dz, dx)
+                    * (180.0D / Math.PI)) - 90.0F;
+
+            getLookControl().setLookAt(targetX, targetY, targetZ);
+            if (getMoveControl() instanceof CubeMobMoveControl<?> control) {
+                control.setDirection(direction, true);
+                control.setWantedMovement(1.0D);
+            }
+
+            double attackRange = Math.max(2.0D,
+                    getBbWidth() * 0.5D + 1.0D);
+            if (distanceToSqr(targetX, targetY, targetZ)
+                    <= attackRange * attackRange
+                    && --attackCooldown <= 0) {
+                targetNexus.damage(damageSources().mobAttack(
+                        IMSlimeEntity.this), Math.max(1, getSize()));
+                attackCooldown = 20;
+            }
+        }
+    }
+}
