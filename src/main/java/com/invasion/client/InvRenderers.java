@@ -24,6 +24,7 @@ import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.EndermiteRenderer;
+import net.minecraft.client.renderer.entity.SlimeRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
@@ -68,6 +69,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.BLAZE, BlazeRenderer::new);
         event.registerEntityRenderer(InvEntities.SILVERFISH, SilverfishRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMITE, EndermiteRenderer::new);
+        event.registerEntityRenderer(InvEntities.SLIME, SlimeRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMAN, VariantMobRenderers.Enderman::new);
         event.registerEntityRenderer(InvEntities.PHANTOM, PhantomRenderer::new);
         event.registerEntityRenderer(InvEntities.THROWER, ThrowerEntityRenderer::new);
