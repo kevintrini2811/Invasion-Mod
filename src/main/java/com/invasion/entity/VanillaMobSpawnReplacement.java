@@ -152,6 +152,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.ZOGLIN, nexus);
         } else if (mob.getType() == EntityType.WITHER) {
             convert(mob, InvEntities.WITHER, nexus);
+        } else if (mob.getType() == EntityType.WARDEN) {
+            convert(mob, InvEntities.WARDEN, nexus);
         } else if (mob.getType() == EntityType.BLAZE) {
             convert(mob, InvEntities.BLAZE, nexus);
         } else if (mob.getType() == EntityType.SILVERFISH) {
@@ -185,6 +187,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.PHANTOM
                 || type == EntityType.ZOGLIN
                 || type == EntityType.WITHER
+                || type == EntityType.WARDEN
                 || type == EntityType.BLAZE
                 || type == EntityType.SILVERFISH
                 || type == EntityType.SLIME
@@ -292,3 +295,4 @@ public final class VanillaMobSpawnReplacement {
         }
     }
 }
+

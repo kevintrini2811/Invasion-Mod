@@ -60,6 +60,7 @@
   "item.invmod.zombie_pigman_brute_spawn_egg": "IM Pigman Zombie Brute Spawn Egg",
   "item.invmod.zoglin_spawn_egg": "IM Zoglin Spawn Egg",
   "item.invmod.wither_spawn_egg": "IM Wither Spawn Egg",
+  "item.invmod.warden_spawn_egg": "IM Warden Spawn Egg",
   "item.invmod.spider_spawn_egg": "IM Spider Spawn Egg",
   "item.invmod.jumping_spider_spawn_egg": "IM Jumping Spider Spawn Egg",
   "item.invmod.cave_spider_spawn_egg": "IM Cave Spider Spawn Egg",
@@ -80,6 +81,7 @@
     "item.invmod.witch_spawn_egg": "IM Witch Spawn Egg",
     "effect.invmod.invasion_strength": "Invasion Strength",
     "entity.invmod.wither": "IM Wither",
+  "entity.invmod.warden": "IM Warden",
   "entity.invmod.skeleton": "IM Skeleton",
   "entity.invmod.bogged": "IM Bogged",
   "entity.invmod.stray": "IM Stray",
@@ -182,3 +184,4 @@
   "invmod.subtitle.spider_egg_hatches": "Spider Egg Hatches",
   "invmod.subtitle.lightning_zaps": "Lightning Zaps"
 }
+
