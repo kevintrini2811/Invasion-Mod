@@ -164,6 +164,8 @@
     "item.invmod.breeze_spawn_egg": "IM-Breeze-Spawn-Ei",
     "entity.invmod.silverfish": "IM-Silberfisch",
     "item.invmod.silverfish_spawn_egg": "IM-Silberfisch-Spawn-Ei",
+    "entity.invmod.endermite": "IM-Endermite",
+    "item.invmod.endermite_spawn_egg": "IM-Endermite-Spawn-Ei",
 
     "invmod.subtitle.nexus_chimes": "Nexus erklingt",
   "invmod.subtitle.nexus_rumbles": "Nexus rumort",
