@@ -176,6 +176,8 @@
     "item.invmod.silverfish_spawn_egg": "IM Silverfish Spawn Egg",
     "entity.invmod.endermite": "IM Endermite",
     "item.invmod.endermite_spawn_egg": "IM Endermite Spawn Egg",
+    "entity.invmod.slime": "IM Slime",
+    "item.invmod.slime_spawn_egg": "IM Slime Spawn Egg",
 
     "invmod.subtitle.nexus_chimes": "Nexus Chimes",
     "invmod.subtitle.nexus_rumbles": "Nexus Rumbles",
