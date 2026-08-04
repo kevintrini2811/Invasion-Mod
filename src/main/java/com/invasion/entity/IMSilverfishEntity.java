@@ -33,6 +33,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
@@ -120,8 +121,20 @@ public final class IMSilverfishEntity extends Silverfish
     }
 
     private final class TransformUnbreakableBlockGoal extends Goal {
+        private static final int HORIZONTAL_SEARCH_RANGE = 12;
+        private static final int VERTICAL_SEARCH_RANGE = 6;
+        private static final int SAMPLES_PER_TICK = 64;
+        private static final int SEARCH_TICKS = 20;
+        private static final int SEARCH_RESULT_CACHE_TICKS = 60;
+
         @Nullable private BlockPos target;
         @Nullable private BlockPos approach;
+        @Nullable private BlockPos bestCandidate;
+        @Nullable private BlockPos bestCandidateApproach;
+        @Nullable private BlockPos searchOrigin;
+        @Nullable private Path cachedPath;
+        private double bestCandidateDistance;
+        private int searchTicksRemaining;
         private int searchCooldown;
 
         private TransformUnbreakableBlockGoal() {
@@ -131,13 +144,23 @@ public final class IMSilverfishEntity extends Silverfish
         @Override
         public boolean canUse() {
             if (!(level() instanceof ServerLevel serverLevel)
-                    || !serverLevel.getGameRules().get(GameRules.MOB_GRIEFING)
-                    || searchCooldown-- > 0) {
+                    || !serverLevel.getGameRules().get(GameRules.MOB_GRIEFING)) {
+                resetSearch();
                 return false;
             }
-            searchCooldown = 20;
-            target = findClosestUnbreakableBlock(serverLevel);
-            return target != null && approach != null;
+            if (searchCooldown > 0) {
+                searchCooldown--;
+                return false;
+            }
+            if (searchTicksRemaining == 0) {
+                beginSearch();
+            }
+            sampleCandidates();
+            if (--searchTicksRemaining > 0) {
+                return false;
+            }
+            searchCooldown = SEARCH_RESULT_CACHE_TICKS;
+            return finishSearch();
         }
 
         @Override
@@ -150,8 +173,7 @@ public final class IMSilverfishEntity extends Silverfish
         @Override
         public void start() {
             if (!isWithinTransformRange()) {
-                getNavigation().moveTo(approach.getX() + 0.5D,
-                        approach.getY(), approach.getZ() + 0.5D, 1.2D);
+                getNavigation().moveTo(cachedPath, 1.2D);
             }
         }
 
@@ -169,43 +191,88 @@ public final class IMSilverfishEntity extends Silverfish
                     target.getY() + 0.5D, target.getZ() + 0.5D) <= 4.0D;
         }
 
-        @Nullable
-        private BlockPos findClosestUnbreakableBlock(ServerLevel level) {
-            BlockPos best = null;
-            approach = null;
-            double bestDistance = Double.MAX_VALUE;
-            for (BlockPos pos : BlockPos.withinManhattan(
-                    blockPosition(), 12, 6, 12)) {
-                if (!isUnbreakableTarget(pos)) continue;
-                BlockPos candidateApproach = findApproach(pos);
-                if (candidateApproach == null) continue;
-                double distance = pos.distSqr(blockPosition());
-                if (distance < bestDistance) {
-                    best = pos.immutable();
-                    approach = candidateApproach;
-                    bestDistance = distance;
+        private void beginSearch() {
+            searchOrigin = blockPosition();
+            bestCandidate = null;
+            bestCandidateApproach = null;
+            bestCandidateDistance = Double.MAX_VALUE;
+            searchTicksRemaining = SEARCH_TICKS;
+        }
+
+        private void sampleCandidates() {
+            for (int i = 0; i < SAMPLES_PER_TICK; i++) {
+                BlockPos pos = searchOrigin.offset(
+                        getRandom().nextInt(HORIZONTAL_SEARCH_RANGE * 2 + 1)
+                                - HORIZONTAL_SEARCH_RANGE,
+                        getRandom().nextInt(VERTICAL_SEARCH_RANGE * 2 + 1)
+                                - VERTICAL_SEARCH_RANGE,
+                        getRandom().nextInt(HORIZONTAL_SEARCH_RANGE * 2 + 1)
+                                - HORIZONTAL_SEARCH_RANGE);
+                if (!isUnbreakableTarget(pos)) {
+                    continue;
+                }
+                BlockPos candidateApproach = findCheapApproach(pos);
+                if (candidateApproach == null) {
+                    continue;
+                }
+                double distance = pos.distSqr(searchOrigin);
+                if (distance < bestCandidateDistance) {
+                    bestCandidate = pos.immutable();
+                    bestCandidateApproach = candidateApproach;
+                    bestCandidateDistance = distance;
                 }
             }
-            return best;
+        }
+
+        private boolean finishSearch() {
+            target = bestCandidate;
+            approach = bestCandidateApproach;
+            cachedPath = null;
+            searchOrigin = null;
+            bestCandidate = null;
+            bestCandidateApproach = null;
+            if (target == null || approach == null) {
+                return false;
+            }
+            if (distanceToSqr(target.getX() + 0.5D,
+                    target.getY() + 0.5D, target.getZ() + 0.5D) <= 4.0D) {
+                return true;
+            }
+            cachedPath = getNavigation().createPath(approach, 0);
+            return cachedPath != null;
         }
 
         @Nullable
-        private BlockPos findApproach(BlockPos block) {
+        private BlockPos findCheapApproach(BlockPos block) {
             if (distanceToSqr(block.getX() + 0.5D,
                     block.getY() + 0.5D, block.getZ() + 0.5D) <= 4.0D) {
                 return blockPosition();
             }
+            BlockPos nearest = null;
+            double nearestDistance = Double.MAX_VALUE;
             for (Direction direction : Direction.values()) {
                 BlockPos candidate = block.relative(direction);
                 if (!level().getBlockState(candidate)
                                 .getCollisionShape(level(), candidate).isEmpty()) {
                     continue;
                 }
-                if (getNavigation().createPath(candidate, 0) != null) {
-                    return candidate.immutable();
+                double distance = candidate.distSqr(blockPosition());
+                if (distance < nearestDistance) {
+                    nearest = candidate.immutable();
+                    nearestDistance = distance;
                 }
             }
-            return null;
+            return nearest;
+        }
+
+        private void resetSearch() {
+            target = null;
+            approach = null;
+            bestCandidate = null;
+            bestCandidateApproach = null;
+            searchOrigin = null;
+            cachedPath = null;
+            searchTicksRemaining = 0;
         }
 
         private boolean isUnbreakableTarget(BlockPos pos) {
