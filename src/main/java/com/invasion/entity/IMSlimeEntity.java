@@ -31,6 +31,7 @@ public final class IMSlimeEntity extends Slime
 
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     private final List<ItemStack> absorbedItems = new ArrayList<>();
+    private boolean suppressNexusDeathSplit;
 
     public IMSlimeEntity(EntityType<? extends Slime> type, Level level) {
         super(type, level);
@@ -103,6 +104,16 @@ public final class IMSlimeEntity extends Slime
             slime.absorbedItems.clear();
             slime.setNexus(getNexus());
         }
+    }
+
+    /** Prevents offspring when this slime is removed as part of Nexus cleanup. */
+    public void suppressSplitOnNexusDeath() {
+        suppressNexusDeathSplit = true;
+    }
+
+    @Override
+    protected int getSplitCount() {
+        return suppressNexusDeathSplit ? 0 : super.getSplitCount();
     }
 
     @Override
