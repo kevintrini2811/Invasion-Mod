@@ -154,9 +154,6 @@ public class NexusSpiderEntity extends Spider
         if (getRandom().nextInt(4) == 0) {
             spawnAtLocation(level, InvItems.SMALL_REMNANTS);
         }
-        if (getRandom().nextFloat() < 0.35F) {
-            spawnAtLocation(level, Items.STRING);
-        }
     }
 
     @Override

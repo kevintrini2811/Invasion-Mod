@@ -122,15 +122,6 @@ public final class IMPhantomEntity extends Phantom
     }
 
     @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.PHANTOM.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(
-                        level, source, causedByPlayer, lootTable));
-    }
-
-    @Override
     public boolean removeWhenFarAway(double distanceSquared) {
         return !hasNexus();
     }
