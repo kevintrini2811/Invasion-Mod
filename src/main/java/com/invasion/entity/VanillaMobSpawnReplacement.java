@@ -134,6 +134,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.STRAY, nexus);
         } else if (mob.getType() == EntityType.WITHER_SKELETON) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
+        } else if (mob.getType() == EntityType.WITCH) {
+            convert(mob, InvEntities.WITCH, nexus);
         } else if (mob.getType() == EntityType.CREEPER) {
             convert(mob, InvEntities.CREEPER, nexus);
         } else if (mob.getType() == EntityType.SPIDER) {
@@ -154,6 +156,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.SILVERFISH, nexus);
         } else if (mob.getType() == EntityType.SLIME) {
             convert(mob, InvEntities.SLIME, nexus);
+        } else if (mob.getType() == EntityType.ENDERMITE) {
+            convert(mob, InvEntities.ENDERMITE, nexus);
         }
     }
 
@@ -166,6 +170,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.SKELETON
                 || type == EntityType.STRAY
                 || type == EntityType.WITHER_SKELETON
+                || type == EntityType.WITCH
                 || type == EntityType.CREEPER
                 || type == EntityType.SPIDER
                 || type == EntityType.CAVE_SPIDER
@@ -175,7 +180,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.WITHER
                 || type == EntityType.BLAZE
                 || type == EntityType.SILVERFISH
-                || type == EntityType.SLIME;
+                || type == EntityType.SLIME
+                || type == EntityType.ENDERMITE;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -244,9 +250,7 @@ public final class VanillaMobSpawnReplacement {
         if (source.isPersistenceRequired()) {
             converted.setPersistenceRequired();
         }
-        double reducedMaxHealth = converted instanceof IMWitherEntity
-                ? 150.0D
-                : converted.getMaxHealth() * 0.3D;
+        double reducedMaxHealth = source.getMaxHealth() * 0.3D;
         converted.getAttribute(Attributes.MAX_HEALTH).setBaseValue(reducedMaxHealth);
         converted.setHealth((float)reducedMaxHealth);
         if (converted instanceof EntityIMLiving imMob) {
