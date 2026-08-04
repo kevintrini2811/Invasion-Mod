@@ -80,6 +80,27 @@ public class SpawnPointContainer {
         return null;
     }
 
+    public List<SpawnPoint> getRandomSpawnPoints(
+            SpawnType spawnType, Ints angle, int limit) {
+        List<SpawnPoint> candidates = new ArrayList<>(
+                spawnPoints.getOrDefault(spawnType, List.of()));
+        if (candidates.isEmpty() || limit <= 0) {
+            return List.of();
+        }
+
+        int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
+        int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
+        if (maxAngle - minAngle < 360) {
+            candidates.removeIf(point -> minAngle <= maxAngle
+                    ? point.getAngle() < minAngle || point.getAngle() >= maxAngle
+                    : point.getAngle() < minAngle && point.getAngle() >= maxAngle);
+        }
+        Collections.shuffle(candidates, random);
+        return candidates.size() <= limit
+                ? candidates
+                : new ArrayList<>(candidates.subList(0, limit));
+    }
+
     public int getNumberOfSpawnPoints(SpawnType type) {
         return spawnPoints.getOrDefault(SpawnType.HUMANOID, List.of()).size();
     }
