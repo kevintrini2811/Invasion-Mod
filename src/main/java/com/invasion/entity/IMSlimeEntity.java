@@ -3,12 +3,12 @@ package com.invasion.entity;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.lang.reflect.Method;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
-import com.invasion.mixin.SlimeMoveControlAccessor;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -30,6 +30,10 @@ import org.jetbrains.annotations.Nullable;
 /** A Nexus-bound slime that absorbs loose items and releases them on death. */
 public final class IMSlimeEntity extends Slime
         implements Combatant<Slime>, EntityConstruct.BuildableMob {
+    private static final Method SET_DIRECTION = findMoveControlMethod(
+            float.class, boolean.class);
+    private static final Method SET_WANTED_MOVEMENT = findMoveControlMethod(
+            double.class);
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     private final List<ItemStack> absorbedItems = new ArrayList<>();
     private boolean suppressNexusDeathSplit;
@@ -232,10 +236,7 @@ public final class IMSlimeEntity extends Slime
                     * (180.0D / Math.PI)) - 90.0F;
 
             getLookControl().setLookAt(targetX, targetY, targetZ);
-            SlimeMoveControlAccessor control =
-                    (SlimeMoveControlAccessor)getMoveControl();
-            control.invasion$setDirection(direction, true);
-            control.invasion$setWantedMovement(1.0D);
+            steerTowardNexus(direction);
 
             double attackRange = Math.max(2.0D,
                     getBbWidth() * 0.5D + 1.0D);
@@ -247,5 +248,31 @@ public final class IMSlimeEntity extends Slime
                 attackCooldown = 20;
             }
         }
+    }
+
+    private void steerTowardNexus(float direction) {
+        try {
+            SET_DIRECTION.invoke(getMoveControl(), direction, true);
+            SET_WANTED_MOVEMENT.invoke(getMoveControl(), 1.0D);
+        } catch (ReflectiveOperationException exception) {
+            throw new IllegalStateException(
+                    "Unable to steer legacy slime movement", exception);
+        }
+    }
+
+    private static Method findMoveControlMethod(Class<?>... parameterTypes) {
+        for (Class<?> nested : Slime.class.getDeclaredClasses()) {
+            if (!nested.getSimpleName().equals("SlimeMoveControl")) {
+                continue;
+            }
+            for (Method method : nested.getDeclaredMethods()) {
+                if (java.util.Arrays.equals(
+                        method.getParameterTypes(), parameterTypes)) {
+                    method.setAccessible(true);
+                    return method;
+                }
+            }
+        }
+        throw new IllegalStateException("Missing legacy slime movement method");
     }
 }

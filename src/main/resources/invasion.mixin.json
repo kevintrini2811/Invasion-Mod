@@ -6,8 +6,7 @@
     "mixins": [
       "EntityMixin",
       "PathNodeMixin",
-      "PhantomAccessor",
-      "SlimeMoveControlAccessor"
+      "PhantomAccessor"
     ],
     "client": []
 }
