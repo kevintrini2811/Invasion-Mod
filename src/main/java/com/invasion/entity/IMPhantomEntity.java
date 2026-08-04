@@ -12,7 +12,6 @@ import com.invasion.mixin.PhantomAccessor;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
@@ -119,15 +118,6 @@ public final class IMPhantomEntity extends Phantom
     protected void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
-    }
-
-    @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.PHANTOM.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(
-                        level, source, causedByPlayer, lootTable));
     }
 
     @Override

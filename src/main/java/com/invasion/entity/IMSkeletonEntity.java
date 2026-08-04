@@ -39,18 +39,6 @@ import net.minecraft.world.level.ServerLevelAccessor;
 
 public class IMSkeletonEntity extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker, Miner {
-    @Override
-    protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        int arrows = getRandom().nextInt(3);
-        for (int i = 0; i < arrows; i++) {
-            spawnAtLocation(level, Items.ARROW);
-        }
-        if (getRandom().nextInt(3) == 2) {
-            spawnAtLocation(level, Items.BONE);
-        }
-    }
-
     public IMSkeletonEntity(
             EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);

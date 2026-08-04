@@ -241,8 +241,6 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.ENDERMAN.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(level, source, causedByPlayer, lootTable));
         getCarriedBlock().ifPresent(state -> {
             ItemStack stack = new ItemStack(state.getBlock().asItem());
             if (!stack.isEmpty()) {

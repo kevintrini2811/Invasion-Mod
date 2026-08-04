@@ -9,7 +9,6 @@ import com.invasion.nexus.NexusAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -77,15 +76,6 @@ public final class IMMagmaCubeEntity extends MagmaCube
             take(item, item.getItem().getCount());
             item.discard();
         }
-    }
-
-    @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.MAGMA_CUBE.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(
-                        level, source, causedByPlayer, lootTable));
     }
 
     @Override

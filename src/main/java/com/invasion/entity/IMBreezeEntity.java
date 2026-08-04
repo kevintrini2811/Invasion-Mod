@@ -9,7 +9,6 @@ import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -99,15 +98,6 @@ public final class IMBreezeEntity extends Breeze
         }
         super.customServerAiStep(level);
         updateBlazeFlight();
-    }
-
-    @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.BREEZE.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(
-                        level, source, causedByPlayer, lootTable));
     }
 
     private void updateBlazeFlight() {

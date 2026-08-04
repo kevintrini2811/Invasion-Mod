@@ -9,8 +9,6 @@ import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
@@ -84,14 +82,6 @@ public final class IMBlazeEntity extends Blaze
     @Override
     public boolean requiresCustomPersistence() {
         return hasNexus() || super.requiresCustomPersistence();
-    }
-
-    @Override
-    protected void dropCustomDeathLoot(
-            ServerLevel level, DamageSource source, boolean causedByPlayer) {
-        super.dropCustomDeathLoot(level, source, causedByPlayer);
-        EntityTypes.BLAZE.getDefaultLootTable().ifPresent(lootTable ->
-                dropFromLootTable(level, source, causedByPlayer, lootTable));
     }
 
     private static void onProjectileImpact(ProjectileImpactEvent event) {
