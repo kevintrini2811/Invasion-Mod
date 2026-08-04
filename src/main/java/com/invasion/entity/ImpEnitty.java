@@ -140,7 +140,8 @@ public class ImpEnitty extends IMMobEntity
                 && tryIgniteNearbyBlock(world)) {
             nextBlockIgnitionTick = tickCount + BLOCK_IGNITION_COOLDOWN;
         }
-        if (tickCount % 5 != 0 || isUsableWeapon(getMainHandItem())) {
+        if (!ItemSearchScheduler.shouldSearch(this)
+                || isUsableWeapon(getMainHandItem())) {
             return;
         }
         for (ItemEntity item : world.getEntitiesOfClass(

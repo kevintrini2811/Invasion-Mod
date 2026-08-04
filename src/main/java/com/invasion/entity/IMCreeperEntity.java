@@ -109,7 +109,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     @Override
     public void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
-        if (tickCount % 5 != 0) {
+        if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
         }
 

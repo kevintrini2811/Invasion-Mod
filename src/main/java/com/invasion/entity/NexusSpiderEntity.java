@@ -97,7 +97,7 @@ public class NexusSpiderEntity extends Spider
     @Override
     protected void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
-        if (tickCount % 5 != 0) {
+        if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
         }
         for (ItemEntity item : world.getEntitiesOfClass(

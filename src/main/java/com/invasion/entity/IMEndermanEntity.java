@@ -159,7 +159,7 @@ public final class IMEndermanEntity extends IMMobEntity {
     @Override
     protected void customServerAiStep(ServerLevel level) {
         super.customServerAiStep(level);
-        if (tickCount % 5 == 0) {
+        if (ItemSearchScheduler.shouldSearch(this)) {
             for (ItemEntity item : level.getEntitiesOfClass(
                     ItemEntity.class,
                     getBoundingBox().inflate(1.25D),
