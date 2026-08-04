@@ -22,6 +22,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,6 +73,11 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
         return Wolf.createAttributes()
                 .add(Attributes.MAX_HEALTH, 8)
                 .add(Attributes.MOVEMENT_SPEED, 0.3);
+    }
+
+    @Override
+    public boolean canUseSlot(EquipmentSlot slot) {
+        return slot == EquipmentSlot.BODY || super.canUseSlot(slot);
     }
 
     @Override
