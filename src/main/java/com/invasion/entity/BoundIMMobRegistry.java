@@ -16,6 +16,8 @@ import com.invasion.nexus.WorldNexusStorage;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
@@ -52,6 +54,24 @@ public final class BoundIMMobRegistry {
     public static synchronized List<Combatant<?>> loaded(ServerLevel level) {
         LevelEntries entries = LEVELS.get(level);
         return entries == null ? List.of() : List.copyOf(entries.loaded);
+    }
+
+    public static synchronized List<Combatant<?>> loadedInArena(
+            ServerLevel level, AABB arena) {
+        LevelEntries entries = LEVELS.get(level);
+        if (entries == null) {
+            return List.of();
+        }
+        List<Combatant<?>> result = new ArrayList<>();
+        for (Combatant<?> combatant : entries.loaded) {
+            Entity entity = combatant.asEntity();
+            if (entity instanceof PathfinderMob && entity.isAlive()
+                    && !entity.isRemoved()
+                    && arena.intersects(entity.getBoundingBox())) {
+                result.add(combatant);
+            }
+        }
+        return result;
     }
 
     public static synchronized List<Combatant<?>> bound(ServerLevel level) {
