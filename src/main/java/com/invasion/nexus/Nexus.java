@@ -306,6 +306,7 @@ public class Nexus implements ControllableNexusAccess {
                 doContinuous(50);
             }
             storage.setActiveNexus(this);
+            storage.setDirty();
         } catch (WaveSpawnerException e) {
             InvasionMod.LOGGER.error("Exception occured whilst updating invasion", e);
             stop(false);
@@ -346,6 +347,7 @@ public class Nexus implements ControllableNexusAccess {
         if (killEnemies) {
             killAllMobs();
         }
+        storage.setDirty();
     }
     @Override
     public boolean togglePause() {
@@ -356,6 +358,7 @@ public class Nexus implements ControllableNexusAccess {
         if (!paused) {
             paused = true;
             setInvasionMobsPaused(true);
+            storage.setDirty();
             return true;
         }
 
@@ -364,6 +367,7 @@ public class Nexus implements ControllableNexusAccess {
             onLoaded();
         }
         setInvasionMobsPaused(false);
+        storage.setDirty();
         return false;
     }
 
@@ -395,6 +399,7 @@ public class Nexus implements ControllableNexusAccess {
     public boolean setSpawnRadius(int radius) {
         if (!waveSpawner.isActive() && waveSpawner.setRadius(radius)) {
             boundingBoxToRadius = getChunkBox(getWorld());
+            storage.setDirty();
             return true;
         }
 
@@ -418,6 +423,7 @@ public class Nexus implements ControllableNexusAccess {
             waveDelayTimer = -1L;
             nexusLevel = Math.max(nexusLevel, currentWave);
             updateWaveProgressHud();
+            storage.setDirty();
             return true;
         } catch (WaveSpawnerException e) {
             InvasionMod.LOGGER.error("Unable to set invasion wave to {}", wave, e);
@@ -432,6 +438,7 @@ public class Nexus implements ControllableNexusAccess {
         }
 
         hp = Math.max(0, hp - amount);
+        storage.setDirty();
         updateWaveProgressHud();
         boundPlayers.playSoundForBoundPlayers(SoundEvents.BLAZE_HURT);
 
@@ -450,6 +457,7 @@ public class Nexus implements ControllableNexusAccess {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
             mobsLeftInWave--;
+            storage.setDirty();
             updateWaveProgressHud();
             if (mobsLeftInWave <= 0) {
                 if (lastMobsLeftInWave > 0) {
@@ -702,6 +710,8 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     public void tickInventory() {
+        int previousActivationTimer = activationTimer;
+        Mode previousMode = mode;
         nexusItemStacks.tick(this);
 
         if (!storage.canActivate(this)) {
@@ -752,6 +762,9 @@ public class Nexus implements ControllableNexusAccess {
                 activationTimer = 0;
             }
         }
+        if (activationTimer != previousActivationTimer || mode != previousMode) {
+            storage.setDirty();
+        }
     }
 
     protected void setMode(Mode mode) {
@@ -760,6 +773,7 @@ public class Nexus implements ControllableNexusAccess {
         }
         InvasionMod.LOGGER.debug("Nexus {} changing mode from {} to {}", this.getUuid(), this.mode, mode);
         this.mode = mode;
+        storage.setDirty();
         if (getWorld() instanceof ServerLevel sw) {
             if (sw.getBlockState(pos).is(InvBlocks.NEXUS_CORE)) {
                 sw.setBlockAndUpdate(pos, InvBlocks.NEXUS_CORE.defaultBlockState().setValue(NexusBlock.LIT, mode != Mode.STOPPED));
