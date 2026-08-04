@@ -42,6 +42,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -80,6 +81,12 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     @Override
     public boolean canUseSlot(EquipmentSlot slot) {
         return slot == EquipmentSlot.BODY || super.canUseSlot(slot);
+    }
+
+    @Override
+    public boolean isEquippableInSlot(ItemStack stack, EquipmentSlot slot) {
+        return slot == EquipmentSlot.BODY && stack.is(Items.WOLF_ARMOR)
+                || super.isEquippableInSlot(stack, slot);
     }
 
     @Override
