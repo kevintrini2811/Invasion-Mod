@@ -8,28 +8,27 @@ import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
-import com.mojang.serialization.Codec;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.monster.cubemob.AbstractCubeMob;
-import net.minecraft.world.entity.monster.cubemob.Slime;
+import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.FlatLevelSource;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
 
 /** A Nexus-bound slime that absorbs loose items and releases them on death. */
 public final class IMSlimeEntity extends Slime
         implements Combatant<Slime>, EntityConstruct.BuildableMob {
-    private static final Codec<List<ItemStack>> ABSORBED_ITEMS_CODEC =
-            ItemStack.CODEC.listOf();
-
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     private final List<ItemStack> absorbedItems = new ArrayList<>();
     private boolean suppressNexusDeathSplit;
@@ -62,14 +61,15 @@ public final class IMSlimeEntity extends Slime
     }
 
     @Override
-    protected void addBehaviourGoals() {
-        super.addBehaviourGoals();
+    protected void registerGoals() {
+        super.registerGoals();
         goalSelector.addGoal(3, new AttackNexusGoal());
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel level) {
-        super.customServerAiStep(level);
+    protected void customServerAiStep() {
+        super.customServerAiStep();
+        ServerLevel level = (ServerLevel)level();
         if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
         }
@@ -92,19 +92,9 @@ public final class IMSlimeEntity extends Slime
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         for (ItemStack stack : absorbedItems) {
-            spawnAtLocation(level, stack);
+            spawnAtLocation(stack);
         }
         absorbedItems.clear();
-    }
-
-    @Override
-    protected void setUpSplitCube(
-            AbstractCubeMob cubeMob, int halfSize, float xd, float zd) {
-        super.setUpSplitCube(cubeMob, halfSize, xd, zd);
-        if (cubeMob instanceof IMSlimeEntity slime) {
-            slime.absorbedItems.clear();
-            slime.setNexus(getNexus());
-        }
     }
 
     /** Prevents offspring when this slime is removed as part of Nexus cleanup. */
@@ -113,24 +103,64 @@ public final class IMSlimeEntity extends Slime
     }
 
     @Override
-    protected int getSplitCount() {
-        return suppressNexusDeathSplit ? 0 : super.getSplitCount();
+    public void remove(Entity.RemovalReason reason) {
+        int size = getSize();
+        if (!level().isClientSide && size > 1 && isDeadOrDying()
+                && !suppressNexusDeathSplit) {
+            Component name = getCustomName();
+            boolean noAi = isNoAi();
+            float offset = getDimensions(getPose()).width() / 2.0F;
+            int halfSize = size / 2;
+            int count = 2 + random.nextInt(3);
+            List<Mob> children = new ArrayList<>();
+            for (int index = 0; index < count; index++) {
+                float xOffset = (index % 2 - 0.5F) * offset;
+                float zOffset = (index / 2 - 0.5F) * offset;
+                IMSlimeEntity child = InvEntities.SLIME.create(level());
+                if (child != null) {
+                    child.setCustomName(name);
+                    child.setNoAi(noAi);
+                    child.setInvulnerable(isInvulnerable());
+                    child.setSize(halfSize, true);
+                    child.moveTo(getX() + xOffset, getY() + 0.5D,
+                            getZ() + zOffset, random.nextFloat() * 360.0F, 0.0F);
+                    child.setNexus(getNexus());
+                    children.add(child);
+                }
+            }
+            if (!net.neoforged.neoforge.event.EventHooks
+                    .onMobSplit(this, children).isCanceled()) {
+                children.forEach(level()::addFreshEntity);
+            }
+        }
+        // Make the vanilla implementation skip its own split after ours.
+        if (size > 1 && isDeadOrDying()) {
+            setSize(1, false);
+        }
+        super.remove(reason);
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
-        output.store("AbsorbedItems", ABSORBED_ITEMS_CODEC, absorbedItems);
+        ListTag items = new ListTag();
+        for (ItemStack stack : absorbedItems) {
+            items.add(stack.save(registryAccess()));
+        }
+        output.put("AbsorbedItems", items);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
         absorbedItems.clear();
-        input.read("AbsorbedItems", ABSORBED_ITEMS_CODEC)
-                .ifPresent(absorbedItems::addAll);
+        ListTag items = input.getList("AbsorbedItems", Tag.TAG_COMPOUND);
+        for (int index = 0; index < items.size(); index++) {
+            absorbedItems.add(ItemStack.parseOptional(
+                    registryAccess(), items.getCompound(index)));
+        }
     }
 
     @Override
@@ -203,10 +233,8 @@ public final class IMSlimeEntity extends Slime
                     * (180.0D / Math.PI)) - 90.0F;
 
             getLookControl().setLookAt(targetX, targetY, targetZ);
-            if (getMoveControl() instanceof CubeMobMoveControl<?> control) {
-                control.setDirection(direction, true);
-                control.setWantedMovement(1.0D);
-            }
+            setYRot(direction);
+            getMoveControl().setWantedPosition(targetX, targetY, targetZ, 1.0D);
 
             double attackRange = Math.max(2.0D,
                     getBbWidth() * 0.5D + 1.0D);

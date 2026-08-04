@@ -138,8 +138,6 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
         } else if (mob.getType() == EntityType.WITCH) {
             convert(mob, InvEntities.WITCH, nexus);
-        } else if (mob.getType() == EntityType.ZOMBIE_VILLAGER) {
-            convert(mob, InvEntities.ZOMBIE_VILLAGER, nexus);
         } else if (mob.getType() == EntityType.CREEPER) {
             convert(mob, InvEntities.CREEPER, nexus);
         } else if (mob.getType() == EntityType.SPIDER) {
