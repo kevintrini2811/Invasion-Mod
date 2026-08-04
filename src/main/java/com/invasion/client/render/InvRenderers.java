@@ -6,6 +6,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.BlazeRenderer;
+import net.minecraft.client.renderer.entity.BreezeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
@@ -62,6 +63,7 @@ public final class InvRenderers {
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/pigman_engineer.png"), 0.5F));
         event.registerEntityRenderer(InvEntities.IMP, ImpRenderer::new);
         event.registerEntityRenderer(InvEntities.BLAZE, BlazeRenderer::new);
+        event.registerEntityRenderer(InvEntities.BREEZE, BreezeRenderer::new);
         event.registerEntityRenderer(InvEntities.SILVERFISH, SilverfishRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMAN, IMEndermanRenderer::new);
         event.registerEntityRenderer(InvEntities.PHANTOM, PhantomRenderer::new);

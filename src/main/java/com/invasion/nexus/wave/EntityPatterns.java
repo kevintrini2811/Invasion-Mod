@@ -61,6 +61,8 @@ public interface EntityPatterns {
             new EntityPattern.Builder(InvEntities.WITHER).addTier(0, 1));
     EntityPattern WITCH = register("witch",
             new EntityPattern.Builder(InvEntities.WITCH).addTier(1, 1));
+    EntityPattern BREEZE = register("breeze",
+            new EntityPattern.Builder(InvEntities.BREEZE).addTier(1, 1));
 
     static EntityPattern register(String name, EntityPattern.Builder builder) {
         return register(name, builder, 0);

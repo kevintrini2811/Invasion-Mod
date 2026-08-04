@@ -160,6 +160,8 @@
   "invmod.message.bone.debugfailed": "The Nexus could not be activated in debug mode.",
     "entity.invmod.blaze": "IM Blaze",
     "item.invmod.blaze_spawn_egg": "IM Blaze Spawn Egg",
+    "entity.invmod.breeze": "IM Breeze",
+    "item.invmod.breeze_spawn_egg": "IM Breeze Spawn Egg",
     "entity.invmod.silverfish": "IM Silverfish",
     "item.invmod.silverfish_spawn_egg": "IM Silverfish Spawn Egg",
 
