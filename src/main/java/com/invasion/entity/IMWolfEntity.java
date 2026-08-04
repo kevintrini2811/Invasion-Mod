@@ -81,6 +81,11 @@ public class IMWolfEntity extends Wolf implements IHasNexus {
     }
 
     @Override
+    public void setOrderedToSit(boolean orderedToSit) {
+        super.setOrderedToSit(false);
+    }
+
+    @Override
     protected void registerGoals() {
         super.registerGoals();
         goalSelector.removeAllGoals(goal -> goal instanceof FollowOwnerGoal);
