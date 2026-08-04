@@ -88,8 +88,10 @@ public class SpawnPointContainer {
             return List.of();
         }
 
-        int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
-        int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
+        int minAngle = java.util.Objects.requireNonNullElse(
+                angle.getMin(), -EntityPattern.MAX_ANGLE);
+        int maxAngle = java.util.Objects.requireNonNullElse(
+                angle.getMax(), EntityPattern.MAX_ANGLE);
         if (maxAngle - minAngle < 360) {
             candidates.removeIf(point -> minAngle <= maxAngle
                     ? point.getAngle() < minAngle || point.getAngle() >= maxAngle
