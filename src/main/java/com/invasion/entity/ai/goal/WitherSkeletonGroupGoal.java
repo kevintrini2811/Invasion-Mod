@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 
@@ -88,16 +90,35 @@ public final class WitherSkeletonGroupGoal extends Goal {
 
         skeleton.getNavigation().stop();
         skeleton.setGroupLeaderWaiting(true);
-        List<IMWitherSkeletonEntity> mergeMembers = group.stream()
-                .sorted(Comparator.comparingDouble(skeleton::distanceToSqr))
-                .limit(REQUIRED_MEMBERS)
-                .toList();
-        if (mergeMembers.size() == REQUIRED_MEMBERS
-                && mergeMembers.stream().allMatch(member ->
-                        member.distanceToSqr(skeleton)
-                                <= MERGE_DISTANCE_SQUARED)) {
+        List<IMWitherSkeletonEntity> mergeMembers = nearestMembers();
+        boolean inRange = mergeMembers.size() == REQUIRED_MEMBERS;
+        for (IMWitherSkeletonEntity member : mergeMembers) {
+            if (member.distanceToSqr(skeleton) > MERGE_DISTANCE_SQUARED) {
+                inRange = false;
+                break;
+            }
+        }
+        if (inRange) {
             merge(mergeMembers);
         }
+    }
+
+    private List<IMWitherSkeletonEntity> nearestMembers() {
+        List<IMWitherSkeletonEntity> nearest =
+                new ArrayList<>(REQUIRED_MEMBERS);
+        for (IMWitherSkeletonEntity candidate : group) {
+            double distance = skeleton.distanceToSqr(candidate);
+            int index = 0;
+            while (index < nearest.size()
+                    && skeleton.distanceToSqr(nearest.get(index)) <= distance) {
+                index++;
+            }
+            nearest.add(index, candidate);
+            if (nearest.size() > REQUIRED_MEMBERS) {
+                nearest.remove(nearest.size() - 1);
+            }
+        }
+        return nearest;
     }
 
     private void refreshGroup() {
@@ -164,9 +185,10 @@ public final class WitherSkeletonGroupGoal extends Goal {
 
     private record GroupSnapshot(
             List<IMWitherSkeletonEntity> members,
+            Set<IMWitherSkeletonEntity> membership,
             IMWitherSkeletonEntity leader) {
         private static final GroupSnapshot EMPTY =
-                new GroupSnapshot(List.of(), null);
+                new GroupSnapshot(List.of(), Set.of(), null);
     }
 
     private record LevelSnapshot(
@@ -195,7 +217,7 @@ public final class WitherSkeletonGroupGoal extends Goal {
             // of serving that incomplete same-tick snapshot indefinitely.
             if (snapshot == null
                     || snapshot.gameTime() != gameTime
-                    || !group.members().contains(skeleton)) {
+                    || !group.membership().contains(skeleton)) {
                 snapshot = build(level, gameTime);
                 LEVELS.put(level, snapshot);
                 group = snapshot.groups().getOrDefault(
@@ -230,7 +252,10 @@ public final class WitherSkeletonGroupGoal extends Goal {
                         .min(Comparator.comparing(Entity::getUUID))
                         .orElse(null);
                 groups.put(nexusId,
-                        new GroupSnapshot(sharedMembers, sharedLeader));
+                        new GroupSnapshot(
+                                sharedMembers,
+                                Set.copyOf(new HashSet<>(sharedMembers)),
+                                sharedLeader));
             });
             return new LevelSnapshot(gameTime, Map.copyOf(groups));
         }
