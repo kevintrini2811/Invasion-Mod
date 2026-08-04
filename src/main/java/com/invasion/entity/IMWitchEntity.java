@@ -1,6 +1,5 @@
 package com.invasion.entity;
 
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -35,6 +34,8 @@ public final class IMWitchEntity extends Witch
     private static final double THROW_RANGE = 16.0D;
     private static final double FOLLOW_RANGE = 32.0D;
     private static final int THROW_COOLDOWN = 80;
+    private static final int MIN_TARGET_SEARCH_INTERVAL = 5;
+    private static final int TARGET_SEARCH_INTERVAL_VARIANCE = 6;
 
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
 
@@ -117,6 +118,11 @@ public final class IMWitchEntity extends Witch
 
     private final class WitchSupportGoal extends Goal {
         private int cooldown;
+        private int targetSearchCooldown;
+        @Nullable
+        private LivingEntity cachedEnemy;
+        @Nullable
+        private LivingEntity cachedAlly;
 
         private WitchSupportGoal() {
             setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
@@ -143,46 +149,86 @@ public final class IMWitchEntity extends Witch
                 cooldown--;
             }
             ServerLevel level = (ServerLevel) level();
-            LivingEntity enemy = nearest(level, THROW_RANGE,
-                    candidate -> isPlayerAlly(candidate, level));
-            if (enemy != null) {
+            if (!isValidEnemy(cachedEnemy, level)) {
+                cachedEnemy = null;
+            }
+            if (!isValidAlly(cachedAlly)) {
+                cachedAlly = null;
+            }
+            if (targetSearchCooldown > 0) {
+                targetSearchCooldown--;
+            } else {
+                if (cachedEnemy == null) {
+                    cachedEnemy = nearest(level, THROW_RANGE,
+                            candidate -> isPlayerAlly(candidate, level));
+                }
+                if (cachedEnemy == null && cachedAlly == null) {
+                    cachedAlly = nearest(level, FOLLOW_RANGE,
+                            this::isNexusAlly);
+                }
+                targetSearchCooldown = MIN_TARGET_SEARCH_INTERVAL
+                        + getRandom().nextInt(TARGET_SEARCH_INTERVAL_VARIANCE);
+            }
+            if (cachedEnemy != null) {
                 getNavigation().stop();
-                getLookControl().setLookAt(enemy, 30.0F, 30.0F);
-                if (cooldown == 0 && hasLineOfSight(enemy)) {
-                    throwPotion(enemy, harmfulType());
+                getLookControl().setLookAt(cachedEnemy, 30.0F, 30.0F);
+                if (cooldown == 0 && hasLineOfSight(cachedEnemy)) {
+                    throwPotion(cachedEnemy, harmfulType());
                 }
                 return;
             }
 
-            LivingEntity ally = nearest(level, FOLLOW_RANGE,
-                    candidate -> candidate instanceof Combatant<?> combatant
-                            && !(candidate instanceof IMWolfEntity)
-                            && !(candidate instanceof IMWitchEntity)
-                            && combatant.getNexus() == getNexus());
-            if (ally == null) {
+            if (cachedAlly == null) {
                 return;
             }
-            getLookControl().setLookAt(ally, 20.0F, 20.0F);
-            double distance = distanceToSqr(ally);
+            getLookControl().setLookAt(cachedAlly, 20.0F, 20.0F);
+            double distance = distanceToSqr(cachedAlly);
             if (distance > 6.0D * 6.0D) {
-                getNavigation().moveTo(ally, 1.0D);
+                getNavigation().moveTo(cachedAlly, 1.0D);
             } else {
                 getNavigation().stop();
             }
             if (cooldown == 0 && distance <= THROW_RANGE * THROW_RANGE
-                    && hasLineOfSight(ally)) {
-                throwPotion(ally, supportType(ally));
+                    && hasLineOfSight(cachedAlly)) {
+                throwPotion(cachedAlly, supportType(cachedAlly));
             }
+        }
+
+        private boolean isValidEnemy(@Nullable LivingEntity candidate,
+                ServerLevel level) {
+            return candidate != null && candidate.isAlive()
+                    && distanceToSqr(candidate) <= THROW_RANGE * THROW_RANGE
+                    && isPlayerAlly(candidate, level);
+        }
+
+        private boolean isValidAlly(@Nullable LivingEntity candidate) {
+            return candidate != null && candidate.isAlive()
+                    && distanceToSqr(candidate) <= FOLLOW_RANGE * FOLLOW_RANGE
+                    && isNexusAlly(candidate);
+        }
+
+        private boolean isNexusAlly(LivingEntity candidate) {
+            return candidate instanceof Combatant<?> combatant
+                    && !(candidate instanceof IMWolfEntity)
+                    && !(candidate instanceof IMWitchEntity)
+                    && combatant.getNexus() == getNexus();
         }
 
         @Nullable
         private LivingEntity nearest(ServerLevel level, double range,
                 java.util.function.Predicate<LivingEntity> predicate) {
-            return level.getEntitiesOfClass(LivingEntity.class,
-                            getBoundingBox().inflate(range),
-                            candidate -> candidate.isAlive() && predicate.test(candidate))
-                    .stream().min(Comparator.comparingDouble(
-                            IMWitchEntity.this::distanceToSqr)).orElse(null);
+            LivingEntity nearest = null;
+            double nearestDistance = Double.MAX_VALUE;
+            for (LivingEntity candidate : level.getEntitiesOfClass(
+                    LivingEntity.class, getBoundingBox().inflate(range),
+                    entity -> entity.isAlive() && predicate.test(entity))) {
+                double distance = distanceToSqr(candidate);
+                if (distance < nearestDistance) {
+                    nearest = candidate;
+                    nearestDistance = distance;
+                }
+            }
+            return nearest;
         }
 
         private IMWitchPotionEntity.Type supportType(LivingEntity ally) {
