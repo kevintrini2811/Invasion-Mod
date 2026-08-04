@@ -135,6 +135,10 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.STRAY, nexus);
         } else if (mob.getType() == EntityTypes.WITHER_SKELETON) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
+        } else if (mob.getType() == EntityTypes.WITCH) {
+            convert(mob, InvEntities.WITCH, nexus);
+        } else if (mob.getType() == EntityTypes.ZOMBIE_VILLAGER) {
+            convert(mob, InvEntities.ZOMBIE_VILLAGER, nexus);
         } else if (mob.getType() == EntityTypes.CREEPER) {
             convert(mob, InvEntities.CREEPER, nexus);
         } else if (mob.getType() == EntityTypes.SPIDER) {
@@ -155,6 +159,10 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.SILVERFISH, nexus);
         } else if (mob.getType() == EntityTypes.SLIME) {
             convert(mob, InvEntities.SLIME, nexus);
+        } else if (mob.getType() == EntityTypes.BREEZE) {
+            convert(mob, InvEntities.BREEZE, nexus);
+        } else if (mob.getType() == EntityTypes.ENDERMITE) {
+            convert(mob, InvEntities.ENDERMITE, nexus);
         }
     }
 
@@ -168,6 +176,8 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.PARCHED
                 || type == EntityTypes.STRAY
                 || type == EntityTypes.WITHER_SKELETON
+                || type == EntityTypes.WITCH
+                || type == EntityTypes.ZOMBIE_VILLAGER
                 || type == EntityTypes.CREEPER
                 || type == EntityTypes.SPIDER
                 || type == EntityTypes.CAVE_SPIDER
@@ -177,7 +187,9 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.WITHER
                 || type == EntityTypes.BLAZE
                 || type == EntityTypes.SILVERFISH
-                || type == EntityTypes.SLIME;
+                || type == EntityTypes.SLIME
+                || type == EntityTypes.BREEZE
+                || type == EntityTypes.ENDERMITE;
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
@@ -255,9 +267,7 @@ public final class VanillaMobSpawnReplacement {
         if (source.isPersistenceRequired()) {
             converted.setPersistenceRequired();
         }
-        double reducedMaxHealth = converted instanceof IMWitherEntity
-                ? 150.0D
-                : converted.getMaxHealth() * 0.3D;
+        double reducedMaxHealth = source.getMaxHealth() * 0.3D;
         converted.getAttribute(Attributes.MAX_HEALTH).setBaseValue(reducedMaxHealth);
         converted.setHealth((float)reducedMaxHealth);
         if (converted instanceof EntityIMLiving imMob) {
