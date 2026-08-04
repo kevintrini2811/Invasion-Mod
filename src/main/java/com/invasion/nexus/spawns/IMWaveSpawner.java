@@ -317,6 +317,19 @@ public class IMWaveSpawner implements Spawner {
 		List<EntityType<? extends Mob>> relevantVariants =
 				new ArrayList<>(3);
 		var biome = world.getBiome(pos);
+		if (construct.tier() == 1
+				&& (biome.is(Biomes.SWAMP)
+						|| biome.is(Biomes.MANGROVE_SWAMP))
+				&& getRandom().nextInt(4) == 0) {
+			return new EntityConstruct(
+					InvEntities.SLIME,
+					construct.texture(),
+					construct.tier(),
+					construct.flavour(),
+					construct.scaling(),
+					construct.minAngle(),
+					construct.maxAngle());
+		}
 		if (biome.is(BiomeTags.IS_OCEAN)
 				|| biome.is(BiomeTags.IS_RIVER)) {
 			relevantVariants.add(InvEntities.DROWNED);
