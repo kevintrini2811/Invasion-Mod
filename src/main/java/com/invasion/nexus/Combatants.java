@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.util.math.DistanceComparators;
+import com.invasion.entity.BoundIMMobRegistry;
 
 public class Combatants implements Iterable<Combatant<?>> {
     private List<Combatant<?>> mobList = new ArrayList<>();
@@ -23,9 +23,10 @@ public class Combatants implements Iterable<Combatant<?>> {
         this.sorter = Comparator.comparing(Combatant::asEntity, DistanceComparators.ofComparisonEntities(com.invasion.util.math.PosUtils.center(nexus.getOrigin())));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public void updateMobList(AABB arena) {
-        mobList = (List)nexus.getWorld().getEntitiesOfClass(PathfinderMob.class, arena, Combatant.PREDICATE);
+        mobList = BoundIMMobRegistry.loadedInArena(
+                (net.minecraft.server.level.ServerLevel) nexus.getWorld(),
+                arena);
         sorted = false;
     }
 
