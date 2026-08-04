@@ -139,6 +139,11 @@ public interface InvEntities {
             EntityType.Builder.<IMBlazeEntity>of(IMBlazeEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(0.6F, 1.8F).eyeHeight(1.53F)
                     .clientTrackingRange(8));
+    EntityType<IMBreezeEntity> BREEZE = register("breeze",
+            EntityType.Builder.<IMBreezeEntity>of(
+                            IMBreezeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.77F).eyeHeight(1.3452F)
+                    .clientTrackingRange(10));
     EntityType<IMSilverfishEntity> SILVERFISH = register("silverfish",
             EntityType.Builder.<IMSilverfishEntity>of(
                             IMSilverfishEntity::new, MobCategory.MONSTER)
@@ -224,6 +229,9 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(BURROWER, BurrowerEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(IMP, ImpEnitty.createAttributes());
         FabricDefaultAttributeRegistry.register(BLAZE, net.minecraft.world.entity.monster.Blaze.createAttributes());
+        FabricDefaultAttributeRegistry.register(BREEZE,
+                net.minecraft.world.entity.monster.breeze.Breeze
+                        .createAttributes());
         FabricDefaultAttributeRegistry.register(SILVERFISH, Silverfish.createAttributes());
         FabricDefaultAttributeRegistry.register(ENDERMAN, IMEndermanEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(PHANTOM, IMPhantomEntity.createAttributes());

@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.BlazeRenderer;
+import net.minecraft.client.renderer.entity.BreezeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
@@ -65,6 +66,7 @@ public final class InvRenderers {
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/pigman_engineer.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.IMP, ImpRenderer::new);
         EntityRendererRegistry.register(InvEntities.BLAZE, BlazeRenderer::new);
+        EntityRendererRegistry.register(InvEntities.BREEZE, BreezeRenderer::new);
         EntityRendererRegistry.register(InvEntities.SILVERFISH, SilverfishRenderer::new);
         EntityRendererRegistry.register(InvEntities.ENDERMAN, IMEndermanRenderer::new);
         EntityRendererRegistry.register(InvEntities.PHANTOM, PhantomRenderer::new);
