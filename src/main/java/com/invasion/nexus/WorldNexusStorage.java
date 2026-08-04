@@ -60,6 +60,7 @@ public class WorldNexusStorage extends SavedData {
 
     public synchronized void tick() {
         cleanupTimer = (cleanupTimer + 1) % 40;
+        int previousSize = instances.size();
         instances.values().removeIf(nexus -> {
             if (tickCleanup(nexus)) {
                 return true;
@@ -75,10 +76,10 @@ public class WorldNexusStorage extends SavedData {
         resumed = false;
 
         // Aktiven Nexus nur vergessen, wenn er wirklich nicht mehr existiert
+        Optional<UUID> previousActiveNexus = activeNexus;
         activeNexus = activeNexus.filter(nexusId -> instances.containsKey(nexusId));
-
-
-        if (!instances.isEmpty()) {
+        if (instances.size() != previousSize
+                || !activeNexus.equals(previousActiveNexus)) {
             setDirty();
         }
     }
@@ -94,7 +95,13 @@ public class WorldNexusStorage extends SavedData {
 
 
     public synchronized Nexus getOrCreate(UUID nexusId, BlockPos pos) {
-        return instances.computeIfAbsent(nexusId, id -> new Nexus(world, this, nexusId, pos));
+        Nexus nexus = instances.get(nexusId);
+        if (nexus == null) {
+            nexus = new Nexus(world, this, nexusId, pos);
+            instances.put(nexusId, nexus);
+            setDirty();
+        }
+        return nexus;
     }
 
     public synchronized void destroyNexus(UUID nexusId) {
@@ -102,6 +109,7 @@ public class WorldNexusStorage extends SavedData {
         Nexus nexus = instances.remove(nexusId);
         if (nexus != null) {
             nexus.stop(true);
+            setDirty();
         }
     }
 
@@ -131,8 +139,12 @@ public class WorldNexusStorage extends SavedData {
         if (!canActivate(nexus)) {
             return false;
         }
-        activeNexus = Optional.ofNullable(nexus).map(Nexus::getUuid);
-        setDirty();
+        Optional<UUID> newActiveNexus = Optional.ofNullable(nexus)
+                .map(Nexus::getUuid);
+        if (!newActiveNexus.equals(activeNexus)) {
+            activeNexus = newActiveNexus;
+            setDirty();
+        }
         return true;
     }
 
