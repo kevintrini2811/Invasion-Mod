@@ -29,6 +29,9 @@ public final class NexusBoundMobLifecycle {
             }
             NexusAccess nexus = combatant.getNexus();
             if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
+                if (living instanceof IMSlimeEntity slime) {
+                    slime.suppressSplitOnNexusDeath();
+                }
                 combatant.setNexus(null);
                 living.kill();
             }
