@@ -5,6 +5,7 @@ import java.util.Stack;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
@@ -172,7 +173,10 @@ public class MineBlockGoal extends Goal {
         var bounds = mob.getDimensions(mob.getPose()).makeBoundingBox(
                 com.invasion.util.math.PosUtils.bottomCenter(new BlockPos(
                         center.getX(), mob.blockPosition().getY(), center.getZ())));
-        for (BlockPos mutablePos : BlockPos.betweenClosed(bounds)) {
+        for (BlockPos mutablePos : BlockPos.betweenClosed(
+                Mth.floor(bounds.minX), Mth.floor(bounds.minY),
+                Mth.floor(bounds.minZ), Mth.floor(bounds.maxX),
+                Mth.floor(bounds.maxY), Mth.floor(bounds.maxZ))) {
             BlockState state = mob.level().getBlockState(mutablePos);
             if (!IMLandPathNodeMaker.canMineBlock(mob, mutablePos)
                     && !state.is(InvBlocks.NEXUS_CORE)) {
