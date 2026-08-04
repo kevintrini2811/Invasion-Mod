@@ -94,6 +94,11 @@ public interface InvEntities {
                             IMWitherEntity::new, MobCategory.MONSTER)
                     .fireImmune().sized(0.9F, 3.5F)
                     .clientTrackingRange(10));
+    EntityType<IMWardenEntity> WARDEN = register("warden",
+            EntityType.Builder.<IMWardenEntity>of(
+                            IMWardenEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(0.9F, 2.9F).eyeHeight(2.55F)
+                    .clientTrackingRange(16));
     EntityType<IMWitherSkullEntity> WITHER_SKULL = register(
             "wither_skull",
             EntityType.Builder.<IMWitherSkullEntity>of(
@@ -232,6 +237,7 @@ public interface InvEntities {
         event.put(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes().build());
         event.put(ZOGLIN, IMZoglinEntity.createAttributes().build());
         event.put(WITHER, IMWitherEntity.createAttributes().build());
+        event.put(WARDEN, IMWardenEntity.createAttributes().build());
         event.put(
                 ZOMBIFIED_PIGLIN,
                 IMZombifiedPiglinEntity.createIMAttributes().build());

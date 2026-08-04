@@ -141,6 +141,8 @@ public interface InvItems {
             p -> createSpawnEgg(p, InvEntities.ZOGLIN, 0xC66E55, 0x5F6464));
     Item WITHER_SPAWN_EGG = register("wither_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.WITHER, 0x141414, 0x4A4A4A));
+    Item WARDEN_SPAWN_EGG = register("warden_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.WARDEN, 0x0F4649, 0x39D6E0));
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
