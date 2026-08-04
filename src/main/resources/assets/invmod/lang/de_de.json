@@ -53,6 +53,7 @@
   "item.invmod.zombie_pigman_brute_spawn_egg": "IM Pigman-Zombie-Grobian-Spawn-Ei",
   "item.invmod.zoglin_spawn_egg": "IM Zoglin-Spawn-Ei",
   "item.invmod.wither_spawn_egg": "IM Wither-Spawn-Ei",
+  "item.invmod.warden_spawn_egg": "IM Warden-Spawn-Ei",
   "block.invmod.nexus_core": "Nexus-Kern",
   "invmod.gui.nexus.title": "Nexus - Stufe %s",
   "invmod.gui.nexus.mobskilled": "%s Monster besiegt",
@@ -79,6 +80,7 @@
     "item.invmod.witch_spawn_egg": "IM Hexen-Spawn-Ei",
     "effect.invmod.invasion_strength": "Invasionsstärkung",
     "entity.invmod.wither": "IM Wither",
+    "entity.invmod.warden": "IM Warden",
   "entity.invmod.skeleton": "IM Skelett",
   "entity.invmod.stray": "IM Eiswanderer",
   "entity.invmod.wither_skeleton": "IM Wither-Skelett",
@@ -177,3 +179,4 @@
   "entity.invmod.slime": "IM-Schleim",
   "item.invmod.slime_spawn_egg": "IM-Schleim-Spawn-Ei"
 }
+
