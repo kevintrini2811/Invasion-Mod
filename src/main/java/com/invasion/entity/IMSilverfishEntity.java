@@ -123,7 +123,14 @@ public final class IMSilverfishEntity extends Silverfish
         private static final int HORIZONTAL_SEARCH_RANGE = 12;
         private static final int VERTICAL_SEARCH_RANGE = 6;
         private static final int SAMPLES_PER_TICK = 64;
-        private static final int SEARCH_TICKS = 20;
+        private static final int MIN_SEARCH_TICKS = 20;
+        private static final int SEARCH_WIDTH = HORIZONTAL_SEARCH_RANGE * 2 + 1;
+        private static final int SEARCH_HEIGHT = VERTICAL_SEARCH_RANGE * 2 + 1;
+        private static final int SEARCH_VOLUME = SEARCH_WIDTH * SEARCH_WIDTH
+                * SEARCH_HEIGHT;
+        private static final int MAX_SEARCH_TICKS =
+                (SEARCH_VOLUME + SAMPLES_PER_TICK - 1) / SAMPLES_PER_TICK;
+        private static final int SEARCH_STRIDE = 7919;
         private static final int SEARCH_RESULT_CACHE_TICKS = 60;
 
         @Nullable private BlockPos target;
@@ -135,6 +142,7 @@ public final class IMSilverfishEntity extends Silverfish
         @Nullable private Path cachedPath;
         private double bestCandidateDistance;
         private int searchTicksRemaining;
+        private int searchIndex;
         private int searchCooldown;
         private int rejectedTargetCooldown;
 
@@ -160,7 +168,11 @@ public final class IMSilverfishEntity extends Silverfish
                 beginSearch();
             }
             sampleCandidates();
-            if (--searchTicksRemaining > 0) {
+            searchTicksRemaining--;
+            if (searchTicksRemaining > 0
+                    && (bestCandidate == null
+                            || searchTicksRemaining
+                                    > MAX_SEARCH_TICKS - MIN_SEARCH_TICKS)) {
                 return false;
             }
             searchCooldown = SEARCH_RESULT_CACHE_TICKS;
@@ -200,18 +212,19 @@ public final class IMSilverfishEntity extends Silverfish
             bestCandidate = null;
             bestCandidateApproach = null;
             bestCandidateDistance = Double.MAX_VALUE;
-            searchTicksRemaining = SEARCH_TICKS;
+            searchTicksRemaining = MAX_SEARCH_TICKS;
+            searchIndex = getRandom().nextInt(SEARCH_VOLUME);
         }
 
         private void sampleCandidates() {
             for (int i = 0; i < SAMPLES_PER_TICK; i++) {
-                BlockPos pos = searchOrigin.offset(
-                        getRandom().nextInt(HORIZONTAL_SEARCH_RANGE * 2 + 1)
-                                - HORIZONTAL_SEARCH_RANGE,
-                        getRandom().nextInt(VERTICAL_SEARCH_RANGE * 2 + 1)
-                                - VERTICAL_SEARCH_RANGE,
-                        getRandom().nextInt(HORIZONTAL_SEARCH_RANGE * 2 + 1)
-                                - HORIZONTAL_SEARCH_RANGE);
+                int index = searchIndex;
+                searchIndex = (searchIndex + SEARCH_STRIDE) % SEARCH_VOLUME;
+                int x = index % SEARCH_WIDTH - HORIZONTAL_SEARCH_RANGE;
+                index /= SEARCH_WIDTH;
+                int z = index % SEARCH_WIDTH - HORIZONTAL_SEARCH_RANGE;
+                int y = index / SEARCH_WIDTH - VERTICAL_SEARCH_RANGE;
+                BlockPos pos = searchOrigin.offset(x, y, z);
                 if (pos.equals(rejectedTarget)) {
                     continue;
                 }
@@ -272,6 +285,11 @@ public final class IMSilverfishEntity extends Silverfish
                 BlockPos candidate = block.relative(direction);
                 if (!level().getBlockState(candidate)
                                 .getCollisionShape(level(), candidate).isEmpty()) {
+                    continue;
+                }
+                BlockPos support = candidate.below();
+                if (level().getBlockState(support)
+                        .getCollisionShape(level(), support).isEmpty()) {
                     continue;
                 }
                 double distance = candidate.distSqr(blockPosition());
