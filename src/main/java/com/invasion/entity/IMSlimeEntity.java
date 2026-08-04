@@ -19,6 +19,7 @@ import net.minecraft.world.entity.monster.cubemob.AbstractCubeMob;
 import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.levelgen.FlatLevelSource;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.Nullable;
@@ -139,7 +140,21 @@ public final class IMSlimeEntity extends Slime
 
     @Override
     public boolean requiresCustomPersistence() {
-        return hasNexus() || super.requiresCustomPersistence();
+        return hasNexus() && !countsTowardMobCapOnSuperflat()
+                || super.requiresCustomPersistence();
+    }
+
+    @Override
+    public boolean isPersistenceRequired() {
+        return !countsTowardMobCapOnSuperflat()
+                && super.isPersistenceRequired();
+    }
+
+    private boolean countsTowardMobCapOnSuperflat() {
+        return hasNexus()
+                && level() instanceof ServerLevel serverLevel
+                && serverLevel.getChunkSource().getGenerator()
+                        instanceof FlatLevelSource;
     }
 
     private final class AttackNexusGoal extends Goal {
