@@ -1,6 +1,7 @@
 package com.invasion;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -63,13 +64,15 @@ public class BountyHunter extends SavedData {
             return;
         }
 
-        setDirty();
-
         if (++time % TICK_RATE == 0) {
-            for (UUID id : players) {
+            boolean changed = false;
+            for (Iterator<UUID> iterator = players.iterator();
+                    iterator.hasNext();) {
+                UUID id = iterator.next();
                 Player player = world.getPlayerByUUID(id);
                 if (player != null) {
-                    players.remove(id);
+                    iterator.remove();
+                    changed = true;
                     if (!player.isCreative()) {
                         player.hurt(world.damageSources().magic(), 500);
                         player.setHealth(1);
@@ -79,8 +82,10 @@ public class BountyHunter extends SavedData {
                                                 .append(player.getDisplayName()),
                                         false));
                     }
-                    setDirty();
                 }
+            }
+            if (changed) {
+                setDirty();
             }
         }
     }
