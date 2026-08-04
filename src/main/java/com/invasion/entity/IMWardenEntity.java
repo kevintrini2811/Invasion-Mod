@@ -14,6 +14,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.warden.Warden;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
@@ -112,7 +113,7 @@ public final class IMWardenEntity extends Warden
     private void approachAndAttackNexus() {
         NexusAccess targetNexus = getNexus();
         if (targetNexus == null || !targetNexus.isActive()
-                || getTarget() != null) {
+                || isOccupiedByVanillaWardenAi()) {
             return;
         }
 
@@ -134,9 +135,21 @@ public final class IMWardenEntity extends Warden
         nexusAttackCooldown = NEXUS_ATTACK_INTERVAL;
     }
 
+    private boolean isOccupiedByVanillaWardenAi() {
+        return getTarget() != null
+                || getBrain().hasMemoryValue(MemoryModuleType.ROAR_TARGET)
+                || getBrain().hasMemoryValue(MemoryModuleType.DISTURBANCE_LOCATION)
+                || getBrain().hasMemoryValue(MemoryModuleType.IS_SNIFFING);
+    }
+
     @Override
     public boolean canAttack(net.minecraft.world.entity.LivingEntity target) {
         return !(target instanceof Combatant<?>) && super.canAttack(target);
+    }
+
+    @Override
+    public boolean canTargetEntity(net.minecraft.world.entity.Entity target) {
+        return !(target instanceof Combatant<?>) && super.canTargetEntity(target);
     }
 
     @Override
