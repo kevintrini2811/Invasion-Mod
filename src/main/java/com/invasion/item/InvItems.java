@@ -121,6 +121,8 @@ public interface InvItems {
             p -> createSpawnEgg(p, InvEntities.SILVERFISH, 0x6E6E6E, 0x303030));
     Item ENDERMITE_SPAWN_EGG = register("endermite_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.ENDERMITE, 0x161616, 0xA458B5));
+    Item SLIME_SPAWN_EGG = register("slime_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.SLIME, 0x51A03E, 0x7EBF6E));
     Item ENDERMAN_SPAWN_EGG = register("enderman_spawn_egg", p -> createSpawnEgg(p, InvEntities.ENDERMAN, 0x161616, 0xE079FA));
     Item PHANTOM_SPAWN_EGG = register("phantom_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.PHANTOM, 0x43518A, 0x88A3BE));

@@ -175,6 +175,8 @@
     "item.invmod.silverfish_spawn_egg": "IM-Silberfisch-Spawn-Ei",
     "entity.invmod.endermite": "IM-Endermite",
     "item.invmod.endermite_spawn_egg": "IM-Endermite-Spawn-Ei",
+    "entity.invmod.slime": "IM-Schleim",
+    "item.invmod.slime_spawn_egg": "IM-Schleim-Spawn-Ei",
 
     "invmod.subtitle.nexus_chimes": "Nexus erklingt",
     "invmod.subtitle.nexus_rumbles": "Nexus rumort",
