@@ -177,6 +177,8 @@
     "item.invmod.endermite_spawn_egg": "IM-Endermite-Spawn-Ei",
     "entity.invmod.slime": "IM-Schleim",
     "item.invmod.slime_spawn_egg": "IM-Schleim-Spawn-Ei",
+    "entity.invmod.magma_cube": "IM-Magmawürfel",
+    "item.invmod.magma_cube_spawn_egg": "IM-Magmawürfel-Spawn-Ei",
 
     "invmod.subtitle.nexus_chimes": "Nexus erklingt",
     "invmod.subtitle.nexus_rumbles": "Nexus rumort",

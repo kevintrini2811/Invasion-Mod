@@ -123,6 +123,8 @@ public interface InvItems {
             p -> createSpawnEgg(p, InvEntities.ENDERMITE, 0x161616, 0xA458B5));
     Item SLIME_SPAWN_EGG = register("slime_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.SLIME, 0x51A03E, 0x7EBF6E));
+    Item MAGMA_CUBE_SPAWN_EGG = register("magma_cube_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.MAGMA_CUBE, 0x340000, 0xFCFC00));
     Item ENDERMAN_SPAWN_EGG = register("enderman_spawn_egg", p -> createSpawnEgg(p, InvEntities.ENDERMAN, 0x161616, 0xE079FA));
     Item PHANTOM_SPAWN_EGG = register("phantom_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.PHANTOM, 0x43518A, 0x88A3BE));

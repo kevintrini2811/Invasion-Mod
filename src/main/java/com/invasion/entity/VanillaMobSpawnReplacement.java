@@ -159,6 +159,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.SILVERFISH, nexus);
         } else if (mob.getType() == EntityTypes.SLIME) {
             convert(mob, InvEntities.SLIME, nexus);
+        } else if (mob.getType() == EntityTypes.MAGMA_CUBE) {
+            convert(mob, InvEntities.MAGMA_CUBE, nexus);
         } else if (mob.getType() == EntityTypes.BREEZE) {
             convert(mob, InvEntities.BREEZE, nexus);
         } else if (mob.getType() == EntityTypes.ENDERMITE) {
@@ -188,6 +190,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.BLAZE
                 || type == EntityTypes.SILVERFISH
                 || type == EntityTypes.SLIME
+                || type == EntityTypes.MAGMA_CUBE
                 || type == EntityTypes.BREEZE
                 || type == EntityTypes.ENDERMITE;
     }
@@ -258,6 +261,10 @@ public final class VanillaMobSpawnReplacement {
         if (source instanceof Slime slime
                 && converted instanceof IMSlimeEntity imSlime) {
             imSlime.setSize(slime.getSize(), true);
+        }
+        if (source instanceof net.minecraft.world.entity.monster.cubemob.MagmaCube magmaCube
+                && converted instanceof IMMagmaCubeEntity imMagmaCube) {
+            imMagmaCube.setSize(magmaCube.getSize(), true);
         }
         if (converted instanceof AbstractIMZombieEntity) {
             converted.setCanPickUpLoot(

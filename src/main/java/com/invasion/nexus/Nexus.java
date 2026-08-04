@@ -853,6 +853,8 @@ public class Nexus implements ControllableNexusAccess {
                     && combatant.getNexus() == this) {
                 if (mob instanceof com.invasion.entity.IMSlimeEntity slime) {
                     slime.suppressSplitOnNexusDeath();
+                } else if (mob instanceof com.invasion.entity.IMMagmaCubeEntity magmaCube) {
+                    magmaCube.suppressSplitOnNexusDeath();
                 }
                 mob.hurt(source, mob.getMaxHealth());
                 mob.kill((ServerLevel) mob.level());
