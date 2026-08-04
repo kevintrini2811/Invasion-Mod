@@ -1,12 +1,11 @@
 package com.invasion.entity.ai.goal;
 
-import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.Optional;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.IMEndermanEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.LivingEntity;
@@ -20,6 +19,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
 
 public final class CarryBlockingBlockGoal extends Goal {
     private final IMEndermanEntity mob;
@@ -41,17 +41,29 @@ public final class CarryBlockingBlockGoal extends Goal {
         if (next == null) {
             return false;
         }
-        Optional<BlockPos> obstacle = BlockPos.betweenClosedStream(
-                mob.getDimensions(mob.getPose()).makeBoundingBox(
-                                com.invasion.util.math.PosUtils.bottomCenter(next)))
-                .filter(pos -> canCarry(mob.level().getBlockState(pos)))
-                .map(BlockPos::immutable)
-                .min(Comparator.comparingDouble(pos ->
-                        mob.distanceToSqr(com.invasion.util.math.PosUtils.center(pos))));
-        if (obstacle.isEmpty()) {
+        AABB bounds = mob.getDimensions(mob.getPose()).makeBoundingBox(
+                com.invasion.util.math.PosUtils.bottomCenter(next));
+        BlockPos obstacle = null;
+        double nearestDistance = Double.MAX_VALUE;
+        for (BlockPos pos : BlockPos.betweenClosed(
+                Mth.floor(bounds.minX), Mth.floor(bounds.minY),
+                Mth.floor(bounds.minZ), Mth.floor(bounds.maxX),
+                Mth.floor(bounds.maxY), Mth.floor(bounds.maxZ))) {
+            BlockState state = mob.level().getBlockState(pos);
+            if (!canCarry(state)) {
+                continue;
+            }
+            double distance = mob.distanceToSqr(
+                    com.invasion.util.math.PosUtils.center(pos));
+            if (distance < nearestDistance) {
+                obstacle = pos.immutable();
+                nearestDistance = distance;
+            }
+        }
+        if (obstacle == null) {
             return false;
         }
-        target = obstacle.get();
+        target = obstacle;
         expectedState = mob.level().getBlockState(target);
         return canCarry(expectedState);
     }
