@@ -169,5 +169,7 @@
   "invmod.subtitle.spider_egg_hatches": "Spinnenei schlüpft",
   "invmod.subtitle.lightning_zaps": "Blitz knistert",
   "entity.invmod.silverfish": "IM Silberfisch",
-  "item.invmod.silverfish_spawn_egg": "IM-Silberfisch-Spawn-Ei"
+  "item.invmod.silverfish_spawn_egg": "IM-Silberfisch-Spawn-Ei",
+  "entity.invmod.endermite": "IM-Endermite",
+  "item.invmod.endermite_spawn_egg": "IM-Endermite-Spawn-Ei"
 }
