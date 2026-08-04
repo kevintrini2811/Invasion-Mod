@@ -1,10 +1,8 @@
 package com.invasion.entity.ai.goal;
 
-import java.util.Comparator;
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Stack;
-import java.util.stream.Stream;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -21,7 +19,6 @@ import net.minecraft.world.phys.HitResult.Type;
 import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
 import com.invasion.block.BlockMetadata;
-import com.invasion.block.InvBlockEntities;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
 import com.invasion.entity.Miner;
@@ -34,7 +31,8 @@ public class MineBlockGoal extends Goal {
     private float breakProgress;
     private int prevBreakProgress;
     private Stack<BreakEntry> breakingBlockPos = new Stack<>();
-    private Optional<BreakEntry> currentEntry = Optional.empty();
+    @Nullable
+    private BreakEntry currentEntry;
 
     public MineBlockGoal(PathfinderMob mob) {
         this.mob = mob;
@@ -64,86 +62,90 @@ public class MineBlockGoal extends Goal {
                     (float)mob.getRandom().triangle(0.5F, 0.5F),
                     (float)mob.getRandom().triangle(mob.getVoicePitch(), 0.2F)
             );
-            breakingBlockPos.addAll(getClearRegion(mob, navigation.getPath().getNextNodePos()).distinct().toList());
+            addClearRegion(navigation.getPath().getNextNodePos());
             navigation.stop();
         }
     }
 
     @Override
     public boolean canContinueToUse() {
-        return breakingBlockPos.stream().anyMatch(entry -> !mob.level().isEmptyBlock(entry.pos())) || currentEntry.isPresent();
+        if (currentEntry != null) {
+            return true;
+        }
+        for (BreakEntry entry : breakingBlockPos) {
+            if (!mob.level().isEmptyBlock(entry.pos())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public void tick() {
-        currentEntry = currentEntry.or(() -> {
-            return breakingBlockPos.isEmpty() ? Optional.empty() : Optional.of(breakingBlockPos.pop());
-        }).filter(entry -> {
-            BlockPos pos = entry.pos();
-            BlockState breakingState = mob.level().getBlockState(pos);
-            if (breakingState != entry.lastKnownState()) {
-                return false;
+        if (currentEntry == null) {
+            if (breakingBlockPos.isEmpty()) {
+                return;
             }
-            mob.swing(InteractionHand.MAIN_HAND);
-            mob.getLookControl().setLookAt(com.invasion.util.math.PosUtils.center(pos));
+            currentEntry = breakingBlockPos.pop();
+        }
+        BlockPos pos = currentEntry.pos();
+        BlockState breakingState = mob.level().getBlockState(pos);
+        if (breakingState != currentEntry.lastKnownState()) {
+            currentEntry = null;
+            return;
+        }
+        mob.swing(InteractionHand.MAIN_HAND);
+        mob.getLookControl().setLookAt(com.invasion.util.math.PosUtils.center(pos));
 
-            float speedMultiplier = mob instanceof Miner miner
-                    ? miner.getDiggingSpeedMultiplier()
-                    : 1.0F;
-            if (mob.isInWater()) {
-                speedMultiplier *= 0.5F;
-            }
-            float speed = getDiggingSpeed(mob, breakingState, pos)
-                    * speedMultiplier * 10;
-            breakProgress += speed;
-            if (breakProgress >= 10) {
-                mob.level().destroyBlockProgress(mob.getId(), pos, -1);
-                if (breakingState.is(InvBlocks.NEXUS_CORE)) {
-                    mob.level()
-                            .getBlockEntity(pos, InvBlockEntities.NEXUS)
-                            .map(NexusBlockEntity::getNexus)
-                            .ifPresent(nexus -> nexus.damage(
-                                    mob.damageSources().mobAttack(mob), 1));
-                    breakProgress = 0;
-                    return true;
-                }
-                boolean removed = mob.level().destroyBlock(pos,
-                        InvasionMod.getConfig().destructedBlocksDrop);
-                if (removed && mob instanceof Miner miner) {
-                    miner.onBlockRemoved(pos, breakingState);
-                }
+        float speedMultiplier = mob instanceof Miner miner
+                ? miner.getDiggingSpeedMultiplier()
+                : 1.0F;
+        if (mob.isInWater()) {
+            speedMultiplier *= 0.5F;
+        }
+        float speed = getDiggingSpeed(mob, breakingState, pos)
+                * speedMultiplier * 10;
+        breakProgress += speed;
+        if (breakProgress >= 10) {
+            mob.level().destroyBlockProgress(mob.getId(), pos, -1);
+            if (breakingState.is(InvBlocks.NEXUS_CORE)) {
+                damageNexus(pos);
                 breakProgress = 0;
-                return false;
-            } else {
-                if ((int)breakProgress != prevBreakProgress) {
-                    prevBreakProgress = (int)breakProgress;
-                    if (breakingState.is(InvBlocks.NEXUS_CORE)) {
-                        mob.level()
-                            .getBlockEntity(pos, InvBlockEntities.NEXUS)
-                            .map(NexusBlockEntity::getNexus)
-                            .ifPresent(nexus -> nexus.damage(mob.damageSources().mobAttack(mob), 1));
-                    }
-                }
-                mob.level().destroyBlockProgress(mob.getId(), pos, prevBreakProgress);
-                if (mob.tickCount % 4 == 0) {
-                    mob.level().playSound(null, pos,
-                            breakingState.getSoundType().getHitSound(),
-                            SoundSource.BLOCKS,
-                            (breakingState.getSoundType().getVolume() + 1) / 8F,
-                            breakingState.getSoundType().getPitch() * 0.5F
-                    );
-                }
+                return;
             }
-            return true;
-        });
+            boolean removed = mob.level().destroyBlock(pos,
+                    InvasionMod.getConfig().destructedBlocksDrop);
+            if (removed && mob instanceof Miner miner) {
+                miner.onBlockRemoved(pos, breakingState);
+            }
+            breakProgress = 0;
+            currentEntry = null;
+            return;
+        }
+        if ((int)breakProgress != prevBreakProgress) {
+            prevBreakProgress = (int)breakProgress;
+            if (breakingState.is(InvBlocks.NEXUS_CORE)) {
+                damageNexus(pos);
+            }
+        }
+        mob.level().destroyBlockProgress(mob.getId(), pos, prevBreakProgress);
+        if (mob.tickCount % 4 == 0) {
+            mob.level().playSound(null, pos,
+                    breakingState.getSoundType().getHitSound(),
+                    SoundSource.BLOCKS,
+                    (breakingState.getSoundType().getVolume() + 1) / 8F,
+                    breakingState.getSoundType().getPitch() * 0.5F
+            );
+        }
     }
 
     @Override
     public void stop() {
-        currentEntry = currentEntry.filter(entry -> {
-            mob.level().destroyBlockProgress(mob.getId(), entry.pos(), -1);
-            return false;
-        });
+        if (currentEntry != null) {
+            mob.level().destroyBlockProgress(
+                    mob.getId(), currentEntry.pos(), -1);
+            currentEntry = null;
+        }
     }
 
     static float getDiggingSpeed(LivingEntity entity, BlockState state, BlockPos pos) {
@@ -166,15 +168,36 @@ public class MineBlockGoal extends Goal {
         return multiplier / hardness / speed;
     }
 
-    static Stream<BreakEntry> getClearRegion(PathfinderMob mob, BlockPos center) {
-        return BlockPos.betweenClosedStream(mob.getDimensions(mob.getPose()).makeBoundingBox(
-                    com.invasion.util.math.PosUtils.bottomCenter(new BlockPos(center.getX(), mob.blockPosition().getY(), center.getZ()))
-                ))
-                .filter(pos -> IMLandPathNodeMaker.canMineBlock(mob, pos) || mob.level().getBlockState(pos).is(InvBlocks.NEXUS_CORE))
-                .map(BlockPos::immutable)
-                .sorted(Comparator.comparing(i -> mob.distanceToSqr(com.invasion.util.math.PosUtils.center(i)) + BlockMetadata.getStrength(i, mob.level().getBlockState(i), mob.level())))
-                .map(i -> new BreakEntry(i, mob.level().getBlockState(i)));
+    private void addClearRegion(BlockPos center) {
+        var bounds = mob.getDimensions(mob.getPose()).makeBoundingBox(
+                com.invasion.util.math.PosUtils.bottomCenter(new BlockPos(
+                        center.getX(), mob.blockPosition().getY(), center.getZ())));
+        for (BlockPos mutablePos : BlockPos.betweenClosed(bounds)) {
+            BlockState state = mob.level().getBlockState(mutablePos);
+            if (!IMLandPathNodeMaker.canMineBlock(mob, mutablePos)
+                    && !state.is(InvBlocks.NEXUS_CORE)) {
+                continue;
+            }
+            BlockPos pos = mutablePos.immutable();
+            double priority = mob.distanceToSqr(
+                    com.invasion.util.math.PosUtils.center(pos))
+                    + BlockMetadata.getStrength(pos, state, mob.level());
+            BreakEntry entry = new BreakEntry(pos, state, priority);
+            int index = 0;
+            while (index < breakingBlockPos.size()
+                    && breakingBlockPos.get(index).priority() <= priority) {
+                index++;
+            }
+            breakingBlockPos.add(index, entry);
+        }
     }
 
-    record BreakEntry(BlockPos pos, BlockState lastKnownState) {}
+    private void damageNexus(BlockPos pos) {
+        if (mob.level().getBlockEntity(pos) instanceof NexusBlockEntity nexus) {
+            nexus.getNexus().damage(mob.damageSources().mobAttack(mob), 1);
+        }
+    }
+
+    record BreakEntry(
+            BlockPos pos, BlockState lastKnownState, double priority) {}
 }
