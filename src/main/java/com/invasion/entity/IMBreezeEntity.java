@@ -16,10 +16,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.breeze.Breeze;
-import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.BreezeWindCharge;
-import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
@@ -27,8 +23,6 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 
 /** Nexus-bound Breeze using Blaze-style flight and vanilla wind attacks. */
 public final class IMBreezeEntity extends Breeze
@@ -38,14 +32,9 @@ public final class IMBreezeEntity extends Breeze
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     @Nullable
     private Vec3 wallCrossingTarget;
-    private int nexusAttackCooldown;
 
     public IMBreezeEntity(EntityType<? extends Breeze> type, Level level) {
         super(type, level);
-    }
-
-    public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(IMBreezeEntity::onProjectileImpact);
     }
 
     @Override
@@ -110,7 +99,6 @@ public final class IMBreezeEntity extends Breeze
         }
         super.customServerAiStep(level);
         updateBlazeFlight();
-        updateNexusAttack(level);
     }
 
     @Override
@@ -127,15 +115,12 @@ public final class IMBreezeEntity extends Breeze
         LivingEntity attackTarget = getTarget();
         if (attackTarget != null && attackTarget.isAlive()) {
             objective = attackTarget.position().add(0.0D, 1.0D, 0.0D);
-        } else if (hasNexus() && getNexus().isActive()) {
-            objective = Vec3.atCenterOf(getNexus().getOrigin());
         }
         if (objective == null || distanceToSqr(objective) <= APPROACH_DISTANCE_SQUARED) {
             return;
         }
 
-        BlockPos nexusPos = hasNexus() ? getNexus().getOrigin() : null;
-        Vec3 flightTarget = findFlightTarget(objective, nexusPos);
+        Vec3 flightTarget = findFlightTarget(objective);
         getMoveControl().setWantedPosition(
                 flightTarget.x, flightTarget.y, flightTarget.z, 1.0D);
         Vec3 approach = flightTarget.subtract(position()).normalize();
@@ -155,36 +140,7 @@ public final class IMBreezeEntity extends Breeze
         setDeltaMovement(velocity);
     }
 
-    private void updateNexusAttack(ServerLevel level) {
-        if (nexusAttackCooldown > 0) {
-            nexusAttackCooldown--;
-        }
-        if (getTarget() != null || !hasNexus() || !getNexus().isActive()
-                || nexusAttackCooldown > 0) {
-            return;
-        }
-        Vec3 target = Vec3.atCenterOf(getNexus().getOrigin());
-        if (distanceToSqr(target) > 32.0D * 32.0D) {
-            return;
-        }
-        BlockHitResult hit = level().clip(new ClipContext(
-                getEyePosition(), target, ClipContext.Block.COLLIDER,
-                ClipContext.Fluid.NONE, this));
-        if (hit.getType() != HitResult.Type.BLOCK
-                || !hit.getBlockPos().equals(getNexus().getOrigin())) {
-            return;
-        }
-        Vec3 direction = target.subtract(
-                getX(), getFiringYPosition(), getZ());
-        Projectile.spawnProjectileUsingShoot(
-                new BreezeWindCharge(this, level), level, ItemStack.EMPTY,
-                direction.x, direction.y, direction.z, 0.7F,
-                5.0F - level.getDifficulty().getId() * 4.0F);
-        playSound(SoundEvents.BREEZE_SHOOT, 1.5F, 1.0F);
-        nexusAttackCooldown = 60;
-    }
-
-    private Vec3 findFlightTarget(Vec3 objective, @Nullable BlockPos nexusPos) {
+    private Vec3 findFlightTarget(Vec3 objective) {
         if (wallCrossingTarget != null) {
             double horizontalDistanceSquared = distanceToSqr(
                     wallCrossingTarget.x, getY(), wallCrossingTarget.z);
@@ -199,8 +155,7 @@ public final class IMBreezeEntity extends Breeze
         BlockHitResult hit = level().clip(new ClipContext(
                 getEyePosition(), horizontalTarget, ClipContext.Block.COLLIDER,
                 ClipContext.Fluid.NONE, this));
-        if (hit.getType() != HitResult.Type.BLOCK
-                || nexusPos != null && hit.getBlockPos().equals(nexusPos)) {
+        if (hit.getType() != HitResult.Type.BLOCK) {
             return objective.add(0.0D, 2.0D, 0.0D);
         }
 
@@ -261,17 +216,4 @@ public final class IMBreezeEntity extends Breeze
         }
     }
 
-    private static void onProjectileImpact(ProjectileImpactEvent event) {
-        if (!(event.getProjectile() instanceof BreezeWindCharge windCharge)
-                || !(windCharge.getOwner() instanceof IMBreezeEntity breeze)
-                || !(event.getRayTraceResult() instanceof BlockHitResult hit)) {
-            return;
-        }
-        NexusAccess nexus = breeze.getNexus();
-        if (nexus != null && hit.getBlockPos().equals(nexus.getOrigin())) {
-            nexus.damage(breeze.damageSources().windCharge(windCharge, breeze), 2);
-            event.setCanceled(true);
-            windCharge.discard();
-        }
-    }
 }
