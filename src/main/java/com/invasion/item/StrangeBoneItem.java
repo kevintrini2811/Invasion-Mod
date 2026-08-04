@@ -22,6 +22,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
@@ -106,6 +107,13 @@ class StrangeBoneItem extends Item {
         }
         if (!wolf.isTame()) {
             newWolf.tame(user);
+        }
+        ItemStack heldItem = user.getItemInHand(hand);
+        try {
+            user.setItemInHand(hand, new ItemStack(Items.BLUE_DYE));
+            newWolf.mobInteract(user, hand);
+        } finally {
+            user.setItemInHand(hand, heldItem);
         }
         wolf.discard();
         stack.consume(1, user);
