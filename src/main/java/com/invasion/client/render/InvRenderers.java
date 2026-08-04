@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.entity.SlimeRenderer;
 import net.minecraft.client.renderer.entity.MagmaCubeRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
+import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
@@ -43,6 +44,7 @@ public final class InvRenderers {
                 context -> new InvasionZombieRenderer<>(context, true));
         EntityRendererRegistry.register(InvEntities.ZOGLIN, IMZoglinRenderer::new);
         EntityRendererRegistry.register(InvEntities.WITHER, WitherBossRenderer::new);
+        EntityRendererRegistry.register(InvEntities.WARDEN, WardenRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
         EntityRendererRegistry.register(InvEntities.WITCH, WitchRenderer::new);
