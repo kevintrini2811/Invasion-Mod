@@ -11,15 +11,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -59,13 +57,13 @@ public final class IMBreezeEntity extends Breeze
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -92,12 +90,13 @@ public final class IMBreezeEntity extends Breeze
     }
 
     @Override
-    protected void customServerAiStep(ServerLevel level) {
+    protected void customServerAiStep() {
+        ServerLevel level = (ServerLevel) level();
         if (isOnFire() || isInLava()) {
             convertToBlaze(level);
             return;
         }
-        super.customServerAiStep(level);
+        super.customServerAiStep();
         updateBlazeFlight();
     }
 
@@ -105,9 +104,8 @@ public final class IMBreezeEntity extends Breeze
     protected void dropCustomDeathLoot(
             ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
-        net.minecraft.world.entity.EntityTypes.BREEZE.getDefaultLootTable()
-                .ifPresent(lootTable -> dropFromLootTable(
-                        level, source, causedByPlayer, lootTable));
+        VanillaLoot.drop(level, this, EntityType.BREEZE, source,
+                causedByPlayer ? lastHurtByPlayer : null);
     }
 
     private void updateBlazeFlight() {
@@ -161,7 +159,7 @@ public final class IMBreezeEntity extends Breeze
 
         BlockPos wall = hit.getBlockPos();
         int startY = Math.max(wall.getY() + 1, blockPosition().getY());
-        for (int y = startY; y < level().getMaxY() - 1; y++) {
+        for (int y = startY; y < level().getMaxBuildHeight() - 1; y++) {
             BlockPos lower = new BlockPos(wall.getX(), y, wall.getZ());
             BlockPos upper = lower.above();
             if (!level().getBlockState(lower)
@@ -185,12 +183,11 @@ public final class IMBreezeEntity extends Breeze
     }
 
     private void convertToBlaze(ServerLevel level) {
-        IMBlazeEntity blaze = InvEntities.BLAZE.create(
-                level, EntitySpawnReason.CONVERSION);
+        IMBlazeEntity blaze = InvEntities.BLAZE.create(level);
         if (blaze == null) {
             return;
         }
-        blaze.snapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+        blaze.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
         blaze.setDeltaMovement(getDeltaMovement());
         blaze.setCustomName(getCustomName());
         blaze.setCustomNameVisible(isCustomNameVisible());
