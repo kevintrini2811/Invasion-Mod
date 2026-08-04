@@ -160,7 +160,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         }
         towerBuildCooldown = Math.max(0, towerBuildCooldown - 1);
 
-        if (tickCount % 5 == 0) {
+        if (ItemSearchScheduler.shouldSearch(this)) {
             for (ItemEntity item : serverLevel.getEntitiesOfClass(
                     ItemEntity.class,
                     getBoundingBox().inflate(1.25D),
