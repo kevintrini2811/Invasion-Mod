@@ -1,5 +1,7 @@
 package com.invasion.entity;
 
+import com.invasion.block.InvBlocks;
+import com.invasion.block.NexusBlockEntity;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -14,6 +16,7 @@ import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 /** Damaging mushroom, sand, and snowball projectile used by baby IM skeletons. */
@@ -60,6 +63,19 @@ public final class IMThrownItemEntity extends ThrowableItemProjectile {
         super.onHitEntity(result);
         Entity entity = result.getEntity();
         entity.hurt(damageSources().thrown(this, getOwner()), 0.5F);
+    }
+
+    @Override
+    protected void onHitBlock(BlockHitResult hit) {
+        super.onHitBlock(hit);
+        if (level() instanceof ServerLevel
+                && level().getBlockState(hit.getBlockPos())
+                        .is(InvBlocks.NEXUS_CORE)
+                && level().getBlockEntity(hit.getBlockPos())
+                        instanceof NexusBlockEntity nexus) {
+            nexus.getNexus().damage(
+                    damageSources().thrown(this, getOwner()), 2);
+        }
     }
 
     @Override
