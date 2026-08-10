@@ -9,6 +9,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
+import net.minecraft.client.renderer.block.BlockModelResolver;
+import net.minecraft.client.renderer.block.model.BlockDisplayContext;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.HumanoidArm;
 
 public final class InvWitherSkeletonRenderer extends
@@ -16,6 +19,9 @@ public final class InvWitherSkeletonRenderer extends
                 IMWitherSkeletonRenderState, IMWitherSkeletonModel> {
     private static final ResourceLocation TEXTURE = ResourceLocation.withDefaultNamespace(
             "textures/entity/skeleton/wither_skeleton.png");
+    private static final BlockDisplayContext BLOCK_DISPLAY_CONTEXT =
+            BlockDisplayContext.create();
+    private final BlockModelResolver blockModelResolver;
 
     public InvWitherSkeletonRenderer(EntityRendererProvider.Context context) {
         super(context,
@@ -34,6 +40,8 @@ public final class InvWitherSkeletonRenderer extends
                 context.getEquipmentRenderer()));
         layers.removeIf(ItemInHandLayer.class::isInstance);
         addLayer(new IMSkeletonItemInHandLayer<>(this));
+        addLayer(new IMWitherSkeletonSkullLayer(this));
+        blockModelResolver = context.getBlockModelResolver();
     }
 
     @Override
@@ -52,6 +60,15 @@ public final class InvWitherSkeletonRenderer extends
                 EquipmentUtil.isRangedWeapon(entity.getMainHandItem());
         state.groupLeaderWaiting = entity.isGroupLeaderWaiting();
         state.dancing = entity.isDancing();
+        state.carryingSkull = entity.isCarryingSkullForRender();
+        if (state.carryingSkull) {
+            blockModelResolver.update(
+                    state.skullModel,
+                    Blocks.WITHER_SKELETON_SKULL.defaultBlockState(),
+                    BLOCK_DISPLAY_CONTEXT);
+        } else {
+            state.skullModel.clear();
+        }
     }
 
     @Override

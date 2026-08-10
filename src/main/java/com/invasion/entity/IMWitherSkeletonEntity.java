@@ -77,6 +77,10 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
         return entityData.get(DANCING);
     }
 
+    public boolean isCarryingSkullForRender() {
+        return isBaby() && isCarryingSkull();
+    }
+
     @Override
     public float getDiggingSpeedMultiplier() {
         return 1.0F;
