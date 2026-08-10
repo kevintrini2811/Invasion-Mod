@@ -233,6 +233,15 @@ public final class VanillaMobSpawnReplacement {
                 source.getYRot(), source.getXRot());
         converted.setDeltaMovement(source.getDeltaMovement());
         converted.setBaby(source.isBaby());
+        if (BuiltInRegistries.ENTITY_TYPE.getKey(source.getType())
+                .getNamespace().equals("tinyskeletons")
+                && converted instanceof IMSkeletonEntity skeleton) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                converted.setItemSlot(
+                        slot, source.getItemBySlot(slot).copy());
+            }
+            skeleton.initializeTinySkeletonAbilities();
+        }
         converted.setCustomName(source.getCustomName());
         converted.setCustomNameVisible(source.isCustomNameVisible());
         converted.setNoAi(source.isNoAi());

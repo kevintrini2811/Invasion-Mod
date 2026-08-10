@@ -9,6 +9,8 @@ import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
+import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
+import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.InvasionMod;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -39,12 +41,12 @@ import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 
 public class IMSkeletonEntity extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker, Miner {
@@ -54,6 +56,7 @@ public class IMSkeletonEntity extends IMMobEntity
     private static final net.minecraft.world.entity.ai.attributes.AttributeModifier
             BABY_SPEED_BONUS = AttributeUtil.addPercentage(
                     InvasionMod.id("baby_skeleton_speed"), 50);
+    private int switchWeaponCooldown;
 
     public IMSkeletonEntity(
             EntityType<? extends IMSkeletonEntity> type, Level world) {
@@ -69,9 +72,9 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(BABY, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(BABY, false);
     }
 
     @Override
@@ -107,24 +110,33 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putBoolean("IsBaby", isBaby());
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        setBaby(input.getBooleanOr("IsBaby", false)
-                || input.getBooleanOr("isBaby", false));
+        setBaby(input.getBoolean("IsBaby") || input.getBoolean("isBaby"));
     }
 
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(0, new MineBlockGoal(this));
-        goalSelector.addGoal(1, new EntityAIKillWithArrow<>(
-                this, LivingEntity.class, 65, 16F));
+        goalSelector.addGoal(1, new PredicatedGoal(
+                new EntityAIKillWithArrow<>(
+                        this, LivingEntity.class, 65, 16F),
+                () -> !isBaby() || getMainHandItem().is(Items.BOW)));
+        goalSelector.addGoal(1, new PredicatedGoal(
+                new EntityAIKillWithArrow<>(
+                        this, LivingEntity.class, 30, 15F),
+                () -> isBaby() && usesThrownItems()));
+        goalSelector.addGoal(1, new PredicatedGoal(
+                new MobMeleeAttackGoal(this, 1.2D, false),
+                () -> isBaby() && getType() == InvEntities.SKELETON
+                        && getMainHandItem().is(Items.WOODEN_SWORD)));
         goalSelector.addGoal(2, new SkeletonAttackNexusGoal<>(this));
         // goalSelector.add(1, new EntityAIRallyBehindEntity(this, EntityIMCreeper.class, 4.0F));
         goalSelector.addGoal(3, new AttackNexusGoal<>(this));
@@ -169,6 +181,12 @@ public class IMSkeletonEntity extends IMMobEntity
 
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
+        if (isBaby() && usesThrownItems()) {
+            throwItemAt(
+                    target.position().add(0.0, target.getEyeHeight(), 0.0),
+                    true);
+            return;
+        }
         ItemStack bow = getMainHandItem();
         ItemStack arrow = getProjectile(bow);
         AbstractArrow projectile = createArrowProjectile(arrow, pullProgress, bow);
@@ -197,6 +215,7 @@ public class IMSkeletonEntity extends IMMobEntity
     public void customServerAiStep() {
         super.customServerAiStep();
         ServerLevel world = (ServerLevel) level();
+        updateBabySkeletonWeapon();
         if (!ItemSearchScheduler.shouldSearch(this)) {
             return;
         }
@@ -210,6 +229,10 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     public void performRangedNexusAttack(net.minecraft.world.phys.Vec3 target) {
+        if (isBaby() && usesThrownItems()) {
+            throwItemAt(target, false);
+            return;
+        }
         SkeletonArrowEntity projectile = new SkeletonArrowEntity(level(), this, getMainHandItem());
         double dX = target.x - getX();
         double dY = target.y - projectile.getY();
@@ -218,5 +241,64 @@ public class IMSkeletonEntity extends IMMobEntity
         projectile.shoot(dX, dY + horizontalDistance * 0.2F, dZ, 1.1F, 12);
         playSound(SoundEvents.SKELETON_SHOOT, 1, 1 / (random.nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(projectile);
+    }
+
+    public void initializeTinySkeletonAbilities() {
+        if (getType() == InvEntities.SKELETON) {
+            setDropChance(EquipmentSlot.OFFHAND, 0.0F);
+        }
+    }
+
+    protected boolean usesThrownItems() {
+        return getMainHandItem().is(Items.SNOWBALL)
+                || getMainHandItem().is(Items.BROWN_MUSHROOM)
+                || getMainHandItem().is(Items.RED_MUSHROOM)
+                || getMainHandItem().is(Items.SAND);
+    }
+
+    private void updateBabySkeletonWeapon() {
+        if (!isBaby() || getType() != InvEntities.SKELETON) {
+            return;
+        }
+        if (switchWeaponCooldown > 0) {
+            switchWeaponCooldown--;
+        }
+        LivingEntity target = getTarget();
+        if (switchWeaponCooldown == 0 && target != null
+                && distanceToSqr(target) < 16.0D
+                && getMainHandItem().is(Items.BOW)) {
+            swapHandItems();
+        } else if (switchWeaponCooldown == 0
+                && (target == null || distanceToSqr(target) > 36.0D)
+                && getMainHandItem().is(Items.WOODEN_SWORD)) {
+            swapHandItems();
+        }
+    }
+
+    private void swapHandItems() {
+        ItemStack mainHand = getMainHandItem();
+        setItemInHand(InteractionHand.MAIN_HAND, getOffhandItem());
+        setItemInHand(InteractionHand.OFF_HAND, mainHand);
+        switchWeaponCooldown = 60;
+    }
+
+    private void throwItemAt(
+            net.minecraft.world.phys.Vec3 target, boolean aimBelowEyes) {
+        ItemStack item = getMainHandItem();
+        if (item.isEmpty() || !(level() instanceof ServerLevel world)) {
+            return;
+        }
+        double x = target.x - getX();
+        double y = target.y - (aimBelowEyes ? 1.1F : 0.0F);
+        double z = target.z - getZ();
+        double arc = Math.sqrt(x * x + z * z) * 0.2F;
+        Projectile.spawnProjectile(
+                new IMThrownItemEntity(world, this, item), world, item,
+                projectile -> projectile.shoot(
+                        x, y + arc - projectile.getY(), z, 1.6F,
+                        14.0F - world.getDifficulty().getId() * 2.0F));
+        playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.0F,
+                0.4F / (getRandom().nextFloat() * 0.4F + 0.8F));
+        swing(InteractionHand.MAIN_HAND);
     }
 }
