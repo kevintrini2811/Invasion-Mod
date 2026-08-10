@@ -126,6 +126,8 @@ public interface InvEntities {
                     .clientTrackingRange(8));
     EntityType<PigmanEngineerEntity> PIGMAN_ENGINEER = register("pigman_engineer", EntityType.Builder.<PigmanEngineerEntity>of(PigmanEngineerEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<ZombieBuilderEntity> ZOMBIE_BUILDER = register("zombie_builder", EntityType.Builder.<ZombieBuilderEntity>of(ZombieBuilderEntity::new, MobCategory.MONSTER)
+            .sized(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMCreeperEntity> CREEPER = register("creeper", EntityType.Builder.<IMCreeperEntity>of(IMCreeperEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.7F).clientTrackingRange(8));
 
@@ -254,6 +256,7 @@ public interface InvEntities {
                 ZOMBIFIED_PIGLIN,
                 IMZombifiedPiglinEntity.createIMAttributes().build());
         event.put(PIGMAN_ENGINEER, PigmanEngineerEntity.createAttributes().build());
+        event.put(ZOMBIE_BUILDER, PigmanEngineerEntity.createAttributes().build());
         event.put(CREEPER, IMCreeperEntity.createAttributes().build());
         event.put(SPIDER, NexusSpiderEntity.createAttributes().build());
         event.put(JUMPING_SPIDER, JumpingSpiderEntity.createAttributes().build());
