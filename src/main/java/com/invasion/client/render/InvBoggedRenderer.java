@@ -8,7 +8,6 @@ import net.minecraft.client.model.monster.skeleton.SkeletonModel;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.state.BoggedRenderState;
 import net.minecraft.resources.Identifier;
@@ -33,8 +32,10 @@ public final class InvBoggedRenderer extends HumanoidMobRenderer<
                         ModelLayers.BOGGED_ARMOR,
                         context.getModelSet(),
                         SkeletonModel::new);
-        addLayer(new HumanoidArmorLayer<>(
-                this, armor, context.getEquipmentRenderer()));
+        addLayer(new IMSkeletonArmorLayer<>(
+                this, armor,
+                IMBabySkeletonModels.armor(SkeletonModel::new, 1.0F),
+                context.getEquipmentRenderer()));
         layers.removeIf(ItemInHandLayer.class::isInstance);
         addLayer(new IMSkeletonItemInHandLayer<>(this));
         addLayer(new IMSkeletonClothingLayer<>(

@@ -7,7 +7,6 @@ import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
-import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.HumanoidArm;
@@ -28,8 +27,11 @@ public final class InvWitherSkeletonRenderer extends
                         ModelLayers.WITHER_SKELETON_ARMOR,
                         context.getModelSet(),
                         IMWitherSkeletonModel::new);
-        addLayer(new HumanoidArmorLayer<>(
-                this, armor, context.getEquipmentRenderer()));
+        addLayer(new IMSkeletonArmorLayer<>(
+                this, armor,
+                IMBabySkeletonModels.armor(
+                        IMWitherSkeletonModel::new, 1.2F),
+                context.getEquipmentRenderer()));
         layers.removeIf(ItemInHandLayer.class::isInstance);
         addLayer(new IMSkeletonItemInHandLayer<>(this));
     }
