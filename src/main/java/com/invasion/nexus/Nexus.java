@@ -29,6 +29,7 @@ import com.invasion.block.NexusBlock;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.ElectricityBoltEntity;
 import com.invasion.entity.InvEntities;
+import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.SpawnProxyEntity;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.ai.AttackerAI;
@@ -844,23 +845,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void killAllMobs() {
-        DamageSource source = getWorld().damageSources().magic();
-        for (Combatant<?> combatant
-                : com.invasion.entity.BoundIMMobRegistry.bound(
-                        (ServerLevel)getWorld())) {
-            net.minecraft.world.entity.Entity entity = combatant.asEntity();
-            if (entity instanceof LivingEntity mob
-                    && !(entity instanceof com.invasion.entity.IMWolfEntity)
-                    && combatant.getNexus() == this) {
-                if (mob instanceof com.invasion.entity.IMSlimeEntity slime) {
-                    slime.suppressSplitOnNexusDeath();
-                } else if (mob instanceof com.invasion.entity.IMMagmaCubeEntity magmaCube) {
-                    magmaCube.suppressSplitOnNexusDeath();
-                }
-                mob.hurt(source, mob.getMaxHealth());
-                mob.kill();
-            }
-        }
+        NexusBoundMobLifecycle.schedule((ServerLevel)getWorld(), this);
     }
 
     private boolean zapEnemy(boolean sfx) {
