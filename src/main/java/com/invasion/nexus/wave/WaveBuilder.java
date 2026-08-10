@@ -161,6 +161,7 @@ public class WaveBuilder {
         EntityPattern imp = waveNumber >= 13
                 ? EntityPatterns.IMP_T1_WITH_BLAZE
                 : EntityPatterns.IMP_T1;
+        EntityPattern ghast = waveNumber >= 15 ? EntityPatterns.GHAST : null;
 
         // Hilfsfunktion: Nur ins Log schreiben (kein Chat)
         java.util.function.Consumer<String> announce = msg ->
@@ -184,6 +185,8 @@ public class WaveBuilder {
                     .entry(imp, 2F)
                     .entry(EntityPatterns.ENDERMAN_T1, 0.2F)
                     .entry(EntityPatterns.WITCH, 0.2F)
+                    .entry(ghast == null ? EntityPatterns.WITCH : ghast,
+                            ghast == null ? 0.0F : 0.2F)
                     .entry(EntityPatterns.SLIME, 0.2F)
                     .entry(EntityPatterns.PHANTOM_T1, 0.12F);
 
@@ -204,6 +207,8 @@ public class WaveBuilder {
                 .entry(EntityPatterns.BURROWER, 0.2F)
                 .entry(EntityPatterns.ENDERMAN_T1, 0.08F)
                 .entry(EntityPatterns.WITCH, 0.08F)
+                .entry(ghast == null ? EntityPatterns.WITCH : ghast,
+                        ghast == null ? 0.0F : 0.08F)
                 .entry(EntityPatterns.SLIME, 0.08F)
                 .entry(EntityPatterns.PHANTOM_T1, 0.05F);
 

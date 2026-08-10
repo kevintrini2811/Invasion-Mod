@@ -18,6 +18,7 @@ import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.entity.monster.MagmaCube;
 import net.minecraft.world.entity.monster.Witch;
+import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 
@@ -40,6 +41,11 @@ public interface InvEntities {
             EntityType.Builder.<IMWitchEntity>of(
                             IMWitchEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F).clientTrackingRange(8));
+    EntityType<IMGhastEntity> GHAST = register("ghast",
+            EntityType.Builder.<IMGhastEntity>of(
+                            IMGhastEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(4.0F, 4.0F)
+                    .clientTrackingRange(10));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F) .clientTrackingRange(8));
     EntityType<EntityIMSpeedyZombie> SPEEDY_ZOMBIE = register(
@@ -198,6 +204,7 @@ public interface InvEntities {
         event.put(
                 WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(WITCH, Witch.createAttributes().build());
+        event.put(GHAST, Ghast.createAttributes().build());
         event.put(ZOMBIE, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(
                 SPEEDY_ZOMBIE,
@@ -239,6 +246,7 @@ public interface InvEntities {
 
     static void bootstrap() {
         IMBlazeEntity.bootstrap();
+        IMGhastEntity.bootstrap();
         InvasionConfig config = InvasionMod.getConfig();
 
         if (config.maxNightMobs != 70) {

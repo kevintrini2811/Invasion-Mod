@@ -97,6 +97,8 @@ public interface InvItems {
     Item WITHER_SKELETON_SPAWN_EGG = register("wither_skeleton_spawn_egg", p -> createSpawnEgg(p, InvEntities.WITHER_SKELETON, 0x141414, 0x474D4D));
     Item WITCH_SPAWN_EGG = register("witch_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.WITCH, 0x340000, 0x51A03E));
+    Item GHAST_SPAWN_EGG = register("ghast_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.GHAST, 0xF9F9F9, 0xBCBCBC));
 
     Item SPIDER_SPAWN_EGG = register("spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.SPIDER, 0x504A3E, 0xA4121C));
     Item JUMPING_SPIDER_SPAWN_EGG = register("jumping_spider_spawn_egg", p -> createSpawnEgg(p, InvEntities.JUMPING_SPIDER, 0x444167, 0x0A0328));
