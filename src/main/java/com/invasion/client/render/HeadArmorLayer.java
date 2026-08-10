@@ -22,6 +22,7 @@ public final class HeadArmorLayer<
         M extends EntityModel<? super S>> extends RenderLayer<S, M> {
     private final EquipmentLayerRenderer equipmentRenderer;
     private final Function<S, ItemStack> helmet;
+    private final String parentPart;
     private final float offsetY;
     private final float offsetZ;
     private final float scale;
@@ -49,9 +50,21 @@ public final class HeadArmorLayer<
             float offsetY,
             float offsetZ,
             float scale) {
+        this(parent, context, helmet, "head", offsetY, offsetZ, scale);
+    }
+
+    public HeadArmorLayer(
+            RenderLayerParent<S, M> parent,
+            net.minecraft.client.renderer.entity.EntityRendererProvider.Context context,
+            Function<S, ItemStack> helmet,
+            String parentPart,
+            float offsetY,
+            float offsetZ,
+            float scale) {
         super(parent);
         equipmentRenderer = context.getEquipmentRenderer();
         this.helmet = helmet;
+        this.parentPart = parentPart;
         this.offsetY = offsetY;
         this.offsetZ = offsetZ;
         this.scale = scale;
@@ -75,7 +88,7 @@ public final class HeadArmorLayer<
         // entity overwrite this helmet's pose.
         HeadArmorModel<S> armorModel = new HeadArmorModel<>(
                 HeadArmorModel.createBodyLayer().bakeRoot());
-        ModelPart parentHead = getParentModel().root().getChild("head");
+        ModelPart parentHead = getParentModel().root().getChild(parentPart);
         PartPose helmetPose = new PartPose(
                 parentHead.x,
                 parentHead.y + offsetY,
