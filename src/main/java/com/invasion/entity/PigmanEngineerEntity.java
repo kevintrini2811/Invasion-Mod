@@ -59,11 +59,18 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
+        if (!dropsEngineerBonusLoot()) {
+            return;
+        }
         if (getRandom().nextBoolean()) {
             spawnAtLocation(level, Items.LEATHER);
         } else {
             spawnAtLocation(level, isOnFire() ? Items.COOKED_PORKCHOP : Items.PORKCHOP);
         }
+    }
+
+    protected boolean dropsEngineerBonusLoot() {
+        return true;
     }
 
     private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
@@ -77,7 +84,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
 
 
-    public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, Level world) {
+    public PigmanEngineerEntity(EntityType<? extends PigmanEngineerEntity> type, Level world) {
         super(type, world);
         getNavigatorNew().setCanDestroyBlocks(true);
         setCanPickUpLoot(true);
@@ -258,7 +265,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         if (replacedState.isAir() || !replacedState.getFluidState().isEmpty()) {
             entries.add(new ModifyBlockEntry(
                     pos,
-                    Blocks.OAK_PLANKS.defaultBlockState(),
+                    getBuildingBlock(),
                     BRIDGE_PLANK_BUILD_TIME
             ));
         }
@@ -514,7 +521,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             BlockPos towerBase,
             Direction ladderFacing) {
         List<ModifyBlockEntry> entries = new ArrayList<>(15);
-        BlockState planks = Blocks.OAK_PLANKS.defaultBlockState();
+        BlockState planks = getBuildingBlock();
         BlockState ladder = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, ladderFacing);
 
@@ -566,6 +573,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
         return entries;
+    }
+
+    /** The solid block used for bridges, tower supports and platforms. */
+    protected BlockState getBuildingBlock() {
+        return Blocks.OAK_PLANKS.defaultBlockState();
     }
 
     private void stopHorizontalMovementForTower() {
