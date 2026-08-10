@@ -45,8 +45,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 
 public class IMSkeletonEntity extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker, Miner {
@@ -112,16 +111,15 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putBoolean("IsBaby", isBaby());
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        setBaby(input.getBooleanOr("IsBaby", false)
-                || input.getBooleanOr("isBaby", false));
+        setBaby(input.getBoolean("IsBaby") || input.getBoolean("isBaby"));
     }
 
     @Override
@@ -293,11 +291,12 @@ public class IMSkeletonEntity extends IMMobEntity
         double y = target.y - (aimBelowEyes ? 1.1F : 0.0F);
         double z = target.z - getZ();
         double arc = Math.sqrt(x * x + z * z) * 0.2F;
-        Projectile.spawnProjectile(
-                new IMThrownItemEntity(world, this, item), world, item,
-                projectile -> projectile.shoot(
-                        x, y + arc - projectile.getY(), z, 1.6F,
-                        14.0F - world.getDifficulty().getId() * 2.0F));
+        IMThrownItemEntity projectile =
+                new IMThrownItemEntity(world, this, item);
+        projectile.shoot(
+                x, y + arc - projectile.getY(), z, 1.6F,
+                14.0F - world.getDifficulty().getId() * 2.0F);
+        world.addFreshEntity(projectile);
         playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.0F,
                 0.4F / (getRandom().nextFloat() * 0.4F + 0.8F));
         swing(InteractionHand.MAIN_HAND);
