@@ -29,6 +29,7 @@ import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
 import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.ImpEnitty;
+import com.invasion.entity.IMBlazeEntity;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.IMGhastEntity;
@@ -585,6 +586,7 @@ public class IMWaveSpawner implements Spawner {
 				|| mob instanceof IMCreeperEntity
 				|| mob instanceof NexusSpiderEntity
 				|| mob instanceof IMEndermanEntity
+				|| mob instanceof IMBlazeEntity
 				|| mob instanceof IMGhastEntity;
 		if (!canWearWaveArmor) {
 			return;
@@ -601,6 +603,7 @@ public class IMWaveSpawner implements Spawner {
 			boolean helmetOnly = mob instanceof IMCreeperEntity
 					|| mob instanceof NexusSpiderEntity
 					|| mob instanceof IMEndermanEntity
+					|| mob instanceof IMBlazeEntity
 					|| mob instanceof IMGhastEntity;
 			boolean bruteArmorSlot =
 					mob instanceof EntityIMZombie zombie && zombie.isBrute()

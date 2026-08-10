@@ -8,12 +8,14 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.projectile.SmallFireball;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
@@ -29,6 +31,14 @@ public final class IMBlazeEntity extends Blaze
 
     public IMBlazeEntity(EntityType<? extends Blaze> type, Level level) {
         super(type, level);
+        setCanPickUpLoot(true);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot == EquipmentSlot.HEAD
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     public static void bootstrap() {
