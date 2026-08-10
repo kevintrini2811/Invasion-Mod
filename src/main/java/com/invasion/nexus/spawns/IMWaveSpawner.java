@@ -260,6 +260,7 @@ public class IMWaveSpawner implements Spawner {
 	@Override
 	public boolean attemptSpawn(EntityConstruct mobConstruct, Ints angle) {
 		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
+		mobConstruct = replaceEngineerWithZombieBuilder(mobConstruct);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (SpawnPoint spawnPoint : spawnPointContainer.getRandomSpawnPoints(
@@ -304,6 +305,25 @@ public class IMWaveSpawner implements Spawner {
 			}
 		}
 		return false;
+	}
+
+	private EntityConstruct replaceEngineerWithZombieBuilder(
+			EntityConstruct construct) {
+		if (construct.entityType() != InvEntities.PIGMAN_ENGINEER) {
+			return construct;
+		}
+		int chancePercent = Math.clamp(nexus.getProgressionLevel(), 1, 100);
+		if (getRandom().nextInt(100) >= chancePercent) {
+			return construct;
+		}
+		return new EntityConstruct(
+				InvEntities.ZOMBIE_BUILDER,
+				construct.texture(),
+				construct.tier(),
+				construct.flavour(),
+				construct.scaling(),
+				construct.minAngle(),
+				construct.maxAngle());
 	}
 
 	private EntityConstruct replaceSlimeWithMagmaCube(

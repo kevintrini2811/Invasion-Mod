@@ -41,6 +41,7 @@
   "item.invmod.mother_spider_spawn_egg": "IM Mutterspinnen-Spawn-Ei",
   "item.invmod.creeper_spawn_egg": "IM Creeper-Spawn-Ei",
   "item.invmod.pigman_engineer_spawn_egg": "IM Pigman-Ingenieur-Spawn-Ei",
+  "item.invmod.zombie_builder_spawn_egg": "IM Zombie-Baumeister-Spawn-Ei",
   "item.invmod.thrower_spawn_egg": "IM Werfer-Spawn-Ei",
   "item.invmod.big_thrower_spawn_egg": "IM Großer-Werfer-Spawn-Ei",
   "item.invmod.imp_spawn_egg": "IM Kobold-Spawn-Ei",
@@ -93,6 +94,7 @@
   "entity.invmod.cave_spider": "IM Höhlenspinne",
   "entity.invmod.queen_spider": "IM Mutterspinne",
   "entity.invmod.pigman_engineer": "IM Zombie Pigman-Ingenieur",
+  "entity.invmod.zombie_builder": "IM Zombie-Baumeister",
   "entity.invmod.thrower": "IM Werfer",
   "entity.invmod.thrower.big": "IM Big Thrower",
   "entity.invmod.burrower": "IM Gräber",
@@ -186,4 +188,3 @@
   "invmod.subtitle.spider_egg_hatches": "Spinnenei schlüpft",
   "invmod.subtitle.lightning_zaps": "Blitz knistert"
 }
-
