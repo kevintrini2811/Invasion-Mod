@@ -27,7 +27,7 @@ public final class InvBoggedRenderer extends HumanoidMobRenderer<
         super(
                 context,
                 new BoggedModel(context.bakeLayer(ModelLayers.BOGGED)),
-                0.5F);
+                IMBabySkeletonModels.skeleton(), 0.5F);
         ArmorModelSet<SkeletonModel<BoggedRenderState>> armor =
                 ArmorModelSet.bake(
                         ModelLayers.BOGGED_ARMOR,

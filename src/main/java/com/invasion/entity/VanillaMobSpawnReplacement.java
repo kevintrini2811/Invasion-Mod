@@ -19,6 +19,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.monster.skeleton.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.cubemob.Slime;
@@ -105,7 +107,18 @@ public final class VanillaMobSpawnReplacement {
 
     private static void convertMob(
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
-        if (mob.getType() == EntityTypes.ZOMBIE) {
+        Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        if (isTinySkeleton(typeId, "baby_skeleton")) {
+            convert(mob, InvEntities.SKELETON, nexus);
+        } else if (isTinySkeleton(typeId, "baby_bogged")) {
+            convert(mob, InvEntities.BOGGED, nexus);
+        } else if (isTinySkeleton(typeId, "baby_parched")) {
+            convert(mob, InvEntities.PARCHED, nexus);
+        } else if (isTinySkeleton(typeId, "baby_stray")) {
+            convert(mob, InvEntities.STRAY, nexus);
+        } else if (isTinySkeleton(typeId, "baby_wither_skeleton")) {
+            convert(mob, InvEntities.WITHER_SKELETON, nexus);
+        } else if (mob.getType() == EntityTypes.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
         } else if (mob.getType() == EntityTypes.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
@@ -161,7 +174,13 @@ public final class VanillaMobSpawnReplacement {
     }
 
     private static boolean isReplaceableType(EntityType<?> type) {
-        return type == EntityTypes.ZOMBIE
+        Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        return isTinySkeleton(typeId, "baby_skeleton")
+                || isTinySkeleton(typeId, "baby_bogged")
+                || isTinySkeleton(typeId, "baby_parched")
+                || isTinySkeleton(typeId, "baby_stray")
+                || isTinySkeleton(typeId, "baby_wither_skeleton")
+                || type == EntityTypes.ZOMBIE
                 || type == EntityTypes.HUSK
                 || type == EntityTypes.DROWNED
                 || type == EntityTypes.ZOMBIFIED_PIGLIN
@@ -187,6 +206,12 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityTypes.MAGMA_CUBE
                 || type == EntityTypes.BREEZE
                 || type == EntityTypes.ENDERMITE;
+    }
+
+    private static boolean isTinySkeleton(Identifier typeId, String path) {
+        return typeId != null
+                && typeId.getNamespace().equals("tinyskeletons")
+                && typeId.getPath().equals(path);
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
