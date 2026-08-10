@@ -10,7 +10,7 @@ import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.item.ItemStack;
 
 public final class IMBlazeRenderer extends BlazeRenderer {
-    private static final float HELMET_Y_OFFSET = 2.8F;
+    private static final float HELMET_Y_OFFSET = 3.2F;
     private static final float HELMET_SCALE = 1.05F;
 
     public IMBlazeRenderer(EntityRendererProvider.Context context) {
