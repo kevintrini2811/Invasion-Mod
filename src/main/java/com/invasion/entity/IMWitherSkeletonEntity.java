@@ -155,8 +155,8 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
     }
 
     @Override
-    public void customServerAiStep(ServerLevel world) {
-        super.customServerAiStep(world);
+    public void customServerAiStep() {
+        super.customServerAiStep();
         if (dancingTicks > 0 && --dancingTicks == 0) {
             entityData.set(DANCING, false);
         }
@@ -184,7 +184,7 @@ public final class IMWitherSkeletonEntity extends IMSkeletonEntity {
             ItemStack skull = getMainHandItem().is(
                     Items.WITHER_SKELETON_SKULL)
                     ? getMainHandItem() : getOffhandItem();
-            spawnAtLocation(world, skull.copy());
+            spawnAtLocation(skull.copy());
             if (getMainHandItem().is(Items.WITHER_SKELETON_SKULL)) {
                 setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
             } else {

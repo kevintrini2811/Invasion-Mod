@@ -41,7 +41,6 @@ import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
@@ -103,12 +102,16 @@ public class IMSkeletonEntity extends IMMobEntity
     }
 
     @Override
-    protected EntityDimensions getDefaultDimensions(Pose pose) {
-        EntityDimensions dimensions = super.getDefaultDimensions(pose);
-        return isBaby()
-                ? dimensions.scale(0.5F).withEyeHeight(
-                        dimensions.eyeHeight() * 0.534F)
-                : dimensions;
+    public EntityDimensions getDimensions(Pose pose) {
+        return isBaby() ? super.getDimensions(pose).scale(0.5F)
+                : super.getDimensions(pose);
+    }
+
+    @Override
+    protected float getStandingEyeHeight(
+            Pose pose, EntityDimensions dimensions) {
+        return isBaby() ? 0.93F
+                : super.getStandingEyeHeight(pose, dimensions);
     }
 
     @Override
@@ -294,11 +297,11 @@ public class IMSkeletonEntity extends IMMobEntity
         double y = target.y - (aimBelowEyes ? 1.1F : 0.0F);
         double z = target.z - getZ();
         double arc = Math.sqrt(x * x + z * z) * 0.2F;
-        Projectile.spawnProjectile(
-                new IMThrownItemEntity(world, this, item), world, item,
-                projectile -> projectile.shoot(
-                        x, y + arc - projectile.getY(), z, 1.6F,
-                        14.0F - world.getDifficulty().getId() * 2.0F));
+        IMThrownItemEntity projectile = new IMThrownItemEntity(
+                world, this, item);
+        projectile.shoot(x, y + arc - projectile.getY(), z, 1.6F,
+                14.0F - world.getDifficulty().getId() * 2.0F);
+        world.addFreshEntity(projectile);
         playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.0F,
                 0.4F / (getRandom().nextFloat() * 0.4F + 0.8F));
         swing(InteractionHand.MAIN_HAND);

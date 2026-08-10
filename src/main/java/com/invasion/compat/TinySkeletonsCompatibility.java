@@ -1,6 +1,6 @@
 package com.invasion.compat;
 
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 
 /** Keeps all Tiny Skeletons integration behind an optional mod check. */
 public final class TinySkeletonsCompatibility {

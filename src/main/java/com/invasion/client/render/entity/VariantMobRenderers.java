@@ -62,9 +62,11 @@ public final class VariantMobRenderers {
 
     private abstract static class SkeletonVariant extends IMSkeletonEntityRenderer {
         private final ResourceLocation texture;
+        private final ResourceLocation babyTexture;
         SkeletonVariant(EntityRendererProvider.Context c, String texture) {
             super(c);
             this.texture = new ResourceLocation(texture);
+            babyTexture = babyTexture(texture);
         }
         SkeletonVariant(EntityRendererProvider.Context c, String texture,
                 SkeletonModel<IMSkeletonEntity> model,
@@ -72,8 +74,17 @@ public final class VariantMobRenderers {
                 net.minecraft.client.model.geom.ModelLayerLocation outerArmor) {
             super(c, innerArmor, outerArmor, model);
             this.texture = new ResourceLocation(texture);
+            babyTexture = babyTexture(texture);
         }
-        @Override public ResourceLocation getTextureLocation(com.invasion.entity.IMSkeletonEntity e) { return texture; }
+        @Override public ResourceLocation getTextureLocation(com.invasion.entity.IMSkeletonEntity e) {
+            return e.isBaby() ? babyTexture : texture;
+        }
+        private static ResourceLocation babyTexture(String texture) {
+            String name = texture.substring(
+                    texture.lastIndexOf('/') + 1, texture.length() - 4);
+            return new ResourceLocation("tinyskeletons",
+                    "textures/entity/skeleton/baby_" + name + ".png");
+        }
     }
     public static final class Stray extends SkeletonVariant {
         public Stray(EntityRendererProvider.Context c) {
@@ -87,6 +98,8 @@ public final class VariantMobRenderers {
                     new IMWitherSkeletonModel(c.bakeLayer(ModelLayers.WITHER_SKELETON)),
                     ModelLayers.WITHER_SKELETON_INNER_ARMOR,
                     ModelLayers.WITHER_SKELETON_OUTER_ARMOR);
+            addLayer(new HeldWitherSkullLayer(this,
+                    c.getBlockRenderDispatcher()));
         }
         @Override protected void scale(com.invasion.entity.IMSkeletonEntity e, PoseStack p, float f) {
             p.scale(1.2F, 1.2F, 1.2F);
@@ -105,6 +118,35 @@ public final class VariantMobRenderers {
                 float headPitch) {
             super.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks,
                     netHeadYaw, headPitch);
+            if (entity instanceof IMWitherSkeletonEntity wither
+                    && wither.isCarryingSkullForRender()) {
+                float attackSwing = net.minecraft.util.Mth.sin(
+                        attackTime * (float) Math.PI);
+                float attackEase = net.minecraft.util.Mth.sin(
+                        (1.0F - (1.0F - attackTime)
+                                * (1.0F - attackTime)) * (float) Math.PI);
+                rightArm.zRot = 0.0F;
+                leftArm.zRot = 0.0F;
+                rightArm.yRot = -(0.1F - attackSwing * 0.6F);
+                leftArm.yRot = 0.1F - attackSwing * 0.6F;
+                rightArm.xRot = -(float) Math.PI / 2.0F
+                        - attackSwing * 1.2F + attackEase * 0.4F;
+                leftArm.xRot = rightArm.xRot;
+            }
+            if (entity instanceof IMWitherSkeletonEntity wither
+                    && wither.isDancing()) {
+                float time = ageInTicks / 60.0F;
+                head.x = net.minecraft.util.Mth.sin(time * 10.0F);
+                head.y = net.minecraft.util.Mth.sin(time * 40.0F) + 0.4F;
+                rightArm.zRot = (float) Math.toRadians(
+                        70.0F + net.minecraft.util.Mth.cos(
+                                time * 40.0F) * 10.0F);
+                leftArm.zRot = -rightArm.zRot;
+                rightArm.y = net.minecraft.util.Mth.sin(
+                        time * 40.0F) * 0.5F + 1.5F;
+                leftArm.y = rightArm.y;
+                body.y = net.minecraft.util.Mth.sin(time * 40.0F) * 0.35F;
+            }
             if (!(entity instanceof IMWitherSkeletonEntity witherSkeleton)
                     || !witherSkeleton.isGroupLeaderWaiting()) {
                 return;
@@ -115,6 +157,41 @@ public final class VariantMobRenderers {
             leftArm.yRot = 0.0F;
             rightArm.zRot = -0.12F;
             leftArm.zRot = 0.12F;
+        }
+    }
+
+    private static final class HeldWitherSkullLayer extends RenderLayer<
+            IMSkeletonEntity, SkeletonModel<IMSkeletonEntity>> {
+        private final BlockRenderDispatcher blockRenderer;
+
+        HeldWitherSkullLayer(WitherSkeleton parent,
+                BlockRenderDispatcher blockRenderer) {
+            super(parent);
+            this.blockRenderer = blockRenderer;
+        }
+
+        @Override
+        public void render(PoseStack pose, MultiBufferSource buffers,
+                int light, IMSkeletonEntity entity, float limbSwing,
+                float limbSwingAmount, float partialTick, float age,
+                float headYaw, float headPitch) {
+            if (!(entity instanceof IMWitherSkeletonEntity wither)
+                    || !wither.isCarryingSkullForRender()) {
+                return;
+            }
+            pose.pushPose();
+            pose.translate(0.0F, -0.075F, 0.325F);
+            pose.translate(0.0F, 0.6875F, -0.75F);
+            pose.mulPose(Axis.XP.rotationDegrees(20.0F));
+            pose.mulPose(Axis.YP.rotationDegrees(-90.0F));
+            pose.translate(0.25F, 0.1875F, 0.25F);
+            pose.scale(-0.5F, -0.5F, 0.5F);
+            pose.mulPose(Axis.YP.rotationDegrees(90.0F));
+            blockRenderer.renderSingleBlock(
+                    net.minecraft.world.level.block.Blocks
+                            .WITHER_SKELETON_SKULL.defaultBlockState(),
+                    pose, buffers, light, OverlayTexture.NO_OVERLAY);
+            pose.popPose();
         }
     }
 

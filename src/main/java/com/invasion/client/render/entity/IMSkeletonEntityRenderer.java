@@ -16,6 +16,8 @@ import net.minecraft.resources.ResourceLocation;
  */
 public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEntity, SkeletonModel<IMSkeletonEntity>> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("textures/entity/skeleton/skeleton.png");
+    private static final ResourceLocation BABY_TEXTURE = new ResourceLocation(
+            "tinyskeletons", "textures/entity/skeleton/baby_skeleton.png");
 
     public IMSkeletonEntityRenderer(EntityRendererProvider.Context context) {
         this(context, ModelLayers.SKELETON, ModelLayers.SKELETON_INNER_ARMOR, ModelLayers.SKELETON_OUTER_ARMOR);
@@ -32,7 +34,7 @@ public class IMSkeletonEntityRenderer extends HumanoidMobRenderer<IMSkeletonEnti
 
     @Override
     public ResourceLocation getTextureLocation(IMSkeletonEntity abstractSkeletonEntity) {
-        return TEXTURE;
+        return abstractSkeletonEntity.isBaby() ? BABY_TEXTURE : TEXTURE;
     }
 
     @Override

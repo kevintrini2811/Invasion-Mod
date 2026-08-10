@@ -9,10 +9,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
+import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
@@ -28,7 +27,8 @@ public final class IMThrownItemEntity extends ThrowableItemProjectile {
 
     public IMThrownItemEntity(
             Level level, LivingEntity owner, ItemStack item) {
-        super(InvEntities.THROWN_ITEM, owner, level, item);
+        super(InvEntities.THROWN_ITEM, owner, level);
+        setItem(item);
     }
 
     @Override
@@ -50,7 +50,7 @@ public final class IMThrownItemEntity extends ThrowableItemProjectile {
         if (id == 3 && !getItem().isEmpty()) {
             ParticleOptions particle = new ItemParticleOption(
                     ParticleTypes.ITEM,
-                    ItemStackTemplate.fromNonEmptyStack(getItem()));
+                    getItem());
             for (int i = 0; i < 8; i++) {
                 level().addParticle(
                         particle, getX(), getY(), getZ(), 0.0, 0.0, 0.0);

@@ -84,6 +84,8 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.BOULDER, BoulderEntityRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.SKELETON_ARROW, SkeletonArrowEntityRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.THROWN_ITEM, ThrownItemRenderer::new);
         event.registerEntityRenderer(InvEntities.TNT, TntEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.WOLF, IMWolfEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.TRAP, TrapEntityRenderer::new);
