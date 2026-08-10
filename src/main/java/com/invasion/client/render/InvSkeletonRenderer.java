@@ -19,7 +19,9 @@ public final class InvSkeletonRenderer extends
             ResourceLocation.withDefaultNamespace("textures/entity/skeleton/skeleton.png");
 
     public InvSkeletonRenderer(EntityRendererProvider.Context context) {
-        super(context, new SkeletonModel<>(context.bakeLayer(ModelLayers.SKELETON)), 0.5F);
+        super(context,
+                new SkeletonModel<>(context.bakeLayer(ModelLayers.SKELETON)),
+                IMBabySkeletonModels.skeleton(), 0.5F);
         ArmorModelSet<SkeletonModel<SkeletonRenderState>> armor = ArmorModelSet.bake(
                 ModelLayers.SKELETON_ARMOR, context.getModelSet(), SkeletonModel::new);
         addLayer(new HumanoidArmorLayer<>(this, armor, context.getEquipmentRenderer()));

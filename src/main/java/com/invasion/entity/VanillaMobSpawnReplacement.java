@@ -17,6 +17,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Bogged;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Drowned;
 import net.minecraft.world.entity.monster.Husk;
@@ -118,7 +120,16 @@ public final class VanillaMobSpawnReplacement {
 
     private static void convertMob(
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
-        if (mob.getType() == EntityType.ZOMBIE) {
+        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        if (isTinySkeleton(typeId, "baby_skeleton")) {
+            convert(mob, InvEntities.SKELETON, nexus);
+        } else if (isTinySkeleton(typeId, "baby_bogged")) {
+            convert(mob, InvEntities.BOGGED, nexus);
+        } else if (isTinySkeleton(typeId, "baby_stray")) {
+            convert(mob, InvEntities.STRAY, nexus);
+        } else if (isTinySkeleton(typeId, "baby_wither_skeleton")) {
+            convert(mob, InvEntities.WITHER_SKELETON, nexus);
+        } else if (mob.getType() == EntityType.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
         } else if (mob.getType() == EntityType.ZOMBIE_VILLAGER) {
             convert(mob, InvEntities.ZOMBIE_VILLAGER, nexus);
@@ -172,7 +183,12 @@ public final class VanillaMobSpawnReplacement {
     }
 
     private static boolean isReplaceableType(EntityType<?> type) {
-        return type == EntityType.ZOMBIE
+        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        return isTinySkeleton(typeId, "baby_skeleton")
+                || isTinySkeleton(typeId, "baby_bogged")
+                || isTinySkeleton(typeId, "baby_stray")
+                || isTinySkeleton(typeId, "baby_wither_skeleton")
+                || type == EntityType.ZOMBIE
                 || type == EntityType.ZOMBIE_VILLAGER
                 || type == EntityType.HUSK
                 || type == EntityType.DROWNED
@@ -197,6 +213,12 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.MAGMA_CUBE
                 || type == EntityType.BREEZE
                 || type == EntityType.ENDERMITE;
+    }
+
+    private static boolean isTinySkeleton(ResourceLocation typeId, String path) {
+        return typeId != null
+                && typeId.getNamespace().equals("tinyskeletons")
+                && typeId.getPath().equals(path);
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
