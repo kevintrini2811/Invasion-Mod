@@ -21,6 +21,15 @@ final class IMBabySkeletonModels {
         return new IMWitherSkeletonModel(babyRoot());
     }
 
+    static <S extends SkeletonRenderState> SkeletonModel<S> clothing(
+            float deformation) {
+        MeshDefinition mesh = HumanoidModel.createMesh(
+                new CubeDeformation(deformation), 0.0F);
+        return new SkeletonModel<>(LayerDefinition.create(
+                HumanoidModel.BABY_TRANSFORMER.apply(mesh), 64, 32)
+                .bakeRoot());
+    }
+
     private static ModelPart babyRoot() {
         MeshDefinition mesh = HumanoidModel.createMesh(
                 CubeDeformation.NONE, 0.0F);
