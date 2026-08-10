@@ -4,7 +4,7 @@ import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 
 public final class IMBlazeRenderer extends BlazeRenderer {
-    private static final float HELMET_Y_OFFSET = -0.5F;
+    private static final float HELMET_Y_OFFSET = -0.6F;
     private static final float HELMET_SCALE = 1.157625F;
 
     public IMBlazeRenderer(EntityRendererProvider.Context context) {
