@@ -49,6 +49,7 @@ public final class InvWitherSkeletonRenderer extends
         state.isHoldingBow =
                 EquipmentUtil.isRangedWeapon(entity.getMainHandItem());
         state.groupLeaderWaiting = entity.isGroupLeaderWaiting();
+        state.dancing = entity.isDancing();
     }
 
     @Override

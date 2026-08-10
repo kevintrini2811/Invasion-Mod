@@ -206,6 +206,11 @@ public interface InvEntities {
     EntityType<SkeletonArrowEntity> SKELETON_ARROW = register("skeleton_arrow",
             EntityType.Builder.<SkeletonArrowEntity>of(SkeletonArrowEntity::new, MobCategory.MISC)
                     .sized(0.5F, 0.5F).clientTrackingRange(4).updateInterval(20));
+    EntityType<IMThrownItemEntity> THROWN_ITEM = register("thrown_item",
+            EntityType.Builder.<IMThrownItemEntity>of(
+                            IMThrownItemEntity::new, MobCategory.MISC)
+                    .sized(0.25F, 0.25F).clientTrackingRange(4)
+                    .updateInterval(10));
     EntityType<EntityIMPrimedTNT> TNT = register("tnt", EntityType.Builder.<EntityIMPrimedTNT>of(EntityIMPrimedTNT::new, MobCategory.MISC)
             .fireImmune().sized(0.98F, 0.98F).eyeHeight(0.15F).clientTrackingRange(10).updateInterval(10));
 
