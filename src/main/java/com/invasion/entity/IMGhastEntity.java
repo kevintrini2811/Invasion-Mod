@@ -203,12 +203,15 @@ public final class IMGhastEntity extends Ghast
             if (chargeTime == 10) {
                 level().levelEvent(null, 1015, blockPosition(), 0);
             } else if (chargeTime == 20) {
-                Vec3 direction = target.subtract(getX(), getY(0.5D), getZ());
+                Vec3 forward = getViewVector(1.0F).scale(4.0D);
+                Vec3 muzzle = new Vec3(
+                        getX() + forward.x,
+                        getY(0.5D) + 0.5D,
+                        getZ() + forward.z);
+                Vec3 direction = target.subtract(muzzle);
                 LargeFireball fireball = new LargeFireball(
                         level(), IMGhastEntity.this, direction.normalize(), 1);
-                Vec3 muzzle = getViewVector(1.0F).scale(4.0D);
-                fireball.setPos(getX() + muzzle.x, getY(0.5D) + 0.5D,
-                        getZ() + muzzle.z);
+                fireball.setPos(muzzle);
                 level().addFreshEntity(fireball);
                 level().levelEvent(null, 1016, blockPosition(), 0);
                 chargeTime = -40;
