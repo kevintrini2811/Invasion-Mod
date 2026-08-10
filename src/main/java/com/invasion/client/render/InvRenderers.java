@@ -5,7 +5,6 @@ import com.invasion.entity.InvEntities;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
-import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.BreezeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.EndermiteRenderer;
@@ -73,7 +72,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.ZOMBIE_BUILDER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/zombie_builder.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.IMP, ImpRenderer::new);
-        EntityRendererRegistry.register(InvEntities.BLAZE, BlazeRenderer::new);
+        EntityRendererRegistry.register(InvEntities.BLAZE, IMBlazeRenderer::new);
         EntityRendererRegistry.register(InvEntities.BREEZE, BreezeRenderer::new);
         EntityRendererRegistry.register(InvEntities.SILVERFISH, SilverfishRenderer::new);
         EntityRendererRegistry.register(InvEntities.ENDERMITE, EndermiteRenderer::new);
