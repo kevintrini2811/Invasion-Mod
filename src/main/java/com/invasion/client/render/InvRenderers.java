@@ -66,6 +66,8 @@ public final class InvRenderers {
                 context -> new TexturedSpiderRenderer<>(context, texture("entity/spider/mother_spider.png")));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/pigman_engineer.png"), 0.5F));
+        event.registerEntityRenderer(InvEntities.ZOMBIE_BUILDER,
+                context -> new GenericHumanoidMobRenderer<>(context, texture("entity/zombie_builder.png"), 0.5F));
         event.registerEntityRenderer(InvEntities.IMP, ImpRenderer::new);
         event.registerEntityRenderer(InvEntities.BLAZE, BlazeRenderer::new);
         event.registerEntityRenderer(InvEntities.SILVERFISH, SilverfishRenderer::new);

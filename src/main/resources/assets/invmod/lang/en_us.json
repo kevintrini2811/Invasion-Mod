@@ -46,6 +46,7 @@
   "item.invmod.wither_skeleton_spawn_egg": "IM Wither Skeleton Spawn Egg",
   "item.invmod.creeper_spawn_egg": "IM Creeper Spawn Egg",
   "item.invmod.pigman_engineer_spawn_egg": "IM Pigman Engineer Spawn Egg",
+  "item.invmod.zombie_builder_spawn_egg": "IM Zombie Builder Spawn Egg",
   "item.invmod.thrower_spawn_egg": "IM Thrower Spawn Egg",
   "item.invmod.big_thrower_spawn_egg": "IM Big Thrower Spawn Egg",
   "item.invmod.imp_spawn_egg": "IM Imp Spawn Egg",
@@ -91,6 +92,7 @@
   "entity.invmod.cave_spider": "IM Cave Spider",
   "entity.invmod.queen_spider": "IM Mother Spider",
   "entity.invmod.pigman_engineer": "IM Pigman Engineer",
+  "entity.invmod.zombie_builder": "IM Zombie Builder",
   "entity.invmod.thrower": "IM Thrower",
   "entity.invmod.thrower.big": "IM Big Thrower",
   "entity.invmod.burrower": "IM Burrower",
@@ -181,4 +183,3 @@
   "entity.invmod.slime": "IM Slime",
   "item.invmod.slime_spawn_egg": "IM Slime Spawn Egg"
 }
-
