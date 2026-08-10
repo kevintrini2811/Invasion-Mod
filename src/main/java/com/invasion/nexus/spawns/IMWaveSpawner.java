@@ -312,7 +312,7 @@ public class IMWaveSpawner implements Spawner {
 		if (construct.entityType() != InvEntities.PIGMAN_ENGINEER) {
 			return construct;
 		}
-		int chancePercent = Math.max(1, Math.min(100, nexus.getProgressionLevel()));
+		int chancePercent = nexus.getZombieBuilderChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return construct;
 		}
