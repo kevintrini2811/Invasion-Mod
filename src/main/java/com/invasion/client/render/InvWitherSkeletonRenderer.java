@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.world.entity.HumanoidArm;
 
 public final class InvWitherSkeletonRenderer extends
@@ -29,6 +30,8 @@ public final class InvWitherSkeletonRenderer extends
                         IMWitherSkeletonModel::new);
         addLayer(new HumanoidArmorLayer<>(
                 this, armor, context.getEquipmentRenderer()));
+        layers.removeIf(ItemInHandLayer.class::isInstance);
+        addLayer(new IMSkeletonItemInHandLayer<>(this));
     }
 
     @Override
