@@ -5,7 +5,6 @@ import com.invasion.entity.InvEntities;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
-import net.minecraft.client.renderer.entity.BlazeRenderer;
 import net.minecraft.client.renderer.entity.BreezeRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.EndermiteRenderer;
@@ -73,7 +72,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ZOMBIE_BUILDER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/zombie_builder.png"), 0.5F));
         event.registerEntityRenderer(InvEntities.IMP, ImpRenderer::new);
-        event.registerEntityRenderer(InvEntities.BLAZE, BlazeRenderer::new);
+        event.registerEntityRenderer(InvEntities.BLAZE, IMBlazeRenderer::new);
         event.registerEntityRenderer(InvEntities.BREEZE, BreezeRenderer::new);
         event.registerEntityRenderer(InvEntities.SILVERFISH, SilverfishRenderer::new);
         event.registerEntityRenderer(InvEntities.ENDERMITE, EndermiteRenderer::new);
