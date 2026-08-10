@@ -40,6 +40,10 @@ public interface NexusAccess {
         return getCurrentWave();
     }
 
+    default int getZombieBuilderChancePercent() {
+        return Math.max(1, Math.min(100, getProgressionLevel()));
+    }
+
     World getWorld();
 
     AttackerAI getAttackerAI();
