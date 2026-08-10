@@ -6,12 +6,14 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 
 public final class IMBlazeRenderer extends BlazeRenderer {
     private static final float HELMET_Y_OFFSET = 0.2F;
-    private static final float HELMET_SCALE = 2.10F;
+    private static final float HELMET_SCALE = 1.05F;
+    private static final float HELMET_HEIGHT_SCALE = 2.10F;
 
     public IMBlazeRenderer(EntityRendererProvider.Context context) {
         super(context);
         addLayer(new MobHeadArmorLayer<>(this, context,
                 blaze -> getModel().root().getChild("head"),
-                HELMET_SCALE, HELMET_Y_OFFSET, 0.0F));
+                HELMET_SCALE, HELMET_HEIGHT_SCALE,
+                HELMET_Y_OFFSET, 0.0F));
     }
 }
