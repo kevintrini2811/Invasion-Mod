@@ -85,6 +85,8 @@ public class IMSkeletonEntity extends IMMobEntity
 
     @Override
     public void setBaby(boolean baby) {
+        baby = baby
+                && com.invasion.compat.TinySkeletonsCompatibility.isLoaded();
         entityData.set(BABY, baby);
         if (!level().isClientSide()) {
             AttributeUtil.toggleAttribute(
