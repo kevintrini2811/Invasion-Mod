@@ -8,7 +8,7 @@ import net.minecraft.client.renderer.entity.ArmorModelSet;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer;
-import net.minecraft.client.renderer.entity.layers.SkeletonClothingLayer;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.HumanoidArm;
@@ -34,9 +34,13 @@ public final class InvStrayRenderer extends HumanoidMobRenderer<
                         SkeletonModel::new);
         addLayer(new HumanoidArmorLayer<>(
                 this, armor, context.getEquipmentRenderer()));
-        addLayer(new SkeletonClothingLayer<>(
-                this, context.getModelSet(),
-                ModelLayers.STRAY_OUTER_LAYER, OVERLAY));
+        layers.removeIf(ItemInHandLayer.class::isInstance);
+        addLayer(new IMSkeletonItemInHandLayer<>(this));
+        addLayer(new IMSkeletonClothingLayer<>(
+                this,
+                new SkeletonModel<>(context.bakeLayer(
+                        ModelLayers.STRAY_OUTER_LAYER)),
+                IMBabySkeletonModels.clothing(0.25F), OVERLAY));
     }
 
     @Override
