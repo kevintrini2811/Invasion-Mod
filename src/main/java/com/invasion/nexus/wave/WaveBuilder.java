@@ -171,7 +171,7 @@ public class WaveBuilder {
         announce.accept("Phase 1 gestartet: Standardmobs greifen an!");
         {
             var entry = WaveEntry.random()
-                    .entry(EntityPatterns.ZOMBIE_T1_ANY, 200F)
+                    .entry(EntityPatterns.ZOMBIE_T1_ANY, 100F)
                     .entry(EntityPatterns.ZOMBIE_T2_ANY_BASIC, 20F)
                     .entry(EntityPatterns.ZOMBIE_T3_ANY, 5F)
                     .entry(EntityPatterns.ZOMBIE_PIGMAN_T1_ANY, 50F)
