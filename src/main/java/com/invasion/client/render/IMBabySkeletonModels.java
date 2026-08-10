@@ -2,7 +2,6 @@ package com.invasion.client.render;
 
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.LayerDefinitions;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
@@ -55,8 +54,8 @@ final class IMBabySkeletonModels {
             ArmorModelSet<M> armor(
                     Function<ModelPart, M> factory, float scale) {
         return HumanoidModel.createArmorMeshSet(
-                        LayerDefinitions.INNER_ARMOR_DEFORMATION,
-                        LayerDefinitions.OUTER_ARMOR_DEFORMATION)
+                        new CubeDeformation(0.5F),
+                        new CubeDeformation(1.0F))
                 .map(mesh -> {
                     LayerDefinition layer = LayerDefinition.create(
                                     HumanoidModel.BABY_TRANSFORMER.apply(mesh),

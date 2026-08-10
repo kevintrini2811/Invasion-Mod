@@ -1,6 +1,6 @@
 package com.invasion.compat;
 
-import net.neoforged.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 
 /** Keeps all Tiny Skeletons integration behind an optional mod check. */
 public final class TinySkeletonsCompatibility {
@@ -8,6 +8,6 @@ public final class TinySkeletonsCompatibility {
     }
 
     public static boolean isLoaded() {
-        return ModList.get().isLoaded("tinyskeletons");
+        return FabricLoader.getInstance().isModLoaded("tinyskeletons");
     }
 }
