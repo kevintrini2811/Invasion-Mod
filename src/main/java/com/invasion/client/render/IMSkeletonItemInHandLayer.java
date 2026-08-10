@@ -25,6 +25,10 @@ final class IMSkeletonItemInHandLayer<
             S state, ItemStackRenderState itemState, ItemStack stack,
             HumanoidArm arm, PoseStack poseStack,
             SubmitNodeCollector collector, int light) {
+        if (state instanceof IMWitherSkeletonRenderState wither
+                && wither.carryingSkull) {
+            return;
+        }
         // The geometry is already transformed into baby proportions. Vanilla's
         // additional baby item offset pulls the bow back into the torso.
         boolean baby = state.isBaby;

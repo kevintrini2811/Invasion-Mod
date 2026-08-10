@@ -7,6 +7,7 @@ import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.monster.skeleton.SkeletonModel;
+import net.minecraft.client.model.monster.skeleton.BoggedModel;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
 import net.minecraft.client.renderer.entity.ArmorModelSet;
 import java.util.function.Function;
@@ -21,7 +22,18 @@ final class IMBabySkeletonModels {
     }
 
     static IMWitherSkeletonModel witherSkeleton() {
-        return new IMWitherSkeletonModel(babyRoot());
+        return new IMWitherSkeletonModel(
+                SkeletonModel.createBodyLayer()
+                        .apply(HumanoidModel.BABY_TRANSFORMER)
+                        .apply(net.minecraft.client.model.geom.builders
+                                .MeshTransformer.scaling(1.2F))
+                        .bakeRoot());
+    }
+
+    static BoggedModel bogged() {
+        return new BoggedModel(BoggedModel.createBodyLayer()
+                .apply(HumanoidModel.BABY_TRANSFORMER)
+                .bakeRoot());
     }
 
     static <S extends SkeletonRenderState> SkeletonModel<S> parched() {
