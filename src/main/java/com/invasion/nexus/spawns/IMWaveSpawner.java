@@ -31,6 +31,7 @@ import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.IMCreeperEntity;
 import com.invasion.entity.IMEndermanEntity;
+import com.invasion.entity.IMGhastEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMSkeletonEntity;
 import com.invasion.entity.IMWitherSkeletonEntity;
@@ -551,7 +552,8 @@ public class IMWaveSpawner implements Spawner {
 				|| mob instanceof IMZombifiedPiglinEntity
 				|| mob instanceof IMCreeperEntity
 				|| mob instanceof NexusSpiderEntity
-				|| mob instanceof IMEndermanEntity;
+				|| mob instanceof IMEndermanEntity
+				|| mob instanceof IMGhastEntity;
 		if (!canWearWaveArmor) {
 			return;
 		}
@@ -566,7 +568,8 @@ public class IMWaveSpawner implements Spawner {
 			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
 			boolean helmetOnly = mob instanceof IMCreeperEntity
 					|| mob instanceof NexusSpiderEntity
-					|| mob instanceof IMEndermanEntity;
+					|| mob instanceof IMEndermanEntity
+					|| mob instanceof IMGhastEntity;
 			boolean bruteArmorSlot =
 					mob instanceof EntityIMZombie zombie && zombie.isBrute()
 					|| mob instanceof EntityIMZombiePigman pigman && pigman.isBrute();

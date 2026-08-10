@@ -6,6 +6,7 @@ import com.invasion.client.render.entity.BoulderEntityRenderer;
 import com.invasion.client.render.entity.BurrowerEntityRenderer;
 import com.invasion.client.render.entity.ElectricityBoltEntityRenderer;
 import com.invasion.client.render.entity.IMCreeperEntityRenderer;
+import com.invasion.client.render.entity.IMGhastRenderer;
 import com.invasion.client.render.entity.IMSkeletonEntityRenderer;
 import com.invasion.client.render.entity.IMSpiderEntityRenderer;
 import com.invasion.client.render.entity.IMWolfEntityRenderer;
@@ -31,7 +32,6 @@ import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
 import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
-import net.minecraft.client.renderer.entity.GhastRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 
@@ -54,7 +54,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(
                 InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
         event.registerEntityRenderer(InvEntities.WITCH, WitchRenderer::new);
-        event.registerEntityRenderer(InvEntities.GHAST, GhastRenderer::new);
+        event.registerEntityRenderer(InvEntities.GHAST, IMGhastRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.WITCH_POTION, ThrownItemRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIFIED_PIGLIN, VariantMobRenderers.ZombifiedPiglin::new);

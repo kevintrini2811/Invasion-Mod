@@ -13,9 +13,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.monster.Ghast;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
@@ -32,6 +34,14 @@ public final class IMGhastEntity extends Ghast
 
     public IMGhastEntity(EntityType<? extends Ghast> type, Level level) {
         super(type, level);
+        setCanPickUpLoot(true);
+    }
+
+    @Override
+    public boolean wantsToPickUp(ItemStack stack) {
+        EquipmentSlot slot = getEquipmentSlotForItem(stack);
+        return slot == EquipmentSlot.HEAD
+                && canReplaceCurrentItem(stack, getItemBySlot(slot));
     }
 
     public static void bootstrap() {
