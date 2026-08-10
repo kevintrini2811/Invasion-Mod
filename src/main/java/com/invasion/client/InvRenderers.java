@@ -30,6 +30,7 @@ import net.minecraft.client.renderer.entity.MagmaCubeRenderer;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
+import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
@@ -49,6 +50,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOGLIN, IMZoglinRenderer::new);
         event.registerEntityRenderer(InvEntities.WITHER, WitherBossRenderer::new);
+        event.registerEntityRenderer(InvEntities.WARDEN, WardenRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
         event.registerEntityRenderer(InvEntities.WITCH, WitchRenderer::new);
