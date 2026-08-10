@@ -138,6 +138,8 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
         } else if (mob.getType() == EntityType.WITCH) {
             convert(mob, InvEntities.WITCH, nexus);
+        } else if (mob.getType() == EntityType.GHAST) {
+            convert(mob, InvEntities.GHAST, nexus);
         } else if (mob.getType() == EntityType.CREEPER) {
             convert(mob, InvEntities.CREEPER, nexus);
         } else if (mob.getType() == EntityType.SPIDER) {
@@ -180,6 +182,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.STRAY
                 || type == EntityType.WITHER_SKELETON
                 || type == EntityType.WITCH
+                || type == EntityType.GHAST
                 || type == EntityType.CREEPER
                 || type == EntityType.SPIDER
                 || type == EntityType.CAVE_SPIDER
@@ -295,4 +298,3 @@ public final class VanillaMobSpawnReplacement {
         }
     }
 }
-

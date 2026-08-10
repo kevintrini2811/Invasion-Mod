@@ -78,6 +78,8 @@
   "entity.invmod.zombie_pigman.brute": "IM Zombie Pigman Brute",
     "entity.invmod.zoglin": "IM Zoglin",
     "entity.invmod.witch": "IM Witch",
+    "entity.invmod.ghast": "IM Ghast",
+    "item.invmod.ghast_spawn_egg": "IM Ghast Spawn Egg",
     "item.invmod.witch_spawn_egg": "IM Witch Spawn Egg",
     "effect.invmod.invasion_strength": "Invasion Strength",
     "entity.invmod.wither": "IM Wither",
