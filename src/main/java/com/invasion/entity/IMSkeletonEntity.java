@@ -9,6 +9,10 @@ import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
+import com.invasion.InvasionMod;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.server.level.ServerLevel;
@@ -16,6 +20,8 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
@@ -37,9 +43,18 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class IMSkeletonEntity extends IMMobEntity
         implements RangedAttackMob, RangedNexusAttacker, Miner {
+    private static final EntityDataAccessor<Boolean> BABY =
+            SynchedEntityData.defineId(
+                    IMSkeletonEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final net.minecraft.world.entity.ai.attributes.AttributeModifier
+            BABY_SPEED_BONUS = AttributeUtil.addPercentage(
+                    InvasionMod.id("baby_skeleton_speed"), 50);
+
     public IMSkeletonEntity(
             EntityType<? extends IMSkeletonEntity> type, Level world) {
         super(type, world);
@@ -51,6 +66,57 @@ public class IMSkeletonEntity extends IMMobEntity
     public static AttributeSupplier.Builder createIMSkeletonAttributes() {
         return Skeleton.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.21);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(BABY, false);
+    }
+
+    @Override
+    public boolean isBaby() {
+        return entityData.get(BABY);
+    }
+
+    @Override
+    public void setBaby(boolean baby) {
+        entityData.set(BABY, baby);
+        if (!level().isClientSide()) {
+            AttributeUtil.toggleAttribute(
+                    this, Attributes.MOVEMENT_SPEED,
+                    BABY_SPEED_BONUS, baby);
+        }
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> data) {
+        super.onSyncedDataUpdated(data);
+        if (data == BABY) {
+            refreshDimensions();
+        }
+    }
+
+    @Override
+    protected EntityDimensions getDefaultDimensions(Pose pose) {
+        EntityDimensions dimensions = super.getDefaultDimensions(pose);
+        return isBaby()
+                ? dimensions.scale(0.5F).withEyeHeight(
+                        dimensions.eyeHeight() * 0.534F)
+                : dimensions;
+    }
+
+    @Override
+    public void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
+        output.putBoolean("IsBaby", isBaby());
+    }
+
+    @Override
+    public void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
+        setBaby(input.getBooleanOr("IsBaby", false)
+                || input.getBooleanOr("isBaby", false));
     }
 
     @Override
