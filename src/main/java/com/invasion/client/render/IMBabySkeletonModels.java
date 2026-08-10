@@ -2,11 +2,14 @@ package com.invasion.client.render;
 
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.LayerDefinitions;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.monster.skeleton.SkeletonModel;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
+import net.minecraft.client.renderer.entity.ArmorModelSet;
+import java.util.function.Function;
 
 /** Creates baby skeleton geometry without depending on TinySkeletons classes. */
 final class IMBabySkeletonModels {
@@ -34,6 +37,25 @@ final class IMBabySkeletonModels {
         return new SkeletonModel<>(LayerDefinition.create(
                 HumanoidModel.BABY_TRANSFORMER.apply(mesh), 64, 32)
                 .bakeRoot());
+    }
+
+    static <S extends SkeletonRenderState, M extends HumanoidModel<S>>
+            ArmorModelSet<M> armor(
+                    Function<ModelPart, M> factory, float scale) {
+        return HumanoidModel.createArmorMeshSet(
+                        LayerDefinitions.INNER_ARMOR_DEFORMATION,
+                        LayerDefinitions.OUTER_ARMOR_DEFORMATION)
+                .map(mesh -> {
+                    LayerDefinition layer = LayerDefinition.create(
+                                    HumanoidModel.BABY_TRANSFORMER.apply(mesh),
+                                    64, 32);
+                    if (scale != 1.0F) {
+                        layer = layer.apply(
+                                net.minecraft.client.model.geom.builders
+                                        .MeshTransformer.scaling(scale));
+                    }
+                    return factory.apply(layer.bakeRoot());
+                });
     }
 
     private static ModelPart babyRoot() {
