@@ -249,6 +249,7 @@ public final class IMSilverfishEntity extends Silverfish
             approach = bestCandidateApproach;
             cachedPath = null;
             searchOrigin = null;
+            searchTicksRemaining = 0;
             bestCandidate = null;
             bestCandidateApproach = null;
             if (target == null || approach == null) {
