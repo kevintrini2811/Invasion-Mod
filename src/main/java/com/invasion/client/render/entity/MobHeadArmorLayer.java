@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
@@ -67,11 +68,15 @@ public final class MobHeadArmorLayer<T extends LivingEntity, M extends EntityMod
         // whereas humanoid armor is centered on its pivot.
         poseStack.translate(0.0F, offsetY, offsetZ);
         poseStack.scale(scale, scale, scale);
-        String base = "textures/models/armor/"
-                + armor.getMaterial().getName() + "_layer_1.png";
+        ResourceLocation material = new ResourceLocation(
+                armor.getMaterial().getName());
+        String base = new ResourceLocation(
+                material.getNamespace(),
+                "textures/models/armor/" + material.getPath()
+                        + "_layer_1.png").toString();
         String resolved = net.minecraftforge.client.ForgeHooksClient.getArmorTexture(
                 entity, stack, base, EquipmentSlot.HEAD, null);
-        var texture = new net.minecraft.resources.ResourceLocation(resolved);
+        var texture = new ResourceLocation(resolved);
         var model = net.minecraftforge.client.ForgeHooksClient.getArmorModel(
                 entity, stack, EquipmentSlot.HEAD, armorModel);
         model.renderToBuffer(poseStack,
