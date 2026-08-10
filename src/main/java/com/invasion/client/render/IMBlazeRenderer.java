@@ -10,7 +10,8 @@ import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.item.ItemStack;
 
 public final class IMBlazeRenderer extends BlazeRenderer {
-    private static final float HELMET_Y_OFFSET = 2.4F;
+    private static final float HELMET_Y_OFFSET = 2.8F;
+    private static final float HELMET_SCALE = 1.05F;
 
     public IMBlazeRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -19,7 +20,7 @@ public final class IMBlazeRenderer extends BlazeRenderer {
                 state -> state instanceof InvasionBlazeRenderState blazeState
                         ? blazeState.headEquipment
                         : ItemStack.EMPTY,
-                HELMET_Y_OFFSET, 0.0F));
+                HELMET_Y_OFFSET, 0.0F, HELMET_SCALE));
     }
 
     @Override
