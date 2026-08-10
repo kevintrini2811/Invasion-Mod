@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -49,6 +50,12 @@ public final class IMMagmaCubeEntity extends MagmaCube
     @Override
     public String getLegacyName() {
         return "IMMagmaCube-T1";
+    }
+
+    @Override
+    public boolean causeFallDamage(
+            float fallDistance, float damageMultiplier, DamageSource source) {
+        return false;
     }
 
     @Override
