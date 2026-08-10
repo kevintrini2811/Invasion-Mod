@@ -39,8 +39,9 @@ record RandomSelectionPool<T>(List<Entry<T>> pool, float totalWeight) implements
 
         @Override
         public Builder<T> entry(Select.Builder<T> entry, Float amount) {
-            entries.add(new Entry.Builder<>(entry, amount));
-            total += amount;
+            float boundedAmount = Math.max(1F, amount);
+            entries.add(new Entry.Builder<>(entry, boundedAmount));
+            total += boundedAmount;
             return this;
         }
 
