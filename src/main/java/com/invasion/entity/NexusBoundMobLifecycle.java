@@ -110,6 +110,9 @@ public final class NexusBoundMobLifecycle {
         } else if (living instanceof IMMagmaCubeEntity magmaCube) {
             magmaCube.suppressSplitOnNexusDeath();
         }
+        // Nexus cleanup must not replace infected hosts with a fresh group of
+        // support parasites while the remaining invasion is being removed.
+        living.removeTag(IMSilverfishEntity.INFECTED_TAG);
         combatant.setNexus(null);
         living.hurt(level.damageSources().magic(), living.getMaxHealth());
         living.kill();
