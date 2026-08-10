@@ -26,7 +26,7 @@ public final class InvStrayRenderer extends HumanoidMobRenderer<
         super(
                 context,
                 new SkeletonModel<>(context.bakeLayer(ModelLayers.STRAY)),
-                0.5F);
+                IMBabySkeletonModels.skeleton(), 0.5F);
         ArmorModelSet<SkeletonModel<SkeletonRenderState>> armor =
                 ArmorModelSet.bake(
                         ModelLayers.STRAY_ARMOR,

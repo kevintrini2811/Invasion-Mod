@@ -24,7 +24,7 @@ public final class InvParchedRenderer extends HumanoidMobRenderer<
                 context,
                 new SkeletonModel<>(
                         context.bakeLayer(ModelLayers.PARCHED)),
-                0.5F);
+                IMBabySkeletonModels.skeleton(), 0.5F);
         ArmorModelSet<SkeletonModel<SkeletonRenderState>> armor =
                 ArmorModelSet.bake(
                         ModelLayers.PARCHED_ARMOR,

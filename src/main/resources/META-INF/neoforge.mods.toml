@@ -39,3 +39,10 @@ type="optional"
 versionRange="[30.15,)"
 ordering="AFTER"
 side="CLIENT"
+
+[[dependencies.invmod]]
+modId="tinyskeletons"
+type="optional"
+versionRange="[26.2.0,)"
+ordering="AFTER"
+side="BOTH"

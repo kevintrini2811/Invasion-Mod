@@ -21,7 +21,7 @@ public final class InvWitherSkeletonRenderer extends
         super(context,
                 new IMWitherSkeletonModel(
                         context.bakeLayer(ModelLayers.WITHER_SKELETON)),
-                0.5F);
+                IMBabySkeletonModels.witherSkeleton(), 0.5F);
         ArmorModelSet<IMWitherSkeletonModel> armor =
                 ArmorModelSet.bake(
                         ModelLayers.WITHER_SKELETON_ARMOR,
