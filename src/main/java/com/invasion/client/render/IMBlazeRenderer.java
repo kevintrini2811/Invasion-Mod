@@ -10,13 +10,16 @@ import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.item.ItemStack;
 
 public final class IMBlazeRenderer extends BlazeRenderer {
+    private static final float HELMET_Y_OFFSET = 2.4F;
+
     public IMBlazeRenderer(EntityRendererProvider.Context context) {
         super(context);
         addLayer(new HeadArmorLayer<LivingEntityRenderState, BlazeModel>(
                 this, context,
                 state -> state instanceof InvasionBlazeRenderState blazeState
                         ? blazeState.headEquipment
-                        : ItemStack.EMPTY));
+                        : ItemStack.EMPTY,
+                HELMET_Y_OFFSET, 0.0F));
     }
 
     @Override
