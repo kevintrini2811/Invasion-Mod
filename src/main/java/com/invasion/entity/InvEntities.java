@@ -21,6 +21,7 @@ import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.monster.cubemob.MagmaCube;
 import net.minecraft.world.entity.monster.Witch;
+import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.phys.Vec3;
 
 public interface InvEntities {
@@ -55,6 +56,11 @@ public interface InvEntities {
                             IMWitchEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F).eyeHeight(1.62F)
                     .ridingOffset(-0.45F).clientTrackingRange(8));
+    EntityType<IMGhastEntity> GHAST = register("ghast",
+            EntityType.Builder.<IMGhastEntity>of(
+                            IMGhastEntity::new, MobCategory.MONSTER)
+                    .fireImmune().sized(4.0F, 4.0F).eyeHeight(2.6F)
+                    .passengerAttachments(4.0625F).clientTrackingRange(10));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<EntityIMSpeedyZombie> SPEEDY_ZOMBIE = register(
@@ -226,6 +232,7 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(
                 WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
         FabricDefaultAttributeRegistry.register(WITCH, Witch.createAttributes());
+        FabricDefaultAttributeRegistry.register(GHAST, Ghast.createAttributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(
                 SPEEDY_ZOMBIE,
@@ -268,6 +275,8 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(WOLF, IMWolfEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPIDER_EGG, SpiderEggEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPAWN_PROXY, Mob.createMobAttributes());
+
+        IMGhastEntity.bootstrap();
 
         InvasionConfig config = InvasionMod.getConfig();
 

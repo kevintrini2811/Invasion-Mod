@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.entity.WitherBossRenderer;
 import net.minecraft.client.renderer.entity.WitherSkullRenderer;
 import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
+import net.minecraft.client.renderer.entity.GhastRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -48,6 +49,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(
                 InvEntities.WITHER_SKULL, WitherSkullRenderer::new);
         EntityRendererRegistry.register(InvEntities.WITCH, WitchRenderer::new);
+        EntityRendererRegistry.register(InvEntities.GHAST, GhastRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.WITCH_POTION, ThrownItemRenderer::new);
         EntityRendererRegistry.register(InvEntities.SKELETON, InvSkeletonRenderer::new);
