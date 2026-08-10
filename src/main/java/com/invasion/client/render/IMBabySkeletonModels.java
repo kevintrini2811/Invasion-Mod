@@ -21,6 +21,12 @@ final class IMBabySkeletonModels {
         return new IMWitherSkeletonModel(babyRoot());
     }
 
+    static <S extends SkeletonRenderState> SkeletonModel<S> parched() {
+        return new SkeletonModel<>(SkeletonModel.createSingleModelDualBodyLayer()
+                .apply(HumanoidModel.BABY_TRANSFORMER)
+                .bakeRoot());
+    }
+
     static <S extends SkeletonRenderState> SkeletonModel<S> clothing(
             float deformation) {
         MeshDefinition mesh = HumanoidModel.createMesh(
