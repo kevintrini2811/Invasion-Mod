@@ -10,6 +10,7 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -187,7 +188,10 @@ public final class IMGhastEntity extends Ghast
         public void tick() {
             Vec3 target = Vec3.atCenterOf(getNexus().getOrigin());
             double distance = distanceToSqr(target);
-            getLookControl().setLookAt(target.x, target.y, target.z, 10.0F, 10.0F);
+            double dx = target.x - getX();
+            double dz = target.z - getZ();
+            setYRot(-((float) Mth.atan2(dx, dz)) * Mth.RAD_TO_DEG);
+            yBodyRot = getYRot();
             if (distance > NEXUS_ATTACK_RANGE * NEXUS_ATTACK_RANGE) {
                 getMoveControl().setWantedPosition(
                         target.x, target.y + 8.0D, target.z, 1.0D);
