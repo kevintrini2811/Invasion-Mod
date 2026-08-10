@@ -77,6 +77,7 @@ public interface InvItems {
 
     Item CREEPER_SPAWN_EGG = register("creeper_spawn_egg", createSpawnEgg(InvEntities.CREEPER, 0x238F1F, 0xA5AAA6));
     Item PIGMAN_ENGINEER_SPAWN_EGG = register("pigman_engineer_spawn_egg", createSpawnEgg(InvEntities.PIGMAN_ENGINEER, 0xEC9695, 0x420000));
+    Item ZOMBIE_BUILDER_SPAWN_EGG = register("zombie_builder_spawn_egg", createSpawnEgg(InvEntities.ZOMBIE_BUILDER, 0x4B7328, 0xF1C232));
     Item THROWER_SPAWN_EGG = register("thrower_spawn_egg", createSpawnEgg(InvEntities.THROWER, 0x545F37, 0x1D2D3E));
     Item BIG_THROWER_SPAWN_EGG = register("big_thrower_spawn_egg", createSpawnEgg(InvEntities.THROWER, 0x5303814, 0x632808, NexusEntity.createVariant(0, 2)));
     Item IMP_SPAWN_EGG = register("imp_spawn_egg", createSpawnEgg(InvEntities.IMP, 0xB40113, 0xFF0000));

@@ -36,6 +36,10 @@ public interface NexusAccess {
 
     int getCurrentWave();
 
+    default int getProgressionLevel() {
+        return getCurrentWave();
+    }
+
     World getWorld();
 
     AttackerAI getAttackerAI();

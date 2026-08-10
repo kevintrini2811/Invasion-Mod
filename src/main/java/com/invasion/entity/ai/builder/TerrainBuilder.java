@@ -24,11 +24,17 @@ public class TerrainBuilder implements ITerrainBuild {
     private final float DIG_COST = 35;
 
     private final NexusEntity mob;
+    private final BlockState buildingBlock;
     private float buildRate;
 
     public TerrainBuilder(NexusEntity entity, float buildRate) {
+        this(entity, buildRate, Blocks.OAK_PLANKS.getDefaultState());
+    }
+
+    public TerrainBuilder(NexusEntity entity, float buildRate, BlockState buildingBlock) {
         mob = entity;
         this.buildRate = buildRate;
+        this.buildingBlock = buildingBlock;
     }
 
     public void setBuildRate(float buildRate) {
@@ -66,7 +72,7 @@ public class TerrainBuilder implements ITerrainBuild {
             if (!block.isFullCube(world, mutable)) {
                 builder.add(new ModifyBlockEntry(
                         mutable.toImmutable(),
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        buildingBlock,
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -89,7 +95,7 @@ public class TerrainBuilder implements ITerrainBuild {
         if (!world.getBlockState(mutable).isFullCube(world, mutable)) {
             builder.add(new ModifyBlockEntry(
                     mutable.toImmutable(),
-                    Blocks.OAK_PLANKS.getDefaultState(),
+                    buildingBlock,
                     (int) (PLANKS_COST / buildRate)
             ));
         }
@@ -113,7 +119,7 @@ public class TerrainBuilder implements ITerrainBuild {
                     if (!world.getBlockState(mutable).isFullCube(world, mutable)) {
                         builder.add(new ModifyBlockEntry(
                                 mutable.toImmutable(),
-                                Blocks.OAK_PLANKS.getDefaultState(),
+                                buildingBlock,
                                 (int) (PLANKS_COST / buildRate)
                         ));
                     }
@@ -154,7 +160,7 @@ public class TerrainBuilder implements ITerrainBuild {
             if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        buildingBlock,
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -198,7 +204,7 @@ public class TerrainBuilder implements ITerrainBuild {
             if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        buildingBlock,
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -387,7 +393,7 @@ public class TerrainBuilder implements ITerrainBuild {
             if (!world.getBlockState(supportPos).isFullCube(world, mutable.set(supportPos))) {
                 builder.add(new ModifyBlockEntry(
                         supportPos,
-                        Blocks.OAK_PLANKS.getDefaultState(),
+                        buildingBlock,
                         (int) (PLANKS_COST / buildRate)
                 ));
             }
@@ -422,7 +428,7 @@ public class TerrainBuilder implements ITerrainBuild {
             boolean needsSupport = IMLandPathNodeMaker.avoidsBlock(mob.asEntity(), mutable.set(pos).move(Direction.DOWN, 2))
                                 || IMLandPathNodeMaker.avoidsBlock(mob.asEntity(), mutable.set(pos).move(Direction.DOWN, 3));
             builder.add(new ModifyBlockEntry(posBelow,
-                    (needsSupport ? Blocks.COBBLESTONE : Blocks.OAK_PLANKS).getDefaultState(),
+                    needsSupport ? Blocks.COBBLESTONE.getDefaultState() : buildingBlock,
                     (int) ((needsSupport ? COBBLE_COST : PLANKS_COST) / buildRate))
             );
         }

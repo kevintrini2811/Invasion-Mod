@@ -251,6 +251,7 @@ public class IMWaveSpawner implements Spawner {
 
 	@Override
 	public boolean attemptSpawn(EntityConstruct mobConstruct, IntRange angle) {
+		mobConstruct = replaceEngineerWithZombieBuilder(mobConstruct);
 		if (!permitSpawns) {
 			return false;
 		}
@@ -303,6 +304,20 @@ public class IMWaveSpawner implements Spawner {
         }
 		InvasionMod.LOGGER.error("Could not find valid spawn for '" + mob.getName().getString() + "' after " + spawnTries + " tries");
 		return false;
+	}
+
+	private EntityConstruct replaceEngineerWithZombieBuilder(EntityConstruct construct) {
+		if (construct.entityType() != InvEntities.PIGMAN_ENGINEER) {
+			return construct;
+		}
+		int chancePercent = Math.max(1, Math.min(100, nexus.getProgressionLevel()));
+		if (getRandom().nextInt(100) >= chancePercent) {
+			return construct;
+		}
+		return new EntityConstruct(
+				InvEntities.ZOMBIE_BUILDER,
+				construct.texture(), construct.tier(), construct.flavour(),
+				construct.scaling(), construct.minAngle(), construct.maxAngle());
 	}
 
 	private void generateSpawnPoints() {

@@ -33,6 +33,8 @@
     "entity.invmod.jumping_spider": "Jumping Spider",
     "entity.invmod.queen_spider": "Mother Spider",
     "entity.invmod.pigman_engineer": "IM Pigman Engineer",
+    "entity.invmod.zombie_builder": "IM Zombie Builder",
+    "item.invmod.zombie_builder_spawn_egg": "IM Zombie Builder Spawn Egg",
     "entity.invmod.bird": "WIP-IM Bird",
     "entity.invmod.thrower": "IM Thrower",
     "entity.invmod.wolf": "IM Wolf",

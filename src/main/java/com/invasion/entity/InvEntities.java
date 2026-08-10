@@ -25,6 +25,8 @@ public interface InvEntities {
             .dimensions(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).vehicleAttachment(-0.7F).maxTrackingRange(8));
     EntityType<PigmanEngineerEntity> PIGMAN_ENGINEER = register("pigman_engineer", EntityType.Builder.<PigmanEngineerEntity>create(PigmanEngineerEntity::new, SpawnGroup.MONSTER)
             .dimensions(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).vehicleAttachment(-0.7F).maxTrackingRange(8));
+    EntityType<ZombieBuilderEntity> ZOMBIE_BUILDER = register("zombie_builder", EntityType.Builder.<ZombieBuilderEntity>create(ZombieBuilderEntity::new, SpawnGroup.MONSTER)
+            .dimensions(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).vehicleAttachment(-0.7F).maxTrackingRange(8));
     EntityType<IMCreeperEntity> CREEPER = register("creeper", EntityType.Builder.<IMCreeperEntity>create(IMCreeperEntity::new, SpawnGroup.MONSTER)
             .dimensions(0.6F, 1.7F).maxTrackingRange(8));
 
@@ -81,6 +83,7 @@ public interface InvEntities {
         FabricDefaultAttributeRegistry.register(ZOMBIE, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes());
         FabricDefaultAttributeRegistry.register(PIGMAN_ENGINEER, PigmanEngineerEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(ZOMBIE_BUILDER, PigmanEngineerEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(CREEPER, IMCreeperEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(SPIDER, NexusSpiderEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(JUMPING_SPIDER, JumpingSpiderEntity.createAttributes());

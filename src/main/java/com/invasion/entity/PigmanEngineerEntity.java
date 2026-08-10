@@ -46,7 +46,7 @@ import net.minecraft.world.World;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
-    private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1);
+    private final TerrainBuilder terrainBuilder;
 
     private float supportThisTick;
     @org.jetbrains.annotations.Nullable
@@ -137,8 +137,13 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
 
 
-    public PigmanEngineerEntity(EntityType<PigmanEngineerEntity> type, World world) {
+    public PigmanEngineerEntity(EntityType<? extends PigmanEngineerEntity> type, World world) {
         super(type, world);
+        terrainBuilder = new TerrainBuilder(this, 1, getBuildingBlock());
+    }
+
+    protected BlockState getBuildingBlock() {
+        return net.minecraft.block.Blocks.OAK_PLANKS.getDefaultState();
     }
 
     public static DefaultAttributeContainer.Builder createAttributes() {

@@ -15,6 +15,7 @@ import com.invasion.client.render.entity.AbstractIMZombieEntityRenderer;
 import com.invasion.client.render.entity.ZombiePigmanEntityRenderer;
 import com.invasion.client.render.entity.ImpEntityRenderer;
 import com.invasion.client.render.entity.PigmanEngineerEntityRenderer;
+import com.invasion.client.render.entity.ZombieBuilderEntityRenderer;
 import com.invasion.client.render.entity.ThrowerEntityRenderer;
 import com.invasion.client.render.entity.TntEntityRenderer;
 import com.invasion.client.render.entity.TrapEntityRenderer;
@@ -39,6 +40,7 @@ public interface InvRenderers {
         EntityRendererRegistry.register(InvEntities.JUMPING_SPIDER, context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.JUMPER));
         EntityRendererRegistry.register(InvEntities.QUEEN_SPIDER, context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
         EntityRendererRegistry.register(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
+        EntityRendererRegistry.register(InvEntities.ZOMBIE_BUILDER, ZombieBuilderEntityRenderer::new);
         EntityRendererRegistry.register(InvEntities.IMP, ImpEntityRenderer::new);
         EntityRendererRegistry.register(InvEntities.THROWER, ThrowerEntityRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER, BurrowerEntityRenderer::new);

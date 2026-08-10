@@ -25,6 +25,8 @@
     "entity.invmod.skeleton": "IM Skelett",
     "entity.invmod.spider": "IM Spinne",
     "entity.invmod.pigman_engineer": "IM Zombie Pigman-Ingenieur",
+    "entity.invmod.zombie_builder": "IM Zombie-Baumeister",
+    "item.invmod.zombie_builder_spawn_egg": "IM Zombie-Baumeister-Spawn-Ei",
     "entity.invmod.bird": "WIP-IM Vogel",
     "entity.invmod.thrower": "IM Werfer",
     "entity.invmod.wolf": "IM Wolf",
