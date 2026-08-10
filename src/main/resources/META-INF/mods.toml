@@ -42,7 +42,7 @@ side="CLIENT"
 
 [[dependencies.invmod]]
 modId="tinyskeletons"
-type="optional"
+mandatory=false
 versionRange="[8.0.1,)"
 ordering="AFTER"
 side="BOTH"
