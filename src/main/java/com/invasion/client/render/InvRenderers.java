@@ -93,6 +93,7 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.BURROWER_TAIL, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOULDER, BoulderProjectileRenderer::new);
         EntityRendererRegistry.register(InvEntities.SKELETON_ARROW, SkeletonArrowRenderer::new);
+        EntityRendererRegistry.register(InvEntities.THROWN_ITEM, ThrownItemRenderer::new);
         EntityRendererRegistry.register(InvEntities.TNT, TntProjectileRenderer::new);
         EntityRendererRegistry.register(InvEntities.WOLF,
                 IMWolfRenderer::new);
