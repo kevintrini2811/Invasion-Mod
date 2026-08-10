@@ -59,6 +59,12 @@ public final class IMSlimeEntity extends Slime
     }
 
     @Override
+    public boolean causeFallDamage(
+            double fallDistance, float damageMultiplier, DamageSource source) {
+        return false;
+    }
+
+    @Override
     public void onSpawned(
             @Nullable NexusAccess nexus, EntityConstruct spawnConditions) {
         setNexus(nexus);

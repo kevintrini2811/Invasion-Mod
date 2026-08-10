@@ -49,6 +49,12 @@ public final class IMMagmaCubeEntity extends MagmaCube
     }
 
     @Override
+    public boolean causeFallDamage(
+            double fallDistance, float damageMultiplier, DamageSource source) {
+        return false;
+    }
+
+    @Override
     public void onSpawned(
             @Nullable NexusAccess nexus, EntityConstruct spawnConditions) {
         setNexus(nexus);
