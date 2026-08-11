@@ -30,6 +30,7 @@ import com.invasion.InvasionMod;
 import com.invasion.block.NexusBlock;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.ElectricityBoltEntity;
+import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.SpawnProxyEntity;
@@ -963,9 +964,17 @@ public class Nexus implements ControllableNexusAccess {
 	}
 
 	private boolean phaseCanEnd() {
-		int spawnedMobsLeft = Math.max(0, waveSpawner.getSuccessfulSpawnsThisWave() - phaseKills);
+		int loadedPhaseMobs = 0;
+		for (Combatant<?> combatant : BoundIMMobRegistry.loaded(world)) {
+			LivingEntity entity = combatant.asEntity();
+			if (entity.isAlive() && !entity.isRemoved()
+					&& entity.getPersistentData().getIntOr(
+							"invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
+				loadedPhaseMobs++;
+			}
+		}
 		return mobsLeftInWave <= 0
-				|| waveSpawner.isWaveComplete() && spawnedMobsLeft == 0
+				|| waveSpawner.isWaveComplete() && loadedPhaseMobs == 0
 				|| world.getGameTime() - lastPhaseKillTick >= 2 * 60 * 20;
 	}
 
