@@ -18,6 +18,11 @@ public class SpawnProxyEntity extends Mob {
     }
 
     @Override
+    public boolean canBeSeenAsEnemy() {
+        return false;
+    }
+
+    @Override
     public void tick() {
         if (!level().isClientSide()) {
             generateMobGroup(level(), entity -> {
