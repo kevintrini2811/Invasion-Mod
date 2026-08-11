@@ -125,7 +125,7 @@ public final class BudgetWavePlan {
             o(InvEntities.SKELETON,1,2), o(InvEntities.STRAY,1,3), o(InvEntities.BOGGED,1,3), o(InvEntities.SKELETON,1,3),
             o(InvEntities.WITHER_SKELETON,1,5), o(InvEntities.SPIDER,1,2), o(InvEntities.CAVE_SPIDER,1,3),
             o(InvEntities.JUMPING_SPIDER,1,3), o(InvEntities.QUEEN_SPIDER,1,8), o(InvEntities.PIGMAN_ENGINEER,1,5),
-            o(InvEntities.ZOMBIE_BUILDER,1,7), o(InvEntities.SILVERFISH,1,3), o(InvEntities.ENDERMITE,1,4),
+            o(InvEntities.ZOMBIE_BUILDER,1,7), o(InvEntities.ZOMBIE_MINER,1,9), o(InvEntities.SILVERFISH,1,3), o(InvEntities.ENDERMITE,1,4),
             o(InvEntities.WITCH,1,5), o(InvEntities.THROWER,1,5), o(InvEntities.THROWER,2,10), o(InvEntities.IMP,1,5),
             o(InvEntities.BLAZE,1,8), o(InvEntities.BREEZE,1,6), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,11),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
@@ -138,9 +138,9 @@ public final class BudgetWavePlan {
         pools.put(Theme.SPIDER, filter(InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER));
         pools.put(Theme.FLYING, filter(InvEntities.PHANTOM, InvEntities.GHAST, InvEntities.BREEZE, InvEntities.BLAZE, InvEntities.WITHER));
         pools.put(Theme.NETHER, filter(InvEntities.ZOMBIE_PIGMAN, InvEntities.ZOMBIFIED_PIGLIN, InvEntities.PIGMAN_ENGINEER, InvEntities.BLAZE, InvEntities.IMP, InvEntities.GHAST, InvEntities.ZOGLIN, InvEntities.MAGMA_CUBE, InvEntities.WITHER_SKELETON, InvEntities.WITHER));
-        pools.put(Theme.UNDERGROUND, filter(InvEntities.BURROWER, InvEntities.ZOMBIE, InvEntities.ZOMBIE_BUILDER, InvEntities.SKELETON, InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER, InvEntities.WARDEN, InvEntities.SILVERFISH, InvEntities.SLIME).stream().filter(option -> option.flavour != 2).toList());
+        pools.put(Theme.UNDERGROUND, filter(InvEntities.BURROWER, InvEntities.ZOMBIE, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER, InvEntities.SKELETON, InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER, InvEntities.WARDEN, InvEntities.SILVERFISH, InvEntities.SLIME).stream().filter(option -> option.flavour != 2).toList());
         pools.put(Theme.FAST, filter(InvEntities.SILVERFISH, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.JUMPING_SPIDER, InvEntities.SPEEDY_ZOMBIE, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.PHANTOM));
-        pools.put(Theme.SIEGE, filter(InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER, InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ENDERMAN, InvEntities.ZOGLIN, InvEntities.ZOMBIE, InvEntities.BURROWER, InvEntities.ENDERMITE));
+        pools.put(Theme.SIEGE, filter(InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER, InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER, InvEntities.ENDERMAN, InvEntities.ZOGLIN, InvEntities.ZOMBIE, InvEntities.BURROWER, InvEntities.ENDERMITE));
         pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.SKELETON, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.WITHER, InvEntities.WITCH));
         pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN).toList());
         pools.put(Theme.SWARM, ALL.stream().filter(option -> option.cost <= 5 && option.type != InvEntities.ENDERMITE && option.flavour != 2).toList());

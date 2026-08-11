@@ -38,8 +38,8 @@ public interface NexusAccess {
         return getCurrentWave();
     }
 
-    default int getZombieBuilderChancePercent() {
-        return Math.max(1, Math.min(100, getProgressionLevel()));
+    default int getEngineerVariantChancePercent() {
+        return Math.max(2, Math.min(100, getProgressionLevel() + 1));
     }
 
     default int getChargedCreeperChancePercent() {

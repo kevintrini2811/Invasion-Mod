@@ -284,8 +284,8 @@ public class IMWaveSpawner implements Spawner {
 		}
 		if ((mobConstruct.rules() & BudgetWavePlan.RULE_PLANNED) == 0) {
 			mobConstruct = replaceWithRareWaveVariant(mobConstruct);
-			mobConstruct = replaceEngineerWithZombieBuilder(mobConstruct);
 		}
+		mobConstruct = replaceEngineerWithZombieVariant(mobConstruct);
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (SpawnPoint spawnPoint : spawnPointContainer.getRandomSpawnPoints(
@@ -334,17 +334,19 @@ public class IMWaveSpawner implements Spawner {
 		return false;
 	}
 
-	private EntityConstruct replaceEngineerWithZombieBuilder(
+	private EntityConstruct replaceEngineerWithZombieVariant(
 			EntityConstruct construct) {
 		if (construct.entityType() != InvEntities.PIGMAN_ENGINEER) {
 			return construct;
 		}
-		int chancePercent = nexus.getZombieBuilderChancePercent();
+		int chancePercent = nexus.getEngineerVariantChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return construct;
 		}
 		return new EntityConstruct(
-				InvEntities.ZOMBIE_BUILDER,
+				getRandom().nextBoolean()
+						? InvEntities.ZOMBIE_BUILDER
+						: InvEntities.ZOMBIE_MINER,
 				construct.texture(),
 				construct.tier(),
 				construct.flavour(),
