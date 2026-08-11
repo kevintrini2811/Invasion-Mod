@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
+import com.invasion.block.NexusBlockEntity;
 
 public class WorldNexusStorage extends SavedData {
     private static final ResourceLocation ID = InvasionMod.id("nexus");
@@ -139,6 +140,29 @@ public class WorldNexusStorage extends SavedData {
         return instances.values().stream()
                 .min(java.util.Comparator.comparingDouble(
                         nexus -> nexus.getOrigin().distSqr(pos)));
+    }
+
+    public synchronized Optional<? extends ControllableNexusAccess> recoverNearestLoadedNexus(BlockPos pos) {
+        Nexus nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        int centerX = pos.getX() >> 4;
+        int centerZ = pos.getZ() >> 4;
+        for (int chunkX = centerX - 8; chunkX <= centerX + 8; chunkX++) {
+            for (int chunkZ = centerZ - 8; chunkZ <= centerZ + 8; chunkZ++) {
+                var chunk = world.getChunkSource().getChunkNow(chunkX, chunkZ);
+                if (chunk == null) continue;
+                for (var blockEntity : chunk.getBlockEntities().values()) {
+                    if (!(blockEntity instanceof NexusBlockEntity nexusBlockEntity)) continue;
+                    Nexus candidate = (Nexus)nexusBlockEntity.getNexus();
+                    double distance = candidate.getOrigin().distSqr(pos);
+                    if (distance < nearestDistance) {
+                        nearest = candidate;
+                        nearestDistance = distance;
+                    }
+                }
+            }
+        }
+        return Optional.ofNullable(nearest);
     }
 
     public synchronized void onPlayerJoined(ServerPlayer player) {
