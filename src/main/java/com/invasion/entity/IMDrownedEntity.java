@@ -91,7 +91,7 @@ public final class IMDrownedEntity extends EntityIMZombie
         ItemStack held = getMainHandItem();
         ItemStack tridentStack = held.is(Items.TRIDENT)
                 ? held : new ItemStack(Items.TRIDENT);
-        ThrownTrident trident = new ThrownTrident(
+        ThrownTrident trident = new IMThrownTridentEntity(
                 level(), this, tridentStack);
         double x = target.getX() - getX();
         double y = target.getY(0.3333333333333333D) - trident.getY();
