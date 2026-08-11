@@ -479,11 +479,11 @@ public class Nexus implements ControllableNexusAccess {
     public void notifyCombatantRemoved(Combatant<?> combatant, RemovalReason reason) {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
-			boolean belongsToCurrentWave = combatant.asEntity().getPersistentData()
-					.getIntOr("invmodWaveNumber", Integer.MIN_VALUE) == currentWave;
+			boolean belongsToCurrentWave = com.invasion.entity.WaveMobData.get(
+					combatant.asEntity(), "invmodWaveNumber", Integer.MIN_VALUE) == currentWave;
 			if (belongsToCurrentWave) mobsLeftInWave--;
-			if (belongsToCurrentWave && combatant.asEntity().getPersistentData()
-					.getIntOr("invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
+			if (belongsToCurrentWave && com.invasion.entity.WaveMobData.get(
+					combatant.asEntity(), "invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
 				phaseKills++;
 				phaseMobsLeft = Math.max(0, phaseMobsLeft - 1);
 				lastPhaseKillTick = world.getGameTime();
@@ -973,7 +973,7 @@ public class Nexus implements ControllableNexusAccess {
 		for (Combatant<?> combatant : BoundIMMobRegistry.loaded(world)) {
 			LivingEntity entity = combatant.asEntity();
 			if (entity.isAlive() && !entity.isRemoved()
-					&& entity.getPersistentData().getIntOr(
+					&& com.invasion.entity.WaveMobData.get(entity,
 							"invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
 				loadedPhaseMobs++;
 			}

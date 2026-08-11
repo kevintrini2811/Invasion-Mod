@@ -52,7 +52,7 @@ public final class VanillaMobSpawnReplacement {
         }
         LOADED_REPLACEABLE.computeIfAbsent(
                 world, ignored -> new HashSet<>()).add(mob.getUUID());
-        if (isNightSpawnActive(world)) {
+        if (hasActiveNexus(world)) {
             PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>()).add(mob.getUUID());
         }
@@ -72,7 +72,7 @@ public final class VanillaMobSpawnReplacement {
     private static void processQueue(ServerLevel world) {
         // These mobs may already be loaded when the Nexus is activated.
         if (world.getGameTime() % 20L == 0L
-                && isNightSpawnActive(world)) {
+                && hasActiveNexus(world)) {
             Set<UUID> loaded = LOADED_REPLACEABLE.get(world);
             if (loaded != null && !loaded.isEmpty()) {
                 PENDING.computeIfAbsent(world, ignored -> new HashSet<>())
@@ -84,7 +84,7 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
-        if (!isNightSpawnActive(world)) {
+        if (!hasActiveNexus(world)) {
             return;
         }
 
@@ -107,12 +107,22 @@ public final class VanillaMobSpawnReplacement {
         }
     }
 
+    public static boolean shouldBlockNaturalSpawn(Mob mob, ServerLevel world) {
+        return world.getDifficulty() != Difficulty.HARD
+                && hasActiveNexus(world)
+                && isReplaceableType(mob.getType());
+    }
+
+    static boolean hasActiveNexus(ServerLevel world) {
+        return WorldNexusStorage.of(world).getNexus()
+                        .filter(nexus -> nexus.isActive())
+                        .isPresent();
+    }
+
     static boolean isNightSpawnActive(ServerLevel world) {
         return world.getDifficulty() == Difficulty.HARD
                 && !world.isBrightOutside()
-                && WorldNexusStorage.of(world).getNexus()
-                        .filter(nexus -> nexus.isActive())
-                        .isPresent();
+                && hasActiveNexus(world);
     }
 
     private static void convertMob(

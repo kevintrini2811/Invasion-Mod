@@ -14,7 +14,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.neoforged.fml.ModList;
+import net.fabricmc.loader.api.FabricLoader;
 
 /** A complete, persistent purchase plan for one invasion wave. */
 public final class BudgetWavePlan {
@@ -210,7 +210,7 @@ public final class BudgetWavePlan {
 			case MIXED, RANDOM, RANDOMHELL -> List.of(Team.values());
 			default -> List.of();
 		};
-		if (!ModList.get().isLoaded("tinyskeletons")) return result.stream().filter(team -> team != Team.SKELETON_FAMILY).toList();
+		if (!FabricLoader.getInstance().isModLoaded("tinyskeletons")) return result.stream().filter(team -> team != Team.SKELETON_FAMILY).toList();
 		return result;
 	}
 
@@ -270,7 +270,7 @@ public final class BudgetWavePlan {
             type = InvEntities.ZOMBIFIED_PIGLIN;
         }
         // Tiny Skeletons are deliberately only considered when the optional mod is present.
-        if (type == InvEntities.SKELETON && ModList.get().isLoaded("tinyskeletons")) {
+        if (type == InvEntities.SKELETON && FabricLoader.getInstance().isModLoaded("tinyskeletons")) {
             // The compatibility entity is selected by its own integration; preserving this roll in the plan is future-proof.
             random.nextInt(100);
         }
