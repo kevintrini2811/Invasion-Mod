@@ -71,6 +71,8 @@ public final class InvRenderers {
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/pigman_engineer.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.ZOMBIE_BUILDER,
                 context -> new GenericHumanoidMobRenderer<>(context, texture("entity/zombie_builder.png"), 0.5F));
+        EntityRendererRegistry.register(InvEntities.ZOMBIE_MINER,
+                context -> new GenericHumanoidMobRenderer<>(context, texture("entity/zombie_miner.png"), 0.5F));
         EntityRendererRegistry.register(InvEntities.IMP, ImpRenderer::new);
         EntityRendererRegistry.register(InvEntities.BLAZE, IMBlazeRenderer::new);
         EntityRendererRegistry.register(InvEntities.BREEZE, BreezeRenderer::new);

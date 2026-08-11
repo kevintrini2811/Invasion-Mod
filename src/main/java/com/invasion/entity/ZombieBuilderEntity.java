@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** An engineer variant that builds its structures from bricks. */
-public final class ZombieBuilderEntity extends PigmanEngineerEntity {
+public class ZombieBuilderEntity extends PigmanEngineerEntity {
     public ZombieBuilderEntity(
             EntityType<? extends ZombieBuilderEntity> type, Level world) {
         super(type, world);
