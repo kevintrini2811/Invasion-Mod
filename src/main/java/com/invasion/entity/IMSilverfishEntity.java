@@ -17,6 +17,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -371,6 +372,7 @@ public final class IMSilverfishEntity extends Silverfish
         private boolean isCandidate(LivingEntity candidate) {
             if (candidate instanceof Silverfish
                     || candidate instanceof Endermite
+                    || isFlyingTarget(candidate)
                     || candidate.entityTags().contains(INFECTED_TAG)
                     || candidate instanceof Player) {
                 return false;
@@ -383,6 +385,20 @@ public final class IMSilverfishEntity extends Silverfish
                     || candidate instanceof AbstractGolem
                     || candidate instanceof OwnableEntity ownable
                             && ownable.getRootOwner() instanceof Player;
+        }
+
+        private boolean isFlyingTarget(LivingEntity candidate) {
+            EntityType<?> type = candidate.getType();
+            return type == EntityTypes.ALLAY || type == EntityTypes.BAT
+                    || type == EntityTypes.BEE || type == EntityTypes.BLAZE
+                    || type == EntityTypes.ENDER_DRAGON || type == EntityTypes.GHAST
+                    || type == EntityTypes.HAPPY_GHAST || type == EntityTypes.PARROT
+                    || type == EntityTypes.PHANTOM || type == EntityTypes.VEX
+                    || type == EntityTypes.WITHER
+                    || candidate instanceof IMBlazeEntity
+                    || candidate instanceof IMGhastEntity
+                    || candidate instanceof IMPhantomEntity
+                    || candidate instanceof IMWitherEntity;
         }
     }
 
