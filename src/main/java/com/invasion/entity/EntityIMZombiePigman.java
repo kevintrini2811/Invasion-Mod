@@ -151,12 +151,13 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
                         double x = getRandom().triangle(pos.getX() + 0.5, 0.5);
                         double y = getRandom().triangle(pos.getY() + 0.5, 0.5);
                         double z = getRandom().triangle(pos.getZ() + 0.5, 0.5);
-                        level().addParticle(ParticleTypes.CLOUD,
-                                x, y, z,
-                                pos.getX() + 0.5 - x,
-                                pos.getY() + 0.5 - y,
-                                pos.getZ() + 0.5 - z
-                        );
+                        if (level() instanceof ServerLevel serverLevel) {
+                            serverLevel.sendParticles(ParticleTypes.CLOUD,
+                                    x, y, z, 1,
+                                    pos.getX() + 0.5 - x,
+                                    pos.getY() + 0.5 - y,
+                                    pos.getZ() + 0.5 - z, 0.0D);
+                        }
                     }
                 }
             }
