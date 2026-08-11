@@ -79,10 +79,10 @@ public abstract class TieredIMMobEntity extends IMMobEntity {
         }
         updatingAttributes = true;
         try {
+			initTieredAttributes();
             if (!level().isClientSide()) {
                 resetHealth();
             }
-            initTieredAttributes();
         } finally {
             updatingAttributes = false;
         }
