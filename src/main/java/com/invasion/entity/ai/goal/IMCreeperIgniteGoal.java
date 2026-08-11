@@ -26,7 +26,10 @@ public class IMCreeperIgniteGoal extends Goal {
     @Override
     public boolean canStart() {
         LivingEntity livingEntity = this.creeper.getTarget();
-        return this.creeper.getFuseSpeed() > 0 || livingEntity != null && this.creeper.squaredDistanceTo(livingEntity) < 9.0;
+        return this.creeper.getFuseSpeed() > 0
+                || this.creeper.canAutomaticallyIgnite()
+                        && livingEntity != null
+                        && this.creeper.squaredDistanceTo(livingEntity) < 9.0;
     }
 
     @Override

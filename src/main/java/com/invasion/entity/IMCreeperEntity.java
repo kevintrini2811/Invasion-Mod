@@ -58,6 +58,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, SkinOv
     private int currentFuseTime;
     private int lastFuseTime;
     private int fuseTime = 30;
+    private int ignitionGraceTicks = 40;
 
     private boolean explosionDeath;
     private boolean commitToExplode;
@@ -114,6 +115,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, SkinOv
 
     @Override
     public void tick() {
+        if (ignitionGraceTicks > 0) ignitionGraceTicks--;
         if (explosionDeath) {
             explode();
         } else if (isAlive()) {
@@ -199,6 +201,10 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader, SkinOv
 
     public int getFuseSpeed() {
         return dataTracker.get(FUSE_SPEED);
+    }
+
+    public boolean canAutomaticallyIgnite() {
+        return ignitionGraceTicks <= 0;
     }
 
     public void setFuseSpeed(int speed) {
