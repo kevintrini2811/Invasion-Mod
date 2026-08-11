@@ -560,8 +560,7 @@ public class IMWaveSpawner implements Spawner {
 		boolean baby = (construct.rules() & BudgetWavePlan.RULE_BABY) != 0
 				|| !planned && getRandom().nextInt(100) < nexus.getBabyZombieChancePercent();
 		if (!baby) return;
-		if (mob instanceof EntityIMZombie zombie
-				&& !zombie.isBrute() && !zombie.isPigman()) {
+		if (mob instanceof EntityIMZombie zombie && !zombie.isPigman()) {
 			zombie.setBaby(true);
 		}
 		if (mob instanceof IMSkeletonEntity skeleton
