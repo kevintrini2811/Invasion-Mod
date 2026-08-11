@@ -29,6 +29,7 @@ import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
+import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 public final class VanillaMobSpawnReplacement {
@@ -43,7 +44,18 @@ public final class VanillaMobSpawnReplacement {
     public static void bootstrap() {
         NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
         NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::removeVanillaMob);
+        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::blockNaturalSpawn);
         NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
+    }
+
+    private static void blockNaturalSpawn(FinalizeSpawnEvent event) {
+        ServerLevel world = event.getLevel().getLevel();
+        if (event.getSpawnType() == EntitySpawnReason.NATURAL
+                && world.getDifficulty() != Difficulty.HARD
+                && hasActiveNexus(world)
+                && isReplaceableType(event.getEntity().getType())) {
+            event.setSpawnCancelled(true);
+        }
     }
 
     private static void queueVanillaMob(EntityJoinLevelEvent event) {
@@ -57,7 +69,7 @@ public final class VanillaMobSpawnReplacement {
         }
         LOADED_REPLACEABLE.computeIfAbsent(
                 world, ignored -> new HashSet<>()).add(mob.getUUID());
-        if (isNightSpawnActive(world)) {
+        if (hasActiveNexus(world)) {
             PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>()).add(mob.getUUID());
         }
@@ -83,7 +95,7 @@ public final class VanillaMobSpawnReplacement {
 
         // These mobs may already be loaded when the Nexus is activated.
         if (world.getGameTime() % 20L == 0L
-                && isNightSpawnActive(world)) {
+                && hasActiveNexus(world)) {
             Set<UUID> loaded = LOADED_REPLACEABLE.get(world);
             if (loaded != null && !loaded.isEmpty()) {
                 PENDING.computeIfAbsent(world, ignored -> new HashSet<>())
@@ -96,7 +108,7 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
-        if (!isNightSpawnActive(world)) {
+        if (!hasActiveNexus(world)) {
             return;
         }
 
@@ -122,7 +134,11 @@ public final class VanillaMobSpawnReplacement {
     static boolean isNightSpawnActive(ServerLevel world) {
         return world.getDifficulty() == Difficulty.HARD
                 && !world.isBrightOutside()
-                && WorldNexusStorage.of(world).getNexus()
+                && hasActiveNexus(world);
+    }
+
+    private static boolean hasActiveNexus(ServerLevel world) {
+        return WorldNexusStorage.of(world).getNexus()
                         .filter(nexus -> nexus.isActive())
                         .isPresent();
     }
