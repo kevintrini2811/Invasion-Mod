@@ -47,11 +47,11 @@ public interface NexusAccess {
     }
 
     default int getRandomEquipmentChancePercent() {
-        return Math.clamp(getProgressionLevel() - 1, 0, 100);
+        return Math.clamp(getProgressionLevel(), 1, 100);
     }
 
     default int getBabyZombieChancePercent() {
-        return Math.clamp(getProgressionLevel() - 2, 0, 20);
+        return Math.clamp(getProgressionLevel(), 1, 20);
     }
 
     default int getWitherSkeletonChancePercent() {

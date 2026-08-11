@@ -260,8 +260,10 @@ public class IMWaveSpawner implements Spawner {
 
 	@Override
 	public boolean attemptSpawn(EntityConstruct mobConstruct, Ints angle) {
-		mobConstruct = replaceWithRareWaveVariant(mobConstruct);
-		mobConstruct = replaceEngineerWithZombieBuilder(mobConstruct);
+		if ((mobConstruct.rules() & BudgetWavePlan.RULE_PLANNED) == 0) {
+			mobConstruct = replaceWithRareWaveVariant(mobConstruct);
+			mobConstruct = replaceEngineerWithZombieBuilder(mobConstruct);
+		}
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (SpawnPoint spawnPoint : spawnPointContainer.getRandomSpawnPoints(
@@ -275,7 +277,7 @@ public class IMWaveSpawner implements Spawner {
 				return true;
 			}
 
-			EntityConstruct spawnConstruct =
+			EntityConstruct spawnConstruct = (mobConstruct.rules() & BudgetWavePlan.RULE_PLANNED) != 0 ? mobConstruct :
 					replaceSlimeWithMagmaCube(
 						replaceSkeletonWithEnvironmentalVariant(
 							replaceZombieWithEnvironmentalVariant(
@@ -285,15 +287,16 @@ public class IMWaveSpawner implements Spawner {
 							(ServerLevel) nexus.getWorld(),
 							spawnPoint.pos()));
 			Mob mob = spawnConstruct.createMob(nexus);
-			equipRandomWaveWeapon(mob);
-			equipRandomWaveArmor(mob);
+			equipRandomWaveWeapon(mob, spawnConstruct);
+			equipRandomWaveArmor(mob, spawnConstruct);
 
             if (spawnPoint.trySpawnEntity(
                     (ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
+				mob.getPersistentData().putBoolean("invmodWaveMob", true);
 
                 equipWitherSkeletonWeapon(mob);
-                applyBabyZombieVariant(mob);
+                applyBabyVariant(mob, spawnConstruct);
                 markAsInvasionAlly(mob);
                 if (debugMode) {
                     InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave()
@@ -543,18 +546,17 @@ public class IMWaveSpawner implements Spawner {
 		mob.setItemSlot(EquipmentSlot.MAINHAND, weapon.getDefaultInstance());
 	}
 
-	private void applyBabyZombieVariant(Mob mob) {
-		if (!(mob instanceof EntityIMZombie zombie) || zombie.isBrute()) {
-			return;
-		}
-
-		int chancePercent = nexus.getBabyZombieChancePercent();
-		if (getRandom().nextInt(100) < chancePercent) {
-			zombie.setBaby(true);
-		}
+	private void applyBabyVariant(Mob mob, EntityConstruct construct) {
+		boolean planned = (construct.rules() & BudgetWavePlan.RULE_PLANNED) != 0;
+		boolean baby = (construct.rules() & BudgetWavePlan.RULE_BABY) != 0
+				|| !planned && getRandom().nextInt(100) < nexus.getBabyZombieChancePercent();
+		if (!baby) return;
+		if (mob instanceof EntityIMZombie zombie && !zombie.isBrute()) zombie.setBaby(true);
+		if (mob instanceof IMSkeletonEntity skeleton
+				&& com.invasion.compat.TinySkeletonsCompatibility.isLoaded()) skeleton.setBaby(true);
 	}
 
-	private void equipRandomWaveWeapon(Mob mob) {
+	private void equipRandomWaveWeapon(Mob mob, EntityConstruct construct) {
 		if (!(mob instanceof EntityIMZombie
 				|| mob instanceof EntityIMZombiePigman
 				|| mob instanceof IMZombifiedPiglinEntity
@@ -563,22 +565,25 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		int chancePercent = nexus.getRandomEquipmentChancePercent();
+		boolean planned = (construct.rules() & BudgetWavePlan.RULE_PLANNED) != 0;
+		int chancePercent = (construct.rules() & (BudgetWavePlan.RULE_RANGED | BudgetWavePlan.RULE_WEAPON)) != 0
+				? 100 : planned ? 0 : nexus.getRandomEquipmentChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return;
 		}
 
-		if (randomWaveWeapons.isEmpty()) {
+		List<Item> weaponPool = (construct.rules() & BudgetWavePlan.RULE_RANGED) != 0
+				? randomRangedWaveWeapons : randomWaveWeapons;
+		if (weaponPool.isEmpty()) {
 			return;
 		}
-		Item weapon = randomWaveWeapons.get(
-				getRandom().nextInt(randomWaveWeapons.size()));
+		Item weapon = weaponPool.get(getRandom().nextInt(weaponPool.size()));
 		mob.setItemSlot(
 				net.minecraft.world.entity.EquipmentSlot.MAINHAND,
 				weapon.getDefaultInstance());
 	}
 
-	private void equipRandomWaveArmor(Mob mob) {
+	private void equipRandomWaveArmor(Mob mob, EntityConstruct construct) {
 		boolean canWearWaveArmor = mob instanceof IMSkeletonEntity
 				|| mob instanceof PigmanEngineerEntity
 				|| mob instanceof EntityIMZombie
@@ -593,7 +598,9 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		int chancePercent = nexus.getRandomEquipmentChancePercent();
+		boolean planned = (construct.rules() & BudgetWavePlan.RULE_PLANNED) != 0;
+		int chancePercent = (construct.rules() & (BudgetWavePlan.RULE_ARMORED | BudgetWavePlan.RULE_ARMOR)) != 0
+				? 100 : planned ? 0 : nexus.getRandomEquipmentChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return;
 		}
@@ -627,9 +634,20 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		Item armor = availableArmor.get(getRandom().nextInt(availableArmor.size()));
-		EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
-		mob.setItemSlot(slot, armor.getDefaultInstance());
+		if ((construct.rules() & BudgetWavePlan.RULE_ARMORED) != 0) {
+			for (EquipmentSlot desired : EquipmentSlot.values()) {
+				if (!desired.isArmor()) continue;
+				List<Item> slotArmor = availableArmor.stream().filter(item -> mob.getEquipmentSlotForItem(item.getDefaultInstance()) == desired).toList();
+				if (!slotArmor.isEmpty()) {
+					Item armor = slotArmor.get(getRandom().nextInt(slotArmor.size()));
+					mob.setItemSlot(desired, armor.getDefaultInstance());
+				}
+			}
+		} else {
+			Item armor = availableArmor.get(getRandom().nextInt(availableArmor.size()));
+			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
+			mob.setItemSlot(slot, armor.getDefaultInstance());
+		}
 	}
 
 	private void generateSpawnPoints() {
