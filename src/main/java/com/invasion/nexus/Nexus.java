@@ -499,6 +499,10 @@ public class Nexus implements ControllableNexusAccess {
         } else if (reason == RemovalReason.DISCARDED) {
             if (combatant.asEntity().getType().create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT) instanceof Combatant<?> copy) {
                 copy.asEntity().restoreFrom(combatant.asEntity());
+                // restoreFrom also copies the UUID. Reusing it for a newly
+                // tracked entity can leave the server-side replacement alive
+                // while clients keep the old, removed entity association.
+                copy.asEntity().setUUID(UUID.randomUUID());
                 copy.setNexus(this);
                 waveSpawner.askForRespawn(copy);
             }
