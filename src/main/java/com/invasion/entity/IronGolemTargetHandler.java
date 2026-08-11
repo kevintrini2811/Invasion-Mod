@@ -8,16 +8,18 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.wolf.Wolf;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
-/** Restores vanilla-style Iron Golem hostility towards Nexus-bound IM monsters. */
+/** Targets Nexus-bound IM monsters for golems and player-supporting wolves. */
 public final class IronGolemTargetHandler {
     private static final double TARGET_RANGE_SQR = 32.0D * 32.0D;
-    private static final Map<ServerLevel, Set<IronGolem>> GOLEMS = new WeakHashMap<>();
+	private static final Map<ServerLevel, Set<Mob>> DEFENDERS = new WeakHashMap<>();
 
     private IronGolemTargetHandler() {}
 
@@ -28,37 +30,46 @@ public final class IronGolemTargetHandler {
     }
 
     private static void onJoin(EntityJoinLevelEvent event) {
-        if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof IronGolem golem) {
-            GOLEMS.computeIfAbsent(level, ignored -> Collections.newSetFromMap(new IdentityHashMap<>())).add(golem);
+		if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof Mob mob
+				&& (mob instanceof IronGolem || mob instanceof Wolf)) {
+			DEFENDERS.computeIfAbsent(level, ignored -> Collections.newSetFromMap(new IdentityHashMap<>())).add(mob);
         }
     }
 
     private static void onLeave(EntityLeaveLevelEvent event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || !(event.getEntity() instanceof IronGolem golem)) return;
-        Set<IronGolem> golems = GOLEMS.get(level);
-        if (golems != null) golems.remove(golem);
+		if (!(event.getLevel() instanceof ServerLevel level) || !(event.getEntity() instanceof Mob mob)) return;
+		Set<Mob> defenders = DEFENDERS.get(level);
+		if (defenders != null) defenders.remove(mob);
     }
 
     private static void tick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level) || level.getGameTime() % 10L != 0L) return;
-        Set<IronGolem> golems = GOLEMS.get(level);
-        if (golems == null) return;
-        golems.removeIf(golem -> !golem.isAlive() || golem.isRemoved());
-        if (golems.isEmpty()) { GOLEMS.remove(level); return; }
+		Set<Mob> defenders = DEFENDERS.get(level);
+		if (defenders == null) return;
+		defenders.removeIf(defender -> !defender.isAlive() || defender.isRemoved());
+		if (defenders.isEmpty()) { DEFENDERS.remove(level); return; }
 
-        var combatants = BoundIMMobRegistry.activeBound(level);
-        for (IronGolem golem : golems) {
-            if (golem.getTarget() != null && golem.getTarget().isAlive()) continue;
+		var combatants = BoundIMMobRegistry.loaded(level);
+		for (Mob defender : defenders) {
+			if (!isDefender(defender)) continue;
+			if (defender.getTarget() != null && defender.getTarget().isAlive()) continue;
             LivingEntity nearest = null;
             double nearestDistance = TARGET_RANGE_SQR;
             for (Combatant<?> combatant : combatants) {
                 LivingEntity candidate = combatant.asEntity();
                 if (!candidate.isAlive() || candidate.isRemoved()
-                        || candidate instanceof IMCreeperEntity || !golem.canAttack(candidate)) continue;
-                double distance = golem.distanceToSqr(candidate);
+						|| candidate == defender || candidate instanceof IMWolfEntity
+						|| !defender.canAttack(candidate)) continue;
+				double distance = defender.distanceToSqr(candidate);
                 if (distance < nearestDistance) { nearest = candidate; nearestDistance = distance; }
             }
-            if (nearest != null) golem.setTarget(nearest);
+			if (nearest != null) defender.setTarget(nearest);
         }
     }
+
+	private static boolean isDefender(Mob mob) {
+		return mob instanceof IronGolem
+				|| mob instanceof IMWolfEntity
+				|| mob instanceof Wolf wolf && wolf.isTame();
+	}
 }
