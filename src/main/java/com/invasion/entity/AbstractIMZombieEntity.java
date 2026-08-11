@@ -29,6 +29,8 @@ import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.server.level.ServerLevel;
@@ -125,19 +127,44 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
 
     @Override
     public void performRangedAttack(LivingEntity target, float pullProgress) {
-        ItemStack bow = getMainHandItem();
-        ItemStack arrow = getProjectile(bow);
+        ItemStack weapon = getMainHandItem();
+        if (weapon.is(Items.TRIDENT)) {
+            shootTrident(target.getX(), target.getY(0.3333333333333333), target.getZ());
+            return;
+        }
+        ItemStack arrow = getProjectile(weapon);
+        if (arrow.isEmpty()) arrow = Items.ARROW.getDefaultInstance();
         AbstractArrow projectile = ProjectileUtil.getMobArrow(
-                this, arrow, pullProgress, bow);
+                this, arrow, pullProgress, weapon);
         shootArrow(projectile, target.getX(), target.getY(0.3333333333333333),
                 target.getZ());
     }
 
     @Override
     public void performRangedNexusAttack(net.minecraft.world.phys.Vec3 target) {
+        if (getMainHandItem().is(Items.TRIDENT)) {
+            shootTrident(target.x, target.y, target.z);
+            return;
+        }
         SkeletonArrowEntity projectile =
                 new SkeletonArrowEntity(level(), this, getMainHandItem());
         shootArrow(projectile, target.x, target.y, target.z);
+    }
+
+    private void shootTrident(double targetX, double targetY, double targetZ) {
+        if (!(level() instanceof ServerLevel world)) return;
+        ItemStack tridentStack = getMainHandItem().copy();
+        ThrownTrident projectile = new ThrownTrident(world, this, tridentStack);
+        double dX = targetX - getX();
+        double dY = targetY - projectile.getY();
+        double dZ = targetZ - getZ();
+        double horizontalDistance = Math.sqrt(dX * dX + dZ * dZ);
+        Projectile.spawnProjectileUsingShoot(
+                projectile, world, tridentStack,
+                dX, dY + horizontalDistance * 0.2F, dZ,
+                1.6F, 14 - world.getDifficulty().getId() * 4);
+        playSound(SoundEvents.DROWNED_SHOOT, 1.0F,
+                1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
     }
 
     private void shootArrow(
