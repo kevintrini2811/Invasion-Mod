@@ -126,6 +126,18 @@ public class WorldNexusStorage extends SavedData {
         return activeNexus.map(instances::get);
     }
 
+	public synchronized boolean hasStableNexus() {
+		return getNexus().map(nexus -> nexus.getMode() == Mode.CONTINUOUS).orElse(false);
+	}
+
+	public synchronized void recordPlayerBlockPlacement() {
+		activeNexus.map(instances::get).filter(Nexus::isActive).ifPresent(Nexus::recordPlayerBlockPlacement);
+	}
+
+	public synchronized void recordPlayerMobKill(boolean ranged) {
+		activeNexus.map(instances::get).filter(Nexus::isActive).ifPresent(nexus -> nexus.recordPlayerMobKill(ranged));
+	}
+
     public synchronized Optional<? extends ControllableNexusAccess> getNearestNexus(BlockPos pos) {
         return instances.values().stream()
                 .min(java.util.Comparator.comparingDouble(
@@ -137,7 +149,13 @@ public class WorldNexusStorage extends SavedData {
     }
 
     public synchronized boolean canActivate(Nexus nexus) {
-        return activeNexus.map(instances::get).orElse(nexus) == nexus;
+		if (activeNexus.map(instances::get).orElse(nexus) != nexus) return false;
+		if (world.getServer() != null) {
+			for (ServerLevel level : world.getServer().getAllLevels()) {
+				if (level != world && WorldNexusStorage.of(level).getNexus().isPresent()) return false;
+			}
+		}
+		return true;
     }
 
     public synchronized boolean setActiveNexus(Nexus nexus) {
@@ -152,6 +170,13 @@ public class WorldNexusStorage extends SavedData {
         }
         return true;
     }
+
+	synchronized void clearActiveNexus(Nexus nexus) {
+		if (activeNexus.filter(nexus.getUuid()::equals).isPresent()) {
+			activeNexus = Optional.empty();
+			setDirty();
+		}
+	}
 
     private CompoundTag write(CompoundTag nbt, Provider lookup) {
         activeNexus.ifPresent(nexus -> {

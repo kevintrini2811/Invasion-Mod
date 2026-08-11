@@ -130,6 +130,8 @@
     "invmod.message.nexus.firstwavesoon": "Brace yourselves! The first wave is coming soon!",
     "invmod.message.nexus.nightlooming": "The night looms around the Nexus...",
     "invmod.message.nexus.activatedandstable": "Nexus activated and stable!",
+    "invmod.message.nexus.daylightcycle_disabled": "Warning: doDaylightCycle is disabled. Stable Nexus night waves cannot advance normally.",
+    "invmod.message.nexus.sleep_blocked": "You cannot sleep while a Stable Nexus is active.",
     "invmod.message.nexus.couldnotactivate": "Couldn't activate Nexus!",
     "invmod.message.nexus.destabilizing": "Forces are destabilizing the Nexus!",
     "invmod.message.nexus.lifenowbound": "%s life is now bound to the Nexus.",

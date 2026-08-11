@@ -20,7 +20,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.AABB;
 import com.invasion.InvasionConfig;
 import com.invasion.InvSounds;
@@ -37,6 +39,7 @@ import com.invasion.nexus.spawns.IMWaveSpawner;
 import com.invasion.nexus.wave.WaveBuilder;
 import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
+import com.invasion.nexus.wave.BudgetWavePlan;
 import com.invasion.network.NexusHudPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
@@ -77,6 +80,14 @@ public class Nexus implements ControllableNexusAccess {
 
     private long waveDelayTimer;
     private long waveDelay;
+	private BudgetWavePlan budgetPlan;
+	private int phaseMobsLeft;
+	private long lastPhaseKillTick;
+	private boolean singlePhaseInvasion;
+	private long lastStableWaveDay = Long.MIN_VALUE;
+	private int placedBlocksThisWave;
+	private int meleeKillsThisWave;
+	private int rangedKillsThisWave;
 
     private boolean continuousAttack;
     private int continuousAttackCount;
@@ -287,6 +298,10 @@ public class Nexus implements ControllableNexusAccess {
             sendWaveProgressHud(player, createHudPayload());
         }
         boundPlayers.reconnect(player);
+		if (mode == Mode.CONTINUOUS) {
+			player.sendSystemMessage(Component.translatable("invmod.message.nexus.lifenowbound", player.getDisplayName()).withStyle(ChatFormatting.DARK_GREEN));
+			warnDaylightCycle(player);
+		}
     }
 
     public void tick() {
@@ -336,6 +351,7 @@ public class Nexus implements ControllableNexusAccess {
             nextAttackTime = (int) ((getWorld().getGameTime() / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
         } else {
             setMode(Mode.STOPPED);
+			storage.clearActiveNexus(this);
         }
 
         waveSpawner.stop();
@@ -458,6 +474,10 @@ public class Nexus implements ControllableNexusAccess {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
             mobsLeftInWave--;
+			if (combatant.asEntity().getPersistentData().getBooleanOr("invmodWaveMob", false)) {
+				phaseMobsLeft = Math.max(0, phaseMobsLeft - 1);
+				lastPhaseKillTick = world.getGameTime();
+			}
             storage.setDirty();
             updateWaveProgressHud();
             if (mobsLeftInWave <= 0) {
@@ -513,6 +533,7 @@ public class Nexus implements ControllableNexusAccess {
     public boolean start(int startWave) {
         if (!storage.setActiveNexus(this)) {
             InvasionMod.log("Another nexus is already active in this world");
+			return false;
         }
         if (mode == Mode.CONTINUOUS && continuousAttack) {
             boundPlayers.sendWarning("invmod.message.nexus.alreadyactivated");
@@ -592,6 +613,7 @@ public class Nexus implements ControllableNexusAccess {
         } else {
             boundPlayers.sendWarning("invmod.message.nexus.activatedandstable");
         }
+		for (ServerPlayer player : world.players()) warnDaylightCycle(player);
     }
 
     private void doInvasion(int elapsed) throws WaveSpawnerException {
@@ -600,18 +622,22 @@ public class Nexus implements ControllableNexusAccess {
                 theEnd();
             } else {
                 nexusItemStacks.generateFlux(1);
-                if (waveSpawner.isWaveComplete()) {
+				if (waveSpawner.isWaveComplete() && phaseCanEnd()) {
                     if (waveDelayTimer == -1L) {
                         boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_CHIME);
                         waveDelayTimer = 0L;
-                        waveDelay = waveSpawner.getWaveRestTime();
+						waveDelay = 2 * 60 * 1000;
                         InvasionMod.LOGGER.debug("Next wave begins in: {}ticks", waveDelay);
                     } else {
                         waveDelayTimer += elapsed;
-                        if (waveDelayTimer > waveDelay) {
-                            currentWave += 1;
-                            beginWave(currentWave);
-                            initializeWaveProgress();
+						if (waveDelayTimer > waveDelay) {
+							if (budgetPlan != null && budgetPlan.advance()) {
+								beginPlannedPhase();
+							} else {
+								currentWave += 1;
+								beginWave(currentWave);
+								initializeWaveProgress();
+							}
                             waveDelayTimer = -1L;
                             boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
                             if (currentWave > nexusLevel) {
@@ -639,6 +665,9 @@ public class Nexus implements ControllableNexusAccess {
         if (nexusItemStacks.getItem(0).is(InvItems.STRONG_DAMPING_AGENT) && powerLevel >= 0 && !continuousAttack && --powerLevel < 0) {
             stop(false);
         }
+
+		startStableNightWaveIfNeeded();
+		if (!continuousAttack) return;
 
         if (!continuousAttack) {
             long currentTime = getWorld().getGameTime();
@@ -676,7 +705,7 @@ public class Nexus implements ControllableNexusAccess {
         } else if (hp <= 0) {
             continuousAttack = false;
             continuousNexusHurt();
-        } else if (waveSpawner.isWaveComplete()) {
+        } else if (waveSpawner.isWaveComplete() && phaseCanEnd()) {
             if (waveDelayTimer == -1L) {
                 waveDelayTimer = 0L;
                 waveDelay = waveSpawner.getWaveRestTime();
@@ -708,6 +737,36 @@ public class Nexus implements ControllableNexusAccess {
         }
     }
 
+	private void startStableNightWaveIfNeeded() {
+		long gameTime = world.getOverworldClockTime();
+		long day = Math.floorDiv(gameTime, TICKS_PER_DAY);
+		long time = Math.floorMod(gameTime, TICKS_PER_DAY);
+		if (time < 13_000 || time >= 23_000 || day == lastStableWaveDay) return;
+		lastStableWaveDay = day;
+		try {
+			waveSpawner.stop(); // Previous mobs deliberately remain in the world.
+			continuousAttackCount++;
+			currentWave = continuousAttackCount;
+			budgetPlan = BudgetWavePlan.generate(currentWave, 1, world.getRandom(), consumeThemeBias());
+			beginPlannedPhase();
+			initializeWaveProgress();
+			continuousAttack = true;
+			regenerateHealth();
+			zapTimer = 0;
+			waveDelayTimer = -1L;
+			boundPlayers.sendWarning("invmod.message.nexus.destabilizing");
+			boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
+		} catch (WaveSpawnerException exception) {
+			InvasionMod.LOGGER.error("Could not start stable Nexus night wave", exception);
+		}
+	}
+
+	private void warnDaylightCycle(ServerPlayer player) {
+		if (!world.getGameRules().get(GameRules.ADVANCE_TIME)) {
+			player.sendSystemMessage(Component.translatable("invmod.message.nexus.daylightcycle_disabled").withStyle(ChatFormatting.RED));
+		}
+	}
+
     private void regenerateHealth() {
         hp = MAX_HEALTH;
     }
@@ -728,12 +787,15 @@ public class Nexus implements ControllableNexusAccess {
             if (!catalyst.isEmpty()) {
                 if (catalyst.is(InvItems.NEXUS_CATALYST)) {
                     catalyst.shrink(1);
+					singlePhaseInvasion = false;
                     start(1);
                 } else if (catalyst.is(InvItems.STRONG_NEXUS_CATALYST)) {
                     catalyst.shrink(1);
+					singlePhaseInvasion = true;
                     start(10);
                 } else if (catalyst.is(InvItems.STABLE_NEXUS_CATALYST)) {
                     catalyst.shrink(1);
+					singlePhaseInvasion = true;
                     activated = true;
                     startContinuousPlay();
                 }
@@ -808,8 +870,51 @@ public class Nexus implements ControllableNexusAccess {
 
     private void beginWave(int wave) throws WaveSpawnerException {
         bindExistingImMobs();
-        waveSpawner.beginNextWave(wave);
+		budgetPlan = BudgetWavePlan.generate(wave, singlePhaseInvasion ? 1 : 4, world.getRandom(), consumeThemeBias());
+		beginPlannedPhase();
     }
+
+	void recordPlayerBlockPlacement() { placedBlocksThisWave++; storage.setDirty(); }
+	void recordPlayerMobKill(boolean ranged) {
+		if (ranged) rangedKillsThisWave++; else meleeKillsThisWave++;
+		storage.setDirty();
+	}
+
+	private BudgetWavePlan.ThemeBias consumeThemeBias() {
+		int kills = meleeKillsThisWave + rangedKillsThisWave;
+		boolean meleeBias = kills > 0 && meleeKillsThisWave * 4 >= kills * 3;
+		boolean rangedBias = kills > 0 && rangedKillsThisWave * 4 >= kills * 3;
+		BudgetWavePlan.ThemeBias bias = new BudgetWavePlan.ThemeBias(
+				placedBlocksThisWave > 20, hasNetherTerrain(), meleeBias, rangedBias);
+		placedBlocksThisWave = meleeKillsThisWave = rangedKillsThisWave = 0;
+		return bias;
+	}
+
+	private boolean hasNetherTerrain() {
+		int found = 0;
+		BlockPos min = pos.offset(-30, -30, -30);
+		BlockPos max = pos.offset(30, 30, 30);
+		for (BlockPos check : BlockPos.betweenClosed(min, max)) {
+			var state = world.getBlockState(check);
+			if (state.is(Blocks.FIRE) || state.is(Blocks.SOUL_FIRE)
+					|| state.getFluidState().is(net.minecraft.tags.FluidTags.LAVA)) {
+				if (++found > 20) return true;
+			}
+		}
+		return false;
+	}
+
+	private void beginPlannedPhase() throws WaveSpawnerException {
+		waveSpawner.stop();
+		phaseMobsLeft = budgetPlan.currentPhase().purchases().size();
+		lastPhaseKillTick = world.getGameTime();
+		waveSpawner.beginNextWave(budgetPlan.currentPhase().asWave());
+		storage.setDirty();
+	}
+
+	private boolean phaseCanEnd() {
+		return phaseMobsLeft <= 0 || world.getGameTime() - lastPhaseKillTick >= 5 * 60 * 20;
+	}
 
     private void beginWave(Wave wave) throws WaveSpawnerException {
         bindExistingImMobs();
@@ -817,8 +922,8 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void initializeWaveProgress() {
-        mobsToKillInWave = Math.max(1,
-                (int)(waveSpawner.getTotalDefinedMobsThisWave() * 0.8F));
+		mobsToKillInWave = budgetPlan == null ? Math.max(1, waveSpawner.getTotalDefinedMobsThisWave())
+				: budgetPlan.totalMobs();
         mobsLeftInWave = mobsToKillInWave;
         lastMobsLeftInWave = mobsToKillInWave;
     }
@@ -861,13 +966,9 @@ public class Nexus implements ControllableNexusAccess {
 
     private boolean resumeSpawnerContinuous() {
         try {
-            float difficulty = 1 + powerLevel / 4500F;
-            float tierLevel = 1 + powerLevel / 4500F;
-            Wave wave = waveBuilder.generateWave(difficulty, tierLevel, WAVE_DURATION);
-            this.mobsToKillInWave = ((int) (wave.getTotalMobAmount() * 0.8F));
-            InvasionMod.log("Original mobs to kill: " + mobsToKillInWave);
-            lastMobsLeftInWave = mobsToKillInWave - waveSpawner.resumeFromState(wave);
-            mobsLeftInWave = lastMobsLeftInWave;
+			if (budgetPlan == null) budgetPlan = BudgetWavePlan.generate(Math.max(1, continuousAttackCount), 1, world.getRandom());
+			waveSpawner.resumeFromState(budgetPlan.currentPhase().asWave());
+			if (mobsToKillInWave <= 0) initializeWaveProgress();
             return true;
         } catch (WaveSpawnerException e) {
             InvasionMod.LOGGER.error("Error resuming spawner", e);
@@ -878,7 +979,10 @@ public class Nexus implements ControllableNexusAccess {
 
     private boolean resumeSpawnerInvasion() {
         try {
-            waveSpawner.resumeFromState(currentWave);
+			if (budgetPlan == null) {
+				budgetPlan = BudgetWavePlan.generate(currentWave, singlePhaseInvasion ? 1 : 4, world.getRandom());
+			}
+			waveSpawner.resumeFromState(budgetPlan.currentPhase().asWave());
             if (mobsToKillInWave <= 0) {
                 initializeWaveProgress();
             }
@@ -911,6 +1015,14 @@ public class Nexus implements ControllableNexusAccess {
         mobsLeftInWave = compound.getIntOr("mobsLeftInWave", 0);
         lastMobsLeftInWave = compound.getIntOr("lastMobsLeftInWave", mobsLeftInWave);
         mobsToKillInWave = compound.getIntOr("mobsToKillInWave", 0);
+		phaseMobsLeft = compound.getIntOr("phaseMobsLeft", 0);
+		lastPhaseKillTick = compound.getLongOr("lastPhaseKillTick", world.getGameTime());
+		singlePhaseInvasion = compound.getBooleanOr("singlePhaseInvasion", false);
+		lastStableWaveDay = compound.getLongOr("lastStableWaveDay", Long.MIN_VALUE);
+		placedBlocksThisWave = compound.getIntOr("placedBlocksThisWave", 0);
+		meleeKillsThisWave = compound.getIntOr("meleeKillsThisWave", 0);
+		rangedKillsThisWave = compound.getIntOr("rangedKillsThisWave", 0);
+		if (compound.contains("budgetPlan")) budgetPlan = BudgetWavePlan.load(compound.getCompoundOrEmpty("budgetPlan"), lookup);
 
         nexusItemStacks.readNbt(compound.getCompoundOrEmpty("inventory"), lookup);
         boundPlayers.readNbt(compound.getCompoundOrEmpty("boundPlayers"), lookup);
@@ -940,6 +1052,14 @@ public class Nexus implements ControllableNexusAccess {
         compound.putInt("mobsLeftInWave", mobsLeftInWave);
         compound.putInt("lastMobsLeftInWave", lastMobsLeftInWave);
         compound.putInt("mobsToKillInWave", mobsToKillInWave);
+		compound.putInt("phaseMobsLeft", phaseMobsLeft);
+		compound.putLong("lastPhaseKillTick", lastPhaseKillTick);
+		compound.putBoolean("singlePhaseInvasion", singlePhaseInvasion);
+		compound.putLong("lastStableWaveDay", lastStableWaveDay);
+		compound.putInt("placedBlocksThisWave", placedBlocksThisWave);
+		compound.putInt("meleeKillsThisWave", meleeKillsThisWave);
+		compound.putInt("rangedKillsThisWave", rangedKillsThisWave);
+		if (budgetPlan != null) compound.put("budgetPlan", budgetPlan.save(lookup));
 
 
         compound.put("inventory", nexusItemStacks.writeNbt(new CompoundTag(), lookup));

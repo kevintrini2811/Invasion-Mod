@@ -43,7 +43,7 @@ public class Participants {
         for (Player player : nexus.getWorld().getEntitiesOfClass(
                 Player.class, arena, EntitySelector.NO_SPECTATORS)) {
             entries.compute(player.getUUID(), (id, oldEntry) -> {
-                if (oldEntry == null || now - oldEntry.time > NexusAccess.BIND_EXPIRE_TIME) {
+                if (oldEntry == null) {
                     Component message = Component.translatable("invmod.message.nexus.lifenowbound", pluralize(player.getDisplayName())).withStyle(ChatFormatting.DARK_GREEN);
                     sendMessage(message);
                     if (oldEntry == null) {
@@ -51,6 +51,7 @@ public class Participants {
                     }
                     return new Entry(now, player.getUUID(), player.isCreative());
                 }
+				oldEntry.time = now;
                 oldEntry.creativeAtBinding = player.isCreative();
                 return oldEntry;
             });
