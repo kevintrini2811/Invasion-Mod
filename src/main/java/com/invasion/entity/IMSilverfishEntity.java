@@ -29,6 +29,7 @@ import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.monster.Silverfish;
+import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -369,6 +370,7 @@ public final class IMSilverfishEntity extends Silverfish
 
         private boolean isCandidate(LivingEntity candidate) {
             if (candidate instanceof Silverfish
+                    || candidate instanceof Endermite
                     || candidate.getTags().contains(INFECTED_TAG)
                     || candidate instanceof Player) {
                 return false;
