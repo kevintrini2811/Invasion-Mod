@@ -7,7 +7,7 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.entity.state.SkeletonRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 /** Selects matching adult and baby geometry for skeleton clothing overlays. */
 final class IMSkeletonClothingLayer<
@@ -15,13 +15,13 @@ final class IMSkeletonClothingLayer<
         extends RenderLayer<S, M> {
     private final SkeletonModel<S> adultModel;
     private final SkeletonModel<S> babyModel;
-    private final Identifier texture;
+    private final ResourceLocation texture;
 
     IMSkeletonClothingLayer(
             RenderLayerParent<S, M> parent,
             SkeletonModel<S> adultModel,
             SkeletonModel<S> babyModel,
-            Identifier texture) {
+            ResourceLocation texture) {
         super(parent);
         this.adultModel = adultModel;
         this.babyModel = babyModel;

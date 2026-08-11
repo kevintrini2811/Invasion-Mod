@@ -583,7 +583,7 @@ public class IMWaveSpawner implements Spawner {
 			skeleton.setItemSlot(EquipmentSlot.MAINHAND,
 					(getRandom().nextBoolean() ? Items.BROWN_MUSHROOM : Items.RED_MUSHROOM)
 							.getDefaultInstance());
-		} else if (skeleton.getType() == InvEntities.PARCHED) {
+		} else if (skeleton.getType() == InvEntities.SKELETON) {
 			skeleton.setItemSlot(EquipmentSlot.MAINHAND, Items.SAND.getDefaultInstance());
 		} else if (skeleton.getType() == InvEntities.STRAY) {
 			skeleton.setItemSlot(EquipmentSlot.MAINHAND, Items.SNOWBALL.getDefaultInstance());

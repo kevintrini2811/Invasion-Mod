@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -28,7 +28,7 @@ public class SpawnProxyEntity extends Mob {
             if (level() instanceof net.minecraft.server.level.ServerLevel world
                     && VanillaMobSpawnReplacement.isNightSpawnActive(world)) {
                 generateMobGroup(level(), entity -> {
-                    entity.absSnapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+                    entity.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
                     level().addFreshEntity(entity);
                 });
             }
@@ -37,7 +37,7 @@ public class SpawnProxyEntity extends Mob {
     }
 
     @Override
-    public boolean checkSpawnRules(LevelAccessor world, EntitySpawnReason reason) {
+    public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason) {
         return world instanceof net.minecraft.server.level.ServerLevel level
                 && VanillaMobSpawnReplacement.isNightSpawnActive(level)
                 && darkEnoughToSpawn(world)

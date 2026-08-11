@@ -22,7 +22,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.phys.AABB;
 import com.invasion.InvasionConfig;
 import com.invasion.InvSounds;
@@ -208,7 +208,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private AABB getChunkBox(Level world) {
-        return new AABB(pos).inflate(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10).setMinY(world.getMinY()).setMaxY(world.getMaxY());
+        return new AABB(pos).inflate(getSpawnRadius() + 10, getSpawnRadius() + 40, getSpawnRadius() + 10).setMinY(world.getMinBuildHeight()).setMaxY(world.getMaxBuildHeight());
     }
 
     @Override
@@ -468,7 +468,7 @@ public class Nexus implements ControllableNexusAccess {
         if (hp <= 0) {
             if (mode == Mode.STARTED || mode == Mode.DEBUG) {
                 theEnd();
-                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
+                SpawnProxyEntity mob = InvEntities.SPAWN_PROXY.create(getWorld());
                 mob.setCustomName(InvBlocks.NEXUS_CORE.getName());
                 boundPlayers.sendMessage(source.getLocalizedDeathMessage(mob));
             }
@@ -480,10 +480,10 @@ public class Nexus implements ControllableNexusAccess {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
 			boolean belongsToCurrentWave = combatant.asEntity().getPersistentData()
-					.getIntOr("invmodWaveNumber", Integer.MIN_VALUE) == currentWave;
+					.getInt("invmodWaveNumber") == currentWave;
 			if (belongsToCurrentWave) mobsLeftInWave--;
 			if (belongsToCurrentWave && combatant.asEntity().getPersistentData()
-					.getIntOr("invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
+					.getInt("invmodWavePhase") == phaseToken) {
 				phaseKills++;
 				phaseMobsLeft = Math.max(0, phaseMobsLeft - 1);
 				lastPhaseKillTick = world.getGameTime();
@@ -498,7 +498,7 @@ public class Nexus implements ControllableNexusAccess {
                 return;
             }
         } else if (reason == RemovalReason.DISCARDED) {
-            if (combatant.asEntity().getType().create(getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT) instanceof Combatant<?> copy) {
+            if (combatant.asEntity().getType().create(getWorld()) instanceof Combatant<?> copy) {
                 copy.asEntity().restoreFrom(combatant.asEntity());
                 // restoreFrom also copies the UUID. Reusing it for a newly
                 // tracked entity can leave the server-side replacement alive
@@ -754,7 +754,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
 	private void startStableNightWaveIfNeeded() {
-		long gameTime = world.getOverworldClockTime();
+		long gameTime = world.getDayTime();
 		long day = Math.floorDiv(gameTime, TICKS_PER_DAY);
 		long time = Math.floorMod(gameTime, TICKS_PER_DAY);
 		if (time < 13_000 || time >= 23_000 || day == lastStableWaveDay) return;
@@ -778,7 +778,7 @@ public class Nexus implements ControllableNexusAccess {
 	}
 
 	private void warnDaylightCycle(ServerPlayer player) {
-		if (!world.getGameRules().get(GameRules.ADVANCE_TIME)) {
+		if (!world.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT)) {
 			player.sendSystemMessage(Component.translatable("invmod.message.nexus.daylightcycle_disabled").withStyle(ChatFormatting.RED));
 		}
 	}
@@ -971,8 +971,7 @@ public class Nexus implements ControllableNexusAccess {
 		for (Combatant<?> combatant : BoundIMMobRegistry.loaded(world)) {
 			LivingEntity entity = combatant.asEntity();
 			if (entity.isAlive() && !entity.isRemoved()
-					&& entity.getPersistentData().getIntOr(
-							"invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
+					&& entity.getPersistentData().getInt("invmodWavePhase") == phaseToken) {
 				loadedPhaseMobs++;
 			}
 		}
@@ -1061,47 +1060,47 @@ public class Nexus implements ControllableNexusAccess {
 
     Nexus(ServerLevel world, WorldNexusStorage storage, CompoundTag compound, HolderLookup.Provider lookup) {
         this(world, storage,
-                compound.read("uuid", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(),
-                compound.read("pos", BlockPos.CODEC).orElseThrow());
-        activationTimer = compound.getIntOr("activationTimer", 0);
-        mode = Mode.forId(compound.getIntOr("mode", 0));
-        currentWave = compound.getIntOr("currentWave", 0);
-        nexusLevel = compound.getIntOr("nexusLevel", 0);
-        hp = compound.getIntOr("hp", 0);
-        nexusKills = compound.getIntOr("nexusKills", 0);
-        powerLevel = compound.getIntOr("powerLevel", 0);
-        lastPowerLevel = compound.getIntOr("lastPowerLevel", 0);
-        nextAttackTime = compound.getIntOr("nextAttackTime", 0);
-        daysToAttack = compound.getIntOr("daysToAttack", 0);
-        continuousAttack = compound.getBooleanOr("continuousAttack", false);
-        continuousAttackCount = compound.getIntOr("continuousAttackCount", 0);
-        activated = compound.getBooleanOr("activated", false);
-        paused = compound.getBooleanOr("paused", false);
-        mobsLeftInWave = compound.getIntOr("mobsLeftInWave", 0);
-        lastMobsLeftInWave = compound.getIntOr("lastMobsLeftInWave", mobsLeftInWave);
-        mobsToKillInWave = compound.getIntOr("mobsToKillInWave", 0);
-		phaseMobsLeft = compound.getIntOr("phaseMobsLeft", 0);
-		phaseKills = compound.getIntOr("phaseKills", 0);
-		phaseToken = compound.getIntOr("phaseToken", 0);
-		lastPhaseKillTick = compound.getLongOr("lastPhaseKillTick", world.getGameTime());
-		singlePhaseInvasion = compound.getBooleanOr("singlePhaseInvasion", false);
-		lastStableWaveDay = compound.getLongOr("lastStableWaveDay", Long.MIN_VALUE);
-		placedBlocksThisWave = compound.getIntOr("placedBlocksThisWave", 0);
-		meleeKillsThisWave = compound.getIntOr("meleeKillsThisWave", 0);
-		rangedKillsThisWave = compound.getIntOr("rangedKillsThisWave", 0);
-		if (compound.contains("budgetPlan")) budgetPlan = BudgetWavePlan.load(compound.getCompoundOrEmpty("budgetPlan"), lookup);
+                compound.getUUID("uuid"), BlockPos.of(compound.getLong("pos")));
+        activationTimer = compound.getInt("activationTimer");
+        mode = Mode.forId(compound.getInt("mode"));
+        currentWave = compound.getInt("currentWave");
+        nexusLevel = compound.getInt("nexusLevel");
+        hp = compound.getInt("hp");
+        nexusKills = compound.getInt("nexusKills");
+        powerLevel = compound.getInt("powerLevel");
+        lastPowerLevel = compound.getInt("lastPowerLevel");
+        nextAttackTime = compound.getInt("nextAttackTime");
+        daysToAttack = compound.getInt("daysToAttack");
+        continuousAttack = compound.getBoolean("continuousAttack");
+        continuousAttackCount = compound.getInt("continuousAttackCount");
+        activated = compound.getBoolean("activated");
+        paused = compound.getBoolean("paused");
+        mobsLeftInWave = compound.getInt("mobsLeftInWave");
+        lastMobsLeftInWave = compound.getInt("lastMobsLeftInWave");
+        mobsToKillInWave = compound.getInt("mobsToKillInWave");
+		phaseMobsLeft = compound.getInt("phaseMobsLeft");
+		phaseKills = compound.getInt("phaseKills");
+		phaseToken = compound.getInt("phaseToken");
+		lastPhaseKillTick = compound.contains("lastPhaseKillTick")
+				? compound.getLong("lastPhaseKillTick") : world.getGameTime();
+		singlePhaseInvasion = compound.getBoolean("singlePhaseInvasion");
+		lastStableWaveDay = compound.getLong("lastStableWaveDay");
+		placedBlocksThisWave = compound.getInt("placedBlocksThisWave");
+		meleeKillsThisWave = compound.getInt("meleeKillsThisWave");
+		rangedKillsThisWave = compound.getInt("rangedKillsThisWave");
+		if (compound.contains("budgetPlan")) budgetPlan = BudgetWavePlan.load(compound.getCompound("budgetPlan"), lookup);
 
-        nexusItemStacks.readNbt(compound.getCompoundOrEmpty("inventory"), lookup);
-        boundPlayers.readNbt(compound.getCompoundOrEmpty("boundPlayers"), lookup);
-        waveSpawner.readNbt(compound.getCompoundOrEmpty("waveSpawner"), lookup);
-        attackerAI.readNbt(compound.getCompoundOrEmpty("ai"), lookup);
+        nexusItemStacks.readNbt(compound.getCompound("inventory"), lookup);
+        boundPlayers.readNbt(compound.getCompound("boundPlayers"), lookup);
+        waveSpawner.readNbt(compound.getCompound("waveSpawner"), lookup);
+        attackerAI.readNbt(compound.getCompound("ai"), lookup);
 
         boundingBoxToRadius = computeSpawnArea();
     }
 
     public CompoundTag writeNbt(CompoundTag compound, HolderLookup.Provider lookup) {
-        compound.store("uuid", net.minecraft.core.UUIDUtil.CODEC, uuid);
-        compound.store("pos", BlockPos.CODEC, pos);
+        compound.putUUID("uuid", uuid);
+        compound.putLong("pos", pos.asLong());
         compound.putInt("activationTimer", activationTimer);
         compound.putInt("mode", getMode().ordinal());
         compound.putInt("currentWave", getCurrentWave());
