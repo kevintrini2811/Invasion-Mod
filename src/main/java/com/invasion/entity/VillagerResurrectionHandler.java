@@ -29,8 +29,7 @@ public final class VillagerResurrectionHandler {
                         || victim instanceof Pig
                         || victim instanceof Hoglin)
                 || !(victim.level() instanceof ServerLevel world)
-                || !(source.getEntity() instanceof Combatant<?> killer)
-                || !killer.hasNexus()) {
+                || !(source.getEntity() instanceof Combatant<?> killer)) {
             return;
         }
 
