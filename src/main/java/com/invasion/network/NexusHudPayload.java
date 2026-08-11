@@ -5,7 +5,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record NexusHudPayload(boolean active, boolean continuous, int wave, int defeatedMobs, int totalMobs,
+public record NexusHudPayload(boolean active, boolean continuous, int wave, int phase, int phaseCount,
+							  int defeatedMobs, int totalMobs,
                               int nexusHealthPercent)
         implements CustomPacketPayload {
     public static final Type<NexusHudPayload> TYPE = new Type<>(InvasionMod.id("nexus_hud"));
@@ -14,6 +15,8 @@ public record NexusHudPayload(boolean active, boolean continuous, int wave, int 
                 buffer.writeBoolean(payload.active);
                 buffer.writeBoolean(payload.continuous);
                 buffer.writeVarInt(payload.wave);
+				buffer.writeVarInt(payload.phase);
+				buffer.writeVarInt(payload.phaseCount);
                 buffer.writeVarInt(payload.defeatedMobs);
                 buffer.writeVarInt(payload.totalMobs);
                 buffer.writeVarInt(payload.nexusHealthPercent);
@@ -22,12 +25,14 @@ public record NexusHudPayload(boolean active, boolean continuous, int wave, int 
                     buffer.readBoolean(),
                     buffer.readBoolean(),
                     buffer.readVarInt(),
+					buffer.readVarInt(),
+					buffer.readVarInt(),
                     buffer.readVarInt(),
                     buffer.readVarInt(),
                     buffer.readVarInt()));
 
     public static NexusHudPayload hidden() {
-        return new NexusHudPayload(false, false, 0, 0, 0, 0);
+        return new NexusHudPayload(false, false, 0, 0, 0, 0, 0, 0);
     }
 
     @Override
