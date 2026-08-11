@@ -11,6 +11,7 @@ import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.entity.IronGolemTargetHandler;
+import com.invasion.entity.PlayerAllyTargetHandler;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
 import com.invasion.nexus.WorldNexusStorage;
@@ -86,6 +87,7 @@ public class InvasionMod {
         InfectionDeathHandler.bootstrap();
         IMCivilianTargetHandler.bootstrap();
 		IronGolemTargetHandler.bootstrap();
+        PlayerAllyTargetHandler.bootstrap();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             InvasionModClient.register(modBus);

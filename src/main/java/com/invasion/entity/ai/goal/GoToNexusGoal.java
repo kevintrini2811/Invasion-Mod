@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.entity.NexusEntity;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.PigmanEngineerEntity;
+import com.invasion.entity.ZombieBuilderEntity;
 import com.invasion.entity.pathfinding.Navigation;
 import com.invasion.nexus.NexusAccess;
 
@@ -41,7 +42,16 @@ public class GoToNexusGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return nexusEntity.hasGoal(HasAiGoals.Goal.BREAK_NEXUS) && nexusEntity.hasNexus();
+        return (mob.getTarget() == null
+                    || mob instanceof PigmanEngineerEntity
+                    || mob instanceof ZombieBuilderEntity)
+                && nexusEntity.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)
+                && nexusEntity.hasNexus();
+    }
+
+    @Override
+    public boolean canContinueToUse() {
+        return canUse();
     }
 
     @Override
