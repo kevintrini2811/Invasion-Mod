@@ -289,11 +289,12 @@ public class IMWaveSpawner implements Spawner {
 			Mob mob = spawnConstruct.createMob(nexus);
 			equipRandomWaveWeapon(mob, spawnConstruct);
 			equipRandomWaveArmor(mob, spawnConstruct);
+			mob.getPersistentData().putInt("invmodWavePhase", nexus.getWavePhaseToken());
+			mob.getPersistentData().putInt("invmodWaveNumber", nexus.getCurrentWave());
 
             if (spawnPoint.trySpawnEntity(
                     (ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
-				mob.getPersistentData().putInt("invmodWavePhase", nexus.getWavePhaseToken());
 
                 equipWitherSkeletonWeapon(mob);
                 applyBabyVariant(mob, spawnConstruct);
