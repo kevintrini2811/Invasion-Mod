@@ -159,10 +159,9 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
         double dY = targetY - projectile.getY();
         double dZ = targetZ - getZ();
         double horizontalDistance = Math.sqrt(dX * dX + dZ * dZ);
-        Projectile.spawnProjectileUsingShoot(
-                projectile, world, tridentStack,
-                dX, dY + horizontalDistance * 0.2F, dZ,
+        projectile.shoot(dX, dY + horizontalDistance * 0.2F, dZ,
                 1.6F, 14 - world.getDifficulty().getId() * 4);
+        world.addFreshEntity(projectile);
         playSound(SoundEvents.DROWNED_SHOOT, 1.0F,
                 1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
     }

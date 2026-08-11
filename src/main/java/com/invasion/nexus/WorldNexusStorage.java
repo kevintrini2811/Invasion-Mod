@@ -4,40 +4,33 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
 
 public class WorldNexusStorage extends SavedData {
-    private static final Identifier ID = InvasionMod.id("nexus");
+    private static final ResourceLocation ID = InvasionMod.id("nexus");
 
-    public static SavedDataType<WorldNexusStorage> getType(ServerLevel world) {
-        return new SavedDataType<>(
-                ID,
+    public static Factory<WorldNexusStorage> getType(ServerLevel world) {
+        return new SavedData.Factory<>(
                 () -> new WorldNexusStorage(world),
-                CompoundTag.CODEC.xmap(
-                        tag -> new WorldNexusStorage(world, tag, world.registryAccess()),
-                        storage -> storage.write(new CompoundTag(), world.registryAccess())
-                ),
-                DataFixTypes.LEVEL
-        );
+                (nbt, lookup) -> new WorldNexusStorage(world, nbt, lookup),
+                DataFixTypes.LEVEL);
     }
 
     public static WorldNexusStorage of(ServerLevel world) {
-        return world.getDataStorage().computeIfAbsent(getType(world));
+        return world.getDataStorage().computeIfAbsent(getType(world), ID.toDebugFileName());
     }
 
     private final ServerLevel world;
@@ -56,8 +49,10 @@ public class WorldNexusStorage extends SavedData {
     private WorldNexusStorage(ServerLevel world, CompoundTag nbt, Provider lookup) {
         this(world);
         resumed = true;
-        activeNexus = nbt.read("activeNexus", net.minecraft.core.UUIDUtil.CODEC);
-        nbt.getListOrEmpty("nexuses").forEach(i -> {
+        if (nbt.hasUUID("activeNexus")) {
+            activeNexus = Optional.of(nbt.getUUID("activeNexus"));
+        }
+        nbt.getList("nexuses", Tag.TAG_COMPOUND).forEach(i -> {
             Nexus nexus = new Nexus(world, this, (CompoundTag)i, lookup);
             instances.put(nexus.getUuid(), nexus);
         });
@@ -126,17 +121,19 @@ public class WorldNexusStorage extends SavedData {
         return activeNexus.map(instances::get);
     }
 
-	public synchronized boolean hasStableNexus() {
-		return getNexus().map(nexus -> nexus.getMode() == Mode.CONTINUOUS).orElse(false);
-	}
+    public synchronized boolean hasStableNexus() {
+        return getNexus().map(nexus -> nexus.getMode() == Mode.CONTINUOUS).orElse(false);
+    }
 
-	public synchronized void recordPlayerBlockPlacement() {
-		activeNexus.map(instances::get).filter(Nexus::isActive).ifPresent(Nexus::recordPlayerBlockPlacement);
-	}
+    public synchronized void recordPlayerBlockPlacement() {
+        activeNexus.map(instances::get).filter(Nexus::isActive)
+                .ifPresent(Nexus::recordPlayerBlockPlacement);
+    }
 
-	public synchronized void recordPlayerMobKill(boolean ranged) {
-		activeNexus.map(instances::get).filter(Nexus::isActive).ifPresent(nexus -> nexus.recordPlayerMobKill(ranged));
-	}
+    public synchronized void recordPlayerMobKill(boolean ranged) {
+        activeNexus.map(instances::get).filter(Nexus::isActive)
+                .ifPresent(nexus -> nexus.recordPlayerMobKill(ranged));
+    }
 
     public synchronized Optional<? extends ControllableNexusAccess> getNearestNexus(BlockPos pos) {
         return instances.values().stream()
@@ -149,13 +146,7 @@ public class WorldNexusStorage extends SavedData {
     }
 
     public synchronized boolean canActivate(Nexus nexus) {
-		if (activeNexus.map(instances::get).orElse(nexus) != nexus) return false;
-		if (world.getServer() != null) {
-			for (ServerLevel level : world.getServer().getAllLevels()) {
-				if (level != world && WorldNexusStorage.of(level).getNexus().isPresent()) return false;
-			}
-		}
-		return true;
+        return activeNexus.map(instances::get).orElse(nexus) == nexus;
     }
 
     public synchronized boolean setActiveNexus(Nexus nexus) {
@@ -171,16 +162,17 @@ public class WorldNexusStorage extends SavedData {
         return true;
     }
 
-	synchronized void clearActiveNexus(Nexus nexus) {
-		if (activeNexus.filter(nexus.getUuid()::equals).isPresent()) {
-			activeNexus = Optional.empty();
-			setDirty();
-		}
-	}
+    synchronized void clearActiveNexus(Nexus nexus) {
+        if (activeNexus.filter(nexus.getUuid()::equals).isPresent()) {
+            activeNexus = Optional.empty();
+            setDirty();
+        }
+    }
 
-    private CompoundTag write(CompoundTag nbt, Provider lookup) {
+    @Override
+    public CompoundTag save(CompoundTag nbt, Provider lookup) {
         activeNexus.ifPresent(nexus -> {
-            nbt.store("activeNexus", net.minecraft.core.UUIDUtil.CODEC, nexus);
+            nbt.putUUID("activeNexus", nexus);
         });
         ListTag nexuses = new ListTag();
         instances.forEach((uuid, nexus) -> {

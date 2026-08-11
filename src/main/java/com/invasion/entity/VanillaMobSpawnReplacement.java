@@ -12,20 +12,20 @@ import com.invasion.nexus.WorldNexusStorage;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.entity.monster.skeleton.Bogged;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
-import net.minecraft.world.entity.monster.cubemob.Slime;
-import net.minecraft.world.entity.monster.zombie.Drowned;
-import net.minecraft.world.entity.monster.zombie.Husk;
-import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
@@ -50,7 +50,7 @@ public final class VanillaMobSpawnReplacement {
 
     private static void blockNaturalSpawn(FinalizeSpawnEvent event) {
         ServerLevel world = event.getLevel().getLevel();
-        if (event.getSpawnType() == EntitySpawnReason.NATURAL
+        if (event.getSpawnType() == MobSpawnType.NATURAL
                 && world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
                 && isReplaceableType(event.getEntity().getType())) {
@@ -133,7 +133,7 @@ public final class VanillaMobSpawnReplacement {
 
     static boolean isNightSpawnActive(ServerLevel world) {
         return world.getDifficulty() == Difficulty.HARD
-                && !world.isBrightOutside()
+                && !world.isDay()
                 && hasActiveNexus(world);
     }
 
@@ -145,108 +145,108 @@ public final class VanillaMobSpawnReplacement {
 
     private static void convertMob(
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
-        Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         if (isTinySkeleton(typeId, "baby_skeleton")) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (isTinySkeleton(typeId, "baby_bogged")) {
             convert(mob, InvEntities.BOGGED, nexus);
         } else if (isTinySkeleton(typeId, "baby_parched")) {
-            convert(mob, InvEntities.PARCHED, nexus);
+            convert(mob, InvEntities.SKELETON, nexus);
         } else if (isTinySkeleton(typeId, "baby_stray")) {
             convert(mob, InvEntities.STRAY, nexus);
         } else if (isTinySkeleton(typeId, "baby_wither_skeleton")) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
-        } else if (mob.getType() == EntityTypes.ZOMBIE) {
+        } else if (mob.getType() == EntityType.ZOMBIE) {
             convert(mob, InvEntities.ZOMBIE, nexus);
-        } else if (mob.getType() == EntityTypes.HUSK) {
+        } else if (mob.getType() == EntityType.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
-        } else if (mob.getType() == EntityTypes.DROWNED) {
+        } else if (mob.getType() == EntityType.DROWNED) {
             convert(mob, InvEntities.DROWNED, nexus);
-        } else if (mob.getType() == EntityTypes.ZOMBIFIED_PIGLIN) {
+        } else if (mob.getType() == EntityType.ZOMBIFIED_PIGLIN) {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
-        } else if (mob.getType() == EntityTypes.SKELETON) {
+        } else if (mob.getType() == EntityType.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
-        } else if (mob.getType() == EntityTypes.BOGGED) {
+        } else if (mob.getType() == EntityType.BOGGED) {
             convert(mob, InvEntities.BOGGED, nexus);
-        } else if (mob.getType() == EntityTypes.PARCHED) {
-            convert(mob, InvEntities.PARCHED, nexus);
-        } else if (mob.getType() == EntityTypes.STRAY) {
+        } else if (mob.getType() == EntityType.SKELETON) {
+            convert(mob, InvEntities.SKELETON, nexus);
+        } else if (mob.getType() == EntityType.STRAY) {
             convert(mob, InvEntities.STRAY, nexus);
-        } else if (mob.getType() == EntityTypes.WITHER_SKELETON) {
+        } else if (mob.getType() == EntityType.WITHER_SKELETON) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
-        } else if (mob.getType() == EntityTypes.WITCH) {
+        } else if (mob.getType() == EntityType.WITCH) {
             convert(mob, InvEntities.WITCH, nexus);
-        } else if (mob.getType() == EntityTypes.GHAST) {
+        } else if (mob.getType() == EntityType.GHAST) {
             convert(mob, InvEntities.GHAST, nexus);
-        } else if (mob.getType() == EntityTypes.ZOMBIE_VILLAGER) {
+        } else if (mob.getType() == EntityType.ZOMBIE_VILLAGER) {
             convert(mob, InvEntities.ZOMBIE_VILLAGER, nexus);
-        } else if (mob.getType() == EntityTypes.CREEPER) {
+        } else if (mob.getType() == EntityType.CREEPER) {
             convert(mob, InvEntities.CREEPER, nexus);
-        } else if (mob.getType() == EntityTypes.SPIDER) {
+        } else if (mob.getType() == EntityType.SPIDER) {
             convert(mob, InvEntities.SPIDER, nexus);
-        } else if (mob.getType() == EntityTypes.CAVE_SPIDER) {
+        } else if (mob.getType() == EntityType.CAVE_SPIDER) {
             convert(mob, InvEntities.CAVE_SPIDER, nexus);
-        } else if (mob.getType() == EntityTypes.ENDERMAN) {
+        } else if (mob.getType() == EntityType.ENDERMAN) {
             convert(mob, InvEntities.ENDERMAN, nexus);
-        } else if (mob.getType() == EntityTypes.PHANTOM) {
+        } else if (mob.getType() == EntityType.PHANTOM) {
             convert(mob, InvEntities.PHANTOM, nexus);
-        } else if (mob.getType() == EntityTypes.ZOGLIN) {
+        } else if (mob.getType() == EntityType.ZOGLIN) {
             convert(mob, InvEntities.ZOGLIN, nexus);
-        } else if (mob.getType() == EntityTypes.WITHER) {
+        } else if (mob.getType() == EntityType.WITHER) {
             convert(mob, InvEntities.WITHER, nexus);
-        } else if (mob.getType() == EntityTypes.WARDEN) {
+        } else if (mob.getType() == EntityType.WARDEN) {
             convert(mob, InvEntities.WARDEN, nexus);
-        } else if (mob.getType() == EntityTypes.BLAZE) {
+        } else if (mob.getType() == EntityType.BLAZE) {
             convert(mob, InvEntities.BLAZE, nexus);
-        } else if (mob.getType() == EntityTypes.SILVERFISH) {
+        } else if (mob.getType() == EntityType.SILVERFISH) {
             convert(mob, InvEntities.SILVERFISH, nexus);
-        } else if (mob.getType() == EntityTypes.SLIME) {
+        } else if (mob.getType() == EntityType.SLIME) {
             convert(mob, InvEntities.SLIME, nexus);
-        } else if (mob.getType() == EntityTypes.MAGMA_CUBE) {
+        } else if (mob.getType() == EntityType.MAGMA_CUBE) {
             convert(mob, InvEntities.MAGMA_CUBE, nexus);
-        } else if (mob.getType() == EntityTypes.BREEZE) {
+        } else if (mob.getType() == EntityType.BREEZE) {
             convert(mob, InvEntities.BREEZE, nexus);
-        } else if (mob.getType() == EntityTypes.ENDERMITE) {
+        } else if (mob.getType() == EntityType.ENDERMITE) {
             convert(mob, InvEntities.ENDERMITE, nexus);
         }
     }
 
     private static boolean isReplaceableType(EntityType<?> type) {
-        Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         return isTinySkeleton(typeId, "baby_skeleton")
                 || isTinySkeleton(typeId, "baby_bogged")
                 || isTinySkeleton(typeId, "baby_parched")
                 || isTinySkeleton(typeId, "baby_stray")
                 || isTinySkeleton(typeId, "baby_wither_skeleton")
-                || type == EntityTypes.ZOMBIE
-                || type == EntityTypes.HUSK
-                || type == EntityTypes.DROWNED
-                || type == EntityTypes.ZOMBIFIED_PIGLIN
-                || type == EntityTypes.SKELETON
-                || type == EntityTypes.BOGGED
-                || type == EntityTypes.PARCHED
-                || type == EntityTypes.STRAY
-                || type == EntityTypes.WITHER_SKELETON
-                || type == EntityTypes.WITCH
-                || type == EntityTypes.GHAST
-                || type == EntityTypes.ZOMBIE_VILLAGER
-                || type == EntityTypes.CREEPER
-                || type == EntityTypes.SPIDER
-                || type == EntityTypes.CAVE_SPIDER
-                || type == EntityTypes.ENDERMAN
-                || type == EntityTypes.PHANTOM
-                || type == EntityTypes.ZOGLIN
-                || type == EntityTypes.WITHER
-                || type == EntityTypes.WARDEN
-                || type == EntityTypes.BLAZE
-                || type == EntityTypes.SILVERFISH
-                || type == EntityTypes.SLIME
-                || type == EntityTypes.MAGMA_CUBE
-                || type == EntityTypes.BREEZE
-                || type == EntityTypes.ENDERMITE;
+                || type == EntityType.ZOMBIE
+                || type == EntityType.HUSK
+                || type == EntityType.DROWNED
+                || type == EntityType.ZOMBIFIED_PIGLIN
+                || type == EntityType.SKELETON
+                || type == EntityType.BOGGED
+                || type == EntityType.SKELETON
+                || type == EntityType.STRAY
+                || type == EntityType.WITHER_SKELETON
+                || type == EntityType.WITCH
+                || type == EntityType.GHAST
+                || type == EntityType.ZOMBIE_VILLAGER
+                || type == EntityType.CREEPER
+                || type == EntityType.SPIDER
+                || type == EntityType.CAVE_SPIDER
+                || type == EntityType.ENDERMAN
+                || type == EntityType.PHANTOM
+                || type == EntityType.ZOGLIN
+                || type == EntityType.WITHER
+                || type == EntityType.WARDEN
+                || type == EntityType.BLAZE
+                || type == EntityType.SILVERFISH
+                || type == EntityType.SLIME
+                || type == EntityType.MAGMA_CUBE
+                || type == EntityType.BREEZE
+                || type == EntityType.ENDERMITE;
     }
 
-    private static boolean isTinySkeleton(Identifier typeId, String path) {
+    private static boolean isTinySkeleton(ResourceLocation typeId, String path) {
         return typeId != null
                 && typeId.getNamespace().equals("tinyskeletons")
                 && typeId.getPath().equals(path);
@@ -260,7 +260,7 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
-        T converted = targetType.create(world, EntitySpawnReason.CONVERSION);
+        T converted = targetType.create(world);
         if (converted == null) {
             return;
         }
@@ -268,7 +268,7 @@ public final class VanillaMobSpawnReplacement {
         Entity vehicle = source.getVehicle();
         source.stopRiding();
 
-        converted.snapTo(
+        converted.moveTo(
                 source.getX(), source.getY(), source.getZ(),
                 source.getYRot(), source.getXRot());
         converted.setDeltaMovement(source.getDeltaMovement());
@@ -285,10 +285,7 @@ public final class VanillaMobSpawnReplacement {
         converted.setCustomName(source.getCustomName());
         converted.setCustomNameVisible(source.isCustomNameVisible());
         converted.setNoAi(source.isNoAi());
-        converted.setCanPickUpLoot(
-                source.canPickUpLoot()
-                        && com.invasion.compat.AsyncCompatibility
-                                .canUseVanillaItemPickup());
+        converted.setCanPickUpLoot(source.canPickUpLoot());
         if (source instanceof Drowned
                 && converted instanceof IMDrownedEntity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
@@ -311,8 +308,8 @@ public final class VanillaMobSpawnReplacement {
                             slot, source.getItemBySlot(slot).copy());
                 }
             }
-            imPiglin.setPersistentAngerEndTime(
-                    piglin.getPersistentAngerEndTime());
+            imPiglin.setRemainingPersistentAngerTime(
+                    piglin.getRemainingPersistentAngerTime());
             imPiglin.setPersistentAngerTarget(
                     piglin.getPersistentAngerTarget());
         }
@@ -328,14 +325,12 @@ public final class VanillaMobSpawnReplacement {
                 && converted instanceof IMSlimeEntity imSlime) {
             imSlime.setSize(slime.getSize(), true);
         }
-        if (source instanceof net.minecraft.world.entity.monster.cubemob.MagmaCube magmaCube
+        if (source instanceof net.minecraft.world.entity.monster.MagmaCube magmaCube
                 && converted instanceof IMMagmaCubeEntity imMagmaCube) {
             imMagmaCube.setSize(magmaCube.getSize(), true);
         }
         if (converted instanceof AbstractIMZombieEntity) {
-            converted.setCanPickUpLoot(
-                    com.invasion.compat.AsyncCompatibility
-                            .canUseVanillaItemPickup());
+            converted.setCanPickUpLoot(true);
         }
         if (source.isPersistenceRequired()) {
             converted.setPersistenceRequired();
