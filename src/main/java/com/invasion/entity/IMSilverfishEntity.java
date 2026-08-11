@@ -371,6 +371,7 @@ public final class IMSilverfishEntity extends Silverfish
         private boolean isCandidate(LivingEntity candidate) {
             if (candidate instanceof Silverfish
                     || candidate instanceof Endermite
+                    || isFlyingTarget(candidate)
                     || candidate.getTags().contains(INFECTED_TAG)
                     || candidate instanceof Player) {
                 return false;
@@ -383,6 +384,19 @@ public final class IMSilverfishEntity extends Silverfish
                     || candidate instanceof AbstractGolem
                     || candidate instanceof OwnableEntity ownable
                             && ownable.getOwner() instanceof Player;
+        }
+
+        private boolean isFlyingTarget(LivingEntity candidate) {
+            EntityType<?> type = candidate.getType();
+            return type == EntityType.ALLAY || type == EntityType.BAT
+                    || type == EntityType.BEE || type == EntityType.BLAZE
+                    || type == EntityType.ENDER_DRAGON || type == EntityType.GHAST
+                    || type == EntityType.PARROT || type == EntityType.PHANTOM
+                    || type == EntityType.VEX || type == EntityType.WITHER
+                    || candidate instanceof IMBlazeEntity
+                    || candidate instanceof IMGhastEntity
+                    || candidate instanceof IMPhantomEntity
+                    || candidate instanceof IMWitherEntity;
         }
     }
 
