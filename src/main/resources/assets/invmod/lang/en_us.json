@@ -132,6 +132,7 @@
     "invmod.message.nexus.activatedandstable": "Nexus activated and stable!",
     "invmod.message.nexus.daylightcycle_disabled": "Warning: doDaylightCycle is disabled. Stable Nexus night waves cannot advance normally.",
     "invmod.message.nexus.sleep_blocked": "You cannot sleep while a Stable Nexus is active.",
+    "invmod.message.nexus.waves_skipped": "Skipped %s wave(s). Now starting wave %s.",
     "invmod.message.nexus.couldnotactivate": "Couldn't activate Nexus!",
     "invmod.message.nexus.destabilizing": "Forces are destabilizing the Nexus!",
     "invmod.message.nexus.lifenowbound": "%s life is now bound to the Nexus.",
