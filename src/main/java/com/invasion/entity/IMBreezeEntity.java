@@ -15,6 +15,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.monster.breeze.Breeze;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.nbt.CompoundTag;
@@ -97,8 +98,31 @@ public final class IMBreezeEntity extends Breeze
             return;
         }
         super.customServerAiStep();
+		acquirePlayerAllyTarget(level);
         updateBlazeFlight();
     }
+
+	private void acquirePlayerAllyTarget(ServerLevel level) {
+		LivingEntity current = getTarget();
+		if (current != null && canAttack(current) && !current.isRemoved()) return;
+		if (tickCount % 10 != 0) return;
+		LivingEntity nearest = null;
+		double nearestDistance = Double.MAX_VALUE;
+		for (LivingEntity candidate : level.getEntitiesOfClass(
+				LivingEntity.class, getBoundingBox().inflate(32.0D), this::canAttack)) {
+			double distance = distanceToSqr(candidate);
+			if (distance < nearestDistance) {
+				nearest = candidate;
+				nearestDistance = distance;
+			}
+		}
+		setTarget(nearest);
+		if (nearest == null) {
+			getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
+		} else {
+			getBrain().setMemory(MemoryModuleType.ATTACK_TARGET, nearest);
+		}
+	}
 
     private void updateBlazeFlight() {
         Vec3 objective = null;
