@@ -176,12 +176,22 @@ public final class BudgetWavePlan {
         }
         while (remaining-- > 0) purchases.add(new Purchase(InvEntities.ZOMBIE, 1, 1, rollRules(theme, wave, random)));
         while (purchases.size() < wave * 5) purchases.add(new Purchase(InvEntities.ZOMBIE, 1, 0, rollRules(theme, wave, random)));
+		if (index == 0 && hasFreeEngineer(theme)) {
+			purchases.add(new Purchase(InvEntities.PIGMAN_ENGINEER, 1, 0, rollRules(theme, wave, random)));
+		}
         if (wave >= 15 && wave % 5 == 0 && index == phaseCount - 1) {
             EntityType<? extends Mob> boss = random.nextBoolean() ? InvEntities.WITHER : InvEntities.WARDEN;
             purchases.add(new Purchase(boss, 1, 0, rollRules(theme, wave, random)));
         }
         return new Phase(theme, List.copyOf(purchases));
     }
+
+	private static boolean hasFreeEngineer(Theme theme) {
+		return switch (theme) {
+			case SWARM, ARMORED, UNDERGROUND, NETHER, SIEGE, FAST, MIXED, RANDOM, RANDOMHELL -> true;
+			default -> false;
+		};
+	}
 
     private static int effectiveCost(Theme theme, Option option) {
         if (theme == Theme.RANDOMHELL) return option.cost >= 100 ? 20 : 5;
