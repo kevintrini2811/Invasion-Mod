@@ -964,7 +964,7 @@ public class Nexus implements ControllableNexusAccess {
 		int spawnedMobsLeft = Math.max(0, waveSpawner.getSuccessfulSpawnsThisWave() - phaseKills);
 		return mobsLeftInWave <= 0
 				|| waveSpawner.isWaveComplete() && spawnedMobsLeft == 0
-				|| world.getGameTime() - lastPhaseKillTick >= 5 * 60 * 20;
+				|| world.getGameTime() - lastPhaseKillTick >= 2 * 60 * 20;
 	}
 
     private void beginWave(Wave wave) throws WaveSpawnerException {
