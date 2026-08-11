@@ -628,7 +628,7 @@ public class Nexus implements ControllableNexusAccess {
                 theEnd();
             } else {
                 nexusItemStacks.generateFlux(1);
-				if (waveSpawner.isWaveComplete() && phaseCanEnd()) {
+				if (phaseCanEnd()) {
 					if (budgetPlan != null && budgetPlan.advance()) {
 						beginPlannedPhase();
 						waveDelayTimer = -1L;
@@ -713,7 +713,7 @@ public class Nexus implements ControllableNexusAccess {
         } else if (hp <= 0) {
             continuousAttack = false;
             continuousNexusHurt();
-        } else if (waveSpawner.isWaveComplete() && phaseCanEnd()) {
+        } else if (phaseCanEnd()) {
             if (waveDelayTimer == -1L) {
                 waveDelayTimer = 0L;
                 waveDelay = waveSpawner.getWaveRestTime();
@@ -960,7 +960,8 @@ public class Nexus implements ControllableNexusAccess {
 
 	private boolean phaseCanEnd() {
 		int spawnedMobsLeft = Math.max(0, waveSpawner.getSuccessfulSpawnsThisWave() - phaseKills);
-		return spawnedMobsLeft == 0 || world.getGameTime() - lastPhaseKillTick >= 5 * 60 * 20;
+		return waveSpawner.isWaveComplete() && spawnedMobsLeft == 0
+				|| world.getGameTime() - lastPhaseKillTick >= 5 * 60 * 20;
 	}
 
     private void beginWave(Wave wave) throws WaveSpawnerException {

@@ -141,6 +141,11 @@ public class WaveEntry {
         return amount;
     }
 
+	/** True once every planned construct was queued and no blocked spawn remains. */
+	public boolean isSpawnComplete() {
+		return amountQueued >= amount && spawnList.isEmpty();
+	}
+
     private void sendNextAlert(Spawner spawner) {
         @Nullable
         String message = alerts.remove(nextAlert);
