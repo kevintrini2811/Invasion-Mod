@@ -25,17 +25,22 @@ public class SpawnProxyEntity extends Mob {
     @Override
     public void tick() {
         if (!level().isClientSide()) {
-            generateMobGroup(level(), entity -> {
-                entity.absSnapTo(getX(), getY(), getZ(), getYRot(), getXRot());
-                level().addFreshEntity(entity);
-            });
+            if (level() instanceof net.minecraft.server.level.ServerLevel world
+                    && VanillaMobSpawnReplacement.isNightSpawnActive(world)) {
+                generateMobGroup(level(), entity -> {
+                    entity.absSnapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+                    level().addFreshEntity(entity);
+                });
+            }
         }
         discard();
     }
 
     @Override
     public boolean checkSpawnRules(LevelAccessor world, EntitySpawnReason reason) {
-        return darkEnoughToSpawn(world)
+        return world instanceof net.minecraft.server.level.ServerLevel level
+                && VanillaMobSpawnReplacement.isNightSpawnActive(level)
+                && darkEnoughToSpawn(world)
                 && getBlockPathWeight(world, blockPosition()) >= 0
                 && super.checkSpawnRules(world, reason);
     }

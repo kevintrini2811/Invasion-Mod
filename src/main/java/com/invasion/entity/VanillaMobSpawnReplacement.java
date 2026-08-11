@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
@@ -56,8 +57,7 @@ public final class VanillaMobSpawnReplacement {
         }
         LOADED_REPLACEABLE.computeIfAbsent(
                 world, ignored -> new HashSet<>()).add(mob.getUUID());
-        if (WorldNexusStorage.of(world).getNexus()
-                .filter(nexus -> nexus.isActive()).isPresent()) {
+        if (isNightSpawnActive(world)) {
             PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>()).add(mob.getUUID());
         }
@@ -83,9 +83,7 @@ public final class VanillaMobSpawnReplacement {
 
         // These mobs may already be loaded when the Nexus is activated.
         if (world.getGameTime() % 20L == 0L
-                && WorldNexusStorage.of(world).getNexus()
-                        .filter(nexus -> nexus.isActive())
-                        .isPresent()) {
+                && isNightSpawnActive(world)) {
             Set<UUID> loaded = LOADED_REPLACEABLE.get(world);
             if (loaded != null && !loaded.isEmpty()) {
                 PENDING.computeIfAbsent(world, ignored -> new HashSet<>())
@@ -95,6 +93,10 @@ public final class VanillaMobSpawnReplacement {
 
         Set<UUID> pending = PENDING.remove(world);
         if (pending == null || pending.isEmpty()) {
+            return;
+        }
+
+        if (!isNightSpawnActive(world)) {
             return;
         }
 
@@ -115,6 +117,14 @@ public final class VanillaMobSpawnReplacement {
         } finally {
             converting = false;
         }
+    }
+
+    static boolean isNightSpawnActive(ServerLevel world) {
+        return world.getDifficulty() == Difficulty.HARD
+                && !world.isBrightOutside()
+                && WorldNexusStorage.of(world).getNexus()
+                        .filter(nexus -> nexus.isActive())
+                        .isPresent();
     }
 
     private static void convertMob(
