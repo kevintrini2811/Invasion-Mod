@@ -3,6 +3,8 @@ package com.invasion.entity.ai.goal;
 import com.invasion.InvasionMod;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.PigmanEngineerEntity;
+import com.invasion.entity.ZombieBuilderEntity;
 
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.PathAwareEntity;
@@ -29,7 +31,11 @@ public class AttackNexusGoal<E extends PathAwareEntity & NexusEntity> extends Go
 
     @Override
     public boolean shouldContinue() {
-        return mob.hasGoal(HasAiGoals.Goal.BREAK_NEXUS) && mob.findDistanceToNexus() <= 4;
+        return (mob.getTarget() == null
+                    || mob instanceof PigmanEngineerEntity
+                    || mob instanceof ZombieBuilderEntity)
+                && mob.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)
+                && mob.findDistanceToNexus() <= 4;
     }
 
     @Override
