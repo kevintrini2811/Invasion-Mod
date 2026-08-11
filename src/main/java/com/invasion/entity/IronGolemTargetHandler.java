@@ -13,10 +13,9 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.animal.wolf.Wolf;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.world.entity.Entity;
 
 /** Targets Nexus-bound IM monsters for golems and player-supporting wolves. */
 public final class IronGolemTargetHandler {
@@ -26,26 +25,26 @@ public final class IronGolemTargetHandler {
     private IronGolemTargetHandler() {}
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(IronGolemTargetHandler::onJoin);
-        NeoForge.EVENT_BUS.addListener(IronGolemTargetHandler::onLeave);
-        NeoForge.EVENT_BUS.addListener(IronGolemTargetHandler::tick);
+        ServerEntityEvents.ENTITY_LOAD.register(IronGolemTargetHandler::onJoin);
+        ServerEntityEvents.ENTITY_UNLOAD.register(IronGolemTargetHandler::onLeave);
+        ServerTickEvents.END_LEVEL_TICK.register(IronGolemTargetHandler::tick);
     }
 
-    private static void onJoin(EntityJoinLevelEvent event) {
-		if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof Mob mob
+    private static void onJoin(Entity entity, ServerLevel level) {
+		if (entity instanceof Mob mob
 				&& (mob instanceof IronGolem || mob instanceof Wolf)) {
 			DEFENDERS.computeIfAbsent(level, ignored -> Collections.newSetFromMap(new IdentityHashMap<>())).add(mob);
         }
     }
 
-    private static void onLeave(EntityLeaveLevelEvent event) {
-		if (!(event.getLevel() instanceof ServerLevel level) || !(event.getEntity() instanceof Mob mob)) return;
+    private static void onLeave(Entity entity, ServerLevel level) {
+		if (!(entity instanceof Mob mob)) return;
 		Set<Mob> defenders = DEFENDERS.get(level);
 		if (defenders != null) defenders.remove(mob);
     }
 
-    private static void tick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || level.getGameTime() % 10L != 0L) return;
+    private static void tick(ServerLevel level) {
+        if (level.getGameTime() % 10L != 0L) return;
 		Set<Mob> defenders = DEFENDERS.get(level);
 		if (defenders == null) return;
 		defenders.removeIf(defender -> !defender.isAlive() || defender.isRemoved());
@@ -63,7 +62,7 @@ public final class IronGolemTargetHandler {
 			if (current != null && current.isAlive() && !current.isRemoved()
 					&& (current instanceof Combatant<?> ? loadedTargets.contains(current)
 							: !BuiltInRegistries.ENTITY_TYPE.getKey(current.getType())
-									.getNamespace().equals(InvasionMod.MOD_ID))) continue;
+									.getNamespace().equals("invmod"))) continue;
 			if (current != null) defender.setTarget(null);
             LivingEntity nearest = null;
             double nearestDistance = TARGET_RANGE_SQR;

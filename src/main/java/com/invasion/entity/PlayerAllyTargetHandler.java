@@ -4,8 +4,7 @@ import com.invasion.nexus.Combatant;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 
 /** Gives visible player allies priority over pursuing or attacking a Nexus. */
 public final class PlayerAllyTargetHandler {
@@ -14,12 +13,11 @@ public final class PlayerAllyTargetHandler {
     private PlayerAllyTargetHandler() {}
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(PlayerAllyTargetHandler::tick);
+        ServerTickEvents.END_LEVEL_TICK.register(PlayerAllyTargetHandler::tick);
     }
 
-    private static void tick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level)
-                || level.getGameTime() % 5L != 0L) return;
+    private static void tick(ServerLevel level) {
+        if (level.getGameTime() % 5L != 0L) return;
 
         for (Combatant<?> combatant : BoundIMMobRegistry.loaded(level)) {
             LivingEntity entity = combatant.asEntity();
