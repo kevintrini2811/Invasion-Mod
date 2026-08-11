@@ -14,6 +14,7 @@ import com.invasion.client.render.entity.IMWolfEntityRenderer;
 import com.invasion.client.render.entity.ImpEntityRenderer;
 import com.invasion.client.render.entity.PigmanEngineerEntityRenderer;
 import com.invasion.client.render.entity.ZombieBuilderEntityRenderer;
+import com.invasion.client.render.entity.ZombieMinerEntityRenderer;
 import com.invasion.client.render.entity.ThrowerEntityRenderer;
 import com.invasion.client.render.entity.TntEntityRenderer;
 import com.invasion.client.render.entity.SpiderEggEntityRenderer;
@@ -72,6 +73,7 @@ public final class InvRenderers {
                 context -> new IMSpiderEntityRenderer<>(context, IMSpiderEntityRenderer.MOTHER));
         event.registerEntityRenderer(InvEntities.PIGMAN_ENGINEER, PigmanEngineerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_BUILDER, ZombieBuilderEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_MINER, ZombieMinerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.IMP, ImpEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.BLAZE, IMBlazeRenderer::new);
         event.registerEntityRenderer(InvEntities.SILVERFISH, SilverfishRenderer::new);

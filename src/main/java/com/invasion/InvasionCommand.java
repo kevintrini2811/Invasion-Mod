@@ -80,6 +80,10 @@ public class InvasionCommand {
                     BlockPos.containing(source.getPosition())).orElse(null);
         }
         if (activeNexus == null) {
+            activeNexus = storage.recoverNearestLoadedNexus(
+                    BlockPos.containing(source.getPosition())).orElse(null);
+        }
+        if (activeNexus == null) {
             source.sendFailure(Component.translatable(
                     "invmod.message.command.place_nexus").withStyle(ChatFormatting.RED));
             return 0;
