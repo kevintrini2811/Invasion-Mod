@@ -286,7 +286,8 @@ public final class BudgetWavePlan {
     private static Purchase rollVariant(Option base, int wave, Theme theme, RandomSource random, int cost) {
         EntityType<? extends Mob> type = base.type;
         int variantChance = Math.min(50, 3 + wave);
-        if (type == InvEntities.ZOMBIE && base.flavour == 0 && random.nextInt(100) < variantChance) {
+        if (type == InvEntities.ZOMBIE && base.flavour != 3
+                && random.nextInt(100) < variantChance) {
             List<EntityType<? extends Mob>> variants = List.of(InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SPEEDY_ZOMBIE);
             type = variants.get(random.nextInt(variants.size()));
         } else if (type == InvEntities.SKELETON && random.nextInt(100) < variantChance) {

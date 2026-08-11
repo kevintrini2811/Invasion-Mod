@@ -375,8 +375,7 @@ public class IMWaveSpawner implements Spawner {
 		if (construct.entityType() != InvEntities.ZOMBIE
 				|| construct.tier() == 3
 				|| construct.tier() == 2
-						&& (construct.flavour() == 2
-								|| construct.flavour() == 3)) {
+						&& construct.flavour() == 3) {
 			return construct;
 		}
 
@@ -574,7 +573,10 @@ public class IMWaveSpawner implements Spawner {
 		boolean baby = (construct.rules() & BudgetWavePlan.RULE_BABY) != 0
 				|| !planned && getRandom().nextInt(100) < nexus.getBabyZombieChancePercent();
 		if (!baby) return;
-		if (mob instanceof EntityIMZombie zombie && !zombie.isBrute()) zombie.setBaby(true);
+		if (mob instanceof EntityIMZombie zombie
+				&& !zombie.isBrute() && !zombie.isPigman()) {
+			zombie.setBaby(true);
+		}
 		if (mob instanceof IMSkeletonEntity skeleton
 				&& com.invasion.compat.TinySkeletonsCompatibility.isLoaded()) {
 			skeleton.setBaby(true);
