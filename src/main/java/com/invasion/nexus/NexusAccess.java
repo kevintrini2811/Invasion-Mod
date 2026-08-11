@@ -66,6 +66,8 @@ public interface NexusAccess {
         return 0;
     }
 
+	default int getWavePhaseToken() { return 0; }
+
     default int getHealthPercent() {
         return 0;
     }
