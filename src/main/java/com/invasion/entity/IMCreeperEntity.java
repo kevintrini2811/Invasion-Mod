@@ -70,6 +70,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     };
 
     private static final int MAX_STATIONARY_TICKS = 20 * 10;
+    private static final int SPAWN_IGNITION_GRACE_TICKS = 40;
     private static final double STATIONARY_TOLERANCE_SQR = 0.2 * 0.2;
     private static final double NEXUS_IGNITION_RANGE = 4.0D;
     private static final int NEXUS_EXPLOSION_DAMAGE_PER_TIER = 5;
@@ -88,6 +89,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     @Nullable
     private Vec3 stationaryAnchor;
     private int stationaryTicks;
+    private int ignitionGraceTicks = SPAWN_IGNITION_GRACE_TICKS;
 
     public IMCreeperEntity(EntityType<IMCreeperEntity> type, Level world) {
         super(type, world);
@@ -157,6 +159,9 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
     }
 
     private void commitToExplosion(BlockPos obstacle) {
+        if (ignitionGraceTicks > 0 && !manuallyIgnited) {
+            return;
+        }
         Vec3 delta = com.invasion.util.math.PosUtils.center(obstacle).subtract(position());
         float facing = (float)(Math.atan2(delta.x(), delta.z()) * Mth.RAD_TO_DEG) - 90;
         explodeDirection = Direction.fromYRot(facing);
@@ -169,6 +174,7 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
         if (explosionDeath) {
             explode();
         } else if (isAlive()) {
+            if (ignitionGraceTicks > 0) ignitionGraceTicks--;
             tickNexusFuse();
             tickStationaryFuse();
             if (manuallyIgnited) {
@@ -329,12 +335,21 @@ public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
                     setItemSlot(slot, ItemStack.EMPTY);
                 }
             }
+            if (hasNexus()) {
+                var nexus = getNexus();
+                nexus.notifyCombatantRemoved(this, Entity.RemovalReason.KILLED);
+                setNexus(null);
+            }
             discard();
         }
     }
 
     public int getFuseSpeed() {
         return entityData.get(FUSE_SPEED);
+    }
+
+    public boolean canAutomaticallyIgnite() {
+        return ignitionGraceTicks <= 0;
     }
 
     public void setFuseSpeed(int speed) {
