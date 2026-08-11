@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LightLayer;
@@ -25,17 +25,22 @@ public class SpawnProxyEntity extends Mob {
     @Override
     public void tick() {
         if (!level().isClientSide()) {
-            generateMobGroup(level(), entity -> {
-                entity.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
-                level().addFreshEntity(entity);
-            });
+            if (level() instanceof net.minecraft.server.level.ServerLevel world
+                    && VanillaMobSpawnReplacement.isNightSpawnActive(world)) {
+                generateMobGroup(level(), entity -> {
+                    entity.absSnapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+                    level().addFreshEntity(entity);
+                });
+            }
         }
         discard();
     }
 
     @Override
-    public boolean checkSpawnRules(LevelAccessor world, MobSpawnType reason) {
-        return darkEnoughToSpawn(world)
+    public boolean checkSpawnRules(LevelAccessor world, EntitySpawnReason reason) {
+        return world instanceof net.minecraft.server.level.ServerLevel level
+                && VanillaMobSpawnReplacement.isNightSpawnActive(level)
+                && darkEnoughToSpawn(world)
                 && getBlockPathWeight(world, blockPosition()) >= 0
                 && super.checkSpawnRules(world, reason);
     }
