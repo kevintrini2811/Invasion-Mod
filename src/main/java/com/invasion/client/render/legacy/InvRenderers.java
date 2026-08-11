@@ -1,6 +1,7 @@
-package com.invasion.client.render;
+package com.invasion.client.render.legacy;
 
 import com.invasion.entity.InvEntities;
+import com.invasion.client.render.IMZoglinRenderer;
 import com.invasion.client.render.entity.AbstractIMZombieEntityRenderer;
 import com.invasion.client.render.entity.BoulderEntityRenderer;
 import com.invasion.client.render.entity.BurrowerEntityRenderer;

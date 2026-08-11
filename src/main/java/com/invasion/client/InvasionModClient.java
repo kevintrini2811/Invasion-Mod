@@ -2,7 +2,7 @@ package com.invasion.client;
 
 import com.invasion.InvScreenHandlers;
 import com.invasion.block.InvBlockEntities;
-import com.invasion.client.render.InvRenderers;
+import com.invasion.client.render.legacy.InvRenderers;
 import com.invasion.client.screen.NexusScreen;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
