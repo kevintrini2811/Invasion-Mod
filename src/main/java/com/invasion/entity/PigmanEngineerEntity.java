@@ -96,7 +96,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         if (path.isDone()) {
             return false;
         }
-        return terrainDigger.askClearPosition(path.getNextNodePos(), notifee, 1.0F);
+        return terrainDigger.askClearPosition(
+                path.getNextNodePos(), notifee,
+                1.0F / getDiggingSpeedMultiplier());
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -136,7 +138,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance localDifficulty) {
         Item heldItem = switch (getRandom().nextInt(3)) {
             case 0 -> Items.LADDER;
-            case 1 -> Items.IRON_PICKAXE;
+            case 1 -> getMiningTool();
             default -> InvItems.ENGY_HAMMER;
         };
         setItemSlot(EquipmentSlot.MAINHAND, heldItem.getDefaultInstance());
@@ -216,11 +218,15 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             swing(InteractionHand.MAIN_HAND);
             PathAction currentAction = getNavigatorNew().getCurrentWorkingAction();
             if (currentAction == PathAction.NONE) {
-                setItemSlot(EquipmentSlot.MAINHAND, Items.IRON_PICKAXE.getDefaultInstance());
+                setItemSlot(EquipmentSlot.MAINHAND, getMiningTool().getDefaultInstance());
             } else {
                 setItemSlot(EquipmentSlot.MAINHAND, InvItems.ENGY_HAMMER.getDefaultInstance());
             }
         }
+    }
+
+    protected Item getMiningTool() {
+        return Items.IRON_PICKAXE;
     }
 
 
