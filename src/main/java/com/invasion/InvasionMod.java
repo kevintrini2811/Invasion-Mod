@@ -28,6 +28,10 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.CanPlayerSleepEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -69,6 +73,9 @@ public class InvasionMod {
         NeoForge.EVENT_BUS.addListener(this::serverStopped);
         NeoForge.EVENT_BUS.addListener(this::playerJoined);
         NeoForge.EVENT_BUS.addListener(this::playerChangedDimension);
+        NeoForge.EVENT_BUS.addListener(this::playerSleepInBed);
+		NeoForge.EVENT_BUS.addListener(this::blockPlaced);
+		NeoForge.EVENT_BUS.addListener(this::livingDeath);
         NeoForge.EVENT_BUS.addListener(this::fuelBurnTime);
 
         BoundIMMobRegistry.bootstrap();
@@ -172,8 +179,8 @@ public class InvasionMod {
 
     private void playerJoined(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player
-                && player.level() instanceof ServerLevel world) {
-            WorldNexusStorage.of(world).onPlayerJoined(player);
+				&& SERVER != null) {
+			SERVER.getAllLevels().forEach(world -> WorldNexusStorage.of(world).onPlayerJoined(player));
         }
     }
 
@@ -181,7 +188,31 @@ public class InvasionMod {
         if (event.getEntity() instanceof ServerPlayer player
                 && player.level() instanceof ServerLevel world) {
             PacketDistributor.sendToPlayer(player, NexusHudPayload.hidden());
-            WorldNexusStorage.of(world).onPlayerJoined(player);
+			if (SERVER != null) SERVER.getAllLevels().forEach(level -> WorldNexusStorage.of(level).onPlayerJoined(player));
         }
     }
+
+	private void playerSleepInBed(CanPlayerSleepEvent event) {
+		if (event.getEntity() instanceof ServerPlayer player
+				&& SERVER != null
+				&& java.util.stream.StreamSupport.stream(SERVER.getAllLevels().spliterator(), false)
+						.anyMatch(level -> WorldNexusStorage.of(level).hasStableNexus())) {
+			event.setProblem(net.minecraft.world.entity.player.Player.BedSleepingProblem.OTHER_PROBLEM);
+			player.sendSystemMessage(Component.translatable("invmod.message.nexus.sleep_blocked").withStyle(net.minecraft.ChatFormatting.RED));
+		}
+	}
+
+	private void blockPlaced(BlockEvent.EntityPlaceEvent event) {
+		if (event.getEntity() instanceof ServerPlayer && SERVER != null) {
+			SERVER.getAllLevels().forEach(level -> WorldNexusStorage.of(level).recordPlayerBlockPlacement());
+		}
+	}
+
+	private void livingDeath(LivingDeathEvent event) {
+		if (!(event.getEntity() instanceof net.minecraft.world.entity.Mob)
+				|| !(event.getSource().getEntity() instanceof ServerPlayer)
+				|| SERVER == null) return;
+		boolean ranged = event.getSource().getDirectEntity() instanceof net.minecraft.world.entity.projectile.Projectile;
+		SERVER.getAllLevels().forEach(level -> WorldNexusStorage.of(level).recordPlayerMobKill(ranged));
+	}
 }
