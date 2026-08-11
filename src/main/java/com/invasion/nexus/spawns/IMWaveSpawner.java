@@ -141,10 +141,13 @@ public class IMWaveSpawner implements Spawner {
 
 	public void spawn(int elapsedMillis) throws WaveSpawnerException {
 		elapsed += elapsedMillis;
-		if (waveComplete || !active) {
+		if (!active) {
 			return;
 		}
 		processRespawns();
+		if (waveComplete) {
+			return;
+		}
 
 		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
 			generateSpawnPoints();
@@ -200,7 +203,7 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	public boolean isWaveComplete() {
-		return waveComplete;
+		return waveComplete && respawnQueue.isEmpty();
 	}
 
 	public int getWaveDuration() {

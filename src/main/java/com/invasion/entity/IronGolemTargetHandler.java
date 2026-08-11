@@ -50,10 +50,16 @@ public final class IronGolemTargetHandler {
 		if (defenders.isEmpty()) { DEFENDERS.remove(level); return; }
 
 		var combatants = BoundIMMobRegistry.loaded(level);
+		Set<LivingEntity> loadedTargets = Collections.newSetFromMap(new IdentityHashMap<>());
+		for (Combatant<?> combatant : combatants) {
+			LivingEntity entity = combatant.asEntity();
+			if (entity.isAlive() && !entity.isRemoved()) loadedTargets.add(entity);
+		}
 		for (Mob defender : defenders) {
 			if (!isDefender(defender)) continue;
 			LivingEntity current = defender.getTarget();
-			if (current != null && current.isAlive() && !current.isRemoved()) continue;
+			if (current != null && current.isAlive() && !current.isRemoved()
+					&& (!(current instanceof Combatant<?>) || loadedTargets.contains(current))) continue;
 			if (current != null) defender.setTarget(null);
             LivingEntity nearest = null;
             double nearestDistance = TARGET_RANGE_SQR;
