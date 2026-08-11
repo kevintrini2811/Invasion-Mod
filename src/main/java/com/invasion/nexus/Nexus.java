@@ -519,8 +519,10 @@ public class Nexus implements ControllableNexusAccess {
         int total = Math.max(0, mobsToKillInWave);
         int defeated = Math.min(total, Math.max(0, total - mobsLeftInWave));
         int healthPercent = getHealthPercent();
+		int phase = budgetPlan == null ? 0 : budgetPlan.phaseIndex() + 1;
+		int phaseCount = budgetPlan == null ? 0 : budgetPlan.phaseCount();
         return new NexusHudPayload(true, mode == Mode.CONTINUOUS,
-                getProgressionLevel(), defeated, total, healthPercent);
+				getProgressionLevel(), phase, phaseCount, defeated, total, healthPercent);
     }
 
     private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {
@@ -623,21 +625,23 @@ public class Nexus implements ControllableNexusAccess {
             } else {
                 nexusItemStacks.generateFlux(1);
 				if (waveSpawner.isWaveComplete() && phaseCanEnd()) {
+					if (budgetPlan != null && budgetPlan.advance()) {
+						beginPlannedPhase();
+						waveDelayTimer = -1L;
+						boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
+						return;
+					}
                     if (waveDelayTimer == -1L) {
                         boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_CHIME);
                         waveDelayTimer = 0L;
-						waveDelay = 2 * 60 * 1000;
+						waveDelay = singlePhaseInvasion ? 0 : 2 * 60 * 1000;
                         InvasionMod.LOGGER.debug("Next wave begins in: {}ticks", waveDelay);
                     } else {
                         waveDelayTimer += elapsed;
-						if (waveDelayTimer > waveDelay) {
-							if (budgetPlan != null && budgetPlan.advance()) {
-								beginPlannedPhase();
-							} else {
-								currentWave += 1;
-								beginWave(currentWave);
-								initializeWaveProgress();
-							}
+						if (waveDelayTimer >= waveDelay) {
+							currentWave += 1;
+							beginWave(currentWave);
+							initializeWaveProgress();
                             waveDelayTimer = -1L;
                             boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
                             if (currentWave > nexusLevel) {
