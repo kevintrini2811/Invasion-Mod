@@ -40,13 +40,13 @@ public final class WitherSkeletonGroupGoal extends Goal {
     @Override
     public boolean canUse() {
         refreshGroup();
-        return group.size() >= 2;
+        return skeleton.getTarget() == null && group.size() >= 2;
     }
 
     @Override
     public boolean canContinueToUse() {
         refreshGroup();
-        return group.size() >= 2;
+        return skeleton.getTarget() == null && group.size() >= 2;
     }
 
     @Override

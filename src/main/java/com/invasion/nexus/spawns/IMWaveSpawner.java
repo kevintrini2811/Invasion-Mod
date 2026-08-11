@@ -19,6 +19,8 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
@@ -569,7 +571,31 @@ public class IMWaveSpawner implements Spawner {
 		if (!baby) return;
 		if (mob instanceof EntityIMZombie zombie && !zombie.isBrute()) zombie.setBaby(true);
 		if (mob instanceof IMSkeletonEntity skeleton
-				&& com.invasion.compat.TinySkeletonsCompatibility.isLoaded()) skeleton.setBaby(true);
+				&& com.invasion.compat.TinySkeletonsCompatibility.isLoaded()) {
+			skeleton.setBaby(true);
+			equipTinySkeletonItems(skeleton);
+		}
+	}
+
+	private void equipTinySkeletonItems(IMSkeletonEntity skeleton) {
+		skeleton.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
+		if (skeleton.getType() == InvEntities.BOGGED) {
+			skeleton.setItemSlot(EquipmentSlot.MAINHAND,
+					(getRandom().nextBoolean() ? Items.BROWN_MUSHROOM : Items.RED_MUSHROOM)
+							.getDefaultInstance());
+		} else if (skeleton.getType() == InvEntities.PARCHED) {
+			skeleton.setItemSlot(EquipmentSlot.MAINHAND, Items.SAND.getDefaultInstance());
+		} else if (skeleton.getType() == InvEntities.STRAY) {
+			skeleton.setItemSlot(EquipmentSlot.MAINHAND, Items.SNOWBALL.getDefaultInstance());
+		} else if (skeleton.getType() == InvEntities.WITHER_SKELETON) {
+			skeleton.setItemSlot(EquipmentSlot.MAINHAND,
+					Items.WITHER_SKELETON_SKULL.getDefaultInstance());
+		} else {
+			skeleton.setItemSlot(EquipmentSlot.MAINHAND, Items.BOW.getDefaultInstance());
+			skeleton.setItemSlot(EquipmentSlot.OFFHAND,
+					Items.WOODEN_SWORD.getDefaultInstance());
+		}
+		skeleton.initializeTinySkeletonAbilities();
 	}
 
 	private void equipRandomWaveWeapon(Mob mob, EntityConstruct construct) {
