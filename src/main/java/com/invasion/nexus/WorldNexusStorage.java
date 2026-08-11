@@ -2,6 +2,9 @@ package com.invasion.nexus;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.nio.file.Files;
@@ -21,6 +24,7 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.LevelResource;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
@@ -82,6 +86,7 @@ public class WorldNexusStorage extends SavedData {
     private final ServerLevel world;
 
     private final Map<UUID, Nexus> instances = new HashMap<>();
+    private final List<LegacyNexus> legacyNexuses = new ArrayList<>();
 
     private Optional<UUID> activeNexus = Optional.empty();
 
@@ -95,14 +100,26 @@ public class WorldNexusStorage extends SavedData {
     private WorldNexusStorage(ServerLevel world, CompoundTag nbt, Provider lookup) {
         this(world);
         resumed = true;
-        activeNexus = nbt.read("activeNexus", net.minecraft.core.UUIDUtil.CODEC);
+        Optional<UUID> savedActiveNexus = nbt.read("activeNexus", net.minecraft.core.UUIDUtil.CODEC);
         nbt.getListOrEmpty("nexuses").forEach(i -> {
-            Nexus nexus = new Nexus(world, this, (CompoundTag)i, lookup);
-            instances.put(nexus.getUuid(), nexus);
+            CompoundTag compound = (CompoundTag)i;
+            if (!compound.contains("phaseToken")) {
+                compound.read("pos", BlockPos.CODEC).ifPresent(pos ->
+                        legacyNexuses.add(new LegacyNexus(
+                                pos,
+                                Math.max(1, compound.getIntOr("currentWave", 1)),
+                                compound.getBooleanOr("activated", false)
+                                        && Mode.forId(compound.getIntOr("mode", 0)).isActive())));
+            } else {
+                Nexus nexus = new Nexus(world, this, compound, lookup);
+                instances.put(nexus.getUuid(), nexus);
+            }
         });
+        activeNexus = savedActiveNexus.filter(instances::containsKey);
     }
 
     public synchronized void tick() {
+        migrateLegacyNexuses();
         cleanupTimer = (cleanupTimer + 1) % 40;
         int previousSize = instances.size();
         instances.values().removeIf(nexus -> {
@@ -126,6 +143,46 @@ public class WorldNexusStorage extends SavedData {
                 || !activeNexus.equals(previousActiveNexus)) {
             setDirty();
         }
+    }
+
+    private void migrateLegacyNexuses() {
+        Iterator<LegacyNexus> iterator = legacyNexuses.iterator();
+        while (iterator.hasNext()) {
+            LegacyNexus legacy = iterator.next();
+            if (!world.hasChunkAt(legacy.pos())) {
+                continue;
+            }
+            if (!world.getBlockState(legacy.pos()).is(InvBlocks.NEXUS_CORE)) {
+                InvasionMod.LOGGER.warn(
+                        "Skipping legacy Nexus migration at {} because the Nexus block is missing",
+                        legacy.pos());
+                iterator.remove();
+                setDirty();
+                continue;
+            }
+
+            world.setBlockAndUpdate(legacy.pos(), Blocks.AIR.defaultBlockState());
+            world.setBlockAndUpdate(legacy.pos(), InvBlocks.NEXUS_CORE.defaultBlockState());
+            if (world.getBlockEntity(legacy.pos()) instanceof NexusBlockEntity blockEntity) {
+                Nexus replacement = (Nexus)blockEntity.getNexus();
+                if (legacy.active() && !replacement.start(legacy.wave())) {
+                    InvasionMod.LOGGER.error(
+                            "Could not restart migrated Nexus at wave {} at {}",
+                            legacy.wave(), legacy.pos());
+                } else {
+                    InvasionMod.LOGGER.info(
+                            "Replaced legacy Nexus at {}{}",
+                            legacy.pos(), legacy.active()
+                                    ? " and restarted wave " + legacy.wave()
+                                    : "");
+                }
+            }
+            iterator.remove();
+            setDirty();
+        }
+    }
+
+    private record LegacyNexus(BlockPos pos, int wave, boolean active) {
     }
 
     private boolean tickCleanup(Nexus nexus) {
@@ -251,6 +308,15 @@ public class WorldNexusStorage extends SavedData {
         ListTag nexuses = new ListTag();
         instances.forEach((uuid, nexus) -> {
             nexuses.add(nexus.writeNbt(new CompoundTag(), lookup));
+        });
+        legacyNexuses.forEach(legacy -> {
+            CompoundTag pending = new CompoundTag();
+            pending.store("pos", BlockPos.CODEC, legacy.pos());
+            pending.putInt("currentWave", legacy.wave());
+            pending.putBoolean("activated", legacy.active());
+            pending.putInt("mode", legacy.active()
+                    ? Mode.STARTED.ordinal() : Mode.STOPPED.ordinal());
+            nexuses.add(pending);
         });
         nbt.put("nexuses", nexuses);
         return nbt;
