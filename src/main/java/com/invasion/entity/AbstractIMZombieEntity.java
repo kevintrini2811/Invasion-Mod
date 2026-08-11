@@ -154,7 +154,7 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
     private void shootTrident(double targetX, double targetY, double targetZ) {
         if (!(level() instanceof ServerLevel world)) return;
         ItemStack tridentStack = getMainHandItem().copy();
-        ThrownTrident projectile = new ThrownTrident(world, this, tridentStack);
+        ThrownTrident projectile = new IMThrownTridentEntity(world, this, tridentStack);
         double dX = targetX - getX();
         double dY = targetY - projectile.getY();
         double dZ = targetZ - getZ();
