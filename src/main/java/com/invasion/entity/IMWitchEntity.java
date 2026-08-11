@@ -23,6 +23,9 @@ import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.animal.golem.AbstractGolem;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
+import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.monster.hoglin.Hoglin;
+import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
@@ -106,6 +109,9 @@ public final class IMWitchEntity extends Witch
         }
         if (candidate instanceof AbstractVillager
                 || candidate instanceof AbstractGolem
+                || candidate instanceof AbstractPiglin
+                || candidate instanceof Hoglin
+                || candidate instanceof Pig
                 || candidate instanceof IMWolfEntity) {
             return true;
         }
