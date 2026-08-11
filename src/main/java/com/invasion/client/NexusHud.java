@@ -13,6 +13,7 @@ public final class NexusHud {
     private static final int BLUE = 0xFF5555FF;
     private static final int GREEN = 0xFF55FF55;
     private static final int RED = 0xFFFF5555;
+	private static final int PINK = 0xFFFF55FF;
     private static final String SEPARATOR = "  ";
 
     private static NexusHudPayload state = NexusHudPayload.hidden();
@@ -39,16 +40,25 @@ public final class NexusHud {
 
         Font font = Minecraft.getInstance().font;
         Component wave = Component.literal((state.continuous() ? "Attack " : "Wave ") + state.wave());
+		Component phase = state.phaseCount() > 1
+				? Component.literal("Phase " + state.phase() + "/" + state.phaseCount()) : Component.empty();
         Component mobs = Component.literal(state.defeatedMobs() + "/" + state.totalMobs() + " mobs");
         Component nexus = Component.literal(state.nexusHealthPercent() + "% Nexus");
         int waveWidth = font.width(wave);
+		int phaseWidth = font.width(phase);
         int mobsWidth = font.width(mobs);
         int separatorWidth = font.width(SEPARATOR);
-        int totalWidth = waveWidth + separatorWidth + mobsWidth + separatorWidth + font.width(nexus);
+		boolean showPhase = state.phaseCount() > 1;
+		int totalWidth = waveWidth + (showPhase ? separatorWidth + phaseWidth : 0)
+				+ separatorWidth + mobsWidth + separatorWidth + font.width(nexus);
         int x = (graphics.guiWidth() - totalWidth) / 2;
 
         graphics.drawString(font, wave, x, 8, BLUE, true);
         int mobsX = x + waveWidth + separatorWidth;
+        if (showPhase) {
+            graphics.drawString(font, phase, mobsX, 8, PINK, true);
+            mobsX += phaseWidth + separatorWidth;
+        }
         graphics.drawString(font, mobs, mobsX, 8, GREEN, true);
         graphics.drawString(font, nexus, mobsX + mobsWidth + separatorWidth, 8, RED, true);
     }
