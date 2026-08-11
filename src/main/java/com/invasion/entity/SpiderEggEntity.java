@@ -105,7 +105,9 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
         compound.putInt("hatchTime", hatchTime);
         ValueOutput.ValueOutputList entities = compound.childrenList("contents");
         for (Entity entity : contents) {
-            entity.saveWithoutId(entities.addChild());
+			// EntityType.create requires the serialized type id. saveWithoutId
+			// produced "Skipping Entity with id [invalid]" and lost hatchlings.
+			entity.save(entities.addChild());
         }
     }
 
