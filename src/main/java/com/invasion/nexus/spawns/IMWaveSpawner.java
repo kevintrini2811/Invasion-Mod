@@ -278,6 +278,10 @@ public class IMWaveSpawner implements Spawner {
 
 	@Override
 	public boolean attemptSpawn(EntityConstruct mobConstruct, Ints angle) {
+		if (!BudgetWavePlan.isWaveSpawnAllowed(mobConstruct.entityType())) {
+			InvasionMod.LOGGER.warn("Discarding invalid wave entity type {}", mobConstruct.entityType());
+			return true;
+		}
 		if ((mobConstruct.rules() & BudgetWavePlan.RULE_PLANNED) == 0) {
 			mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 			mobConstruct = replaceEngineerWithZombieBuilder(mobConstruct);

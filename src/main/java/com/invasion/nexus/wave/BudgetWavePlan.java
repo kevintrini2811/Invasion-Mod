@@ -48,10 +48,25 @@ public final class BudgetWavePlan {
         @SuppressWarnings("unchecked")
         static Purchase load(CompoundTag tag) {
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(tag.getString("type")));
-            if (type == null) type = InvEntities.ZOMBIE;
+            if (!isWaveSpawnAllowed(type)) type = InvEntities.ZOMBIE;
             return new Purchase((EntityType<? extends Mob>)type, tag.getInt("tier"),
                     tag.getInt("cost"), tag.getInt("rules"));
         }
+    }
+
+    public static boolean isWaveSpawnAllowed(EntityType<?> type) {
+        return type != null
+                && type != InvEntities.SPIDER_EGG
+                && type != InvEntities.WITHER_SKULL
+                && type != InvEntities.WITCH_POTION
+                && type != InvEntities.TRAP
+                && type != InvEntities.SFX
+                && type != InvEntities.SPAWN_PROXY
+                && type != InvEntities.BOLT
+                && type != InvEntities.BOULDER
+                && type != InvEntities.SKELETON_ARROW
+                && type != InvEntities.THROWN_ITEM
+                && type != InvEntities.TNT;
     }
 
     public record Phase(Theme theme, List<Purchase> purchases) {
