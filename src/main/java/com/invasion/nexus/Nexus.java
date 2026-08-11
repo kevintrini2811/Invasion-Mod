@@ -478,7 +478,9 @@ public class Nexus implements ControllableNexusAccess {
     public void notifyCombatantRemoved(Combatant<?> combatant, RemovalReason reason) {
         if (reason == RemovalReason.KILLED) {
             nexusKills++;
-            mobsLeftInWave--;
+			boolean belongsToCurrentWave = combatant.asEntity().getPersistentData()
+					.getIntOr("invmodWaveNumber", Integer.MIN_VALUE) == currentWave;
+			if (belongsToCurrentWave) mobsLeftInWave--;
 			if (combatant.asEntity().getPersistentData().getIntOr("invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
 				phaseKills++;
 				phaseMobsLeft = Math.max(0, phaseMobsLeft - 1);
@@ -486,7 +488,7 @@ public class Nexus implements ControllableNexusAccess {
 			}
             storage.setDirty();
             updateWaveProgressHud();
-            if (mobsLeftInWave <= 0) {
+            if (belongsToCurrentWave && mobsLeftInWave <= 0) {
                 if (lastMobsLeftInWave > 0) {
                     boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.stableagain");
                     lastMobsLeftInWave = mobsLeftInWave;
@@ -960,7 +962,8 @@ public class Nexus implements ControllableNexusAccess {
 
 	private boolean phaseCanEnd() {
 		int spawnedMobsLeft = Math.max(0, waveSpawner.getSuccessfulSpawnsThisWave() - phaseKills);
-		return waveSpawner.isWaveComplete() && spawnedMobsLeft == 0
+		return mobsLeftInWave <= 0
+				|| waveSpawner.isWaveComplete() && spawnedMobsLeft == 0
 				|| world.getGameTime() - lastPhaseKillTick >= 5 * 60 * 20;
 	}
 
