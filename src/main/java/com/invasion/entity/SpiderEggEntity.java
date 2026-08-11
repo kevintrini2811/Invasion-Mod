@@ -102,7 +102,11 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
         compound.putInt("hatchTime", hatchTime);
         net.minecraft.nbt.ListTag entities = new net.minecraft.nbt.ListTag();
         for (Entity entity : contents) {
-            entities.add(entity.saveWithoutId(new CompoundTag()));
+            // EntityType.create requires the serialized type id.
+            CompoundTag entityTag = new CompoundTag();
+            if (entity.save(entityTag)) {
+                entities.add(entityTag);
+            }
         }
         compound.put("contents", entities);
     }
