@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import com.invasion.InvasionMod;
 import com.invasion.nexus.Combatant;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.golem.IronGolem;
@@ -59,7 +61,9 @@ public final class IronGolemTargetHandler {
 			if (!isDefender(defender)) continue;
 			LivingEntity current = defender.getTarget();
 			if (current != null && current.isAlive() && !current.isRemoved()
-					&& (!(current instanceof Combatant<?>) || loadedTargets.contains(current))) continue;
+					&& (current instanceof Combatant<?> ? loadedTargets.contains(current)
+							: !BuiltInRegistries.ENTITY_TYPE.getKey(current.getType())
+									.getNamespace().equals(InvasionMod.MOD_ID))) continue;
 			if (current != null) defender.setTarget(null);
             LivingEntity nearest = null;
             double nearestDistance = TARGET_RANGE_SQR;
