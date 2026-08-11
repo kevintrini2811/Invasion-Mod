@@ -4,7 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import com.mojang.serialization.Codec;
+import net.minecraft.SharedConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.nbt.CompoundTag;
@@ -16,10 +19,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.LevelResource;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 import com.invasion.block.InvBlocks;
+import com.invasion.block.NexusBlockEntity;
 
 public class WorldNexusStorage extends SavedData {
     private static final Identifier ID = InvasionMod.id("nexus");
@@ -37,7 +43,40 @@ public class WorldNexusStorage extends SavedData {
     }
 
     public static WorldNexusStorage of(ServerLevel world) {
-        return world.getDataStorage().computeIfAbsent(getType(world));
+        SavedDataType<WorldNexusStorage> type = getType(world);
+        var dataStorage = world.getDataStorage();
+        WorldNexusStorage storage = dataStorage.get(type);
+        if (storage != null) {
+            return storage;
+        }
+
+        storage = loadLegacyStorage(world);
+        if (storage != null) {
+            dataStorage.set(type, storage);
+            InvasionMod.LOGGER.info("Migrated legacy Nexus storage in {}", world.dimension().identifier());
+            return storage;
+        }
+        return dataStorage.computeIfAbsent(type);
+    }
+
+    @Nullable
+    private static WorldNexusStorage loadLegacyStorage(ServerLevel world) {
+        Path dimensionRoot = DimensionType.getStorageFolder(
+                world.dimension(), world.getServer().getWorldPath(LevelResource.ROOT));
+        Path legacyFile = dimensionRoot.resolve("data/invmod_nexus.dat");
+        if (!Files.isRegularFile(legacyFile)) {
+            return null;
+        }
+        try {
+            CompoundTag root = world.getDataStorage().readTagFromDisk(
+                    legacyFile, DataFixTypes.LEVEL,
+                    SharedConstants.getCurrentVersion().dataVersion().version());
+            CompoundTag data = root.getCompoundOrEmpty("data");
+            return new WorldNexusStorage(world, data, world.registryAccess());
+        } catch (Exception exception) {
+            InvasionMod.LOGGER.error("Could not migrate legacy Nexus storage {}", legacyFile, exception);
+            return null;
+        }
     }
 
     private final ServerLevel world;
@@ -142,6 +181,33 @@ public class WorldNexusStorage extends SavedData {
         return instances.values().stream()
                 .min(java.util.Comparator.comparingDouble(
                         nexus -> nexus.getOrigin().distSqr(pos)));
+    }
+
+    public synchronized Optional<? extends ControllableNexusAccess> recoverNearestLoadedNexus(BlockPos pos) {
+        Nexus nearest = null;
+        double nearestDistance = Double.MAX_VALUE;
+        int centerX = pos.getX() >> 4;
+        int centerZ = pos.getZ() >> 4;
+        for (int chunkX = centerX - 8; chunkX <= centerX + 8; chunkX++) {
+            for (int chunkZ = centerZ - 8; chunkZ <= centerZ + 8; chunkZ++) {
+                var chunk = world.getChunkSource().getChunkNow(chunkX, chunkZ);
+                if (chunk == null) {
+                    continue;
+                }
+                for (var blockEntity : chunk.getBlockEntities().values()) {
+                    if (!(blockEntity instanceof NexusBlockEntity nexusBlockEntity)) {
+                        continue;
+                    }
+                    Nexus candidate = (Nexus)nexusBlockEntity.getNexus();
+                    double distance = candidate.getOrigin().distSqr(pos);
+                    if (distance < nearestDistance) {
+                        nearest = candidate;
+                        nearestDistance = distance;
+                    }
+                }
+            }
+        }
+        return Optional.ofNullable(nearest);
     }
 
     public synchronized void onPlayerJoined(ServerPlayer player) {
