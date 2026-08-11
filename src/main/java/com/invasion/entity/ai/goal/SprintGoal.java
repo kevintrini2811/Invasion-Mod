@@ -75,7 +75,7 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
             double dZ = target.getZ() - theEntity.getZ();
             double dAngle = Mth.wrapDegrees(Math.atan2(dZ, dX) * Mth.RAD_TO_DEG - 90 - theEntity.getYRot());
             if (dAngle > 60) {
-                ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(2);
+                setTurnRate(2);
                 missingTarget = 1;
             }
 
@@ -127,15 +127,21 @@ public class SprintGoal<T extends PathfinderMob & NexusEntity> extends net.minec
             attribute.addTransientModifier(SPRINTING_SPEED_BOOST);
         }
         theEntity.setSprinting(true);
-        ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(4.9F);
+        setTurnRate(4.9F);
         theEntity.setAggressive(false);
     }
 
     protected void endSprint() {
         timer = 180;
         theEntity.getAttribute(Attributes.MOVEMENT_SPEED).removeModifier(SPRINTING_SPEED_BOOST.getId());
-        ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(30);
+        setTurnRate(30);
         theEntity.setSprinting(false);
+    }
+
+    private void setTurnRate(float turnRate) {
+        if (theEntity.getMoveControl() instanceof ClimbableMoveControl control) {
+            control.setTurnRate(turnRate);
+        }
     }
 
     protected void crash() {
