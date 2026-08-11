@@ -73,7 +73,7 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
             double dZ = target.getZ() - theEntity.getZ();
             double dAngle = MathHelper.wrapDegrees(Math.atan2(dZ, dX) * MathHelper.DEGREES_PER_RADIAN - 90 - theEntity.getYaw());
             if (dAngle > 60) {
-                ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(2);
+                setTurnRate(2);
                 missingTarget = 1;
             }
 
@@ -124,15 +124,21 @@ public class SprintGoal<T extends PathAwareEntity & NexusEntity> extends net.min
             attribute.addTemporaryModifier(SPRINTING_SPEED_BOOST);
         }
         theEntity.setSprinting(true);
-        ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(4.9F);
+        setTurnRate(4.9F);
         theEntity.setAttacking(false);
     }
 
     protected void endSprint() {
         timer = 180;
         theEntity.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED).removeModifier(SPRINTING_SPEED_BOOST.id());
-        ((ClimbableMoveControl)theEntity.getMoveControl()).setTurnRate(30);
+        setTurnRate(30);
         theEntity.setSprinting(false);
+    }
+
+    private void setTurnRate(float turnRate) {
+        if (theEntity.getMoveControl() instanceof ClimbableMoveControl control) {
+            control.setTurnRate(turnRate);
+        }
     }
 
     protected void crash() {
