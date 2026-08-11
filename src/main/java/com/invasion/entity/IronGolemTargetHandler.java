@@ -13,10 +13,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.animal.Wolf;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraftforge.event.TickEvent;
 
 /** Targets Nexus-bound IM monsters for golems and player-supporting wolves. */
 public final class IronGolemTargetHandler {
@@ -26,9 +26,9 @@ public final class IronGolemTargetHandler {
     private IronGolemTargetHandler() {}
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(IronGolemTargetHandler::onJoin);
-        NeoForge.EVENT_BUS.addListener(IronGolemTargetHandler::onLeave);
-        NeoForge.EVENT_BUS.addListener(IronGolemTargetHandler::tick);
+        MinecraftForge.EVENT_BUS.addListener(IronGolemTargetHandler::onJoin);
+        MinecraftForge.EVENT_BUS.addListener(IronGolemTargetHandler::onLeave);
+        MinecraftForge.EVENT_BUS.addListener(IronGolemTargetHandler::tick);
     }
 
     private static void onJoin(EntityJoinLevelEvent event) {
@@ -44,8 +44,10 @@ public final class IronGolemTargetHandler {
 		if (defenders != null) defenders.remove(mob);
     }
 
-    private static void tick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || level.getGameTime() % 10L != 0L) return;
+    private static void tick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END
+                || !(event.level instanceof ServerLevel level)
+                || level.getGameTime() % 10L != 0L) return;
 		Set<Mob> defenders = DEFENDERS.get(level);
 		if (defenders == null) return;
 		defenders.removeIf(defender -> !defender.isAlive() || defender.isRemoved());

@@ -42,7 +42,7 @@ import com.invasion.nexus.wave.Wave;
 import com.invasion.nexus.wave.WaveSpawnerException;
 import com.invasion.nexus.wave.BudgetWavePlan;
 import com.invasion.network.NexusHudPayload;
-import net.neoforged.neoforge.network.PacketDistributor;
+import com.invasion.network.InvNetwork;
 
 public class Nexus implements ControllableNexusAccess {
     private static final int INITIAL_SPAWN_RADIUS = 52;
@@ -268,7 +268,7 @@ public class Nexus implements ControllableNexusAccess {
     @Override
     public int getChargedCreeperChancePercent() {
         return mode == Mode.CONTINUOUS
-                ? Math.clamp(continuousAttackCount, 1, 100)
+                ? net.minecraft.util.Mth.clamp(continuousAttackCount, 1, 100)
                 : ControllableNexusAccess.super
                         .getChargedCreeperChancePercent();
     }
@@ -276,7 +276,7 @@ public class Nexus implements ControllableNexusAccess {
     @Override
     public int getRandomEquipmentChancePercent() {
         return mode == Mode.CONTINUOUS
-                ? Math.clamp(continuousAttackCount - 1, 0, 100)
+                ? net.minecraft.util.Mth.clamp(continuousAttackCount - 1, 0, 100)
                 : ControllableNexusAccess.super
                         .getRandomEquipmentChancePercent();
     }
@@ -540,7 +540,7 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     private void sendWaveProgressHud(ServerPlayer player, NexusHudPayload payload) {
-        PacketDistributor.sendToPlayer(player, payload);
+        InvNetwork.send(player, payload);
     }
 
     @Override

@@ -22,15 +22,10 @@ import com.invasion.block.InvBlocks;
 public class WorldNexusStorage extends SavedData {
     private static final ResourceLocation ID = InvasionMod.id("nexus");
 
-    public static Factory<WorldNexusStorage> getType(ServerLevel world) {
-        return new SavedData.Factory<>(
-                () -> new WorldNexusStorage(world),
-                (nbt, lookup) -> new WorldNexusStorage(world, nbt, lookup),
-                DataFixTypes.LEVEL);
-    }
-
     public static WorldNexusStorage of(ServerLevel world) {
-        return world.getDataStorage().computeIfAbsent(getType(world), ID.toDebugFileName());
+        return world.getDataStorage().computeIfAbsent(
+                nbt -> new WorldNexusStorage(world, nbt),
+                () -> new WorldNexusStorage(world), ID.toDebugFileName());
     }
 
     private final ServerLevel world;
@@ -46,14 +41,15 @@ public class WorldNexusStorage extends SavedData {
         this.world = world;
     }
 
-    private WorldNexusStorage(ServerLevel world, CompoundTag nbt, Provider lookup) {
+    private WorldNexusStorage(ServerLevel world, CompoundTag nbt) {
         this(world);
         resumed = true;
         if (nbt.hasUUID("activeNexus")) {
             activeNexus = Optional.of(nbt.getUUID("activeNexus"));
         }
         nbt.getList("nexuses", Tag.TAG_COMPOUND).forEach(i -> {
-            Nexus nexus = new Nexus(world, this, (CompoundTag)i, lookup);
+            Nexus nexus = new Nexus(world, this, (CompoundTag)i,
+                    world.registryAccess());
             instances.put(nexus.getUuid(), nexus);
         });
     }
@@ -170,13 +166,13 @@ public class WorldNexusStorage extends SavedData {
     }
 
     @Override
-    public CompoundTag save(CompoundTag nbt, Provider lookup) {
+    public CompoundTag save(CompoundTag nbt) {
         activeNexus.ifPresent(nexus -> {
             nbt.putUUID("activeNexus", nexus);
         });
         ListTag nexuses = new ListTag();
         instances.forEach((uuid, nexus) -> {
-            nexuses.add(nexus.writeNbt(new CompoundTag(), lookup));
+            nexuses.add(nexus.writeNbt(new CompoundTag(), world.registryAccess()));
         });
         nbt.put("nexuses", nexuses);
         return nbt;

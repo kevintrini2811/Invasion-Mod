@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.neoforged.fml.ModList;
+import net.minecraftforge.fml.ModList;
 
 /** A complete, persistent purchase plan for one invasion wave. */
 public final class BudgetWavePlan {
@@ -53,7 +53,7 @@ public final class BudgetWavePlan {
 
         @SuppressWarnings("unchecked")
         static Purchase load(CompoundTag tag) {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(ResourceLocation.parse(tag.getString("type")));
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(new ResourceLocation(tag.getString("type")));
             if (!isWaveSpawnAllowed(type)) type = InvEntities.ZOMBIE;
             return new Purchase((EntityType<? extends Mob>)type, tag.getInt("tier"),
                     tag.getInt("flavour"), tag.getInt("cost"), tag.getInt("rules"));
@@ -122,12 +122,12 @@ public final class BudgetWavePlan {
             o(InvEntities.SPEEDY_ZOMBIE,1,3), o(InvEntities.SPEEDY_ZOMBIE,2,5), o(InvEntities.SPEEDY_ZOMBIE,3,9),
             o(InvEntities.ZOMBIE_PIGMAN,1,2), o(InvEntities.ZOMBIE_PIGMAN,2,4), o(InvEntities.ZOMBIE_PIGMAN,3,7),
             o(InvEntities.ZOMBIFIED_PIGLIN,1,2), o(InvEntities.ZOMBIFIED_PIGLIN,2,4), o(InvEntities.ZOMBIFIED_PIGLIN,3,7),
-            o(InvEntities.SKELETON,1,2), o(InvEntities.STRAY,1,3), o(InvEntities.BOGGED,1,3), o(InvEntities.SKELETON,1,3),
+            o(InvEntities.SKELETON,1,2), o(InvEntities.STRAY,1,3), o(InvEntities.SKELETON,1,3),
             o(InvEntities.WITHER_SKELETON,1,5), o(InvEntities.SPIDER,1,2), o(InvEntities.CAVE_SPIDER,1,3),
             o(InvEntities.JUMPING_SPIDER,1,3), o(InvEntities.QUEEN_SPIDER,1,8), o(InvEntities.PIGMAN_ENGINEER,1,5),
             o(InvEntities.ZOMBIE_BUILDER,1,7), o(InvEntities.SILVERFISH,1,3), o(InvEntities.ENDERMITE,1,4),
             o(InvEntities.WITCH,1,5), o(InvEntities.THROWER,1,5), o(InvEntities.THROWER,2,10), o(InvEntities.IMP,1,5),
-            o(InvEntities.BLAZE,1,8), o(InvEntities.BREEZE,1,6), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,11),
+            o(InvEntities.BLAZE,1,8), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,11),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,10),
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5));
@@ -136,12 +136,12 @@ public final class BudgetWavePlan {
     private static Map<Theme, List<Option>> makePools() {
         Map<Theme, List<Option>> pools = new EnumMap<>(Theme.class);
         pools.put(Theme.SPIDER, filter(InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER));
-        pools.put(Theme.FLYING, filter(InvEntities.PHANTOM, InvEntities.GHAST, InvEntities.BREEZE, InvEntities.BLAZE, InvEntities.WITHER));
+        pools.put(Theme.FLYING, filter(InvEntities.PHANTOM, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.WITHER));
         pools.put(Theme.NETHER, filter(InvEntities.ZOMBIE_PIGMAN, InvEntities.ZOMBIFIED_PIGLIN, InvEntities.PIGMAN_ENGINEER, InvEntities.BLAZE, InvEntities.IMP, InvEntities.GHAST, InvEntities.ZOGLIN, InvEntities.MAGMA_CUBE, InvEntities.WITHER_SKELETON, InvEntities.WITHER));
         pools.put(Theme.UNDERGROUND, filter(InvEntities.BURROWER, InvEntities.ZOMBIE, InvEntities.ZOMBIE_BUILDER, InvEntities.SKELETON, InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER, InvEntities.WARDEN, InvEntities.SILVERFISH, InvEntities.SLIME).stream().filter(option -> option.flavour != 2).toList());
-        pools.put(Theme.FAST, filter(InvEntities.SILVERFISH, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.JUMPING_SPIDER, InvEntities.SPEEDY_ZOMBIE, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.PHANTOM));
+        pools.put(Theme.FAST, filter(InvEntities.SILVERFISH, InvEntities.BLAZE, InvEntities.JUMPING_SPIDER, InvEntities.SPEEDY_ZOMBIE, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.PHANTOM));
         pools.put(Theme.SIEGE, filter(InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER, InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ENDERMAN, InvEntities.ZOGLIN, InvEntities.ZOMBIE, InvEntities.BURROWER, InvEntities.ENDERMITE));
-        pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.SKELETON, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.WITHER, InvEntities.WITCH));
+        pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.WITHER, InvEntities.WITCH));
         pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN).toList());
         pools.put(Theme.SWARM, ALL.stream().filter(option -> option.cost <= 5 && option.type != InvEntities.ENDERMITE && option.flavour != 2).toList());
         pools.put(Theme.MIXED, ALL.stream().filter(option -> option.type != InvEntities.WITHER && option.type != InvEntities.WARDEN).toList());
@@ -290,7 +290,7 @@ public final class BudgetWavePlan {
             List<EntityType<? extends Mob>> variants = List.of(InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SPEEDY_ZOMBIE);
             type = variants.get(random.nextInt(variants.size()));
         } else if (type == InvEntities.SKELETON && random.nextInt(100) < variantChance) {
-            List<EntityType<? extends Mob>> variants = List.of(InvEntities.STRAY, InvEntities.BOGGED, InvEntities.SKELETON, InvEntities.WITHER_SKELETON);
+            List<EntityType<? extends Mob>> variants = List.of(InvEntities.STRAY, InvEntities.SKELETON, InvEntities.WITHER_SKELETON);
             type = variants.get(random.nextInt(variants.size()));
         } else if (type == InvEntities.CREEPER && base.tier == 1 && random.nextInt(100) < Math.min(100, wave)) {
             return new Purchase(type, 2, cost, rollRules(theme, wave, random));
@@ -322,6 +322,6 @@ public final class BudgetWavePlan {
         tag.getList("phases", net.minecraft.nbt.Tag.TAG_COMPOUND)
                 .forEach(value -> phases.add(Phase.load((CompoundTag)value)));
         return new BudgetWavePlan(tag.getInt("wave"), List.copyOf(phases),
-                Math.clamp(tag.getInt("phase"), 0, Math.max(0, phases.size() - 1)));
+                net.minecraft.util.Mth.clamp(tag.getInt("phase"), 0, Math.max(0, phases.size() - 1)));
     }
 }

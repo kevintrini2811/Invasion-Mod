@@ -20,17 +20,16 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.monster.Bogged;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Drowned;
 import net.minecraft.world.entity.monster.Husk;
 import net.minecraft.world.entity.monster.ZombifiedPiglin;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.entity.living.FinalizeSpawnEvent;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityLeaveLevelEvent;
+import net.minecraftforge.event.entity.living.MobSpawnEvent;
+import net.minecraftforge.event.TickEvent;
 
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
@@ -42,14 +41,14 @@ public final class VanillaMobSpawnReplacement {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
-        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::removeVanillaMob);
-        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::blockNaturalSpawn);
-        NeoForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
+        MinecraftForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::queueVanillaMob);
+        MinecraftForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::removeVanillaMob);
+        MinecraftForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::blockNaturalSpawn);
+        MinecraftForge.EVENT_BUS.addListener(VanillaMobSpawnReplacement::processQueue);
     }
 
-    private static void blockNaturalSpawn(FinalizeSpawnEvent event) {
-        ServerLevel world = event.getLevel().getLevel();
+    private static void blockNaturalSpawn(MobSpawnEvent.FinalizeSpawn event) {
+        if (!(event.getLevel() instanceof ServerLevel world)) return;
         if (event.getSpawnType() == MobSpawnType.NATURAL
                 && world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
@@ -88,8 +87,9 @@ public final class VanillaMobSpawnReplacement {
         }
     }
 
-    private static void processQueue(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel world)) {
+    private static void processQueue(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END
+                || !(event.level instanceof ServerLevel world)) {
             return;
         }
 
@@ -148,8 +148,6 @@ public final class VanillaMobSpawnReplacement {
         ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         if (isTinySkeleton(typeId, "baby_skeleton")) {
             convert(mob, InvEntities.SKELETON, nexus);
-        } else if (isTinySkeleton(typeId, "baby_bogged")) {
-            convert(mob, InvEntities.BOGGED, nexus);
         } else if (isTinySkeleton(typeId, "baby_parched")) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (isTinySkeleton(typeId, "baby_stray")) {
@@ -166,8 +164,6 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
         } else if (mob.getType() == EntityType.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
-        } else if (mob.getType() == EntityType.BOGGED) {
-            convert(mob, InvEntities.BOGGED, nexus);
         } else if (mob.getType() == EntityType.SKELETON) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (mob.getType() == EntityType.STRAY) {
@@ -204,8 +200,6 @@ public final class VanillaMobSpawnReplacement {
             convert(mob, InvEntities.SLIME, nexus);
         } else if (mob.getType() == EntityType.MAGMA_CUBE) {
             convert(mob, InvEntities.MAGMA_CUBE, nexus);
-        } else if (mob.getType() == EntityType.BREEZE) {
-            convert(mob, InvEntities.BREEZE, nexus);
         } else if (mob.getType() == EntityType.ENDERMITE) {
             convert(mob, InvEntities.ENDERMITE, nexus);
         }
@@ -214,7 +208,6 @@ public final class VanillaMobSpawnReplacement {
     private static boolean isReplaceableType(EntityType<?> type) {
         ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         return isTinySkeleton(typeId, "baby_skeleton")
-                || isTinySkeleton(typeId, "baby_bogged")
                 || isTinySkeleton(typeId, "baby_parched")
                 || isTinySkeleton(typeId, "baby_stray")
                 || isTinySkeleton(typeId, "baby_wither_skeleton")
@@ -223,7 +216,6 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.DROWNED
                 || type == EntityType.ZOMBIFIED_PIGLIN
                 || type == EntityType.SKELETON
-                || type == EntityType.BOGGED
                 || type == EntityType.SKELETON
                 || type == EntityType.STRAY
                 || type == EntityType.WITHER_SKELETON
@@ -242,7 +234,6 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.SILVERFISH
                 || type == EntityType.SLIME
                 || type == EntityType.MAGMA_CUBE
-                || type == EntityType.BREEZE
                 || type == EntityType.ENDERMITE;
     }
 
@@ -312,10 +303,6 @@ public final class VanillaMobSpawnReplacement {
                     piglin.getRemainingPersistentAngerTime());
             imPiglin.setPersistentAngerTarget(
                     piglin.getPersistentAngerTarget());
-        }
-        if (source instanceof Bogged bogged
-                && converted instanceof IMBoggedEntity imBogged) {
-            imBogged.setSheared(bogged.isSheared());
         }
         if (source instanceof Phantom phantom
                 && converted instanceof IMPhantomEntity imPhantom) {

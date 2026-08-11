@@ -25,7 +25,8 @@ public class Wave {
 			// Keep processing missed/blocked constructs after their scheduling
 			// window. Otherwise a transient collision during the last batch can
 			// leave the phase permanently short of its planned mob count.
-			boolean schedulingWindowPassed = entry.getTime().max().orElse(Integer.MAX_VALUE) < elapsed;
+			boolean schedulingWindowPassed = java.util.Objects.requireNonNullElse(
+					entry.getTime().getMax(), Integer.MAX_VALUE) < elapsed;
             if (entry.getTime().matches(elapsed) || schedulingWindowPassed && !entry.isSpawnComplete()) {
                 numberOfSpawns += entry.doNextSpawns(elapsedMillis, spawner);
             }

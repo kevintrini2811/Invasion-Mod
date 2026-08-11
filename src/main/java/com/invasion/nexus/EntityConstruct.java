@@ -40,7 +40,7 @@ public record EntityConstruct (
     }
 
     public Mob createMob(ServerLevel world, @Nullable NexusAccess nexus, BlockPos position) {
-        return entityType().create(world, entity -> {
+        return entityType().create(world, null, entity -> {
             if (entity instanceof BuildableMob b) {
                 b.onSpawned(nexus, this);
                 applyWaveInfection(entity, nexus, rules);
@@ -58,7 +58,7 @@ public record EntityConstruct (
                 || entity instanceof IMEndermiteEntity) {
             return;
         }
-        int chancePercent = Math.clamp(nexus.getProgressionLevel(), 1, 100);
+        int chancePercent = net.minecraft.util.Mth.clamp(nexus.getProgressionLevel(), 1, 100);
 		if ((rules & com.invasion.nexus.wave.BudgetWavePlan.RULE_INFECTED_BONUS) != 0) chancePercent += 10;
         if (entity.getRandom().nextInt(100) < chancePercent) {
             entity.addTag(IMSilverfishEntity.INFECTED_TAG);

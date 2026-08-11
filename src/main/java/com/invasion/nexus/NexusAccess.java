@@ -43,19 +43,19 @@ public interface NexusAccess {
     }
 
     default int getChargedCreeperChancePercent() {
-        return Math.clamp(getProgressionLevel() - 9, 0, 100);
+        return net.minecraft.util.Mth.clamp(getProgressionLevel() - 9, 0, 100);
     }
 
     default int getRandomEquipmentChancePercent() {
-        return Math.clamp(getProgressionLevel(), 1, 100);
+        return net.minecraft.util.Mth.clamp(getProgressionLevel(), 1, 100);
     }
 
     default int getBabyZombieChancePercent() {
-        return Math.clamp(getProgressionLevel(), 1, 20);
+        return net.minecraft.util.Mth.clamp(getProgressionLevel(), 1, 20);
     }
 
     default int getWitherSkeletonChancePercent() {
-        return Math.clamp(getProgressionLevel() - 7, 0, 100);
+        return net.minecraft.util.Mth.clamp(getProgressionLevel() - 7, 0, 100);
     }
 
     default int getMobsLeftInWave() {
