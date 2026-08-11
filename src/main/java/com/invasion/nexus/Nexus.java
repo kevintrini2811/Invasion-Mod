@@ -482,7 +482,8 @@ public class Nexus implements ControllableNexusAccess {
 			boolean belongsToCurrentWave = combatant.asEntity().getPersistentData()
 					.getIntOr("invmodWaveNumber", Integer.MIN_VALUE) == currentWave;
 			if (belongsToCurrentWave) mobsLeftInWave--;
-			if (combatant.asEntity().getPersistentData().getIntOr("invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
+			if (belongsToCurrentWave && combatant.asEntity().getPersistentData()
+					.getIntOr("invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
 				phaseKills++;
 				phaseMobsLeft = Math.max(0, phaseMobsLeft - 1);
 				lastPhaseKillTick = world.getGameTime();
