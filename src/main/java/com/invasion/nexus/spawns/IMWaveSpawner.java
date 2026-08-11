@@ -53,6 +53,7 @@ public class IMWaveSpawner implements Spawner {
 	private static final float SPAWN_POINT_CULL_RATE = 0.3F;
 
 	private SpawnPointContainer spawnPointContainer = new SpawnPointContainer();
+	private final List<Combatant<?>> respawnQueue = new ArrayList<>();
 
 	private final NexusAccess nexus;
 	private final List<Item> randomMeleeWaveWeapons;
@@ -143,6 +144,7 @@ public class IMWaveSpawner implements Spawner {
 		if (waveComplete || !active) {
 			return;
 		}
+		processRespawns();
 
 		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
 			generateSpawnPoints();
@@ -221,10 +223,21 @@ public class IMWaveSpawner implements Spawner {
 		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) > 10) {
 			SpawnPoint spawnPoint = spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID);
 			if (spawnPoint != null) {
-			    final byte statusAddDeathParticles = (byte)60;
 			    spawnPoint.applyTo(entity.asEntity());
 			    entity.resetHealth();
-			    entity.asEntity().level().broadcastEntityEvent(entity.asEntity(), statusAddDeathParticles);
+				respawnQueue.add(entity);
+			}
+		}
+	}
+
+	private void processRespawns() {
+		ServerLevel world = (ServerLevel)nexus.getWorld();
+		for (int i = respawnQueue.size() - 1; i >= 0; i--) {
+			Combatant<?> combatant = respawnQueue.get(i);
+			if (world.addFreshEntity(combatant.asEntity())) {
+				markAsInvasionAlly((Mob)combatant.asEntity());
+				world.broadcastEntityEvent(combatant.asEntity(), (byte)60);
+				respawnQueue.remove(i);
 			}
 		}
 	}

@@ -52,7 +52,9 @@ public final class IronGolemTargetHandler {
 		var combatants = BoundIMMobRegistry.loaded(level);
 		for (Mob defender : defenders) {
 			if (!isDefender(defender)) continue;
-			if (defender.getTarget() != null && defender.getTarget().isAlive()) continue;
+			LivingEntity current = defender.getTarget();
+			if (current != null && current.isAlive() && !current.isRemoved()) continue;
+			if (current != null) defender.setTarget(null);
             LivingEntity nearest = null;
             double nearestDistance = TARGET_RANGE_SQR;
             for (Combatant<?> combatant : combatants) {
