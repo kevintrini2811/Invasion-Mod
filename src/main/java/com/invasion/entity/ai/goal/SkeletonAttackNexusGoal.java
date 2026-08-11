@@ -38,7 +38,8 @@ public class SkeletonAttackNexusGoal<T extends PathfinderMob & NexusEntity & Ran
 
     @Override
     public boolean canContinueToUse() {
-        if (!skeleton.hasNexus() || !skeleton.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)) {
+        if (skeleton.getTarget() != null || !skeleton.hasNexus()
+                || !skeleton.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)) {
             return false;
         }
         double distance = skeleton.distanceToSqr(nexusTarget());
