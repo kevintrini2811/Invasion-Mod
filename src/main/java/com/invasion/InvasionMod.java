@@ -10,6 +10,7 @@ import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
+import com.invasion.entity.IMMobFriendlyFireHandler;
 import com.invasion.entity.IronGolemTargetHandler;
 import com.invasion.entity.PlayerAllyTargetHandler;
 import com.invasion.item.InvItems;
@@ -81,6 +82,7 @@ public class InvasionMod {
         NeoForge.EVENT_BUS.addListener(this::fuelBurnTime);
 
         BoundIMMobRegistry.bootstrap();
+        IMMobFriendlyFireHandler.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
         NexusBoundMobLifecycle.bootstrap();
         VillagerResurrectionHandler.bootstrap();
