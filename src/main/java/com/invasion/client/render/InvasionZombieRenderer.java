@@ -109,11 +109,21 @@ public class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         // AgeableMobRenderer resets `model` from this field at the start of submit.
         // Select the legacy brute model at the source so its 10x5 torso is retained.
+        HumanoidModel<InvasionZombieRenderState> adultModel =
+                state.brute ? bruteModel : normalModel;
+        HumanoidModel<InvasionZombieRenderState> babyModel =
+                state.brute ? bruteBabyModel : normalBabyModel;
+        adultModel.hat.visible = rendersBuiltInHat();
+        babyModel.hat.visible = rendersBuiltInHat();
         ((AgeableMobRendererAccessor) (Object) this).invasion$setAdultModel(
-                state.brute ? bruteModel : normalModel);
+                adultModel);
         ((AgeableMobRendererAccessor) (Object) this).invasion$setBabyModel(
-                state.brute ? bruteBabyModel : normalBabyModel);
+                babyModel);
         super.submit(state, poseStack, collector, cameraState);
+    }
+
+    protected boolean rendersBuiltInHat() {
+        return true;
     }
 
     @Override

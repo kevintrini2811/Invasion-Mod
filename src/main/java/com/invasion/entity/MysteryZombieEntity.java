@@ -3,6 +3,7 @@ package com.invasion.entity;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.wave.BudgetWavePlan;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -15,6 +16,11 @@ public final class MysteryZombieEntity extends EntityIMZombie {
     public MysteryZombieEntity(
             EntityType<? extends EntityIMZombie> type, Level world) {
         super(type, world);
+    }
+
+    @Override
+    public void playSound(SoundEvent sound, float volume, float pitch) {
+        // ???? is completely silent, including footsteps and combat sounds.
     }
 
     @Override

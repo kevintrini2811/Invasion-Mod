@@ -12,6 +12,7 @@ public final class MysteryZombieRenderer
 
     public MysteryZombieRenderer(EntityRendererProvider.Context context) {
         super(context, false);
+        addLayer(new MysteryZombieOuterLayer(this));
     }
 
     @Override
@@ -26,5 +27,10 @@ public final class MysteryZombieRenderer
     @Override
     public Identifier getTextureLocation(InvasionZombieRenderState state) {
         return TEXTURE;
+    }
+
+    @Override
+    protected boolean rendersBuiltInHat() {
+        return false;
     }
 }
