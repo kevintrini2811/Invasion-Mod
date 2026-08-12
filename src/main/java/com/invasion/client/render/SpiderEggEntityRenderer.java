@@ -12,6 +12,13 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.resources.Identifier;
 
 public class SpiderEggEntityRenderer extends EntityRenderer<SpiderEggEntity, EntityRenderState> {
+	private static final class NoOutlineRenderState extends EntityRenderState {
+		@Override
+		public boolean appearsGlowing() {
+			return false;
+		}
+	}
+
 	private static final Identifier TEXTURE = InvasionMod.id("textures/entity/spider_egg.png");
 
 	private final EggModel model = new EggModel(EggModel.getTexturedModelData().bakeRoot());
@@ -23,7 +30,7 @@ public class SpiderEggEntityRenderer extends EntityRenderer<SpiderEggEntity, Ent
 
 	@Override
     public EntityRenderState createRenderState() {
-        return new EntityRenderState();
+        return new NoOutlineRenderState();
     }
 
     @Override

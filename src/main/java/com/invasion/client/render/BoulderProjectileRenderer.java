@@ -13,6 +13,13 @@ import net.minecraft.resources.Identifier;
 
 public final class BoulderProjectileRenderer
         extends EntityRenderer<BoulderEntity, EntityRenderState> {
+    private static final class NoOutlineRenderState extends EntityRenderState {
+        @Override
+        public boolean appearsGlowing() {
+            return false;
+        }
+    }
+
     private static final Identifier TEXTURE =
             InvasionMod.id("textures/entity/boulder.png");
     private final ProjectileCubeModel model =
@@ -25,7 +32,7 @@ public final class BoulderProjectileRenderer
 
     @Override
     public EntityRenderState createRenderState() {
-        return new EntityRenderState();
+        return new NoOutlineRenderState();
     }
 
     @Override
