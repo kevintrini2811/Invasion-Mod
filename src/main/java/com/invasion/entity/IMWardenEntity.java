@@ -9,19 +9,27 @@ import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.util.math.PosUtils;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Mth;
 import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.level.gameevent.PositionSource;
+import net.minecraft.world.level.gameevent.vibrations.VibrationSystem;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.AABB;
@@ -194,18 +202,88 @@ public final class IMWardenEntity extends Warden
 
     @Override
     public boolean canAttack(net.minecraft.world.entity.LivingEntity target) {
-        return !(target instanceof Combatant<?>) && super.canAttack(target);
+        return !isFromCombatant(target) && super.canAttack(target);
     }
 
     @Override
-    public boolean canTargetEntity(net.minecraft.world.entity.Entity target) {
-        return !(target instanceof Combatant<?>) && super.canTargetEntity(target);
+    public boolean canTargetEntity(Entity target) {
+        return !isFromCombatant(target) && super.canTargetEntity(target);
+    }
+
+    private static boolean isFromCombatant(Entity entity) {
+        return entity instanceof Combatant<?>
+                || entity instanceof Projectile projectile
+                        && projectile.getOwner() instanceof Combatant<?>;
+    }
+
+    @Override
+    public VibrationSystem.User getVibrationUser() {
+        return new CombatantFilteringVibrationUser(super.getVibrationUser());
+    }
+
+    private record CombatantFilteringVibrationUser(VibrationSystem.User delegate)
+            implements VibrationSystem.User {
+        @Override
+        public int getListenerRadius() {
+            return delegate.getListenerRadius();
+        }
+
+        @Override
+        public PositionSource getPositionSource() {
+            return delegate.getPositionSource();
+        }
+
+        @Override
+        public TagKey<GameEvent> getListenableEvents() {
+            return delegate.getListenableEvents();
+        }
+
+        @Override
+        public boolean canTriggerAvoidVibration() {
+            return delegate.canTriggerAvoidVibration();
+        }
+
+        @Override
+        public boolean requiresAdjacentChunksToBeTicking() {
+            return delegate.requiresAdjacentChunksToBeTicking();
+        }
+
+        @Override
+        public int calculateTravelTimeInTicks(float distance) {
+            return delegate.calculateTravelTimeInTicks(distance);
+        }
+
+        @Override
+        public boolean canReceiveVibration(ServerLevel level, BlockPos pos,
+                Holder<GameEvent> event, GameEvent.Context context) {
+            return !isFromCombatant(context.sourceEntity())
+                    && delegate.canReceiveVibration(level, pos, event, context);
+        }
+
+        @Override
+        public void onReceiveVibration(ServerLevel level, BlockPos pos,
+                Holder<GameEvent> event, @Nullable Entity sourceEntity,
+                @Nullable Entity projectileOwner, float receivingDistance) {
+            if (!isFromCombatant(sourceEntity)
+                    && !isFromCombatant(projectileOwner)) {
+                delegate.onReceiveVibration(level, pos, event, sourceEntity,
+                        projectileOwner, receivingDistance);
+            }
+        }
+
+        @Override
+        public void onDataChanged() {
+            delegate.onDataChanged();
+        }
     }
 
     @Override
     public boolean hurtServer(
             ServerLevel level, DamageSource source, float damage) {
-        cancelNexusSonicBoom();
+        if (!isFromCombatant(source.getDirectEntity())
+                && !isFromCombatant(source.getEntity())) {
+            cancelNexusSonicBoom();
+        }
         return super.hurtServer(level, source, damage);
     }
 
