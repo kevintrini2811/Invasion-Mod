@@ -81,6 +81,9 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
 
     @Override
     public void prepare(PathNavigationRegion cachedWorld, Mob entity) {
+        if (entity.fireImmune() && entity.getPathfindingMalus(BlockPathTypes.LAVA) < 0) {
+            entity.setPathfindingMalus(BlockPathTypes.LAVA, 0);
+        }
         super.prepare(cachedWorld, entity);
         pathingView = cachedWorld;
         if (entity instanceof IHasNexus nexusHolder && nexusHolder.hasNexus()) {
@@ -280,7 +283,10 @@ public class IMLandPathNodeMaker extends WalkNodeEvaluator implements DynamicPat
     }
 
     protected boolean canWalkOn(BlockPathTypes type) {
-        return type != BlockPathTypes.DAMAGE_FIRE && type != BlockPathTypes.DANGER_FIRE && type != BlockPathTypes.LAVA && type != BlockPathTypes.STICKY_HONEY;
+        return type != BlockPathTypes.DAMAGE_FIRE
+                && type != BlockPathTypes.DANGER_FIRE
+                && (type != BlockPathTypes.LAVA || mob != null && mob.fireImmune())
+                && type != BlockPathTypes.STICKY_HONEY;
     }
 
     public static boolean canMineBlock(PathfinderMob entity, BlockPos pos) {
