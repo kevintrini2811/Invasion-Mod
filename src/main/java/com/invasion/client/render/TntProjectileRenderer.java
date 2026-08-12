@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.TntMinecartRenderer;
 import net.minecraft.client.renderer.entity.TntRenderer;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.TntRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.level.block.Blocks;
@@ -32,6 +33,7 @@ public final class TntProjectileRenderer
     public void extractRenderState(EntityIMPrimedTNT entity, TntRenderState state,
             float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
+        state.outlineColor = EntityRenderState.NO_OUTLINE;
         state.fuseRemainingInTicks = -1.0F;
         blockModelResolver.update(state.blockState, Blocks.TNT.defaultBlockState(),
                 TntRenderer.BLOCK_DISPLAY_CONTEXT);

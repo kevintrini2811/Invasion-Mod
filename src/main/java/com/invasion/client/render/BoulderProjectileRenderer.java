@@ -29,6 +29,13 @@ public final class BoulderProjectileRenderer
     }
 
     @Override
+    public void extractRenderState(BoulderEntity entity, EntityRenderState state,
+            float tickDelta) {
+        super.extractRenderState(entity, state, tickDelta);
+        state.outlineColor = EntityRenderState.NO_OUTLINE;
+    }
+
+    @Override
     public void submit(EntityRenderState state, PoseStack poseStack,
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         poseStack.pushPose();
