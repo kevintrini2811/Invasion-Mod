@@ -182,6 +182,8 @@
     "invmod.message.command.wave_set": "Invasionswelle erfolgreich auf %s gesetzt.",
     "invmod.message.command.no_invasion_to_stop": "Es ist keine Invasion aktiv. Es geschieht nichts.",
     "invmod.message.command.invasion_stopped": "Invasion erfolgreich beendet.",
+    "invmod.message.command.no_nexuses_to_destroy": "Es wurden keine Nexusblöcke gefunden.",
+    "invmod.message.command.nexuses_destroyed": "%s Nexusblock/-blöcke zerstört.",
     "invmod.message.command.no_nexus_for_beam": "Es wurde kein ausgewählter Nexus gefunden.",
     "invmod.message.command.nexus_beam_enabled": "Nexus-Leuchtfeuerstrahl aktiviert.",
     "invmod.message.command.nexus_beam_disabled": "Nexus-Leuchtfeuerstrahl deaktiviert.",
