@@ -18,6 +18,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.monster.skeleton.Bogged;
@@ -360,8 +361,30 @@ public final class VanillaMobSpawnReplacement {
         // setNexus update the loaded/bound registry against the final entity
         // lifecycle state instead of relying on a pre-spawn registration.
         converted.setNexus(nexus);
-        if (vehicle != null && !vehicle.isRemoved()) {
+        if (canContinueRiding(vehicle, nexus)) {
             converted.startRiding(vehicle);
+        }
+    }
+
+    /**
+     * Modded mounts can make assumptions about their vanilla passengers. Only
+     * transfer a converted rider when the mount can actually navigate to the
+     * Nexus; otherwise the IM mob continues on foot with its own navigation.
+     */
+    private static boolean canContinueRiding(
+            Entity vehicle, com.invasion.nexus.NexusAccess nexus) {
+        if (!(vehicle instanceof Mob mount) || vehicle.isRemoved()) {
+            return false;
+        }
+
+        try {
+            Path path = mount.getNavigation().createPath(
+                    nexus.getOrigin(), 1);
+            return path != null && path.canReach();
+        } catch (RuntimeException | LinkageError ignored) {
+            // Compatibility code in a modded mount may reject an unfamiliar
+            // IM passenger or navigation implementation. Dismount safely.
+            return false;
         }
     }
 }
