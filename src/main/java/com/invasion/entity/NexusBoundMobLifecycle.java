@@ -104,6 +104,8 @@ public final class NexusBoundMobLifecycle {
             slime.suppressSplitOnNexusDeath();
         } else if (living instanceof IMMagmaCubeEntity magmaCube) {
             magmaCube.suppressSplitOnNexusDeath();
+        } else if (living instanceof MysteryZombieEntity mysteryZombie) {
+            mysteryZombie.suppressReleaseOnNexusDeath();
         }
         // Nexus cleanup must not replace infected hosts with a fresh group of
         // support parasites while the remaining invasion is being removed.

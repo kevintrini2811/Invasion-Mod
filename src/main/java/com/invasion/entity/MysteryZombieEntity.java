@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 /** The exceptionally rare ???? zombie variant. */
 public final class MysteryZombieEntity extends EntityIMZombie {
     private boolean releasedMob;
+    private boolean suppressRelease;
 
     public MysteryZombieEntity(
             EntityType<? extends EntityIMZombie> type, Level world) {
@@ -28,9 +29,14 @@ public final class MysteryZombieEntity extends EntityIMZombie {
         // ???? is completely silent, including footsteps and combat sounds.
     }
 
+    public void suppressReleaseOnNexusDeath() {
+        suppressRelease = true;
+    }
+
     @Override
     public void die(DamageSource source) {
-        if (!releasedMob && level() instanceof ServerLevel world) {
+        if (!releasedMob && !suppressRelease
+                && level() instanceof ServerLevel world) {
             releasedMob = true;
             EntityConstruct construct = BudgetWavePlan.randomMobConstruct(
                     getRandom());
