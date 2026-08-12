@@ -115,17 +115,22 @@ public interface NexusEntity extends IHasNexus, BuildableMob, HasAiGoals, Entity
 
     @Override
     default Goal getAIGoal() {
-        return getNavigatorNew().getAIGoal();
+        Navigation navigation = getNavigatorNew();
+        return navigation == null ? Goal.NONE : navigation.getAIGoal();
     }
 
     @Override
     default Goal getPrevAIGoal() {
-        return getNavigatorNew().getPrevAIGoal();
+        Navigation navigation = getNavigatorNew();
+        return navigation == null ? Goal.NONE : navigation.getPrevAIGoal();
     }
 
     @Override
     default Goal transitionAIGoal(Goal newGoal) {
-        return getNavigatorNew().transitionAIGoal(newGoal);
+        Navigation navigation = getNavigatorNew();
+        return navigation == null
+                ? Goal.NONE
+                : navigation.transitionAIGoal(newGoal);
     }
 
     @Deprecated
