@@ -28,6 +28,7 @@ public class InvasionCommand {
                 .then(Commands.literal("help").executes(context -> help(dispatcher, context.getSource())))
                 .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
                 .then(Commands.literal("continue").executes(context -> continueInvasion(context.getSource())))
+                .then(Commands.literal("destroy").executes(context -> destroy(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
                 .then(Commands.literal("set")
                         .then(Commands.argument("wave", IntegerArgumentType.integer(1))
@@ -123,6 +124,26 @@ public class InvasionCommand {
                 "invmod.message.command.invasion_stopped")
                 .withStyle(ChatFormatting.RED), true);
         return 1;
+    }
+
+    private static int destroy(CommandSourceStack source) {
+        int destroyed = 0;
+        for (var level : source.getServer().getAllLevels()) {
+            destroyed += WorldNexusStorage.of(level).destroyAllNexuses();
+        }
+
+        if (destroyed == 0) {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.no_nexuses_to_destroy")
+                    .withStyle(ChatFormatting.RED));
+            return 0;
+        }
+
+        int destroyedCount = destroyed;
+        source.sendSuccess(() -> Component.translatable(
+                "invmod.message.command.nexuses_destroyed", destroyedCount)
+                .withStyle(ChatFormatting.RED), true);
+        return destroyed;
     }
 
     private static int getRadius(CommandSourceStack source) {
