@@ -9,6 +9,7 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.model.monster.zombie.ZombieModel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
@@ -22,17 +23,17 @@ final class MysteryZombieOuterLayer extends RenderLayer<
         HumanoidModel<InvasionZombieRenderState>> {
     private static final Identifier TEXTURE = InvasionMod.id(
             "textures/entity/zombie/mystery_zombie.png");
-    private final HumanoidModel<InvasionZombieRenderState> adultModel;
-    private final HumanoidModel<InvasionZombieRenderState> babyModel;
+    private final ZombieModel<InvasionZombieRenderState> adultModel;
+    private final ZombieModel<InvasionZombieRenderState> babyModel;
 
     MysteryZombieOuterLayer(RenderLayerParent<
             InvasionZombieRenderState,
             HumanoidModel<InvasionZombieRenderState>> renderer) {
         super(renderer);
         MeshDefinition mesh = createOuterMesh();
-        adultModel = new HumanoidModel<>(
+        adultModel = new ZombieModel<>(
                 LayerDefinition.create(mesh, 64, 64).bakeRoot());
-        babyModel = new HumanoidModel<>(LayerDefinition.create(
+        babyModel = new ZombieModel<>(LayerDefinition.create(
                 HumanoidModel.BABY_TRANSFORMER.apply(mesh),
                 64, 64).bakeRoot());
     }
@@ -48,7 +49,7 @@ final class MysteryZombieOuterLayer extends RenderLayer<
         if (state.isInvisible) {
             return;
         }
-        HumanoidModel<InvasionZombieRenderState> model =
+        ZombieModel<InvasionZombieRenderState> model =
                 state.isBaby ? babyModel : adultModel;
         collector.order(1).submitModel(
                 model,
