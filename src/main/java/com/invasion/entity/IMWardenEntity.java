@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Unit;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityAttachment;
 import net.minecraft.world.entity.EntityType;
@@ -97,6 +98,8 @@ public final class IMWardenEntity extends Warden
                     .ifPresent(this::setNexus);
         }
 
+        getBrain().setMemoryWithExpiry(
+                MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, 1200L);
         super.customServerAiStep(level);
         consumeExperienceOrbs(level);
         approachAndAttackNexus(level);
