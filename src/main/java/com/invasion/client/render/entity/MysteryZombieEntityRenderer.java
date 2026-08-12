@@ -95,9 +95,10 @@ public final class MysteryZombieEntityRenderer
         PartDefinition root = mesh.getRoot();
         CubeDeformation head = new CubeDeformation(0.5F);
         CubeDeformation body = new CubeDeformation(0.25F);
-        root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(32, 0)
-                .addBox(-4, -8, -4, 8, 8, 8, head), PartPose.ZERO)
-                .addOrReplaceChild("hat", CubeListBuilder.create(), PartPose.ZERO);
+        root.addOrReplaceChild(
+                "head", CubeListBuilder.create(), PartPose.ZERO);
+        root.addOrReplaceChild("hat", CubeListBuilder.create().texOffs(32, 0)
+                .addBox(-4, -8, -4, 8, 8, 8, head), PartPose.ZERO);
         root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(16, 32)
                 .addBox(-4, 0, -2, 8, 12, 4, body), PartPose.ZERO);
         root.addOrReplaceChild("right_arm", CubeListBuilder.create().texOffs(40, 32)
