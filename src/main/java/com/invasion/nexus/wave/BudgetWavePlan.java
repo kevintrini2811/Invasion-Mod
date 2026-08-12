@@ -127,9 +127,9 @@ public final class BudgetWavePlan {
             o(InvEntities.JUMPING_SPIDER,1,3), o(InvEntities.QUEEN_SPIDER,1,8), o(InvEntities.PIGMAN_ENGINEER,1,5),
             o(InvEntities.ZOMBIE_BUILDER,1,7), o(InvEntities.ZOMBIE_MINER,1,9), o(InvEntities.SILVERFISH,1,3), o(InvEntities.ENDERMITE,1,4),
             o(InvEntities.WITCH,1,5), o(InvEntities.THROWER,1,5), o(InvEntities.THROWER,2,10), o(InvEntities.IMP,1,5),
-            o(InvEntities.BLAZE,1,8), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,11),
+            o(InvEntities.BLAZE,1,8), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,15),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
-            o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,10),
+            o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5));
 
     /** Selects any purchasable IM combat mob without exposing it as a purchase. */
