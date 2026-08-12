@@ -73,10 +73,10 @@ public class NexusInventory extends SimpleContainer {
                     cookTime += nexus.getMode() == Mode.STOPPED ? 1 : 9;
                 } else {
                     if (secondStack.isEmpty()) {
-                        setItem(1, InvItems.FLAME_TRAP.getDefaultInstance());
+                        setItem(1, InvItems.RIFT_TRAP.getDefaultInstance());
                         firstStack.shrink(1);
                         cookTime = 0;
-                    } else if (secondStack.is(InvItems.FLAME_TRAP) && secondStack.getCount() < secondStack.getMaxStackSize()) {
+                    } else if (secondStack.is(InvItems.RIFT_TRAP) && secondStack.getCount() < secondStack.getMaxStackSize()) {
                         secondStack.grow(1);
                         firstStack.shrink(1);
                         cookTime = 0;
