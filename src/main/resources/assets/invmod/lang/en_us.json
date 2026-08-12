@@ -183,6 +183,8 @@
     "invmod.message.command.wave_set": "Invasion wave successfully set to %s.",
     "invmod.message.command.no_invasion_to_stop": "No invasion is active. Nothing happened.",
     "invmod.message.command.invasion_stopped": "Invasion successfully stopped.",
+    "invmod.message.command.no_nexuses_to_destroy": "No Nexus blocks were found.",
+    "invmod.message.command.nexuses_destroyed": "Destroyed %s Nexus block(s).",
     "invmod.message.command.no_nexus_for_beam": "No selected Nexus was found.",
     "invmod.message.command.nexus_beam_enabled": "Nexus beacon beam enabled.",
     "invmod.message.command.nexus_beam_disabled": "Nexus beacon beam disabled.",

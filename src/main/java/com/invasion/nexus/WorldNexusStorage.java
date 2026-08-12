@@ -214,6 +214,29 @@ public class WorldNexusStorage extends SavedData {
         }
     }
 
+    public synchronized int destroyAllNexuses() {
+        List<BlockPos> positions = new ArrayList<>();
+        instances.values().forEach(nexus -> positions.add(nexus.getOrigin()));
+        legacyNexuses.forEach(nexus -> positions.add(nexus.pos()));
+
+        instances.values().forEach(nexus -> nexus.stop(true));
+        instances.clear();
+        legacyNexuses.clear();
+        activeNexus = Optional.empty();
+
+        int destroyed = 0;
+        for (BlockPos pos : positions) {
+            if (world.getBlockState(pos).is(InvBlocks.NEXUS_CORE)
+                    && world.destroyBlock(pos, false)) {
+                destroyed++;
+            }
+        }
+        if (!positions.isEmpty()) {
+            setDirty();
+        }
+        return destroyed;
+    }
+
     public synchronized NexusAccess getNexus(UUID nexusId) {
         return instances.get(nexusId);
     }
