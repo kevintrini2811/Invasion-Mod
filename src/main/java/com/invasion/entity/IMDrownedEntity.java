@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
@@ -27,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.Vec3;
@@ -40,6 +42,8 @@ public final class IMDrownedEntity extends EntityIMZombie
         moveControl = new SmoothSwimmingMoveControl(
                 this, 85, 10, 1.0F, 1.0F, true);
         setPathfindingMalus(PathType.WATER, 0.0F);
+        setPathfindingMalus(PathType.LAVA, 0.0F);
+        setFireImmune(true);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -60,6 +64,23 @@ public final class IMDrownedEntity extends EntityIMZombie
         goalSelector.addGoal(1, new PredicatedGoal(
                 new RangedAttackGoal(this, 1.0D, 40, 10.0F),
                 () -> getMainHandItem().is(Items.TRIDENT)));
+    }
+
+    @Override
+    public void tick() {
+        if (!level().isClientSide()) {
+            solidifyLavaUnderfoot();
+        }
+        super.tick();
+    }
+
+    private void solidifyLavaUnderfoot() {
+        BlockPos lavaPos = BlockPos.containing(
+                getX(), getBoundingBox().minY - 0.01D, getZ());
+        if (level().getFluidState(lavaPos).is(FluidTags.LAVA)) {
+            level().setBlockAndUpdate(
+                    lavaPos, Blocks.COBBLESTONE.defaultBlockState());
+        }
     }
 
     @Override
