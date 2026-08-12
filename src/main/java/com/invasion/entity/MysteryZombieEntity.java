@@ -50,7 +50,9 @@ public final class MysteryZombieEntity extends EntityIMZombie {
 
     private void equipDeathSpawn(Mob mob) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (!slot.isArmor() || !getRandom().nextBoolean()) {
+            if (!slot.isArmor()
+                    || !EquipmentUtil.canUseRandomArmor(mob, slot)
+                    || !getRandom().nextBoolean()) {
                 continue;
             }
             List<Item> armor = findEquipment(mob, slot, true);
@@ -60,7 +62,8 @@ public final class MysteryZombieEntity extends EntityIMZombie {
             }
         }
 
-        if (!getRandom().nextBoolean()) {
+        if (!EquipmentUtil.canUseRandomWeapon(mob)
+                || !getRandom().nextBoolean()) {
             return;
         }
         List<Item> weapons = findEquipment(
