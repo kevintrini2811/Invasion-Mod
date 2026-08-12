@@ -13,13 +13,6 @@ import net.minecraft.resources.Identifier;
 
 public final class BoulderProjectileRenderer
         extends EntityRenderer<BoulderEntity, EntityRenderState> {
-    private static final class NoOutlineRenderState extends EntityRenderState {
-        @Override
-        public boolean appearsGlowing() {
-            return false;
-        }
-    }
-
     private static final Identifier TEXTURE =
             InvasionMod.id("textures/entity/boulder.png");
     private final ProjectileCubeModel model =
@@ -32,14 +25,7 @@ public final class BoulderProjectileRenderer
 
     @Override
     public EntityRenderState createRenderState() {
-        return new NoOutlineRenderState();
-    }
-
-    @Override
-    public void extractRenderState(BoulderEntity entity, EntityRenderState state,
-            float tickDelta) {
-        super.extractRenderState(entity, state, tickDelta);
-        state.outlineColor = EntityRenderState.NO_OUTLINE;
+        return new EntityRenderState();
     }
 
     @Override
@@ -50,7 +36,7 @@ public final class BoulderProjectileRenderer
         poseStack.mulPose(Axis.XP.rotationDegrees(state.ageInTicks * 12.0F));
         poseStack.mulPose(Axis.YP.rotationDegrees(state.ageInTicks * 7.0F));
         collector.submitModel(model, state, poseStack, TEXTURE, state.lightCoords,
-                0, -1, null);
+                0, EntityRenderState.NO_OUTLINE, null);
         poseStack.popPose();
         super.submit(state, poseStack, collector, cameraState);
     }

@@ -16,13 +16,6 @@ import net.minecraft.world.level.block.Blocks;
 
 public final class TntProjectileRenderer
         extends EntityRenderer<EntityIMPrimedTNT, TntRenderState> {
-    private static final class NoOutlineTntRenderState extends TntRenderState {
-        @Override
-        public boolean appearsGlowing() {
-            return false;
-        }
-    }
-
     private final BlockModelResolver blockModelResolver;
 
     public TntProjectileRenderer(EntityRendererProvider.Context context) {
@@ -33,7 +26,7 @@ public final class TntProjectileRenderer
 
     @Override
     public TntRenderState createRenderState() {
-        return new NoOutlineTntRenderState();
+        return new TntRenderState();
     }
 
     @Override
