@@ -34,6 +34,9 @@ public final class InvRenderers {
         event.registerEntityRenderer(
                 InvEntities.SPEEDY_ZOMBIE,
                 SpeedyZombieRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.MYSTERY_ZOMBIE,
+                MysteryZombieRenderer::new);
         event.registerEntityRenderer(InvEntities.HUSK, InvHuskRenderer::new);
         event.registerEntityRenderer(InvEntities.DROWNED, InvDrownedRenderer::new);
         event.registerEntityRenderer(

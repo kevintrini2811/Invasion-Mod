@@ -68,6 +68,13 @@ public interface InvEntities {
                     .sized(0.6F, 1.8F).eyeHeight(1.53F)
                     .passengerAttachments(1.865F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
+    EntityType<MysteryZombieEntity> MYSTERY_ZOMBIE = register(
+            "mystery_zombie",
+            EntityType.Builder.<MysteryZombieEntity>of(
+                            MysteryZombieEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .passengerAttachments(1.865F).ridingOffset(-0.7F)
+                    .clientTrackingRange(8));
     EntityType<IMHuskEntity> HUSK = register(
             "husk",
             EntityType.Builder.<IMHuskEntity>of(
@@ -243,6 +250,9 @@ public interface InvEntities {
         event.put(ZOMBIE, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(
                 SPEEDY_ZOMBIE,
+                EntityIMZombie.createTierT1V0Attributes().build());
+        event.put(
+                MYSTERY_ZOMBIE,
                 EntityIMZombie.createTierT1V0Attributes().build());
         event.put(
                 HUSK, EntityIMZombie.createTierT1V0Attributes().build());
