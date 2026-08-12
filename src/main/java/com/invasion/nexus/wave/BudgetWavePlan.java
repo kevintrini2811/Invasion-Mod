@@ -132,6 +132,14 @@ public final class BudgetWavePlan {
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,10),
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5));
 
+    /** Selects any purchasable IM combat mob without exposing it as a purchase. */
+    public static EntityConstruct randomMobConstruct(RandomSource random) {
+        Option option = ALL.get(random.nextInt(ALL.size()));
+        return new EntityConstruct(
+                option.type(), 0, option.tier(), option.flavour(),
+                1.0F, 0, 360);
+    }
+
     private static final Map<Theme, List<Option>> POOLS = makePools();
     private static Map<Theme, List<Option>> makePools() {
         Map<Theme, List<Option>> pools = new EnumMap<>(Theme.class);

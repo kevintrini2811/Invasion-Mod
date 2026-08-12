@@ -34,6 +34,9 @@ public final class InvRenderers {
         EntityRendererRegistry.register(
                 InvEntities.SPEEDY_ZOMBIE,
                 SpeedyZombieRenderer::new);
+        EntityRendererRegistry.register(
+                InvEntities.MYSTERY_ZOMBIE,
+                MysteryZombieRenderer::new);
         EntityRendererRegistry.register(InvEntities.HUSK, InvHuskRenderer::new);
         EntityRendererRegistry.register(InvEntities.DROWNED, InvDrownedRenderer::new);
         EntityRendererRegistry.register(
