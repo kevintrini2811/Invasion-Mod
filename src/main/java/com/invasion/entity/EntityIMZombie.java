@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.server.level.ServerLevel;
@@ -21,6 +22,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
@@ -81,6 +83,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     private static final EntityDataAccessor<Boolean> BABY =
             SynchedEntityData.defineId(
                     EntityIMZombie.class, EntityDataSerializers.BOOLEAN);
+    private int inWaterTime;
+    private int drownedConversionTime = -1;
     private static final net.minecraft.world.entity.ai.attributes.AttributeModifier
             BABY_SPEED_BONUS = AttributeUtil.addPercentage(
                     InvasionMod.id("baby_zombie_speed"), 50);
@@ -199,6 +203,10 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.putBoolean("IsBaby", isBaby());
+        output.putInt("InWaterTime", inWaterTime);
+        if (drownedConversionTime >= 0) {
+            output.putInt("DrownedConversionTime", drownedConversionTime);
+        }
     }
 
     @Override
@@ -206,6 +214,9 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         super.readAdditionalSaveData(input);
         setBaby(input.getBooleanOr("IsBaby", false)
                 || input.getBooleanOr("isBaby", false));
+        inWaterTime = input.getIntOr("InWaterTime", 0);
+        drownedConversionTime = input.getIntOr(
+                "DrownedConversionTime", -1);
     }
 
     @Override
@@ -233,6 +244,22 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     @Override
     public void tick() {
         super.tick();
+        if (!level().isClientSide() && isAlive() && !isNoAi()
+                && getType() == InvEntities.ZOMBIE) {
+            if (drownedConversionTime >= 0) {
+                if (--drownedConversionTime < 0
+                        && level() instanceof ServerLevel world) {
+                    convertToDrowned(world);
+                    return;
+                }
+            } else if (isEyeInFluid(FluidTags.WATER)) {
+                if (++inWaterTime >= 600) {
+                    drownedConversionTime = 300;
+                }
+            } else {
+                inWaterTime = -1;
+            }
+        }
         if (!level().isClientSide()
                 && getType() == InvEntities.ZOMBIE
                 && level().getBlockState(blockPosition()).is(Blocks.SOUL_FIRE)) {
@@ -245,6 +272,46 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
             // expiring while still allowing water to clear it first.
             igniteForTicks(20);
             spreadTarFire();
+        }
+    }
+
+    private void convertToDrowned(ServerLevel world) {
+        IMDrownedEntity drowned = InvEntities.DROWNED.create(
+                world, EntitySpawnReason.CONVERSION);
+        if (drowned == null) {
+            return;
+        }
+
+        drowned.setTier(getTier());
+        drowned.setFlavour(getFlavour());
+        drowned.setBaby(isBaby());
+        drowned.setNexus(getNexus());
+        drowned.setCountsTowardMobCap(countsTowardMobCap());
+        drowned.snapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+        drowned.setDeltaMovement(getDeltaMovement());
+        drowned.setCustomName(getCustomName());
+        drowned.setCustomNameVisible(isCustomNameVisible());
+        drowned.setNoAi(isNoAi());
+        drowned.setCanPickUpLoot(canPickUpLoot());
+        drowned.setTarget(getTarget());
+        if (isPersistenceRequired()) {
+            drowned.setPersistenceRequired();
+        }
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            drowned.setItemSlot(slot, getItemBySlot(slot).copy());
+            drowned.setDropChance(slot, getDropChances().byEquipment(slot));
+        }
+        drowned.setHealth(drowned.getMaxHealth());
+
+        Entity vehicle = getVehicle();
+        stopRiding();
+        discard();
+        if (world.addFreshEntity(drowned)
+                && vehicle != null && !vehicle.isRemoved()) {
+            drowned.startRiding(vehicle);
+        }
+        if (!isSilent()) {
+            world.levelEvent(null, 1040, blockPosition(), 0);
         }
     }
 
