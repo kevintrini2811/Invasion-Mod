@@ -23,15 +23,18 @@ import com.invasion.nexus.ai.scaffold.ScaffoldView;
 
 public class AttackerAI {
     private static final ExecutorService SCAFFOLD_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final int DENSITY_UPDATE_PERIOD = 20;
     private final Nexus nexus;
 
-    private final Long2ObjectMap<Integer> entityDensityData = new Long2ObjectOpenHashMap<>();
+    private Long2ObjectMap<Integer> entityDensityData = new Long2ObjectOpenHashMap<>();
+    private Long2ObjectMap<Integer> pendingEntityDensityData = new Long2ObjectOpenHashMap<>();
 
     private final ScaffoldList scaffolds = new ScaffoldList();
 
     private int nextScaffoldCalcTimer;
     private int updateScaffoldTimer;
-    private int nextEntityDensityUpdate;
+    private int densityUpdateTick;
+    private int densityUpdateSize;
 
     public AttackerAI(Nexus nexus) {
         this.nexus = nexus;
@@ -49,12 +52,29 @@ public class AttackerAI {
             scaffolds.tick(nexus.getWorld());
         }
 
-        if (--nextEntityDensityUpdate <= 0) {
-            nextEntityDensityUpdate = 20;
-            entityDensityData.clear();
-            for (Combatant<?> mob : nexus.getCombatants()) {
-                entityDensityData.compute(mob.asEntity().blockPosition().asLong(), (key, old) -> (old == null ? 1 : old + 1) & ScaffoldView.MOB_DENSITY_FLAG);
+        updateEntityDensity();
+    }
+
+    private void updateEntityDensity() {
+        if (densityUpdateTick == 0) {
+            densityUpdateSize = nexus.getCombatants().size();
+            pendingEntityDensityData = new Long2ObjectOpenHashMap<>();
+        }
+
+        int start = densityUpdateSize * densityUpdateTick / DENSITY_UPDATE_PERIOD;
+        int end = densityUpdateSize * (densityUpdateTick + 1) / DENSITY_UPDATE_PERIOD;
+        for (int index = start; index < end; index++) {
+            Combatant<?> mob = nexus.getCombatants().get(index);
+            if (mob != null) {
+                pendingEntityDensityData.compute(mob.asEntity().blockPosition().asLong(),
+                        (key, old) -> (old == null ? 1 : old + 1) & ScaffoldView.MOB_DENSITY_FLAG);
             }
+        }
+
+        densityUpdateTick++;
+        if (densityUpdateTick == DENSITY_UPDATE_PERIOD) {
+            entityDensityData = pendingEntityDensityData;
+            densityUpdateTick = 0;
         }
     }
 
