@@ -157,13 +157,21 @@ public final class IMDrownedEntity extends EntityIMZombie
             }
             if (hasNexus()) {
                 BlockPos nexus = getNexus().getOrigin();
-                if (nexus.getY() >= getY() - 0.5D) {
-                    return false;
-                }
-                destination = Vec3.atCenterOf(nexus);
+                double nexusX = nexus.getX() + 0.5D;
+                double nexusZ = nexus.getZ() + 0.5D;
+                double horizontalDistanceSqr =
+                        (nexusX - getX()) * (nexusX - getX())
+                                + (nexusZ - getZ()) * (nexusZ - getZ());
+                destination = new Vec3(
+                        nexusX,
+                        horizontalDistanceSqr <= 16.0D
+                                ? nexus.getY() + 0.5D
+                                : Math.min(
+                                        nexus.getY() + 0.5D, getY() - 1.0D),
+                        nexusZ);
                 return true;
             }
-            if (getRandom().nextInt(isUnderWater() ? 80 : 20) != 0) {
+            if (isUnderWater() && getRandom().nextInt(10) != 0) {
                 return false;
             }
             destination = findDiveDestination();
@@ -200,15 +208,20 @@ public final class IMDrownedEntity extends EntityIMZombie
         private Vec3 findDiveDestination() {
             BlockPos origin = blockPosition();
             RandomSource random = getRandom();
-            for (int attempt = 0; attempt < 16; attempt++) {
-                BlockPos candidate = origin.offset(
-                        random.nextInt(11) - 5,
-                        -(2 + random.nextInt(6)),
-                        random.nextInt(11) - 5);
-                if (level().getFluidState(candidate).is(FluidTags.WATER)
-                        && level().getFluidState(candidate.above())
-                                .is(FluidTags.WATER)) {
-                    return Vec3.atCenterOf(candidate);
+            for (int depthPass = 2; depthPass >= 1; depthPass--) {
+                for (int attempt = 0; attempt < 16; attempt++) {
+                    int yOffset = isUnderWater()
+                            ? random.nextInt(5) - 2
+                            : -(2 + random.nextInt(6));
+                    BlockPos candidate = origin.offset(
+                            random.nextInt(13) - 6,
+                            yOffset,
+                            random.nextInt(13) - 6);
+                    if (level().getFluidState(candidate).is(FluidTags.WATER)
+                            && level().getFluidState(candidate.above(depthPass))
+                                    .is(FluidTags.WATER)) {
+                        return Vec3.atCenterOf(candidate);
+                    }
                 }
             }
             return null;
