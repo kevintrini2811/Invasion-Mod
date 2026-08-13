@@ -47,4 +47,13 @@ public class Combatants implements Iterable<Combatant<?>> {
     public Iterator<Combatant<?>> iterator() {
         return mobList.iterator();
     }
+
+    public int size() {
+        return mobList.size();
+    }
+
+    @Nullable
+    public Combatant<?> get(int index) {
+        return index < mobList.size() ? mobList.get(index) : null;
+    }
 }
