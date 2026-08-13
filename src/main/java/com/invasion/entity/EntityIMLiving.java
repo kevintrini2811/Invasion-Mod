@@ -108,7 +108,14 @@ public abstract class EntityIMLiving extends Monster implements NexusEntity, Stu
 
     @Override
     public boolean checkSpawnObstruction(LevelReader world) {
-        return super.checkSpawnObstruction(world) && (hasNexus() || getLightLevelBelow8()) && level().loadedAndEntityCanStandOn(blockPosition().below(), this);
+        return super.checkSpawnObstruction(world)
+                && (hasNexus() || getLightLevelBelow8())
+                && hasValidSpawnSupport(world);
+    }
+
+    protected boolean hasValidSpawnSupport(LevelReader world) {
+        return level().loadedAndEntityCanStandOn(
+                blockPosition().below(), this);
     }
 
     @Override
