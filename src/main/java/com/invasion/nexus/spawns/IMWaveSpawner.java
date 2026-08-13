@@ -326,6 +326,8 @@ public class IMWaveSpawner implements Spawner {
 									spawnConstruct, world, spawnPoint.pos()),
 							world, spawnPoint.pos()));
 			}
+			spawnConstruct = replaceWaterSpawnedDrownedWithGuardian(
+					spawnConstruct, world, spawnPoint.pos());
 			Mob mob = spawnConstruct.createMob(nexus);
 			equipRandomWaveWeapon(mob, spawnConstruct);
 			equipRandomWaveArmor(mob, spawnConstruct);
@@ -484,6 +486,24 @@ public class IMWaveSpawner implements Spawner {
 		}
 		return new EntityConstruct(
 				replacement,
+				construct.texture(),
+				construct.tier(),
+				construct.flavour(),
+				construct.scaling(),
+				construct.minAngle(),
+				construct.maxAngle(),
+				construct.rules());
+	}
+
+	private EntityConstruct replaceWaterSpawnedDrownedWithGuardian(
+			EntityConstruct construct, ServerLevel world, BlockPos pos) {
+		if (construct.entityType() != InvEntities.DROWNED
+				|| !world.getFluidState(pos).is(FluidTags.WATER)
+				|| getRandom().nextInt(10) != 0) {
+			return construct;
+		}
+		return new EntityConstruct(
+				InvEntities.GUARDIAN,
 				construct.texture(),
 				construct.tier(),
 				construct.flavour(),
