@@ -242,6 +242,7 @@ public final class IMDrownedEntity extends EntityIMZombie
 
     private static final class DrownedMoveControl
             extends MoveControl {
+        private int shoreClimbTicks;
         private DrownedMoveControl(IMDrownedEntity drowned) {
             super(drowned);
         }
@@ -278,15 +279,28 @@ public final class IMDrownedEntity extends EntityIMZombie
             double x = targetX - mob.getX();
             double y = targetY - mob.getY();
             double z = targetZ - mob.getZ();
-            boolean climbingShore = mob.hasNexus()
-                    && targetY > mob.getY() + 0.5D
-                    && mob.horizontalCollision;
+            BlockPos nexusPos = mob.hasNexus()
+                    ? mob.getNexus().getOrigin() : null;
+            if (nexusPos != null && mob.horizontalCollision
+                    && nexusPos.getY() + 0.5D > mob.getY()) {
+                shoreClimbTicks = 20;
+            }
+            boolean climbingShore = nexusPos != null
+                    && nexusPos.getY() + 0.5D > mob.getY()
+                    && shoreClimbTicks-- > 0;
             if (climbingShore && mob.isUnderWater()) {
                 // Swim up beside the shore instead of continuously pushing
                 // into its submerged wall.
                 x = 0.0D;
                 z = 0.0D;
-                y = Math.max(y, 1.0D);
+                y = Math.max(
+                        nexusPos.getY() + 0.5D - mob.getY(), 1.0D);
+            } else if (climbingShore) {
+                // Once its head reaches the surface, keep pushing toward the
+                // real Nexus instead of an underwater land-path waypoint.
+                x = nexusPos.getX() + 0.5D - mob.getX();
+                y = nexusPos.getY() + 0.5D - mob.getY();
+                z = nexusPos.getZ() + 0.5D - mob.getZ();
             }
             double distance = Math.sqrt(x * x + y * y + z * z);
             if (distance < 1.0E-5D) {
