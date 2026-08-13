@@ -32,6 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.pathfinder.PathType;
@@ -196,7 +197,8 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
         // SpawnPoint performs the complete block/entity collision check after
         // positioning. Vanilla's additional entity-obstruction test rejects
         // crowded invasion batches before that authoritative check can run.
-        return !world.containsAnyLiquid(getBoundingBox());
+        return world.getFluidState(blockPosition()).is(FluidTags.LAVA)
+                || !world.containsAnyLiquid(getBoundingBox());
     }
 
     @Override
