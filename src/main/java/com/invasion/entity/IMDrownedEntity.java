@@ -317,7 +317,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     protected void travelInWater(
             Vec3 movementInput, double gravity,
             boolean falling, double y) {
-        if (isUnderWater() && wantsToSwim()) {
+        if (isInWater() && wantsToSwim()) {
             moveRelative(0.01F, movementInput);
             move(MoverType.SELF, getDeltaMovement());
             setDeltaMovement(getDeltaMovement().scale(0.9D));
@@ -330,7 +330,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     public void updateSwimming() {
         if (!level().isClientSide()) {
             setSwimming(isEffectiveAi()
-                    && isUnderWater() && wantsToSwim());
+                    && isInWater() && wantsToSwim());
         }
     }
 
