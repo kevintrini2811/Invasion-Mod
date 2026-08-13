@@ -10,6 +10,7 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -19,7 +20,7 @@ import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
+import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -42,8 +43,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     public IMDrownedEntity(
             EntityType<? extends EntityIMZombie> type, Level world) {
         super(type, world);
-        moveControl = new SmoothSwimmingMoveControl<>(
-                this, 85, 10, 1.0F, 1.0F, false);
+        moveControl = new DrownedMoveControl(this);
         setPathfindingMalus(PathType.WATER, 0.0F);
         setPathfindingMalus(PathType.LAVA, 0.0F);
         setFireImmune(true);
@@ -210,6 +210,53 @@ public final class IMDrownedEntity extends EntityIMZombie
                 }
             }
             return null;
+        }
+    }
+
+    private static final class DrownedMoveControl
+            extends MoveControl<IMDrownedEntity> {
+        private DrownedMoveControl(IMDrownedEntity drowned) {
+            super(drowned);
+        }
+
+        @Override
+        public void tick() {
+            if (!mob.isInWater()
+                    || operation != Operation.MOVE_TO) {
+                super.tick();
+                return;
+            }
+
+            double x = wantedX - mob.getX();
+            double y = wantedY - mob.getY();
+            double z = wantedZ - mob.getZ();
+            double distance = Math.sqrt(x * x + y * y + z * z);
+            if (distance < 1.0E-5D) {
+                mob.setSpeed(0.0F);
+                mob.setXxa(0.0F);
+                mob.setYya(0.0F);
+                mob.setZza(0.0F);
+                return;
+            }
+
+            float targetYaw = (float) (Mth.atan2(z, x)
+                    * Mth.RAD_TO_DEG) - 90.0F;
+            mob.setYRot(rotlerp(mob.getYRot(), targetYaw, 10.0F));
+            mob.yBodyRot = mob.getYRot();
+
+            double horizontalDistance = Math.sqrt(x * x + z * z);
+            float targetPitch = -((float) (Mth.atan2(y, horizontalDistance)
+                    * Mth.RAD_TO_DEG));
+            mob.setXRot(rotateTowards(
+                    mob.getXRot(), Mth.clamp(targetPitch, -85.0F, 85.0F),
+                    5.0F));
+
+            float speed = (float) (speedModifier
+                    * mob.getAttributeValue(Attributes.MOVEMENT_SPEED));
+            mob.setSpeed(speed);
+            float pitchRadians = mob.getXRot() * Mth.DEG_TO_RAD;
+            mob.setZza(Mth.cos(pitchRadians) * speed);
+            mob.setYya(-Mth.sin(pitchRadians) * speed);
         }
     }
 
