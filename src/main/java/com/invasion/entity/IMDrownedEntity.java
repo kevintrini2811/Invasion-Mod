@@ -21,6 +21,7 @@ import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.RangedAttackGoal;
 import net.minecraft.world.entity.monster.RangedAttackMob;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -64,6 +65,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        goalSelector.removeAllGoals(goal -> goal instanceof FloatGoal);
         goalSelector.addGoal(1, new PredicatedGoal(
                 new RangedAttackGoal(this, 1.0D, 40, 10.0F),
                 () -> getMainHandItem().is(Items.TRIDENT)));
