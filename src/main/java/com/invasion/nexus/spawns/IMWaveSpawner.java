@@ -717,6 +717,9 @@ public class IMWaveSpawner implements Spawner {
 		IMDrownedEntity drowned = InvEntities.DROWNED.create(
 				nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
 		drowned.setNexus(nexus);
+		EntityIMZombiePigman zombiePigman = InvEntities.ZOMBIE_PIGMAN.create(
+				nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
+		zombiePigman.setNexus(nexus);
 		List<SpawnPoint> spawnPoints = new ArrayList<>();
 		BlockPos origin = nexus.getOrigin();
 		BlockPos.MutableBlockPos mutable = origin.mutable();
@@ -727,15 +730,15 @@ public class IMWaveSpawner implements Spawner {
 			for (int i = 0; i <= spawnRadius * 0.7D + 1; i++) {
 				int j = (int) Math.round(spawnRadius * Math.cos(Math.asin(i / spawnRadius)));
 
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( i, vertical, j));
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( i, vertical,-j));
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-i, vertical, j));
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-i, vertical,-j));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( i, vertical, j));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( i, vertical,-j));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-i, vertical, j));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-i, vertical,-j));
 
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( j, vertical, i));
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( j, vertical,-i));
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-j, vertical, i));
-				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-j, vertical,-i));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( j, vertical, i));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( j, vertical,-i));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-j, vertical, i));
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-j, vertical,-i));
 			}
 		}
 
@@ -765,10 +768,11 @@ public class IMWaveSpawner implements Spawner {
 
 	private void addValidSpawn(
 			Mob groundMob, IMDrownedEntity drowned,
+			EntityIMZombiePigman zombiePigman,
 			List<SpawnPoint> spawnPoints, BlockPos pos) {
-		Mob candidate = nexus.getWorld().getFluidState(pos)
-				.is(FluidTags.WATER)
-				? drowned : groundMob;
+		var fluid = nexus.getWorld().getFluidState(pos);
+		Mob candidate = fluid.is(FluidTags.WATER) ? drowned
+				: fluid.is(FluidTags.LAVA) ? zombiePigman : groundMob;
 		addValidSpawn(candidate, spawnPoints, pos);
 	}
 
