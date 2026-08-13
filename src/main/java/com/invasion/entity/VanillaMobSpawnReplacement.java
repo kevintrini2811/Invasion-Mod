@@ -29,7 +29,6 @@ import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
-import net.minecraft.tags.FluidTags;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
@@ -56,13 +55,6 @@ public final class VanillaMobSpawnReplacement {
 
     private static void blockNaturalSpawn(FinalizeSpawnEvent event) {
         ServerLevel world = event.getLevel().getLevel();
-        if (event.getEntity().getType() == EntityTypes.DROWNED
-                && world.getFluidState(event.getEntity().blockPosition())
-                        .is(FluidTags.WATER)) {
-            WATER_SPAWNED_DROWNED.computeIfAbsent(
-                    world, ignored -> new HashSet<>())
-                    .add(event.getEntity().getUUID());
-        }
         if (event.getSpawnType() == EntitySpawnReason.NATURAL
                 && world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
@@ -82,6 +74,12 @@ public final class VanillaMobSpawnReplacement {
         }
         LOADED_REPLACEABLE.computeIfAbsent(
                 world, ignored -> new HashSet<>()).add(mob.getUUID());
+        // Fluid contact is reliable once the entity joins the level. During
+        // FinalizeSpawnEvent the Drowned's cached water state is not yet set.
+        if (mob.getType() == EntityTypes.DROWNED && mob.isInWater()) {
+            WATER_SPAWNED_DROWNED.computeIfAbsent(
+                    world, ignored -> new HashSet<>()).add(mob.getUUID());
+        }
         if (hasActiveNexus(world)) {
             PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>()).add(mob.getUUID());
