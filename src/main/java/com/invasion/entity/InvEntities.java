@@ -97,6 +97,12 @@ public interface InvEntities {
                             IMGuardianEntity::new, MobCategory.MONSTER)
                     .sized(0.85F, 0.85F).eyeHeight(0.425F)
                     .clientTrackingRange(8));
+    EntityType<IMElderGuardianEntity> ELDER_GUARDIAN = register(
+            "elder_guardian",
+            EntityType.Builder.<IMElderGuardianEntity>of(
+                            IMElderGuardianEntity::new, MobCategory.MONSTER)
+                    .sized(1.9975F, 1.9975F).eyeHeight(0.99875F)
+                    .clientTrackingRange(10));
     EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER = register(
             "zombie_villager",
             EntityType.Builder.<IMZombieVillagerEntity>of(
@@ -268,6 +274,8 @@ public interface InvEntities {
                 DROWNED, IMDrownedEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(
                 GUARDIAN, IMGuardianEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(
+                ELDER_GUARDIAN, IMElderGuardianEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(
                 ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes());

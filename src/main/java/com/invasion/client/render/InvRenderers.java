@@ -41,6 +41,8 @@ public final class InvRenderers {
         EntityRendererRegistry.register(InvEntities.DROWNED, InvDrownedRenderer::new);
         EntityRendererRegistry.register(InvEntities.GUARDIAN, IMGuardianRenderer::new);
         EntityRendererRegistry.register(
+                InvEntities.ELDER_GUARDIAN, IMElderGuardianRenderer::new);
+        EntityRendererRegistry.register(
                 InvEntities.ZOMBIE_VILLAGER,
                 IMZombieVillagerRenderer::new);
         EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
