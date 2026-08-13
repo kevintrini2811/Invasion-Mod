@@ -39,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class IMDrownedEntity extends EntityIMZombie
         implements RangedAttackMob {
+    private static final float UNDERWATER_SPEED_MULTIPLIER = 1.5F;
     private boolean diving;
 
     public IMDrownedEntity(
@@ -267,7 +268,8 @@ public final class IMDrownedEntity extends EntityIMZombie
                     5.0F));
 
             float speed = (float) (speedModifier
-                    * mob.getAttributeValue(Attributes.MOVEMENT_SPEED));
+                    * mob.getAttributeValue(Attributes.MOVEMENT_SPEED))
+                    * UNDERWATER_SPEED_MULTIPLIER;
             mob.setSpeed(speed);
             float pitchRadians = mob.getXRot() * Mth.DEG_TO_RAD;
             mob.setZza(Mth.cos(pitchRadians) * speed);
@@ -302,6 +304,11 @@ public final class IMDrownedEntity extends EntityIMZombie
     @Override
     public boolean isPushedByFluid() {
         return !isSwimming();
+    }
+
+    @Override
+    protected int decreaseAirSupply(int air) {
+        return air;
     }
 
     @Override
