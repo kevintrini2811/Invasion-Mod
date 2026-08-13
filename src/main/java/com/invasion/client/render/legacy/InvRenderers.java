@@ -38,6 +38,7 @@ import net.minecraft.client.renderer.entity.WitherSkullRenderer;
 import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
+import net.minecraft.client.renderer.entity.GuardianRenderer;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
 public final class InvRenderers {
@@ -54,6 +55,7 @@ public final class InvRenderers {
                 MysteryZombieEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.HUSK, VariantMobRenderers.Husk::new);
         event.registerEntityRenderer(InvEntities.DROWNED, VariantMobRenderers.Drowned::new);
+        event.registerEntityRenderer(InvEntities.GUARDIAN, GuardianRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER, VariantMobRenderers.ZombieVillager::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOGLIN, IMZoglinRenderer::new);
