@@ -276,6 +276,16 @@ public final class IMDrownedEntity extends EntityIMZombie
             double x = targetX - mob.getX();
             double y = targetY - mob.getY();
             double z = targetZ - mob.getZ();
+            boolean climbingShore = mob.hasNexus()
+                    && targetY > mob.getY() + 0.5D
+                    && mob.horizontalCollision;
+            if (climbingShore && mob.isUnderWater()) {
+                // Swim up beside the shore instead of continuously pushing
+                // into its submerged wall.
+                x = 0.0D;
+                z = 0.0D;
+                y = Math.max(y, 1.0D);
+            }
             double distance = Math.sqrt(x * x + y * y + z * z);
             if (distance < 1.0E-5D) {
                 mob.setSpeed(0.0F);
@@ -308,7 +318,9 @@ public final class IMDrownedEntity extends EntityIMZombie
             Vec3 movement = mob.getDeltaMovement();
             mob.setDeltaMovement(
                     movement.x,
-                    Mth.lerp(0.2D, movement.y, verticalSpeed),
+                    climbingShore && !mob.isUnderWater()
+                            ? Math.max(movement.y, 0.3D)
+                            : Mth.lerp(0.2D, movement.y, verticalSpeed),
                     movement.z);
         }
     }
