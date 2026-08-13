@@ -7,7 +7,7 @@ import net.minecraft.world.item.ToolMaterial;
 final class CustomToolMaterial {
     static final ToolMaterial INFUSED_GOLD = new ToolMaterial(
             BlockTags.INCORRECT_FOR_GOLD_TOOL,
-            40,
+            101,
             12.0F,
             4.0F,
             22,
