@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import com.invasion.entity.ai.goal.PredicatedGoal;
+import java.util.EnumSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -36,11 +37,13 @@ import org.jetbrains.annotations.Nullable;
 
 public final class IMDrownedEntity extends EntityIMZombie
         implements RangedAttackMob {
+    private boolean diving;
+
     public IMDrownedEntity(
             EntityType<? extends EntityIMZombie> type, Level world) {
         super(type, world);
         moveControl = new SmoothSwimmingMoveControl<>(
-                this, 85, 10, 1.0F, 1.0F, true);
+                this, 85, 10, 1.0F, 1.0F, false);
         setPathfindingMalus(PathType.WATER, 0.0F);
         setPathfindingMalus(PathType.LAVA, 0.0F);
         setFireImmune(true);
@@ -64,6 +67,7 @@ public final class IMDrownedEntity extends EntityIMZombie
         goalSelector.addGoal(1, new PredicatedGoal(
                 new RangedAttackGoal(this, 1.0D, 40, 10.0F),
                 () -> getMainHandItem().is(Items.TRIDENT)));
+        goalSelector.addGoal(4, new DiveGoal());
     }
 
     @Override
@@ -129,8 +133,84 @@ public final class IMDrownedEntity extends EntityIMZombie
 
     public boolean wantsToSwim() {
         LivingEntity target = getTarget();
-        return hasNexus()
+        return diving || hasNexus()
                 || target != null && target.isInWater();
+    }
+
+    private final class DiveGoal
+            extends net.minecraft.world.entity.ai.goal.Goal {
+        private static final int MAX_DIVE_TIME = 20 * 8;
+        private Vec3 destination;
+        private int remainingTicks;
+
+        private DiveGoal() {
+            setFlags(EnumSet.of(
+                    net.minecraft.world.entity.ai.goal.Goal.Flag.MOVE));
+        }
+
+        @Override
+        public boolean canUse() {
+            if (getTarget() != null || !isInWater()) {
+                return false;
+            }
+            if (hasNexus()) {
+                BlockPos nexus = getNexus().getOrigin();
+                if (nexus.getY() >= getY() - 0.5D) {
+                    return false;
+                }
+                destination = Vec3.atCenterOf(nexus);
+                return true;
+            }
+            if (getRandom().nextInt(isUnderWater() ? 80 : 20) != 0) {
+                return false;
+            }
+            destination = findDiveDestination();
+            return destination != null;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return diving && remainingTicks-- > 0 && isInWater()
+                    && getTarget() == null
+                    && distanceToSqr(destination) > 1.0D;
+        }
+
+        @Override
+        public void start() {
+            diving = true;
+            remainingTicks = MAX_DIVE_TIME;
+            moveControl.setWantedPosition(
+                    destination.x, destination.y, destination.z, 1.0D);
+        }
+
+        @Override
+        public void tick() {
+            moveControl.setWantedPosition(
+                    destination.x, destination.y, destination.z, 1.0D);
+        }
+
+        @Override
+        public void stop() {
+            diving = false;
+            destination = null;
+        }
+
+        private Vec3 findDiveDestination() {
+            BlockPos origin = blockPosition();
+            RandomSource random = getRandom();
+            for (int attempt = 0; attempt < 16; attempt++) {
+                BlockPos candidate = origin.offset(
+                        random.nextInt(11) - 5,
+                        -(2 + random.nextInt(6)),
+                        random.nextInt(11) - 5);
+                if (level().getFluidState(candidate).is(FluidTags.WATER)
+                        && level().getFluidState(candidate.above())
+                                .is(FluidTags.WATER)) {
+                    return Vec3.atCenterOf(candidate);
+                }
+            }
+            return null;
+        }
     }
 
     @Override
