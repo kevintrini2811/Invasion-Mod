@@ -276,7 +276,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
     // Darf dieser Zombie-Typ überhaupt "buddeln"?
     // Darf dieser konkrete Zombie-Typ nach unten buddeln?
-    private boolean canDigDown() {
+    protected boolean canDigDown() {
         int tier = getTier();
         int flavour = getFlavour();
 
