@@ -79,7 +79,7 @@ public interface InvEntities {
             "guardian",
             EntityType.Builder.<IMGuardianEntity>of(
                             IMGuardianEntity::new, MobCategory.MONSTER)
-                    .sized(0.85F, 0.85F).eyeHeight(0.425F)
+                    .sized(0.85F, 0.85F)
                     .clientTrackingRange(8));
     EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER = register(
             "zombie_villager",
