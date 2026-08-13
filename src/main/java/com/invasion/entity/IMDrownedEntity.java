@@ -31,6 +31,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -238,6 +239,12 @@ public final class IMDrownedEntity extends EntityIMZombie
     @Override
     protected boolean canDigDown() {
         return !isInWater() && super.canDigDown();
+    }
+
+    @Override
+    protected boolean hasValidSpawnSupport(LevelReader world) {
+        return world.getFluidState(blockPosition()).is(FluidTags.WATER)
+                || super.hasValidSpawnSupport(world);
     }
 
     private static final class DrownedMoveControl

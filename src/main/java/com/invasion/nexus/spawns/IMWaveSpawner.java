@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.tags.BiomeTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.StructureTags;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -33,6 +34,7 @@ import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.ImpEnitty;
 import com.invasion.entity.IMBlazeEntity;
 import com.invasion.entity.IMCreeperEntity;
+import com.invasion.entity.IMDrownedEntity;
 import com.invasion.entity.IMEndermanEntity;
 import com.invasion.entity.IMGhastEntity;
 import com.invasion.entity.InvEntities;
@@ -695,6 +697,9 @@ public class IMWaveSpawner implements Spawner {
 	private void generateSpawnPoints() {
 		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld());
 		zombie.setNexus(nexus);
+		IMDrownedEntity drowned = InvEntities.DROWNED.create(
+				nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
+		drowned.setNexus(nexus);
 		List<SpawnPoint> spawnPoints = new ArrayList<>();
 		BlockPos origin = nexus.getOrigin();
 		BlockPos.MutableBlockPos mutable = origin.mutable();
@@ -705,15 +710,15 @@ public class IMWaveSpawner implements Spawner {
 			for (int i = 0; i <= spawnRadius * 0.7D + 1; i++) {
 				int j = (int) Math.round(spawnRadius * Math.cos(Math.asin(i / spawnRadius)));
 
-				addValidSpawn(zombie, spawnPoints, mutable.set(origin).move( i, vertical, j));
-				addValidSpawn(zombie, spawnPoints, mutable.set(origin).move( i, vertical,-j));
-				addValidSpawn(zombie, spawnPoints, mutable.set(origin).move(-i, vertical, j));
-				addValidSpawn(zombie, spawnPoints, mutable.set(origin).move(-i, vertical,-j));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( i, vertical, j));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( i, vertical,-j));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-i, vertical, j));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-i, vertical,-j));
 
-                addValidSpawn(zombie, spawnPoints, mutable.set(origin).move( j, vertical, i));
-                addValidSpawn(zombie, spawnPoints, mutable.set(origin).move( j, vertical,-i));
-                addValidSpawn(zombie, spawnPoints, mutable.set(origin).move(-j, vertical, i));
-                addValidSpawn(zombie, spawnPoints, mutable.set(origin).move(-j, vertical,-i));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( j, vertical, i));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move( j, vertical,-i));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-j, vertical, i));
+				addValidSpawn(zombie, drowned, spawnPoints, mutable.set(origin).move(-j, vertical,-i));
 			}
 		}
 
@@ -739,6 +744,15 @@ public class IMWaveSpawner implements Spawner {
 		}
 
 		InvasionMod.LOGGER.debug("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
+	}
+
+	private void addValidSpawn(
+			Mob groundMob, IMDrownedEntity drowned,
+			List<SpawnPoint> spawnPoints, BlockPos pos) {
+		Mob candidate = nexus.getWorld().getFluidState(pos)
+				.is(FluidTags.WATER)
+				? drowned : groundMob;
+		addValidSpawn(candidate, spawnPoints, pos);
 	}
 
 	private void addValidSpawn(Mob entity, List<SpawnPoint> spawnPoints, BlockPos pos) {
