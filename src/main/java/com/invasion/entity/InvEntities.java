@@ -19,6 +19,7 @@ import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.entity.monster.MagmaCube;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.entity.monster.Ghast;
+import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 
@@ -73,6 +74,12 @@ public interface InvEntities {
                             IMDrownedEntity::new, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F)
 
+                    .clientTrackingRange(8));
+    EntityType<IMGuardianEntity> GUARDIAN = register(
+            "guardian",
+            EntityType.Builder.<IMGuardianEntity>of(
+                            IMGuardianEntity::new, MobCategory.MONSTER)
+                    .sized(0.85F, 0.85F).eyeHeight(0.425F)
                     .clientTrackingRange(8));
     EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER = register(
             "zombie_villager",
@@ -231,6 +238,7 @@ public interface InvEntities {
                 HUSK, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(
                 DROWNED, IMDrownedEntity.createAttributes().build());
+        event.put(GUARDIAN, IMGuardianEntity.createAttributes().build());
         event.put(
                 ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes().build());
