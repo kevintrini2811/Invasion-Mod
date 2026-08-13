@@ -68,7 +68,7 @@ public class InfusedSwordItem extends Item {
 
         }
 
-        stack.setDamageValue(CustomToolMaterial.INFUSED_GOLD.durability());
+        stack.setDamageValue(stack.getMaxDamage() - 1);
         return InteractionResult.SUCCESS;
     }
 }
