@@ -243,7 +243,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     public void tick() {
         super.tick();
         if (!level().isClientSide() && isAlive() && !isNoAi()
-                && getType() == InvEntities.ZOMBIE) {
+                && canConvertToDrowned()) {
             if (drownedConversionTime >= 0) {
                 if (--drownedConversionTime < 0
                         && level() instanceof ServerLevel world) {
@@ -271,6 +271,18 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
             igniteForTicks(20);
             spreadTarFire();
         }
+    }
+
+    private boolean canConvertToDrowned() {
+        return getType() != InvEntities.DROWNED
+                && getType() != InvEntities.HUSK;
+    }
+
+    @Override
+    protected int decreaseAirSupply(int air) {
+        // Zombie conversions take longer than an IM zombie would otherwise
+        // survive after exhausting its air supply.
+        return increaseAirSupply(air);
     }
 
     private void convertToDrowned(ServerLevel world) {
