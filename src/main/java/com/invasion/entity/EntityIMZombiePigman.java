@@ -108,6 +108,13 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     }
 
     @Override
+    public boolean checkSpawnObstruction(LevelReader world) {
+        return world.isUnobstructed(this)
+                && (hasNexus() || getLightLevelBelow8())
+                && hasValidSpawnSupport(world);
+    }
+
+    @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(CHARGING, false);
