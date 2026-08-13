@@ -82,6 +82,10 @@ public interface InvItems {
     Item GUARDIAN_SPAWN_EGG = register(
             "guardian_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.GUARDIAN, 0x5A8272, 0xF17D30));
+    Item ELDER_GUARDIAN_SPAWN_EGG = register(
+            "elder_guardian_spawn_egg",
+            p -> createSpawnEgg(
+                    p, InvEntities.ELDER_GUARDIAN, 0xCECCBA, 0x747693));
     Item ZOMBIE_VILLAGER_SPAWN_EGG = register(
             "zombie_villager_spawn_egg",
             p -> createSpawnEgg(

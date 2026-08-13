@@ -28,6 +28,7 @@ import com.invasion.client.render.entity.VariantMobRenderers;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.entity.PhantomRenderer;
 import net.minecraft.client.renderer.entity.BreezeRenderer;
+import net.minecraft.client.renderer.entity.ElderGuardianRenderer;
 import net.minecraft.client.renderer.entity.SilverfishRenderer;
 import net.minecraft.client.renderer.entity.EndermiteRenderer;
 import net.minecraft.client.renderer.entity.SlimeRenderer;
@@ -56,6 +57,8 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.HUSK, VariantMobRenderers.Husk::new);
         event.registerEntityRenderer(InvEntities.DROWNED, VariantMobRenderers.Drowned::new);
         event.registerEntityRenderer(InvEntities.GUARDIAN, GuardianRenderer::new);
+        event.registerEntityRenderer(
+                InvEntities.ELDER_GUARDIAN, ElderGuardianRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER, VariantMobRenderers.ZombieVillager::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN, ZombiePigmanEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOGLIN, IMZoglinRenderer::new);
