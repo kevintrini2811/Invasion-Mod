@@ -34,6 +34,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
@@ -63,13 +64,19 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.level.ServerLevel;
 
 public class EntityIMZombiePigman extends AbstractIMZombieEntity {
     private static final EntityDataAccessor<Boolean> CHARGING = SynchedEntityData.defineId(EntityIMZombiePigman.class, EntityDataSerializers.BOOLEAN);
+    private final LavaSwimmingBehavior<EntityIMZombiePigman> lavaSwimming =
+            new LavaSwimmingBehavior<>(this);
 
     public EntityIMZombiePigman(EntityType<EntityIMZombiePigman> type, Level world) {
         super(type, world, 0.75F);
+        moveControl = lavaSwimming.createMoveControl();
+        goalSelector.removeAllGoals(goal -> goal instanceof FloatGoal);
+        goalSelector.addGoal(4, lavaSwimming.createDiveGoal());
         setFireImmune(true);
         getNavigatorNew().setCanDestroyBlocks(true);
     }
@@ -100,7 +107,6 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new PredicatedGoal(
                 new ChargeMobGoal<>(this, Player.class, 0.75F),
@@ -120,6 +126,18 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
         targetSelector.addGoal(3, new PredicatedGoal(new CustomRangeActiveTargetGoal<>(this, PigmanEngineerEntity.class, 3.5F), () -> getTier() != 3 && NoNexusPathGoal.isLostPathToNexus(this)));
         targetSelector.addGoal(4, new CustomRangeActiveTargetGoal<>(this, IronGolem.class, this::getAggroRange, true));
         targetSelector.addGoal(5, new HurtByTargetGoal(this));
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    protected void travelInFluid(Vec3 input) {
+        if (isInLava() && lavaSwimming.wantsToSwim()) {
+            moveRelative(0.01F, input);
+            move(MoverType.SELF, getDeltaMovement());
+            setDeltaMovement(getDeltaMovement().scale(0.9D));
+        } else {
+            super.travelInFluid(input);
+        }
     }
 
     public boolean isCharging() {

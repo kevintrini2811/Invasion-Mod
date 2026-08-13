@@ -17,9 +17,11 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.golem.AbstractGolem;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -32,6 +34,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Nexus-aware zombified piglin retaining vanilla anger propagation, water
@@ -44,10 +48,16 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
                     IMZombifiedPiglinEntity.class,
                     EntityDataSerializers.INT);
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
+    private final LavaSwimmingBehavior<IMZombifiedPiglinEntity> lavaSwimming =
+            new LavaSwimmingBehavior<>(this);
 
     public IMZombifiedPiglinEntity(
             EntityType<? extends ZombifiedPiglin> type, Level level) {
         super(type, level);
+        moveControl = lavaSwimming.createMoveControl();
+        setPathfindingMalus(PathType.LAVA, 0.0F);
+        goalSelector.removeAllGoals(goal -> goal instanceof FloatGoal);
+        goalSelector.addGoal(4, lavaSwimming.createDiveGoal());
         setCanPickUpLoot(
                 com.invasion.compat.AsyncCompatibility.canUseVanillaItemPickup());
         getNavigatorNew().setCanDestroyBlocks(true);
@@ -121,6 +131,18 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
                 this, AbstractVillager.class, this::getAggroRange, true));
         targetSelector.addGoal(3, new CustomRangeActiveTargetGoal<>(
                 this, AbstractGolem.class, this::getAggroRange, true));
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    protected void travelInFluid(Vec3 input) {
+        if (isInLava() && lavaSwimming.wantsToSwim()) {
+            moveRelative(0.01F, input);
+            move(MoverType.SELF, getDeltaMovement());
+            setDeltaMovement(getDeltaMovement().scale(0.9D));
+        } else {
+            super.travelInFluid(input);
+        }
     }
 
     @Override
