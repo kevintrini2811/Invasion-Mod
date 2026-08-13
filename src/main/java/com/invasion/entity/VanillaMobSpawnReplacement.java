@@ -425,7 +425,7 @@ public final class VanillaMobSpawnReplacement {
         InvasionMod.LOGGER.warn(
                 "Invasion Mod dismounted rider {} from mount {} because {}. "
                         + "Please report this mount combination to the "
-                        + "Invasion Mod developer.",
+                        + "Invasion Mod developer on CurseForge.",
                 riderType, mountType, reason);
     }
 
