@@ -29,6 +29,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 /** A vanilla guardian that joins the active Nexus invasion. */
 public final class IMGuardianEntity extends Guardian
         implements Combatant<Guardian>, EntityConstruct.BuildableMob {
+    private static final double NEXUS_BEAM_RANGE = 16.0D;
     private static final EntityDataAccessor<Optional<BlockPos>> NEXUS_BEAM_TARGET =
             SynchedEntityData.defineId(
                     IMGuardianEntity.class,
@@ -135,7 +136,8 @@ public final class IMGuardianEntity extends Guardian
             double x = pos.getX() + 0.5D;
             double y = pos.getY() + 0.5D;
             double z = pos.getZ() + 0.5D;
-            if (distanceToSqr(x, y, z) <= 4.0D) {
+            if (distanceToSqr(x, y, z)
+                    <= NEXUS_BEAM_RANGE * NEXUS_BEAM_RANGE) {
                 getNavigation().stop();
                 getLookControl().setLookAt(x, y, z);
                 if (getNexusBeamTarget().isEmpty()) {
