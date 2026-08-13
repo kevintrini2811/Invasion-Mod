@@ -126,7 +126,13 @@ public class WaveEntry {
         elapsed = 0;
         amountQueued = 0;
         spawnRetryDelay = 0;
+        spawnList.clear();
         mobPool.reset();
+    }
+
+    public void discardPendingSpawns() {
+        spawnList.clear();
+        spawnRetryDelay = 0;
     }
 
     public void setToTime(int millis) {
