@@ -144,7 +144,7 @@ public final class IMDrownedEntity extends EntityIMZombie
 
     private final class DiveGoal
             extends net.minecraft.world.entity.ai.goal.Goal {
-        private static final int MAX_DIVE_TIME = 20 * 8;
+        private static final int TARGET_REFRESH_INTERVAL = 20 * 2;
         private Vec3 destination;
         private int remainingTicks;
 
@@ -158,46 +158,32 @@ public final class IMDrownedEntity extends EntityIMZombie
             if (getTarget() != null || !isInWater()) {
                 return false;
             }
-            if (hasNexus()) {
-                BlockPos nexus = getNexus().getOrigin();
-                double nexusX = nexus.getX() + 0.5D;
-                double nexusZ = nexus.getZ() + 0.5D;
-                double horizontalDistanceSqr =
-                        (nexusX - getX()) * (nexusX - getX())
-                                + (nexusZ - getZ()) * (nexusZ - getZ());
-                destination = new Vec3(
-                        nexusX,
-                        horizontalDistanceSqr <= 16.0D
-                                ? nexus.getY() + 0.5D
-                                : Math.min(
-                                        nexus.getY() + 0.5D, getY() - 1.0D),
-                        nexusZ);
-                return true;
-            }
-            if (isUnderWater() && getRandom().nextInt(10) != 0) {
-                return false;
-            }
-            destination = findDiveDestination();
+            destination = findDestination();
             return destination != null;
         }
 
         @Override
         public boolean canContinueToUse() {
-            return diving && remainingTicks-- > 0 && isInWater()
-                    && getTarget() == null
-                    && distanceToSqr(destination) > 1.0D;
+            return diving && isInWater() && getTarget() == null;
         }
 
         @Override
         public void start() {
             diving = true;
-            remainingTicks = MAX_DIVE_TIME;
+            remainingTicks = TARGET_REFRESH_INTERVAL;
             moveControl.setWantedPosition(
                     destination.x, destination.y, destination.z, 1.0D);
         }
 
         @Override
         public void tick() {
+            if (--remainingTicks <= 0 || distanceToSqr(destination) < 2.0D) {
+                Vec3 nextDestination = findDestination();
+                if (nextDestination != null) {
+                    destination = nextDestination;
+                }
+                remainingTicks = TARGET_REFRESH_INTERVAL;
+            }
             moveControl.setWantedPosition(
                     destination.x, destination.y, destination.z, 1.0D);
         }
@@ -206,6 +192,24 @@ public final class IMDrownedEntity extends EntityIMZombie
         public void stop() {
             diving = false;
             destination = null;
+        }
+
+        private Vec3 findDestination() {
+            if (!hasNexus()) {
+                return findDiveDestination();
+            }
+            BlockPos nexus = getNexus().getOrigin();
+            double nexusX = nexus.getX() + 0.5D;
+            double nexusZ = nexus.getZ() + 0.5D;
+            double horizontalDistanceSqr =
+                    (nexusX - getX()) * (nexusX - getX())
+                            + (nexusZ - getZ()) * (nexusZ - getZ());
+            return new Vec3(
+                    nexusX,
+                    horizontalDistanceSqr <= 16.0D
+                            ? nexus.getY() + 0.5D
+                            : Math.min(nexus.getY() + 0.5D, getY() - 1.0D),
+                    nexusZ);
         }
 
         private Vec3 findDiveDestination() {
@@ -229,6 +233,11 @@ public final class IMDrownedEntity extends EntityIMZombie
             }
             return null;
         }
+    }
+
+    @Override
+    protected boolean canDigDown() {
+        return !isInWater() && super.canDigDown();
     }
 
     private static final class DrownedMoveControl
