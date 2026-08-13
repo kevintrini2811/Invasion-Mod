@@ -15,7 +15,7 @@ record CustomToolMaterial(
         int enchantability,
         Ingredient repairIngredient) implements Tier {
     static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(
-            null, 40, 12, 4, 22,
+            null, 101, 12, 4, 22,
             Ingredient.of(Items.GOLD_INGOT));
 
     @Override public int getUses() { return durability; }

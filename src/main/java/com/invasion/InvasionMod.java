@@ -14,6 +14,7 @@ import com.invasion.entity.IMMobFriendlyFireHandler;
 import com.invasion.entity.IronGolemTargetHandler;
 import com.invasion.entity.PlayerAllyTargetHandler;
 import com.invasion.item.InvItems;
+import com.invasion.item.InfusedSwordChargeHandler;
 import com.invasion.network.NexusHudPayload;
 import com.invasion.network.InvNetwork;
 import com.invasion.nexus.WorldNexusStorage;
@@ -103,6 +104,7 @@ public class InvasionMod {
         IMCivilianTargetHandler.bootstrap();
         IronGolemTargetHandler.bootstrap();
         PlayerAllyTargetHandler.bootstrap();
+        InfusedSwordChargeHandler.bootstrap();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             InvasionModClient.register(modBus);
