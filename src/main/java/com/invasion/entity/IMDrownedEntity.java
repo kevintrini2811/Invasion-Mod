@@ -245,6 +245,13 @@ public final class IMDrownedEntity extends EntityIMZombie
                 || super.hasValidSpawnSupport(world);
     }
 
+    @Override
+    public boolean checkSpawnObstruction(LevelReader world) {
+        return world.isUnobstructed(this)
+                && (hasNexus() || getLightLevelBelow8())
+                && hasValidSpawnSupport(world);
+    }
+
     private static final class DrownedMoveControl
             extends MoveControl<IMDrownedEntity> {
         private int shoreClimbTicks;
