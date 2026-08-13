@@ -240,9 +240,11 @@ public final class IMDrownedEntity extends EntityIMZombie
 
     private static final class DrownedMoveControl
             extends MoveControl {
+        private final IMDrownedEntity drowned;
         private int shoreClimbTicks;
         private DrownedMoveControl(IMDrownedEntity drowned) {
             super(drowned);
+            this.drowned = drowned;
         }
 
         @Override
@@ -263,11 +265,11 @@ public final class IMDrownedEntity extends EntityIMZombie
                 targetZ = attackTarget.getZ();
                 targetSpeedModifier = 1.0D;
             } else if (operation != Operation.MOVE_TO) {
-                if (!mob.hasNexus()) {
+                if (!drowned.hasNexus()) {
                     super.tick();
                     return;
                 }
-                BlockPos nexus = mob.getNexus().getOrigin();
+                BlockPos nexus = drowned.getNexus().getOrigin();
                 targetX = nexus.getX() + 0.5D;
                 targetY = nexus.getY() + 0.5D;
                 targetZ = nexus.getZ() + 0.5D;
@@ -277,8 +279,8 @@ public final class IMDrownedEntity extends EntityIMZombie
             double x = targetX - mob.getX();
             double y = targetY - mob.getY();
             double z = targetZ - mob.getZ();
-            BlockPos nexusPos = mob.hasNexus()
-                    ? mob.getNexus().getOrigin() : null;
+            BlockPos nexusPos = drowned.hasNexus()
+                    ? drowned.getNexus().getOrigin() : null;
             if (nexusPos != null && mob.horizontalCollision
                     && nexusPos.getY() + 0.5D > mob.getY()) {
                 shoreClimbTicks = 20;
