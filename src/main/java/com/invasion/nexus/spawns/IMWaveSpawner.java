@@ -301,15 +301,16 @@ public class IMWaveSpawner implements Spawner {
 				return true;
 			}
 
-			EntityConstruct spawnConstruct = (mobConstruct.rules() & BudgetWavePlan.RULE_PLANNED) != 0 ? mobConstruct :
-					replaceSlimeWithMagmaCube(
+			ServerLevel world = (ServerLevel) nexus.getWorld();
+			EntityConstruct spawnConstruct = replaceZombieInFluid(
+					mobConstruct, world, spawnPoint.pos());
+			if ((mobConstruct.rules() & BudgetWavePlan.RULE_PLANNED) == 0) {
+				spawnConstruct = replaceSlimeWithMagmaCube(
 						replaceSkeletonWithEnvironmentalVariant(
 							replaceZombieWithEnvironmentalVariant(
-									mobConstruct,
-									(ServerLevel) nexus.getWorld(),
-									spawnPoint.pos()),
-							(ServerLevel) nexus.getWorld(),
-							spawnPoint.pos()));
+									spawnConstruct, world, spawnPoint.pos()),
+							world, spawnPoint.pos()));
+			}
 			Mob mob = spawnConstruct.createMob(nexus);
 			equipRandomWaveWeapon(mob, spawnConstruct);
 			equipRandomWaveArmor(mob, spawnConstruct);
@@ -437,6 +438,30 @@ public class IMWaveSpawner implements Spawner {
 				construct.scaling(),
 				construct.minAngle(),
 				construct.maxAngle());
+	}
+
+	private EntityConstruct replaceZombieInFluid(
+			EntityConstruct construct, ServerLevel world, BlockPos pos) {
+		if (construct.entityType() != InvEntities.ZOMBIE) {
+			return construct;
+		}
+		var fluid = world.getFluidState(pos);
+		EntityType<? extends Mob> replacement = fluid.is(FluidTags.WATER)
+				? InvEntities.DROWNED
+				: fluid.is(FluidTags.LAVA)
+						? InvEntities.ZOMBIE_PIGMAN : null;
+		if (replacement == null) {
+			return construct;
+		}
+		return new EntityConstruct(
+				replacement,
+				construct.texture(),
+				construct.tier(),
+				construct.flavour(),
+				construct.scaling(),
+				construct.minAngle(),
+				construct.maxAngle(),
+				construct.rules());
 	}
 
 	private EntityConstruct replaceSkeletonWithEnvironmentalVariant(
