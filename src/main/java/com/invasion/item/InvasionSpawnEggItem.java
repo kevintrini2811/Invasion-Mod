@@ -1,10 +1,12 @@
 package com.invasion.item;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.TieredIMMobEntity;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.WorldNexusStorage;
 
@@ -13,15 +15,23 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 
 public final class InvasionSpawnEggItem extends SpawnEggItem {
     private final EntityType<? extends Mob> entityType;
+    private final CustomData variantData;
 
     public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
             int primaryColor, int secondaryColor) {
+        this(properties, entityType, primaryColor, secondaryColor, CustomData.EMPTY);
+    }
+
+    public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
+            int primaryColor, int secondaryColor, CustomData variantData) {
         super(entityType, primaryColor, secondaryColor, properties);
         this.entityType = entityType;
+        this.variantData = variantData;
     }
 
     @Override
@@ -42,12 +52,14 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
 
         InteractionResult result = spawnAction.get();
 
+        List<Mob> spawnedEntities = serverLevel.getEntitiesOfClass(Mob.class,
+                player.getBoundingBox().inflate(16),
+                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()));
+        spawnedEntities.forEach(this::applyEntityData);
+
         WorldNexusStorage.of(serverLevel).getNexus()
                 .filter(nexus -> nexus.getMode().isActive())
-                .ifPresent(nexus -> serverLevel.getEntitiesOfClass(Mob.class,
-                                player.getBoundingBox().inflate(16),
-                                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()))
-                        .forEach(mob -> {
+                .ifPresent(nexus -> spawnedEntities.forEach(mob -> {
                             if (mob instanceof IHasNexus nexusMob) {
                                 nexusMob.setNexus(nexus);
                                 if (mob instanceof NexusEntity configuredMob) {
@@ -56,5 +68,17 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
                             }
                         }));
         return result;
+    }
+
+    public boolean appliesTo(Mob mob) {
+        return mob.getType() == entityType;
+    }
+
+    public void applyEntityData(Mob mob) {
+        if (mob instanceof TieredIMMobEntity tieredMob) {
+            var data = variantData.copyTag();
+            if (data.contains("tier")) tieredMob.setTier(data.getInt("tier"));
+            if (data.contains("flavour")) tieredMob.setFlavour(data.getInt("flavour"));
+        }
     }
 }

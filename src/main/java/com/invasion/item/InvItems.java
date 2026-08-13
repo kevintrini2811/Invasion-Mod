@@ -154,7 +154,7 @@ public interface InvItems {
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(
                 properties.component(DataComponents.ENTITY_DATA, data),
-                type, primaryColor, secondaryColor);
+                type, primaryColor, secondaryColor, data);
         SPAWN_EGGS.add(egg);
         return egg;
     }
