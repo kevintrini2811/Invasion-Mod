@@ -246,15 +246,36 @@ public final class IMDrownedEntity extends EntityIMZombie
 
         @Override
         public void tick() {
-            if (!mob.isInWater()
-                    || operation != Operation.MOVE_TO) {
+            if (!mob.isInWater()) {
                 super.tick();
                 return;
             }
 
-            double x = wantedX - mob.getX();
-            double y = wantedY - mob.getY();
-            double z = wantedZ - mob.getZ();
+            double targetX = wantedX;
+            double targetY = wantedY;
+            double targetZ = wantedZ;
+            double targetSpeedModifier = speedModifier;
+            LivingEntity attackTarget = mob.getTarget();
+            if (attackTarget != null && attackTarget.isInWater()) {
+                targetX = attackTarget.getX();
+                targetY = attackTarget.getY(0.5D);
+                targetZ = attackTarget.getZ();
+                targetSpeedModifier = 1.0D;
+            } else if (operation != Operation.MOVE_TO) {
+                if (!mob.hasNexus()) {
+                    super.tick();
+                    return;
+                }
+                BlockPos nexus = mob.getNexus().getOrigin();
+                targetX = nexus.getX() + 0.5D;
+                targetY = nexus.getY() + 0.5D;
+                targetZ = nexus.getZ() + 0.5D;
+                targetSpeedModifier = 1.0D;
+            }
+
+            double x = targetX - mob.getX();
+            double y = targetY - mob.getY();
+            double z = targetZ - mob.getZ();
             double distance = Math.sqrt(x * x + y * y + z * z);
             if (distance < 1.0E-5D) {
                 mob.setSpeed(0.0F);
@@ -276,7 +297,7 @@ public final class IMDrownedEntity extends EntityIMZombie
                     0.2F, mob.getXRot(),
                     Mth.clamp(targetPitch, -85.0F, 85.0F)));
 
-            float speed = (float) (speedModifier
+            float speed = (float) (targetSpeedModifier
                     * mob.getAttributeValue(Attributes.MOVEMENT_SPEED))
                     * UNDERWATER_SPEED_MULTIPLIER;
             mob.setSpeed(speed);
