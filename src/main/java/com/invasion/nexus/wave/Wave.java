@@ -56,6 +56,12 @@ public class Wave {
         }
     }
 
+    public void discardPendingSpawns() {
+        for (WaveEntry entry : entries) {
+            entry.discardPendingSpawns();
+        }
+    }
+
     public void setWaveToTime(int millis) {
         elapsed = millis;
     }
