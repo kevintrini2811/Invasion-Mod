@@ -15,7 +15,7 @@ record CustomToolMaterial(
         int enchantability,
         Ingredient repairIngredient) implements Tier {
     static final CustomToolMaterial INFUSED_GOLD = new CustomToolMaterial(
-            BlockTags.INCORRECT_FOR_GOLD_TOOL, 40, 12, 4, 22,
+            BlockTags.INCORRECT_FOR_GOLD_TOOL, 101, 12, 4, 22,
             Ingredient.of(Items.GOLD_INGOT));
 
     @Override public int getUses() { return durability; }
