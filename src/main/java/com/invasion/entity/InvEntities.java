@@ -91,6 +91,12 @@ public interface InvEntities {
                     .sized(0.6F, 1.95F).eyeHeight(1.74F)
                     .passengerAttachments(2.0125F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
+    EntityType<IMGuardianEntity> GUARDIAN = register(
+            "guardian",
+            EntityType.Builder.<IMGuardianEntity>of(
+                            IMGuardianEntity::new, MobCategory.MONSTER)
+                    .sized(0.85F, 0.85F).eyeHeight(0.425F)
+                    .clientTrackingRange(8));
     EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER = register(
             "zombie_villager",
             EntityType.Builder.<IMZombieVillagerEntity>of(
@@ -260,6 +266,8 @@ public interface InvEntities {
                 HUSK, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(
                 DROWNED, IMDrownedEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(
+                GUARDIAN, IMGuardianEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(
                 ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes());

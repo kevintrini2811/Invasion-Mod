@@ -146,7 +146,11 @@ public final class VanillaMobSpawnReplacement {
         } else if (mob.getType() == EntityTypes.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityTypes.DROWNED) {
-            convert(mob, InvEntities.DROWNED, nexus);
+            if (mob.isInWater() && mob.getRandom().nextFloat() < 0.1F) {
+                convert(mob, InvEntities.GUARDIAN, nexus);
+            } else {
+                convert(mob, InvEntities.DROWNED, nexus);
+            }
         } else if (mob.getType() == EntityTypes.ZOMBIFIED_PIGLIN) {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
         } else if (mob.getType() == EntityTypes.SKELETON) {
