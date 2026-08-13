@@ -286,11 +286,13 @@ public final class IMDrownedEntity extends EntityIMZombie
             mob.setZza(Mth.cos(pitchRadians) * speed);
             mob.setYya(-Mth.sin(pitchRadians) * speed);
             double verticalSpeed = Mth.clamp(y * 0.1D, -speed, speed);
+            double horizontalScale = horizontalDistance > 1.0E-5D
+                    ? speed / horizontalDistance : 0.0D;
             Vec3 movement = mob.getDeltaMovement();
             mob.setDeltaMovement(
-                    movement.x,
+                    Mth.lerp(0.2D, movement.x, x * horizontalScale),
                     Mth.lerp(0.2D, movement.y, verticalSpeed),
-                    movement.z);
+                    Mth.lerp(0.2D, movement.z, z * horizontalScale));
         }
     }
 
