@@ -29,6 +29,7 @@ import net.minecraft.world.entity.monster.cubemob.Slime;
 import net.minecraft.world.entity.monster.zombie.Drowned;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
+import net.minecraft.tags.FluidTags;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
@@ -38,6 +39,8 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
     private static final Map<ServerLevel, Set<UUID>> LOADED_REPLACEABLE =
+            new HashMap<>();
+    private static final Map<ServerLevel, Set<UUID>> WATER_SPAWNED_DROWNED =
             new HashMap<>();
     private static boolean converting;
 
@@ -53,6 +56,13 @@ public final class VanillaMobSpawnReplacement {
 
     private static void blockNaturalSpawn(FinalizeSpawnEvent event) {
         ServerLevel world = event.getLevel().getLevel();
+        if (event.getEntity().getType() == EntityTypes.DROWNED
+                && world.getFluidState(event.getEntity().blockPosition())
+                        .is(FluidTags.WATER)) {
+            WATER_SPAWNED_DROWNED.computeIfAbsent(
+                    world, ignored -> new HashSet<>())
+                    .add(event.getEntity().getUUID());
+        }
         if (event.getSpawnType() == EntitySpawnReason.NATURAL
                 && world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
@@ -87,6 +97,13 @@ public final class VanillaMobSpawnReplacement {
             loaded.remove(event.getEntity().getUUID());
             if (loaded.isEmpty()) {
                 LOADED_REPLACEABLE.remove(world);
+            }
+        }
+        Set<UUID> waterSpawned = WATER_SPAWNED_DROWNED.get(world);
+        if (waterSpawned != null) {
+            waterSpawned.remove(event.getEntity().getUUID());
+            if (waterSpawned.isEmpty()) {
+                WATER_SPAWNED_DROWNED.remove(world);
             }
         }
     }
@@ -164,7 +181,13 @@ public final class VanillaMobSpawnReplacement {
         } else if (mob.getType() == EntityTypes.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityTypes.DROWNED) {
-            convert(mob, InvEntities.DROWNED, nexus);
+            Set<UUID> waterSpawned = WATER_SPAWNED_DROWNED.get(mob.level());
+            if (waterSpawned != null && waterSpawned.contains(mob.getUUID())
+                    && mob.getRandom().nextFloat() < 0.1F) {
+                convert(mob, InvEntities.GUARDIAN, nexus);
+            } else {
+                convert(mob, InvEntities.DROWNED, nexus);
+            }
         } else if (mob.getType() == EntityTypes.ZOMBIFIED_PIGLIN) {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
         } else if (mob.getType() == EntityTypes.SKELETON) {
