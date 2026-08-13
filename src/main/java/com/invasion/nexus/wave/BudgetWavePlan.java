@@ -63,10 +63,11 @@ public final class BudgetWavePlan {
 
     public static boolean isWaveSpawnAllowed(EntityType<?> type) {
         return type != null
-                // Guardians are only a post-purchase environmental Drowned
-                // replacement and must never be persisted or submitted as a
+                // Guardians are only post-purchase environmental mobs and
+                // must never be persisted or submitted as a
                 // direct round-budget purchase.
                 && type != InvEntities.GUARDIAN
+                && type != InvEntities.ELDER_GUARDIAN
                 && type != InvEntities.SPIDER_EGG
                 && type != InvEntities.WITHER_SKULL
                 && type != InvEntities.WITCH_POTION
