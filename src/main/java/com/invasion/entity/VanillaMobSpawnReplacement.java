@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.invasion.entity.ai.goal.VanillaMountNexusGoal;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.WorldNexusStorage;
@@ -338,15 +339,23 @@ public final class VanillaMobSpawnReplacement {
         // setNexus update the loaded/bound registry against the final entity
         // lifecycle state instead of relying on a pre-spawn registration.
         converted.setNexus(nexus);
-        if (canContinueRiding(vehicle, nexus)) {
+        if (canContinueRiding(vehicle, converted, nexus)) {
             converted.startRiding(vehicle);
         }
     }
 
     private static boolean canContinueRiding(
-            Entity vehicle, com.invasion.nexus.NexusAccess nexus) {
+            Entity vehicle, Mob converted,
+            com.invasion.nexus.NexusAccess nexus) {
         if (!(vehicle instanceof Mob mount) || vehicle.isRemoved()) {
             return false;
+        }
+        if (isVanillaJockeyMount(mount)
+                && mount instanceof net.minecraft.world.entity.PathfinderMob pathfinderMount
+                && converted instanceof NexusEntity nexusRider) {
+            pathfinderMount.getGoalSelector().addGoal(2, new VanillaMountNexusGoal(
+                    pathfinderMount, converted, nexusRider));
+            return true;
         }
         try {
             Path path = mount.getNavigation().createPath(nexus.getOrigin(), 1);
@@ -354,5 +363,15 @@ public final class VanillaMobSpawnReplacement {
         } catch (RuntimeException | LinkageError ignored) {
             return false;
         }
+    }
+
+    private static boolean isVanillaJockeyMount(Mob mount) {
+        EntityType<?> type = mount.getType();
+        return type == EntityTypes.CHICKEN
+                || type == EntityTypes.SKELETON_HORSE
+                || type == EntityTypes.ZOMBIE_HORSE
+                || type == EntityTypes.STRIDER
+                || type == EntityTypes.ZOMBIE_NAUTILUS
+                || type == EntityTypes.CAMEL_HUSK;
     }
 }
