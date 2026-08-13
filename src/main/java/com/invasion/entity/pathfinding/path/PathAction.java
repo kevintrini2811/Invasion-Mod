@@ -29,12 +29,12 @@ public enum PathAction {
             LADDER_TOWER_UP_NZ, LADDER_TOWER_UP_PX
     );
 
-    public static PathAction getLadderActionForDirection(Direction direction) {
-        return LADDER_ACTIONS.get(direction.get2DDataValue());
+    public static PathAction getLadderActionForDirection(@Nullable Direction direction) {
+        return direction == null ? NONE : LADDER_ACTIONS.get(direction.get2DDataValue());
     }
 
-    public static PathAction getTowerActionForDirection(Direction direction) {
-        return TOWER_ACTIONS.get(direction.get2DDataValue());
+    public static PathAction getTowerActionForDirection(@Nullable Direction direction) {
+        return direction == null ? NONE : TOWER_ACTIONS.get(direction.get2DDataValue());
     }
 
     public static PathAction getClimbing(Direction direction) {
