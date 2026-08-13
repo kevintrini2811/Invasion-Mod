@@ -156,15 +156,19 @@ public interface InvItems {
             p -> createSpawnEgg(p, InvEntities.WARDEN, 0x0F4649, 0x39D6E0));
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
+        TypedEntityData<EntityType<?>> entityData = TypedEntityData.of(
+                (EntityType<?>) type, data.copyTag());
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
-                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, data.copyTag())), type);
+                DataComponents.ENTITY_DATA, entityData), type, entityData);
         SPAWN_EGGS.add(egg);
         return egg;
     }
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor) {
+        TypedEntityData<EntityType<?>> entityData = TypedEntityData.of(
+                (EntityType<?>) type, new CompoundTag());
         InvasionSpawnEggItem egg = new InvasionSpawnEggItem(properties.component(
-                DataComponents.ENTITY_DATA, TypedEntityData.of((EntityType<?>) type, new CompoundTag())), type);
+                DataComponents.ENTITY_DATA, entityData), type, entityData);
         SPAWN_EGGS.add(egg);
         return egg;
     }
