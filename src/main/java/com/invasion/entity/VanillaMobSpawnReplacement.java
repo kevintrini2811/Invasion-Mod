@@ -167,6 +167,8 @@ public final class VanillaMobSpawnReplacement {
             } else {
                 convert(mob, InvEntities.DROWNED, nexus);
             }
+        } else if (mob.getType() == EntityType.ELDER_GUARDIAN) {
+            convert(mob, InvEntities.ELDER_GUARDIAN, nexus);
         } else if (mob.getType() == EntityType.ZOMBIFIED_PIGLIN) {
             convert(mob, InvEntities.ZOMBIFIED_PIGLIN, nexus);
         } else if (mob.getType() == EntityType.SKELETON) {
@@ -221,6 +223,7 @@ public final class VanillaMobSpawnReplacement {
                 || type == EntityType.ZOMBIE
                 || type == EntityType.HUSK
                 || type == EntityType.DROWNED
+                || type == EntityType.ELDER_GUARDIAN
                 || type == EntityType.ZOMBIFIED_PIGLIN
                 || type == EntityType.SKELETON
                 || type == EntityType.SKELETON

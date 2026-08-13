@@ -20,6 +20,7 @@ import net.minecraft.world.entity.monster.MagmaCube;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Guardian;
+import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 
@@ -81,6 +82,12 @@ public interface InvEntities {
                             IMGuardianEntity::new, MobCategory.MONSTER)
                     .sized(0.85F, 0.85F)
                     .clientTrackingRange(8));
+    EntityType<IMElderGuardianEntity> ELDER_GUARDIAN = register(
+            "elder_guardian",
+            EntityType.Builder.<IMElderGuardianEntity>of(
+                            IMElderGuardianEntity::new, MobCategory.MONSTER)
+                    .sized(1.9975F, 1.9975F)
+                    .clientTrackingRange(10));
     EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER = register(
             "zombie_villager",
             EntityType.Builder.<IMZombieVillagerEntity>of(
@@ -239,6 +246,8 @@ public interface InvEntities {
         event.put(
                 DROWNED, IMDrownedEntity.createAttributes().build());
         event.put(GUARDIAN, IMGuardianEntity.createAttributes().build());
+        event.put(ELDER_GUARDIAN,
+                IMElderGuardianEntity.createAttributes().build());
         event.put(
                 ZOMBIE_VILLAGER, EntityIMZombie.createTierT1V0Attributes().build());
         event.put(ZOMBIE_PIGMAN, EntityIMZombiePigman.createT1Attributes().build());

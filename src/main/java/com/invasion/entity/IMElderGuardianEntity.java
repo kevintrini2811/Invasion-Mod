@@ -12,10 +12,10 @@ import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -23,30 +23,30 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.monster.Guardian;
-import net.minecraft.world.entity.animal.Squid;
+import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.level.Level;
 
-/** A vanilla guardian that joins the active Nexus invasion. */
-public final class IMGuardianEntity extends Guardian
-        implements Combatant<Guardian>, EntityConstruct.BuildableMob {
+/** A vanilla elder guardian that joins the active Nexus invasion. */
+public final class IMElderGuardianEntity extends ElderGuardian
+        implements Combatant<ElderGuardian>, EntityConstruct.BuildableMob {
     private static final double NEXUS_BEAM_RANGE = 16.0D;
     private static final EntityDataAccessor<Optional<BlockPos>> NEXUS_BEAM_TARGET =
             SynchedEntityData.defineId(
-                    IMGuardianEntity.class,
+                    IMElderGuardianEntity.class,
                     EntityDataSerializers.OPTIONAL_BLOCK_POS);
     private static final EntityDataAccessor<Integer> NEXUS_BEAM_START_TICK =
             SynchedEntityData.defineId(
-                    IMGuardianEntity.class, EntityDataSerializers.INT);
+                    IMElderGuardianEntity.class, EntityDataSerializers.INT);
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     @Nullable private ArmorStand clientNexusBeamTarget;
 
-    public IMGuardianEntity(EntityType<? extends Guardian> type, Level level) {
+    public IMElderGuardianEntity(
+            EntityType<? extends ElderGuardian> type, Level level) {
         super(type, level);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Guardian.createAttributes();
+        return ElderGuardian.createAttributes();
     }
 
     @Override
@@ -118,13 +118,13 @@ public final class IMGuardianEntity extends Guardian
     }
 
     @Override
-    public Guardian asEntity() {
+    public ElderGuardian asEntity() {
         return this;
     }
 
     @Override
     public String getLegacyName() {
-        return "IMGuardian-T1";
+        return "IMElderGuardian-T1";
     }
 
     @Override
@@ -153,37 +153,6 @@ public final class IMGuardianEntity extends Guardian
     @Override
     public boolean requiresCustomPersistence() {
         return hasNexus() || super.requiresCustomPersistence();
-    }
-
-    @Override
-    public boolean killedEntity(ServerLevel level, LivingEntity victim) {
-        boolean result = super.killedEntity(level, victim);
-        if (victim instanceof Squid && hasNexus()
-                && random.nextInt(100) < Math.min(getNexus().getCurrentWave(), 100)) {
-            evolve(level);
-        }
-        return result;
-    }
-
-    private void evolve(ServerLevel level) {
-        IMElderGuardianEntity elder = InvEntities.ELDER_GUARDIAN.create(level);
-        if (elder == null) {
-            return;
-        }
-        float healthRatio = getHealth() / getMaxHealth();
-        elder.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
-        elder.setDeltaMovement(getDeltaMovement());
-        elder.setCustomName(getCustomName());
-        elder.setCustomNameVisible(isCustomNameVisible());
-        elder.setNoAi(isNoAi());
-        if (isPersistenceRequired()) {
-            elder.setPersistenceRequired();
-        }
-        elder.setHealth(elder.getMaxHealth() * healthRatio);
-        discard();
-        if (level.addFreshEntity(elder)) {
-            elder.setNexus(getNexus());
-        }
     }
 
     private final class AttackNexusGoal extends Goal {
@@ -218,7 +187,7 @@ public final class IMGuardianEntity extends Guardian
                 } else if (tickCount - getNexusBeamStartTick()
                         >= getAttackDuration()) {
                     getNexus().damage(damageSources().mobAttack(
-                            IMGuardianEntity.this), 2);
+                            IMElderGuardianEntity.this), 2);
                     clearNexusBeam();
                 }
             } else {
