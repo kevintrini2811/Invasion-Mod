@@ -22,7 +22,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
@@ -243,7 +242,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     public void tick() {
         super.tick();
         if (!level().isClientSide() && isAlive() && !isNoAi()
-                && getType() == InvEntities.ZOMBIE) {
+                && canConvertToDrowned()) {
             if (drownedConversionTime >= 0) {
                 if (--drownedConversionTime < 0
                         && level() instanceof ServerLevel world) {
@@ -273,9 +272,20 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         }
     }
 
+    private boolean canConvertToDrowned() {
+        return getType() != InvEntities.DROWNED
+                && getType() != InvEntities.HUSK;
+    }
+
+    @Override
+    protected int decreaseAirSupply(int air) {
+        // Zombie conversions take longer than an IM zombie would otherwise
+        // survive after exhausting its air supply.
+        return increaseAirSupply(air);
+    }
+
     private void convertToDrowned(ServerLevel world) {
-        IMDrownedEntity drowned = InvEntities.DROWNED.create(
-                world, EntitySpawnReason.CONVERSION);
+        IMDrownedEntity drowned = InvEntities.DROWNED.create(world);
         if (drowned == null) {
             return;
         }
@@ -285,7 +295,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         drowned.setBaby(isBaby());
         drowned.setNexus(getNexus());
         drowned.setCountsTowardMobCap(countsTowardMobCap());
-        drowned.snapTo(getX(), getY(), getZ(), getYRot(), getXRot());
+        drowned.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
         drowned.setDeltaMovement(getDeltaMovement());
         drowned.setCustomName(getCustomName());
         drowned.setCustomNameVisible(isCustomNameVisible());
@@ -297,7 +307,6 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         }
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             drowned.setItemSlot(slot, getItemBySlot(slot).copy());
-            drowned.setDropChance(slot, getDropChances().byEquipment(slot));
         }
         drowned.setHealth(drowned.getMaxHealth());
 
