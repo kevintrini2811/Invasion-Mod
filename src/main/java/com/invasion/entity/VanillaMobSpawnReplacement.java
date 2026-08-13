@@ -39,8 +39,6 @@ public final class VanillaMobSpawnReplacement {
     private static final Map<ServerLevel, Set<UUID>> PENDING = new HashMap<>();
     private static final Map<ServerLevel, Set<UUID>> LOADED_REPLACEABLE =
             new HashMap<>();
-    private static final Map<ServerLevel, Set<UUID>> WATER_SPAWNED_DROWNED =
-            new HashMap<>();
     private static boolean converting;
 
     private VanillaMobSpawnReplacement() {
@@ -74,12 +72,6 @@ public final class VanillaMobSpawnReplacement {
         }
         LOADED_REPLACEABLE.computeIfAbsent(
                 world, ignored -> new HashSet<>()).add(mob.getUUID());
-        // Fluid contact is reliable once the entity joins the level. During
-        // FinalizeSpawnEvent the Drowned's cached water state is not yet set.
-        if (mob.getType() == EntityTypes.DROWNED && mob.isInWater()) {
-            WATER_SPAWNED_DROWNED.computeIfAbsent(
-                    world, ignored -> new HashSet<>()).add(mob.getUUID());
-        }
         if (hasActiveNexus(world)) {
             PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>()).add(mob.getUUID());
@@ -95,13 +87,6 @@ public final class VanillaMobSpawnReplacement {
             loaded.remove(event.getEntity().getUUID());
             if (loaded.isEmpty()) {
                 LOADED_REPLACEABLE.remove(world);
-            }
-        }
-        Set<UUID> waterSpawned = WATER_SPAWNED_DROWNED.get(world);
-        if (waterSpawned != null) {
-            waterSpawned.remove(event.getEntity().getUUID());
-            if (waterSpawned.isEmpty()) {
-                WATER_SPAWNED_DROWNED.remove(world);
             }
         }
     }
@@ -179,8 +164,7 @@ public final class VanillaMobSpawnReplacement {
         } else if (mob.getType() == EntityTypes.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityTypes.DROWNED) {
-            Set<UUID> waterSpawned = WATER_SPAWNED_DROWNED.get(mob.level());
-            if (waterSpawned != null && waterSpawned.contains(mob.getUUID())
+            if (mob.isInWater()
                     && mob.getRandom().nextFloat() < 0.1F) {
                 convert(mob, InvEntities.GUARDIAN, nexus);
             } else {
