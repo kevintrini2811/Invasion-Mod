@@ -288,10 +288,12 @@ public class IMWaveSpawner implements Spawner {
 			mobConstruct = replaceWithRareWaveVariant(mobConstruct);
 		}
 		mobConstruct = replaceEngineerWithZombieVariant(mobConstruct);
+		EntityConstruct requestedConstruct = mobConstruct;
 		int spawnTries = Math.min(spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID, angle), MAX_SPAWN_TRIES);
 
 		for (SpawnPoint spawnPoint : spawnPointContainer.getRandomSpawnPoints(
-				SpawnType.HUMANOID, angle, spawnTries)) {
+				SpawnType.HUMANOID, angle, spawnTries,
+				point -> isPreferredFluidSpawn(requestedConstruct, point))) {
 			if (!permitSpawns) {
 				successfulSpawns++;
 				if (debugMode) {
@@ -335,6 +337,20 @@ public class IMWaveSpawner implements Spawner {
 			}
 		}
 		return false;
+	}
+
+	private boolean isPreferredFluidSpawn(
+			EntityConstruct construct, SpawnPoint point) {
+		var fluid = nexus.getWorld().getFluidState(point.pos());
+		if (construct.entityType() == InvEntities.ZOMBIE) {
+			return fluid.is(FluidTags.WATER) || fluid.is(FluidTags.LAVA);
+		}
+		if (construct.entityType() == InvEntities.DROWNED) {
+			return fluid.is(FluidTags.WATER);
+		}
+		return (construct.entityType() == InvEntities.ZOMBIE_PIGMAN
+				|| construct.entityType() == InvEntities.ZOMBIFIED_PIGLIN)
+				&& fluid.is(FluidTags.LAVA);
 	}
 
 	private EntityConstruct replaceEngineerWithZombieVariant(
