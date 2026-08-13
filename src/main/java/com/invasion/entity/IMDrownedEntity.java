@@ -239,7 +239,7 @@ public final class IMDrownedEntity extends EntityIMZombie
     }
 
     private static final class DrownedMoveControl
-            extends MoveControl<IMDrownedEntity> {
+            extends MoveControl {
         private DrownedMoveControl(IMDrownedEntity drowned) {
             super(drowned);
         }
@@ -272,9 +272,9 @@ public final class IMDrownedEntity extends EntityIMZombie
             double horizontalDistance = Math.sqrt(x * x + z * z);
             float targetPitch = -((float) (Mth.atan2(y, horizontalDistance)
                     * Mth.RAD_TO_DEG));
-            mob.setXRot(rotateTowards(
-                    mob.getXRot(), Mth.clamp(targetPitch, -85.0F, 85.0F),
-                    5.0F));
+            mob.setXRot(Mth.rotLerp(
+                    0.2F, mob.getXRot(),
+                    Mth.clamp(targetPitch, -85.0F, 85.0F)));
 
             float speed = (float) (speedModifier
                     * mob.getAttributeValue(Attributes.MOVEMENT_SPEED))
