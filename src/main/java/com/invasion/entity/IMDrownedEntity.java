@@ -40,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class IMDrownedEntity extends EntityIMZombie
         implements RangedAttackMob {
-    private static final float UNDERWATER_SPEED_MULTIPLIER = 2.0F;
+    private static final float UNDERWATER_SPEED_MULTIPLIER = 1.0F;
     private boolean diving;
 
     public IMDrownedEntity(
