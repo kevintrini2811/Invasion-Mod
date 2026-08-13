@@ -41,6 +41,8 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.DROWNED, InvDrownedRenderer::new);
         event.registerEntityRenderer(InvEntities.GUARDIAN, IMGuardianRenderer::new);
         event.registerEntityRenderer(
+                InvEntities.ELDER_GUARDIAN, IMElderGuardianRenderer::new);
+        event.registerEntityRenderer(
                 InvEntities.ZOMBIE_VILLAGER,
                 IMZombieVillagerRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN,
