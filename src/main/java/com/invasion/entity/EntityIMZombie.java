@@ -75,6 +75,7 @@ import com.invasion.Notifiable;
 import com.invasion.entity.ai.builder.TerrainBuilder;
 import com.invasion.entity.ai.builder.TerrainModifier;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.item.InvasionSpawnEggItem;
 
 
 public class EntityIMZombie extends AbstractIMZombieEntity {
@@ -188,6 +189,23 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
                     Attributes.MOVEMENT_SPEED,
                     BABY_SPEED_BONUS,
                     baby);
+        }
+    }
+
+    @Override
+    protected void onOffspringSpawnedFromEgg(Player player, net.minecraft.world.entity.Mob offspring) {
+        super.onOffspringSpawnedFromEgg(player, offspring);
+        for (InteractionHand hand : InteractionHand.values()) {
+            ItemStack stack = player.getItemInHand(hand);
+            if (stack.getItem() instanceof InvasionSpawnEggItem egg && egg.appliesTo(offspring)) {
+                egg.applyEntityData(offspring);
+                return;
+            }
+        }
+
+        if (offspring instanceof TieredIMMobEntity tieredOffspring) {
+            tieredOffspring.setTier(getTier());
+            tieredOffspring.setFlavour(getFlavour());
         }
     }
 

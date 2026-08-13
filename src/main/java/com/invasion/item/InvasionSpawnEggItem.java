@@ -73,4 +73,12 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
                         }));
         return result;
     }
+
+    public boolean appliesTo(Mob mob) {
+        return mob.getType() == entityType;
+    }
+
+    public void applyEntityData(Mob mob) {
+        entityData.loadInto(mob);
+    }
 }
