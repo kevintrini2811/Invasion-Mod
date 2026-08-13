@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.invasion.InvasionMod;
 import com.invasion.entity.ai.goal.VanillaMountNexusGoal;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
@@ -375,7 +376,15 @@ public final class VanillaMobSpawnReplacement {
     private static boolean canContinueRiding(
             Entity vehicle, Mob converted,
             com.invasion.nexus.NexusAccess nexus) {
-        if (!(vehicle instanceof Mob mount) || vehicle.isRemoved()) {
+        if (vehicle == null) {
+            return false;
+        }
+        if (!(vehicle instanceof Mob mount)) {
+            logForcedDismount(vehicle, converted, "mount is not a mob");
+            return false;
+        }
+        if (vehicle.isRemoved()) {
+            logForcedDismount(vehicle, converted, "mount was removed");
             return false;
         }
 
@@ -391,12 +400,33 @@ public final class VanillaMobSpawnReplacement {
         try {
             Path path = mount.getNavigation().createPath(
                     nexus.getOrigin(), 1);
-            return path != null && path.canReach();
-        } catch (RuntimeException | LinkageError ignored) {
+            if (path != null && path.canReach()) {
+                return true;
+            }
+            logForcedDismount(vehicle, converted,
+                    "mount cannot navigate to the Nexus");
+            return false;
+        } catch (RuntimeException | LinkageError error) {
             // Compatibility code in a modded mount may reject an unfamiliar
             // IM passenger or navigation implementation. Dismount safely.
+            logForcedDismount(vehicle, converted,
+                    "mount navigation failed with "
+                            + error.getClass().getSimpleName());
             return false;
         }
+    }
+
+    private static void logForcedDismount(
+            Entity mount, Mob rider, String reason) {
+        Identifier mountType = BuiltInRegistries.ENTITY_TYPE.getKey(
+                mount.getType());
+        Identifier riderType = BuiltInRegistries.ENTITY_TYPE.getKey(
+                rider.getType());
+        InvasionMod.LOGGER.warn(
+                "Invasion Mod dismounted rider {} from mount {} because {}. "
+                        + "Please report this mount combination to the "
+                        + "Invasion Mod developer.",
+                riderType, mountType, reason);
     }
 
     private static boolean isVanillaJockeyMount(Mob mount) {
