@@ -2,6 +2,7 @@ package com.invasion.item;
 
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -11,25 +12,50 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.Tool;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class InfusedSwordItem extends Item {
+    private static final int REQUIRED_DAMAGE = 100;
+    private static final int CHARGE_SCALE = 1000;
+    private static final String CHARGE_TAG = "invmodInfusedSwordCharge";
+
     public InfusedSwordItem(Properties properties) {
         super(properties.stacksTo(1).sword(CustomToolMaterial.INFUSED_GOLD, 3.0F, -2.4F));
     }
 
     @Override
     public void hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
-        if (stack.isDamaged()) {
-            stack.setDamageValue(stack.getDamageValue() - 1);
-        }
+        // Charge is restored from the damage event after a successful attack.
+    }
+
+    public static void addDamageCharge(ItemStack stack, float inflictedDamage) {
+        if (!(stack.getItem() instanceof InfusedSwordItem) || !stack.isDamaged()
+                || inflictedDamage <= 0.0F) return;
+        int currentCharge = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
+                .copyTag().getIntOr(CHARGE_TAG,
+                        Math.max(0, REQUIRED_DAMAGE - stack.getDamageValue()) * CHARGE_SCALE);
+        int newCharge = Math.min(REQUIRED_DAMAGE * CHARGE_SCALE,
+                currentCharge + Math.round(inflictedDamage * CHARGE_SCALE));
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+            if (newCharge >= REQUIRED_DAMAGE * CHARGE_SCALE) tag.remove(CHARGE_TAG);
+            else tag.putInt(CHARGE_TAG, newCharge);
+        });
+        stack.setDamageValue((int)Math.ceil(
+                (double)(REQUIRED_DAMAGE * CHARGE_SCALE - newCharge) / CHARGE_SCALE));
     }
 
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
         Tool toolComponent = stack.get(DataComponents.TOOL);
         return toolComponent != null ? toolComponent.getMiningSpeed(state) : 1.0F;
+    }
+
+    @Override
+    public boolean mineBlock(ItemStack stack, Level world, BlockState state,
+            BlockPos pos, LivingEntity miner) {
+        return true;
     }
 
     // get break speed
@@ -68,7 +94,9 @@ public class InfusedSwordItem extends Item {
 
         }
 
-        stack.setDamageValue(CustomToolMaterial.INFUSED_GOLD.durability());
+        CustomData.update(DataComponents.CUSTOM_DATA, stack,
+                tag -> tag.putInt(CHARGE_TAG, 0));
+        stack.setDamageValue(REQUIRED_DAMAGE);
         return InteractionResult.SUCCESS;
     }
 }

@@ -29,6 +29,7 @@ import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.IMBlazeEntity;
 import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.item.InvItems;
+import com.invasion.item.InfusedSwordChargeHandler;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.network.NexusHudPayload;
 import com.invasion.particle.InvParticles;
@@ -106,6 +107,7 @@ public class InvasionMod implements ModInitializer {
         IMCivilianTargetHandler.bootstrap();
         IronGolemTargetHandler.bootstrap();
         PlayerAllyTargetHandler.bootstrap();
+        InfusedSwordChargeHandler.bootstrap();
         InvParticles.bootstrap();
         InvScreenHandlers.bootstrap();
     }
