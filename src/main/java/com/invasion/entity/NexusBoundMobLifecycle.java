@@ -12,6 +12,8 @@ import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 
@@ -67,8 +69,18 @@ public final class NexusBoundMobLifecycle {
         CleanupQueue queue = CLEANUP_QUEUES.computeIfAbsent(
                 level, ignored -> new CleanupQueue());
         if (queue.pending.add(combatant)) {
+            freeze(living);
             queue.entries.addLast(new CleanupEntry(combatant, nexus));
         }
+    }
+
+    private static void freeze(LivingEntity living) {
+        if (living instanceof Mob mob) {
+            mob.getNavigation().stop();
+            mob.setTarget(null);
+            mob.setNoAi(true);
+        }
+        living.setDeltaMovement(Vec3.ZERO);
     }
 
     private static void drain(ServerLevel level) {
@@ -105,19 +117,11 @@ public final class NexusBoundMobLifecycle {
                         && currentNexus.isActive()) {
             return;
         }
-        if (living instanceof IMSlimeEntity slime) {
-            slime.suppressSplitOnNexusDeath();
-        } else if (living instanceof IMMagmaCubeEntity magmaCube) {
-            magmaCube.suppressSplitOnNexusDeath();
-        } else if (living instanceof MysteryZombieEntity mysteryZombie) {
-            mysteryZombie.suppressReleaseOnNexusDeath();
-        }
-        // Nexus cleanup must not replace infected hosts with a fresh group of
-        // support parasites while the remaining invasion is being removed.
-        living.removeTag(IMSilverfishEntity.INFECTED_TAG);
         combatant.setNexus(null);
-        living.hurt(level.damageSources().magic(), living.getMaxHealth());
-        living.kill();
+        // A failed Nexus cleanup is not a combat death. Removing the entity
+        // directly avoids loot, XP, death events, split/release behaviour and
+        // twenty ticks of death animation for every remaining wave mob.
+        living.discard();
     }
 
     private record CleanupEntry(
