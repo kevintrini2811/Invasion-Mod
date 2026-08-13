@@ -16,7 +16,6 @@ import net.minecraft.client.renderer.entity.WardenRenderer;
 import net.minecraft.client.renderer.entity.WitchRenderer;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.ZombifiedPiglinRenderer;
-import net.minecraft.client.renderer.entity.GuardianRenderer;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.SpiderRenderer;
 import net.minecraft.resources.Identifier;
@@ -40,7 +39,7 @@ public final class InvRenderers {
                 MysteryZombieRenderer::new);
         event.registerEntityRenderer(InvEntities.HUSK, InvHuskRenderer::new);
         event.registerEntityRenderer(InvEntities.DROWNED, InvDrownedRenderer::new);
-        event.registerEntityRenderer(InvEntities.GUARDIAN, GuardianRenderer::new);
+        event.registerEntityRenderer(InvEntities.GUARDIAN, IMGuardianRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.ZOMBIE_VILLAGER,
                 IMZombieVillagerRenderer::new);
