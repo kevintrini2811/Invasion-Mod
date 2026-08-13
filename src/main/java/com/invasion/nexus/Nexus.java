@@ -360,7 +360,10 @@ public class Nexus implements ControllableNexusAccess {
 			storage.clearActiveNexus(this);
         }
 
-        waveSpawner.stop();
+        waveSpawner.abort();
+        budgetPlan = null;
+        phaseMobsLeft = 0;
+        phaseKills = 0;
         activationTimer = 0;
         currentWave = 0;
         activated = false;

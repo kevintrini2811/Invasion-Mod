@@ -197,6 +197,19 @@ public class IMWaveSpawner implements Spawner {
         active = false;
     }
 
+    public void abort() {
+        active = false;
+        waveComplete = false;
+        permitSpawns = true;
+        respawnQueue.clear();
+        if (currentWave != null) {
+            currentWave.discardPendingSpawns();
+            currentWave = null;
+        }
+        elapsed = 0L;
+        successfulSpawns = 0;
+    }
+
 
     public boolean isActive() {
 		return active;
