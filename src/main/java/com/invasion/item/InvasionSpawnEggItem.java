@@ -1,6 +1,7 @@
 package com.invasion.item;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -15,15 +16,19 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
 public final class InvasionSpawnEggItem extends SpawnEggItem {
     private final EntityType<? extends Mob> entityType;
+    private final TypedEntityData<EntityType<?>> entityData;
 
-    public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType) {
+    public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
+            TypedEntityData<EntityType<?>> entityData) {
         super(properties);
         this.entityType = entityType;
+        this.entityData = entityData;
     }
 
     @Override
@@ -47,12 +52,18 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
 
         InteractionResult result = spawnAction.get();
 
+        List<Mob> spawnedEntities = serverLevel.getEntitiesOfClass(Mob.class,
+                player.getBoundingBox().inflate(16),
+                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()));
+        spawnedEntities.forEach(mob -> {
+            // SpawnEggItem normally applies ENTITY_DATA itself. Apply it again here so
+            // IM tier/flavour variants cannot fall back to their default appearance.
+            entityData.loadInto(mob);
+        });
+
         WorldNexusStorage.of(serverLevel).getNexus()
                 .filter(nexus -> nexus.getMode().isActive())
-                .ifPresent(nexus -> serverLevel.getEntitiesOfClass(Mob.class,
-                                player.getBoundingBox().inflate(16),
-                                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()))
-                        .forEach(mob -> {
+                .ifPresent(nexus -> spawnedEntities.forEach(mob -> {
                             if (mob instanceof IHasNexus nexusMob) {
                                 nexusMob.setNexus(nexus);
                                 if (mob instanceof NexusEntity configuredMob) {
