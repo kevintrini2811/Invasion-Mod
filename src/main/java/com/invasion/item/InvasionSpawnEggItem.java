@@ -1,10 +1,12 @@
 package com.invasion.item;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.TieredIMMobEntity;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.WorldNexusStorage;
 
@@ -62,12 +64,14 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
 
         InteractionResult result = spawnAction.get();
 
+        List<Mob> spawnedEntities = serverLevel.getEntitiesOfClass(Mob.class,
+                player.getBoundingBox().inflate(16),
+                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()));
+        spawnedEntities.forEach(this::applyEntityData);
+
         WorldNexusStorage.of(serverLevel).getNexus()
                 .filter(nexus -> nexus.getMode().isActive())
-                .ifPresent(nexus -> serverLevel.getEntitiesOfClass(Mob.class,
-                                player.getBoundingBox().inflate(16),
-                                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()))
-                        .forEach(mob -> {
+                .ifPresent(nexus -> spawnedEntities.forEach(mob -> {
                             if (mob instanceof IHasNexus nexusMob) {
                                 nexusMob.setNexus(nexus);
                                 if (mob instanceof NexusEntity configuredMob) {
@@ -76,5 +80,16 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
                             }
                         }));
         return result;
+    }
+
+    public boolean appliesTo(Mob mob) {
+        return mob.getType() == entityType;
+    }
+
+    public void applyEntityData(Mob mob) {
+        if (variantData != null && mob instanceof TieredIMMobEntity tieredMob) {
+            if (variantData.contains("tier")) tieredMob.setTier(variantData.getInt("tier"));
+            if (variantData.contains("flavour")) tieredMob.setFlavour(variantData.getInt("flavour"));
+        }
     }
 }
