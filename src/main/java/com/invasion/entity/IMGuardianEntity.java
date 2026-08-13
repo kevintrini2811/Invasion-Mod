@@ -11,6 +11,7 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -18,17 +19,17 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 /** A vanilla guardian that joins the active Nexus invasion. */
 public final class IMGuardianEntity extends Guardian
         implements Combatant<Guardian>, EntityConstruct.BuildableMob {
+    private static final double NEXUS_BEAM_RANGE = 16.0D;
     private static final EntityDataAccessor<Optional<BlockPos>> NEXUS_BEAM_TARGET =
             SynchedEntityData.defineId(
                     IMGuardianEntity.class,
@@ -37,6 +38,7 @@ public final class IMGuardianEntity extends Guardian
             SynchedEntityData.defineId(
                     IMGuardianEntity.class, EntityDataSerializers.INT);
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
+    @Nullable private ArmorStand clientNexusBeamTarget;
 
     public IMGuardianEntity(EntityType<? extends Guardian> type, Level level) {
         super(type, level);
@@ -62,12 +64,50 @@ public final class IMGuardianEntity extends Guardian
     }
 
     @Override
+    public boolean hasActiveAttackTarget() {
+        return super.hasActiveAttackTarget()
+                || level().isClientSide && getNexusBeamTarget().isPresent();
+    }
+
+    @Override
+    public LivingEntity getActiveAttackTarget() {
+        LivingEntity vanillaTarget = super.getActiveAttackTarget();
+        if (vanillaTarget != null || !level().isClientSide) {
+            return vanillaTarget;
+        }
+        return getNexusBeamTarget().map(pos -> {
+            if (clientNexusBeamTarget == null) {
+                clientNexusBeamTarget = new ArmorStand(level(), 0, 0, 0);
+                clientNexusBeamTarget.setInvisible(true);
+            }
+            clientNexusBeamTarget.setPos(
+                    pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D);
+            return clientNexusBeamTarget;
+        }).orElse(null);
+    }
+
+    @Override
+    public float getClientSideAttackTime() {
+        return getNexusBeamTarget().isPresent()
+                ? tickCount - getNexusBeamStartTick()
+                : super.getClientSideAttackTime();
+    }
+
+    @Override
+    public float getAttackAnimationScale(float partialTick) {
+        return getNexusBeamTarget().isPresent()
+                ? Math.min((getClientSideAttackTime() + partialTick)
+                        / getAttackDuration(), 1.0F)
+                : super.getAttackAnimationScale(partialTick);
+    }
+
+    @Override
     protected void registerGoals() {
         super.registerGoals();
         goalSelector.addGoal(5, new AttackNexusGoal());
         targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(
                 this, LivingEntity.class, 10, true, false,
-                (candidate, level) -> level instanceof ServerLevel serverLevel
+                candidate -> level() instanceof ServerLevel serverLevel
                         && IMWitchEntity.isPlayerAlly(candidate, serverLevel)));
     }
 
@@ -93,13 +133,13 @@ public final class IMGuardianEntity extends Guardian
     }
 
     @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         nexus.writeNbt(output);
     }
 
     @Override
-    protected void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
         nexus.readNbt(input);
     }
@@ -135,7 +175,8 @@ public final class IMGuardianEntity extends Guardian
             double x = pos.getX() + 0.5D;
             double y = pos.getY() + 0.5D;
             double z = pos.getZ() + 0.5D;
-            if (distanceToSqr(x, y, z) <= 4.0D) {
+            if (distanceToSqr(x, y, z)
+                    <= NEXUS_BEAM_RANGE * NEXUS_BEAM_RANGE) {
                 getNavigation().stop();
                 getLookControl().setLookAt(x, y, z);
                 if (getNexusBeamTarget().isEmpty()) {
