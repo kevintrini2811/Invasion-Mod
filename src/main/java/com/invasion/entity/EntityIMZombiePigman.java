@@ -64,6 +64,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.level.ServerLevel;
 
@@ -97,6 +99,12 @@ public class EntityIMZombiePigman extends AbstractIMZombieEntity {
         return Zombie.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.2F)
                 .add(Attributes.ATTACK_DAMAGE, 18);
+    }
+
+    @Override
+    protected boolean hasValidSpawnSupport(LevelReader world) {
+        return world.getFluidState(blockPosition()).is(FluidTags.LAVA)
+                || super.hasValidSpawnSupport(world);
     }
 
     @Override
