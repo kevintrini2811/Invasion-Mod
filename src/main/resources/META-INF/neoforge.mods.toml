@@ -50,6 +50,6 @@ side="BOTH"
 [[dependencies.invmod]]
 modId="mutantmonsters"
 type="optional"
-versionRange="[26.2.0,)"
+versionRange="[21.1.1,)"
 ordering="AFTER"
 side="BOTH"
