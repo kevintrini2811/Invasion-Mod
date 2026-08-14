@@ -16,11 +16,7 @@ import fuzs.mutantmonsters.world.entity.mutant.MutantEnderman;
 import fuzs.mutantmonsters.world.entity.mutant.MutantSkeleton;
 import fuzs.mutantmonsters.world.entity.mutant.MutantZombie;
 import fuzs.mutantmonsters.world.entity.mutant.SpiderPig;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -83,8 +79,7 @@ public final class MutantMonstersEntities {
     private static <T extends Entity> EntityType<T> register(
             String name, EntityType.Builder<T> builder) {
         var id = InvasionMod.id(name);
-        var key = ResourceKey.create(Registries.ENTITY_TYPE, id);
-        return Registry.register(
-                BuiltInRegistries.ENTITY_TYPE, id, builder.build(id.toString()));
+        return InvasionMod.INSTANCE.register(
+                Registries.ENTITY_TYPE, id, builder.build(id.toString()));
     }
 }
