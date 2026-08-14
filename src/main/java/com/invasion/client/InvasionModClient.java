@@ -3,6 +3,8 @@ package com.invasion.client;
 import com.invasion.InvScreenHandlers;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.client.render.legacy.InvRenderers;
+import com.invasion.compat.MutantMonstersCompatibility;
+import com.invasion.compat.MutantMonstersRenderers;
 import com.invasion.client.screen.NexusScreen;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
@@ -58,6 +60,7 @@ public final class InvasionModClient {
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         InvRenderers.register(event);
+        if (MutantMonstersCompatibility.isLoaded()) MutantMonstersRenderers.register(event);
     }
 
     private static void registerGuiLayers(RegisterGuiOverlaysEvent event) {

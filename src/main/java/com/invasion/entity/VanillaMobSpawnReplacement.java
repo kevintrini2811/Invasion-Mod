@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.invasion.InvasionMod;
+import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.entity.ai.goal.VanillaMountNexusGoal;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
@@ -149,7 +150,10 @@ public final class VanillaMobSpawnReplacement {
     private static void convertMob(
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
         ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
-        if (isTinySkeleton(typeId, "baby_skeleton")) {
+        EntityType<? extends Mob> mutant = MutantMonstersCompatibility.replacementFor(mob.getType());
+        if (mutant != null) {
+            convert(mob, (EntityType) mutant, nexus);
+        } else if (isTinySkeleton(typeId, "baby_skeleton")) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (isTinySkeleton(typeId, "baby_parched")) {
             convert(mob, InvEntities.SKELETON, nexus);
@@ -216,7 +220,8 @@ public final class VanillaMobSpawnReplacement {
 
     private static boolean isReplaceableType(EntityType<?> type) {
         ResourceLocation typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        return isTinySkeleton(typeId, "baby_skeleton")
+        return MutantMonstersCompatibility.replacementFor(type) != null
+                || isTinySkeleton(typeId, "baby_skeleton")
                 || isTinySkeleton(typeId, "baby_parched")
                 || isTinySkeleton(typeId, "baby_stray")
                 || isTinySkeleton(typeId, "baby_wither_skeleton")

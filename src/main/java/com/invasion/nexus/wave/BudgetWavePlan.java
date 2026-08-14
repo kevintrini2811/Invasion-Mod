@@ -1,6 +1,7 @@
 package com.invasion.nexus.wave;
 
 import com.invasion.entity.InvEntities;
+import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.nexus.EntityConstruct;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -118,7 +119,9 @@ public final class BudgetWavePlan {
     private static Option o(EntityType<? extends Mob> type, int tier, int cost) { return new Option(type, tier, cost); }
     private static Option o(EntityType<? extends Mob> type, int tier, int flavour, int cost) { return new Option(type, tier, flavour, cost); }
 
-    private static final List<Option> ALL = List.of(
+    private static final List<Option> ALL = makeAll();
+    private static List<Option> makeAll() {
+        List<Option> options = new ArrayList<>(List.of(
             o(InvEntities.ZOMBIE,1,1), o(InvEntities.ZOMBIE,2,3), o(InvEntities.ZOMBIE,3,6),
             o(InvEntities.FAT_ZOMBIE,3,30),
             o(InvEntities.ZOMBIE,2,2,5),
@@ -136,7 +139,14 @@ public final class BudgetWavePlan {
             o(InvEntities.BLAZE,1,8), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,15),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
-            o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5));
+            o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5)));
+        MutantMonstersCompatibility.freeBossTypes().forEach(type -> options.add(o(type, 1, 200)));
+        EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");
+        EntityType<? extends Mob> minion = MutantMonstersCompatibility.mobType("creeper_minion");
+        if (spiderPig != null) options.add(o(spiderPig, 1, 25));
+        if (minion != null) options.add(o(minion, 1, 1));
+        return List.copyOf(options);
+    }
 
     /** Selects any purchasable IM combat mob without exposing it as a purchase. */
     public static EntityConstruct randomMobConstruct(RandomSource random) {
@@ -156,15 +166,33 @@ public final class BudgetWavePlan {
         pools.put(Theme.FAST, filter(InvEntities.SILVERFISH, InvEntities.BLAZE, InvEntities.JUMPING_SPIDER, InvEntities.SPEEDY_ZOMBIE, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.PHANTOM));
         pools.put(Theme.SIEGE, filter(InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER, InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER, InvEntities.ENDERMAN, InvEntities.ZOGLIN, InvEntities.ZOMBIE, InvEntities.BURROWER, InvEntities.ENDERMITE));
         pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.WITHER, InvEntities.WITCH));
-        pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN).toList());
+        EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");
+        EntityType<? extends Mob> minion = MutantMonstersCompatibility.mobType("creeper_minion");
+        EntityType<? extends Mob> mz = MutantMonstersCompatibility.mobType("mutant_zombie");
+        EntityType<? extends Mob> mc = MutantMonstersCompatibility.mobType("mutant_creeper");
+        EntityType<? extends Mob> ms = MutantMonstersCompatibility.mobType("mutant_skeleton");
+        EntityType<? extends Mob> me = MutantMonstersCompatibility.mobType("mutant_enderman");
+        pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN && option.type != spiderPig && option.type != minion).toList());
         pools.put(Theme.SWARM, ALL.stream().filter(option ->
                 option.type == InvEntities.FAT_ZOMBIE
                         || option.cost <= 5 && option.type != InvEntities.ENDERMITE
                                 && option.flavour != 2).toList());
-        pools.put(Theme.MIXED, ALL.stream().filter(option -> option.type != InvEntities.WITHER && option.type != InvEntities.WARDEN).toList());
+        pools.put(Theme.MIXED, ALL.stream().filter(option -> option.type != InvEntities.WITHER && option.type != InvEntities.WARDEN && option.type != spiderPig && option.type != minion).toList());
         pools.put(Theme.RANDOM, pools.get(Theme.MIXED));
-        pools.put(Theme.RANDOMHELL, ALL);
+        pools.put(Theme.RANDOMHELL, ALL.stream().filter(o -> o.type != spiderPig && o.type != minion).toList());
+        addToPool(pools, Theme.FAST, spiderPig); addToPool(pools, Theme.SPIDER, spiderPig);
+        addToPool(pools, Theme.UNDERGROUND, minion); addToPool(pools, Theme.SIEGE, minion);
+        addToPool(pools, Theme.UNDERGROUND, mz); addToPool(pools, Theme.UNDERGROUND, mc);
+        addToPool(pools, Theme.UNDERGROUND, ms); addToPool(pools, Theme.UNDERGROUND, me);
+        addToPool(pools, Theme.RANGED, ms);
         return pools;
+    }
+
+    private static void addToPool(Map<Theme, List<Option>> pools, Theme theme, EntityType<? extends Mob> type) {
+        if (type == null) return;
+        List<Option> updated = new ArrayList<>(pools.get(theme));
+        ALL.stream().filter(o -> o.type == type).findFirst().ifPresent(updated::add);
+        pools.put(theme, List.copyOf(updated));
     }
 
     @SafeVarargs private static List<Option> filter(EntityType<? extends Mob>... types) {
@@ -225,7 +253,9 @@ public final class BudgetWavePlan {
 			purchases.add(new Purchase(InvEntities.PIGMAN_ENGINEER, 1, 0, rollRules(theme, wave, random)));
 		}
         if (wave >= 15 && wave % 5 == 0 && index == phaseCount - 1) {
-            EntityType<? extends Mob> boss = random.nextBoolean() ? InvEntities.WITHER : InvEntities.WARDEN;
+            List<EntityType<? extends Mob>> bosses = new ArrayList<>(List.of(InvEntities.WITHER, InvEntities.WARDEN));
+            bosses.addAll(MutantMonstersCompatibility.freeBossTypes());
+            EntityType<? extends Mob> boss = bosses.get(random.nextInt(bosses.size()));
             purchases.add(new Purchase(boss, 1, 0, rollRules(theme, wave, random)));
         }
         return new Phase(theme, List.copyOf(purchases));
@@ -239,6 +269,7 @@ public final class BudgetWavePlan {
 	}
 
     private static int effectiveCost(Theme theme, Option option) {
+        if (MutantMonstersCompatibility.isMutant(option.type)) return option.cost;
         if (theme == Theme.RANDOMHELL) return option.cost >= 100 ? 20 : 5;
         return theme == Theme.RANDOM ? 5 : option.cost;
     }

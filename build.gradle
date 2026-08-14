@@ -41,6 +41,7 @@ sourceSets {
 
 repositories {
     maven { name = 'JEI'; url = 'https://maven.blamejared.com' }
+    maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' }
 }
 
 legacyForge {
@@ -70,6 +71,8 @@ legacyForge {
 
 dependencies {
     compileOnly "mezz.jei:jei-${project.minecraft_version}-forge-api:${project.jei_version}"
+    compileOnly "maven.modrinth:mutant-monsters:v8.0.8-1.20.1-Forge"
+    compileOnly "maven.modrinth:puzzles-lib:v8.1.33-1.20.1-Forge"
 }
 
 processResources {

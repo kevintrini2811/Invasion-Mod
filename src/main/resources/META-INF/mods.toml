@@ -46,3 +46,10 @@ mandatory=false
 versionRange="[8.0.1,)"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.invmod]]
+modId="mutantmonsters"
+mandatory=false
+versionRange="[8.0.8,)"
+ordering="AFTER"
+side="BOTH"
