@@ -160,11 +160,7 @@ public final class VanillaMobSpawnReplacement {
         } else if (isTinySkeleton(typeId, "baby_wither_skeleton")) {
             convert(mob, InvEntities.WITHER_SKELETON, nexus);
         } else if (mob.getType() == EntityTypes.ZOMBIE) {
-            if (mob.getRandom().nextInt(10) == 0) {
-                convert(mob, InvEntities.FAT_ZOMBIE, nexus);
-            } else {
-                convert(mob, InvEntities.ZOMBIE, nexus);
-            }
+            convert(mob, InvEntities.ZOMBIE, nexus);
         } else if (mob.getType() == EntityTypes.HUSK) {
             convert(mob, InvEntities.HUSK, nexus);
         } else if (mob.getType() == EntityTypes.DROWNED) {
@@ -279,10 +275,6 @@ public final class VanillaMobSpawnReplacement {
         if (converted == null) {
             return;
         }
-        if (converted instanceof IMFatZombieEntity fatZombie) {
-            fatZombie.setTier(3);
-        }
-
         Entity vehicle = source.getVehicle();
         source.stopRiding();
 
@@ -312,14 +304,6 @@ public final class VanillaMobSpawnReplacement {
             for (EquipmentSlot slot : EquipmentSlot.values()) {
                 converted.setItemSlot(
                         slot, source.getItemBySlot(slot).copy());
-            }
-        }
-        if (converted instanceof IMFatZombieEntity) {
-            for (EquipmentSlot slot : EquipmentSlot.values()) {
-                converted.setItemSlot(
-                        slot, source.getItemBySlot(slot).copy());
-                converted.setDropChance(
-                        slot, source.getDropChances().byEquipment(slot));
             }
         }
         if (source instanceof Husk

@@ -36,7 +36,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 public final class IMFatZombieEntity extends EntityIMZombie {
     private static final int EAT_DURATION = 32;
     private static final int EAT_COOLDOWN = 200;
-    private static final float GROWTH_PER_MEAL = 0.01F;
+    private static final float GROWTH_PER_MEAL = 0.05F;
     private static final EntityDataAccessor<Boolean> EATING =
             SynchedEntityData.defineId(
                     IMFatZombieEntity.class, EntityDataSerializers.BOOLEAN);
@@ -104,6 +104,18 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
                 this, Wolf.class, 10, true, false,
                 (wolf, level) -> wolf instanceof Wolf tame && tame.isTame()));
+    }
+
+    @Override
+    public boolean wantsToPickUp(ServerLevel level,
+            net.minecraft.world.item.ItemStack stack) {
+        return EquipmentUtil.isWeapon(stack)
+                && !EquipmentUtil.isWeapon(getMainHandItem());
+    }
+
+    @Override
+    public boolean canUseSlot(net.minecraft.world.entity.EquipmentSlot slot) {
+        return !slot.isArmor() && super.canUseSlot(slot);
     }
 
     @Override
@@ -223,7 +235,19 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         getAttribute(Attributes.MAX_HEALTH).setBaseValue(savedMaxHealth);
         setAttackStrength(18.0D + getMeals());
         setHealth(Math.min(savedHealth, getMaxHealth()));
+        clearArmor();
         refreshDimensions();
+    }
+
+    private void clearArmor() {
+        setItemSlot(net.minecraft.world.entity.EquipmentSlot.HEAD,
+                net.minecraft.world.item.ItemStack.EMPTY);
+        setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST,
+                net.minecraft.world.item.ItemStack.EMPTY);
+        setItemSlot(net.minecraft.world.entity.EquipmentSlot.LEGS,
+                net.minecraft.world.item.ItemStack.EMPTY);
+        setItemSlot(net.minecraft.world.entity.EquipmentSlot.FEET,
+                net.minecraft.world.item.ItemStack.EMPTY);
     }
 
     @Override
