@@ -23,6 +23,16 @@ public class SpawnProxyEntity extends Mob {
     }
 
     @Override
+    public boolean isAttackable() {
+        return false;
+    }
+
+    @Override
+    public boolean isPickable() {
+        return false;
+    }
+
+    @Override
     public void tick() {
         if (!level().isClientSide()) {
             if (level() instanceof net.minecraft.server.level.ServerLevel world
