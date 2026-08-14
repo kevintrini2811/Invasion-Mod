@@ -93,7 +93,6 @@ public class InvasionMod {
 		IronGolemTargetHandler.bootstrap();
         PlayerAllyTargetHandler.bootstrap();
         InfusedSwordChargeHandler.bootstrap();
-        MutantMonstersCompatibility.bootstrap();
 
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
             InvasionModClient.register(modBus);
@@ -127,6 +126,7 @@ public class InvasionMod {
             InvBlocks.bootstrap();
         } else if (event.getRegistryKey() == Registries.ENTITY_TYPE) {
             InvEntities.bootstrap();
+            MutantMonstersCompatibility.bootstrapEntities();
         } else if (event.getRegistryKey() == Registries.MOB_EFFECT) {
             InvMobEffects.bootstrap();
         } else if (event.getRegistryKey() == Registries.ITEM) {
@@ -146,6 +146,7 @@ public class InvasionMod {
 
     private void registerAttributes(EntityAttributeCreationEvent event) {
         InvEntities.registerAttributes(event);
+        MutantMonstersCompatibility.registerAttributes(event);
     }
 
     private void addCreativeItems(BuildCreativeModeTabContentsEvent event) {

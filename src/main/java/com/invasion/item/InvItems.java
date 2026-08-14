@@ -167,8 +167,6 @@ public interface InvItems {
             "mutant_skeleton", 0xC1C1C1, 0x604949);
     Item MUTANT_ENDERMAN_SPAWN_EGG = registerMutantSpawnEgg(
             "mutant_enderman", 0x161616, 0x8733CC);
-    Item MUTANT_SNOW_GOLEM_SPAWN_EGG = registerMutantSpawnEgg(
-            "mutant_snow_golem", 0xE5FFFF, 0xFFA31A);
     Item SPIDER_PIG_SPAWN_EGG = registerMutantSpawnEgg(
             "spider_pig", 0x343327, 0xF0A5A2);
 

@@ -29,6 +29,9 @@ public final class InvRenderers {
     }
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
+        if (com.invasion.compat.MutantMonstersCompatibility.isLoaded()) {
+            com.invasion.compat.MutantMonstersRenderers.register(event);
+        }
         event.registerEntityRenderer(InvEntities.ZOMBIE,
                 context -> new InvasionZombieRenderer<>(context, false));
         event.registerEntityRenderer(InvEntities.FAT_ZOMBIE,

@@ -149,7 +149,12 @@ public final class VanillaMobSpawnReplacement {
     private static void convertMob(
             Mob mob, com.invasion.nexus.NexusAccess nexus) {
         Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
-        if (isTinySkeleton(typeId, "baby_skeleton")) {
+        EntityType<? extends Mob> mutantReplacement =
+                com.invasion.compat.MutantMonstersCompatibility
+                        .replacementFor(mob.getType());
+        if (mutantReplacement != null) {
+            convertMutant(mob, mutantReplacement, nexus);
+        } else if (isTinySkeleton(typeId, "baby_skeleton")) {
             convert(mob, InvEntities.SKELETON, nexus);
         } else if (isTinySkeleton(typeId, "baby_bogged")) {
             convert(mob, InvEntities.BOGGED, nexus);
@@ -223,7 +228,9 @@ public final class VanillaMobSpawnReplacement {
 
     private static boolean isReplaceableType(EntityType<?> type) {
         Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
-        return isTinySkeleton(typeId, "baby_skeleton")
+        return com.invasion.compat.MutantMonstersCompatibility
+                        .replacementFor(type) != null
+                || isTinySkeleton(typeId, "baby_skeleton")
                 || isTinySkeleton(typeId, "baby_bogged")
                 || isTinySkeleton(typeId, "baby_parched")
                 || isTinySkeleton(typeId, "baby_stray")
@@ -261,6 +268,13 @@ public final class VanillaMobSpawnReplacement {
         return typeId != null
                 && typeId.getNamespace().equals("tinyskeletons")
                 && typeId.getPath().equals(path);
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static void convertMutant(
+            Mob source, EntityType<? extends Mob> targetType,
+            com.invasion.nexus.NexusAccess nexus) {
+        convert(source, (EntityType) targetType, nexus);
     }
 
     private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
