@@ -49,6 +49,9 @@ public final class EquipmentUtil {
     }
 
     public static boolean canUseRandomArmor(Mob mob, EquipmentSlot slot) {
+        if (mob instanceof IMFatZombieEntity) {
+            return false;
+        }
         boolean supported = mob instanceof IMSkeletonEntity
                 || mob instanceof PigmanEngineerEntity
                 || mob instanceof EntityIMZombie

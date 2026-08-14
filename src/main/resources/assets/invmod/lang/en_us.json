@@ -33,6 +33,7 @@
   "item.invmod.debug_wand": "Debug Wand",
   "item.invmod.nexus_core": "Nexus Core",
   "item.invmod.zombie_spawn_egg": "IM Zombie Spawn Egg",
+  "item.invmod.fat_zombie_spawn_egg": "IM Fat Zombie Spawn Egg",
   "item.invmod.speedy_zombie_spawn_egg": "IM Speedy Zombie Spawn Egg",
   "item.invmod.husk_spawn_egg": "IM Husk Spawn Egg",
   "item.invmod.drowned_spawn_egg": "IM Drowned Spawn Egg",
@@ -73,6 +74,7 @@
     "item.invmod.mother_spider_spawn_egg": "IM Mother Spider Spawn Egg",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.fat_zombie": "IM Fat Zombie",
     "entity.invmod.speedy_zombie": "IM Speedy Zombie",
     "entity.invmod.mystery_zombie": "????",
     "entity.invmod.husk": "IM Husk",

@@ -22,6 +22,7 @@
   "item.invmod.debug_wand": "Debug-Stab",
   "item.invmod.nexus_core": "Nexus-Kern",
   "item.invmod.zombie_spawn_egg": "IM Zombie-Spawn-Ei",
+  "item.invmod.fat_zombie_spawn_egg": "IM Fat-Zombie-Spawn-Ei",
   "item.invmod.speedy_zombie_spawn_egg": "IM Speedy-Zombie-Spawn-Ei",
   "item.invmod.husk_spawn_egg": "IM Wüstenzombie-Spawn-Ei",
   "item.invmod.drowned_spawn_egg": "IM Ertrunkener-Spawn-Ei",
@@ -72,6 +73,7 @@
   "itemGroup.invmod.invasion_mod": "Invasion Mod",
 
     "entity.invmod.zombie": "IM Zombie",
+    "entity.invmod.fat_zombie": "IM Fat Zombie",
     "entity.invmod.speedy_zombie": "IM Speedy Zombie",
     "entity.invmod.mystery_zombie": "????",
     "entity.invmod.husk": "IM Wüstenzombie",
