@@ -120,6 +120,7 @@ public final class BudgetWavePlan {
 
     private static final List<Option> ALL = List.of(
             o(InvEntities.ZOMBIE,1,1), o(InvEntities.ZOMBIE,2,3), o(InvEntities.ZOMBIE,3,6),
+            o(InvEntities.FAT_ZOMBIE,3,30),
             o(InvEntities.ZOMBIE,2,2,5),
             o(InvEntities.HUSK,1,2), o(InvEntities.HUSK,2,4), o(InvEntities.HUSK,3,7),
             o(InvEntities.DROWNED,1,1), o(InvEntities.DROWNED,2,3), o(InvEntities.DROWNED,3,6),
@@ -156,7 +157,10 @@ public final class BudgetWavePlan {
         pools.put(Theme.SIEGE, filter(InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER, InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER, InvEntities.ENDERMAN, InvEntities.ZOGLIN, InvEntities.ZOMBIE, InvEntities.BURROWER, InvEntities.ENDERMITE));
         pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.WITHER, InvEntities.WITCH));
         pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN).toList());
-        pools.put(Theme.SWARM, ALL.stream().filter(option -> option.cost <= 5 && option.type != InvEntities.ENDERMITE && option.flavour != 2).toList());
+        pools.put(Theme.SWARM, ALL.stream().filter(option ->
+                option.type == InvEntities.FAT_ZOMBIE
+                        || option.cost <= 5 && option.type != InvEntities.ENDERMITE
+                                && option.flavour != 2).toList());
         pools.put(Theme.MIXED, ALL.stream().filter(option -> option.type != InvEntities.WITHER && option.type != InvEntities.WARDEN).toList());
         pools.put(Theme.RANDOM, pools.get(Theme.MIXED));
         pools.put(Theme.RANDOMHELL, ALL);

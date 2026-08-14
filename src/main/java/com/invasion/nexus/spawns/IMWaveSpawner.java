@@ -702,6 +702,9 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void equipRandomWaveArmor(Mob mob, EntityConstruct construct) {
+		if (mob instanceof com.invasion.entity.IMFatZombieEntity) {
+			return;
+		}
 		boolean canWearWaveArmor = mob instanceof IMSkeletonEntity
 				|| mob instanceof PigmanEngineerEntity
 				|| mob instanceof EntityIMZombie

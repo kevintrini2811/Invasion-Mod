@@ -1,6 +1,7 @@
 package com.invasion.client.render.legacy;
 
 import com.invasion.entity.InvEntities;
+import com.invasion.client.render.entity.FatZombieRenderer;
 import com.invasion.client.render.IMZoglinRenderer;
 import com.invasion.client.render.entity.AbstractIMZombieEntityRenderer;
 import com.invasion.client.render.entity.BoulderEntityRenderer;
@@ -47,6 +48,7 @@ public final class InvRenderers {
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(InvEntities.ZOMBIE, AbstractIMZombieEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.FAT_ZOMBIE, FatZombieRenderer::new);
         event.registerEntityRenderer(
                 InvEntities.SPEEDY_ZOMBIE,
                 SpeedyZombieEntityRenderer::new);
