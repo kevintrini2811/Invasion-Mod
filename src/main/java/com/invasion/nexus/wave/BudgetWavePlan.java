@@ -148,7 +148,7 @@ public final class BudgetWavePlan {
         EntityType<? extends Mob> creeperMinion =
                 MutantMonstersCompatibility.mobType("creeper_minion");
         if (spiderPig != null) options.add(o(spiderPig, 1, 25));
-        if (creeperMinion != null) options.add(o(creeperMinion, 1, 1));
+        if (creeperMinion != null) options.add(o(creeperMinion, 1, 5));
         return List.copyOf(options);
     }
 
