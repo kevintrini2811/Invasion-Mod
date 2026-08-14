@@ -33,6 +33,7 @@ import com.invasion.entity.ElectricityBoltEntity;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.NexusBoundMobLifecycle;
+import com.invasion.entity.SpiderEggEntity;
 import com.invasion.entity.SpawnProxyEntity;
 import com.invasion.item.InvItems;
 import com.invasion.nexus.ai.AttackerAI;
@@ -500,7 +501,8 @@ public class Nexus implements ControllableNexusAccess {
                 }
                 return;
             }
-        } else if (reason == RemovalReason.DISCARDED) {
+        } else if (reason == RemovalReason.DISCARDED
+                && !(combatant instanceof SpiderEggEntity)) {
             if (combatant.asEntity().getType().create(getWorld()) instanceof Combatant<?> copy) {
                 copy.asEntity().restoreFrom(combatant.asEntity());
                 // restoreFrom also copies the UUID. Reusing it for a newly
