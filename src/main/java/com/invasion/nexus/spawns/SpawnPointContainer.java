@@ -6,7 +6,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.Predicate;
 import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -83,13 +82,6 @@ public class SpawnPointContainer {
 
     public List<SpawnPoint> getRandomSpawnPoints(
             SpawnType spawnType, Ints angle, int limit) {
-        return getRandomSpawnPoints(
-                spawnType, angle, limit, point -> false);
-    }
-
-    public List<SpawnPoint> getRandomSpawnPoints(
-            SpawnType spawnType, Ints angle, int limit,
-            Predicate<SpawnPoint> preferred) {
         List<SpawnPoint> candidates = new ArrayList<>(
                 spawnPoints.getOrDefault(spawnType, List.of()));
         if (candidates.isEmpty() || limit <= 0) {
@@ -104,8 +96,6 @@ public class SpawnPointContainer {
                     : point.getAngle() < minAngle && point.getAngle() >= maxAngle);
         }
         Collections.shuffle(candidates, random);
-        candidates.sort((first, second) -> Boolean.compare(
-                preferred.test(second), preferred.test(first)));
         return candidates.size() <= limit
                 ? candidates
                 : new ArrayList<>(candidates.subList(0, limit));
