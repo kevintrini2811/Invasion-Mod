@@ -1,5 +1,7 @@
 package com.invasion.client.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.model.ArmedModel;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -9,8 +11,10 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.HumanoidArm;
 
-public final class FatZombieModel extends EntityModel<FatZombieRenderState> {
+public final class FatZombieModel extends EntityModel<FatZombieRenderState>
+        implements ArmedModel<FatZombieRenderState> {
     private final ModelPart head;
     private final ModelPart rightLeg;
     private final ModelPart leftLeg;
@@ -68,5 +72,14 @@ public final class FatZombieModel extends EntityModel<FatZombieRenderState> {
             leftArm.yRot = 0.35F;
             head.xRot = 0.35F + bite;
         }
+    }
+
+    @Override
+    public void translateToHand(FatZombieRenderState state,
+            HumanoidArm arm, PoseStack poseStack) {
+        root.translateAndRotate(poseStack);
+        (arm == HumanoidArm.RIGHT ? rightArm : leftArm)
+                .translateAndRotate(poseStack);
+        poseStack.translate(0.0F, 0.55F, 0.0F);
     }
 }

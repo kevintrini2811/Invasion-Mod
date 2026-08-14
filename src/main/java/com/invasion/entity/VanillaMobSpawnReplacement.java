@@ -314,6 +314,14 @@ public final class VanillaMobSpawnReplacement {
                         slot, source.getItemBySlot(slot).copy());
             }
         }
+        if (converted instanceof IMFatZombieEntity) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                converted.setItemSlot(
+                        slot, source.getItemBySlot(slot).copy());
+                converted.setDropChance(
+                        slot, source.getDropChances().byEquipment(slot));
+            }
+        }
         if (source instanceof Husk
                 && converted instanceof IMHuskEntity) {
             for (EquipmentSlot slot : EquipmentSlot.values()) {

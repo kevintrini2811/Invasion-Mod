@@ -5,16 +5,22 @@ import com.invasion.entity.IMFatZombieEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.ItemInHandLayer;
+import net.minecraft.client.renderer.entity.state.ArmedEntityRenderState;
+import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.resources.Identifier;
 
 public final class FatZombieRenderer extends MobRenderer<
         IMFatZombieEntity, FatZombieRenderState, FatZombieModel> {
     private static final Identifier TEXTURE =
             InvasionMod.id("textures/entity/fat_zombie.png");
+    private final ItemModelResolver itemModelResolver;
 
     public FatZombieRenderer(EntityRendererProvider.Context context) {
         super(context, new FatZombieModel(
                 FatZombieModel.createBodyLayer().bakeRoot()), 0.8F);
+        itemModelResolver = context.getItemModelResolver();
+        addLayer(new ItemInHandLayer<>(this));
     }
 
     @Override
@@ -26,6 +32,8 @@ public final class FatZombieRenderer extends MobRenderer<
     public void extractRenderState(IMFatZombieEntity entity,
             FatZombieRenderState state, float partialTick) {
         super.extractRenderState(entity, state, partialTick);
+        ArmedEntityRenderState.extractArmedEntityRenderState(
+                entity, state, itemModelResolver, partialTick);
         state.growthScale = entity.getGrowthScale();
         state.eating = entity.isEating();
         state.eatAnimation = entity.getEatAnimation(partialTick);

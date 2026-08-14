@@ -5,6 +5,8 @@ import com.invasion.entity.ai.goal.GoToNexusGoal;
 import com.invasion.entity.ai.goal.MineBlockGoal;
 import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
+import com.invasion.entity.ai.goal.EntityAIKillWithArrow;
+import com.invasion.entity.ai.goal.SkeletonAttackNexusGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.network.chat.Component;
@@ -45,6 +47,7 @@ public final class IMFatZombieEntity extends EntityIMZombie {
     private int eatingTicks;
     private int eatCooldown;
     private float pendingHealth;
+    private float consumedHealth;
 
     public IMFatZombieEntity(
             EntityType<? extends EntityIMZombie> type, Level level) {
@@ -80,7 +83,15 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         goalSelector.addGoal(1, new PredicatedGoal(
                 new AttackNexusGoal<>(this), () -> !isEating()));
         goalSelector.addGoal(2, new PredicatedGoal(
-                new MobMeleeAttackGoal(this, 1.3D, false), () -> !isEating()));
+                new SkeletonAttackNexusGoal<>(this),
+                () -> !isEating() && isHoldingRangedWeapon()));
+        goalSelector.addGoal(6, new PredicatedGoal(
+                new EntityAIKillWithArrow<>(
+                        this, LivingEntity.class, 65, 16.0F),
+                () -> !isEating() && isHoldingRangedWeapon()));
+        goalSelector.addGoal(6, new PredicatedGoal(
+                new MobMeleeAttackGoal(this, 1.3D, false),
+                () -> !isEating() && !isHoldingRangedWeapon()));
         goalSelector.addGoal(5, new PredicatedGoal(
                 new GoToNexusGoal(this), () -> !isEating()));
         goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -141,9 +152,9 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         entityData.set(MEALS, getMeals() + 1);
         entityData.set(EATING, false);
         setAttackStrength(18.0D + getMeals());
+        consumedHealth += pendingHealth;
         getAttribute(Attributes.MAX_HEALTH).setBaseValue(
-                getAttribute(Attributes.MAX_HEALTH).getBaseValue()
-                        + pendingHealth);
+                getAttribute(Attributes.MAX_HEALTH).getBaseValue() + pendingHealth);
         setHealth(getHealth() + pendingHealth);
         pendingHealth = 0.0F;
         refreshDimensions();
@@ -190,6 +201,10 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         output.putInt("EatCooldown", eatCooldown);
         output.putInt("Meals", getMeals());
         output.putFloat("PendingHealth", pendingHealth);
+        output.putFloat("ConsumedHealth", consumedHealth);
+        output.putFloat("FatZombieMaxHealth",
+                (float)getAttribute(Attributes.MAX_HEALTH).getBaseValue());
+        output.putFloat("FatZombieHealth", getHealth());
     }
 
     @Override
@@ -200,7 +215,14 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         entityData.set(MEALS, input.getIntOr("Meals", 0));
         entityData.set(EATING, eatingTicks > 0);
         pendingHealth = input.getFloatOr("PendingHealth", 0.0F);
+        consumedHealth = input.getFloatOr("ConsumedHealth", 0.0F);
+        float savedMaxHealth = input.getFloatOr(
+                "FatZombieMaxHealth", getMaxHealth() + consumedHealth);
+        float savedHealth = input.getFloatOr(
+                "FatZombieHealth", getHealth());
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(savedMaxHealth);
         setAttackStrength(18.0D + getMeals());
+        setHealth(Math.min(savedHealth, getMaxHealth()));
         refreshDimensions();
     }
 
