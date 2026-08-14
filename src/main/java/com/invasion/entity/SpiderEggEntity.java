@@ -49,6 +49,11 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     }
 
     @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getRandom().nextInt(4) == 0) {
