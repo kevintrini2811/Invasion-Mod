@@ -1,6 +1,7 @@
 package com.invasion;
 
 import com.invasion.compat.AsyncCompatibility;
+import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
@@ -99,6 +100,7 @@ public class InvasionMod implements ModInitializer {
         InvItems.bootstrap();
         InvSounds.boostrap();
         InvEntities.bootstrap();
+        MutantMonstersCompatibility.bootstrapEntities();
         IMMobFriendlyFireHandler.bootstrap();
         InvMobEffects.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
