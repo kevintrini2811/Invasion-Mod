@@ -92,7 +92,7 @@ public interface IMMutantMob
         if (asEntity().getTarget() == null && hasNexus()
                 && animated.isAnimationPlaying()
                 && animated.getAnimationTick()
-                        >= animated.getAnimation().duration()) {
+                        >= animated.getAnimation().duration() - 1) {
             sendAnimationPacket(asEntity(),
                     fuzs.mutantmonsters.common.world.entity.animation.EntityAnimation.NONE);
         }
