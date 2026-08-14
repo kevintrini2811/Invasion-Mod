@@ -172,6 +172,10 @@ public final class BudgetWavePlan {
         pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.PARCHED, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.WITHER, InvEntities.WITCH));
         EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");
         EntityType<? extends Mob> creeperMinion = MutantMonstersCompatibility.mobType("creeper_minion");
+        EntityType<? extends Mob> mutantZombie = MutantMonstersCompatibility.mobType("mutant_zombie");
+        EntityType<? extends Mob> mutantCreeper = MutantMonstersCompatibility.mobType("mutant_creeper");
+        EntityType<? extends Mob> mutantSkeleton = MutantMonstersCompatibility.mobType("mutant_skeleton");
+        EntityType<? extends Mob> mutantEnderman = MutantMonstersCompatibility.mobType("mutant_enderman");
         pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN
                 && option.type != spiderPig && option.type != creeperMinion).toList());
         pools.put(Theme.SWARM, ALL.stream().filter(option ->
@@ -187,7 +191,12 @@ public final class BudgetWavePlan {
         addToPool(pools, Theme.FAST, spiderPig);
         addToPool(pools, Theme.SPIDER, spiderPig);
         addToPool(pools, Theme.UNDERGROUND, creeperMinion);
+        addToPool(pools, Theme.UNDERGROUND, mutantZombie);
+        addToPool(pools, Theme.UNDERGROUND, mutantCreeper);
+        addToPool(pools, Theme.UNDERGROUND, mutantSkeleton);
+        addToPool(pools, Theme.UNDERGROUND, mutantEnderman);
         addToPool(pools, Theme.SIEGE, creeperMinion);
+        addToPool(pools, Theme.RANGED, mutantSkeleton);
         return pools;
     }
 
