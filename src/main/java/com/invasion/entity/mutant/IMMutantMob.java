@@ -67,10 +67,24 @@ public interface IMMutantMob
                 && !animated.isAnimationPlaying()) {
             return 5;
         }
+        if (mob instanceof AnimatedEntity animated) {
+            sendAnimationPacket(mob, animated);
+        }
         int damage = Math.max(2,
                 (int) Math.ceil(mob.getAttributeValue(Attributes.ATTACK_DAMAGE)));
         nexus.damage(mob.damageSources().mobAttack(mob), damage);
         return 40;
+    }
+
+    default double getNexusAttackRangeSqr() {
+        return 16.0D;
+    }
+
+    private static <T extends Entity & AnimatedEntity> void sendAnimationPacket(
+            Entity mob, AnimatedEntity animated) {
+        @SuppressWarnings("unchecked")
+        T animatedMob = (T) mob;
+        AnimatedEntity.sendAnimationPacket(animatedMob, animated.getAnimation());
     }
 
     default void addNexusGoals() {

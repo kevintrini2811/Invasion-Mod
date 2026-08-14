@@ -22,7 +22,8 @@ public final class MutantAttackNexusGoal extends Goal {
     public boolean canUse() {
         NexusAccess nexus = boundMob.getNexus();
         return mob.getTarget() == null && nexus != null && nexus.isActive()
-                && mob.distanceToSqr(Vec3.atCenterOf(nexus.getOrigin())) <= 16.0D;
+                && mob.distanceToSqr(Vec3.atCenterOf(nexus.getOrigin()))
+                        <= boundMob.getNexusAttackRangeSqr();
     }
 
     @Override
