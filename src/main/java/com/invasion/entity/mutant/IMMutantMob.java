@@ -68,7 +68,7 @@ public interface IMMutantMob
             return 5;
         }
         if (mob instanceof AnimatedEntity animated) {
-            sendAnimationPacket(mob, animated);
+            sendAnimationPacket(mob, animated.getAnimation());
         }
         int damage = Math.max(2,
                 (int) Math.ceil(mob.getAttributeValue(Attributes.ATTACK_DAMAGE)));
@@ -81,10 +81,21 @@ public interface IMMutantMob
     }
 
     private static <T extends Entity & AnimatedEntity> void sendAnimationPacket(
-            Entity mob, AnimatedEntity animated) {
+            Entity mob,
+            fuzs.mutantmonsters.common.world.entity.animation.EntityAnimation animation) {
         @SuppressWarnings("unchecked")
         T animatedMob = (T) mob;
-        AnimatedEntity.sendAnimationPacket(animatedMob, animated.getAnimation());
+        AnimatedEntity.sendAnimationPacket(animatedMob, animation);
+    }
+
+    default void finishNexusAttackAnimation(AnimatedEntity animated) {
+        if (asEntity().getTarget() == null && hasNexus()
+                && animated.isAnimationPlaying()
+                && animated.getAnimationTick()
+                        >= animated.getAnimation().duration()) {
+            sendAnimationPacket(asEntity(),
+                    fuzs.mutantmonsters.common.world.entity.animation.EntityAnimation.NONE);
+        }
     }
 
     default void addNexusGoals() {

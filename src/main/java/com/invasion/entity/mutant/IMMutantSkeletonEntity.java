@@ -73,7 +73,7 @@ public final class IMMutantSkeletonEntity extends MutantSkeleton implements IMMu
         double dY = target.y - arrow.getY();
         double dZ = target.z - getZ();
         double horizontalDistance = Math.sqrt(dX * dX + dZ * dZ);
-        arrow.shoot(dX, dY + horizontalDistance * 0.2D, dZ, 2.4F, 1.0F);
+        arrow.shoot(dX, dY + horizontalDistance * 0.05D, dZ, 2.4F, 1.0F);
         playSound(SoundEvents.SKELETON_SHOOT, 1.0F,
                 1.0F / (getRandom().nextFloat() * 0.4F + 0.8F));
         level().addFreshEntity(arrow);

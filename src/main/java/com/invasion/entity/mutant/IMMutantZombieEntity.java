@@ -31,4 +31,5 @@ public final class IMMutantZombieEntity extends MutantZombie
     @Override protected void readAdditionalSaveData(ValueInput in) { super.readAdditionalSaveData(in); nexus.readNbt(in); }
     @Override public boolean canAttack(LivingEntity target) { return !(target instanceof Combatant<?>) && super.canAttack(target); }
     @Override public boolean removeWhenFarAway(double distance) { return !hasNexus() && super.removeWhenFarAway(distance); }
+    @Override public void tick() { super.tick(); finishNexusAttackAnimation(this); }
 }
