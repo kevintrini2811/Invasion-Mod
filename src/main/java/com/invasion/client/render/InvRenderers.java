@@ -31,6 +31,8 @@ public final class InvRenderers {
     public static void bootstrap() {
         EntityRendererRegistry.register(InvEntities.ZOMBIE,
                 context -> new InvasionZombieRenderer<>(context, false));
+        EntityRendererRegistry.register(InvEntities.FAT_ZOMBIE,
+                FatZombieRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.SPEEDY_ZOMBIE,
                 SpeedyZombieRenderer::new);

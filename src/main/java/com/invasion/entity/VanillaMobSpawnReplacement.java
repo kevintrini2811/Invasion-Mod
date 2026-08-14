@@ -256,7 +256,6 @@ public final class VanillaMobSpawnReplacement {
         if (converted == null) {
             return;
         }
-
         Entity vehicle = source.getVehicle();
         source.stopRiding();
 
