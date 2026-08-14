@@ -17,6 +17,10 @@ public final class IMMobFriendlyFireHandler {
     }
 
     private static void onTargetChanged(LivingChangeTargetEvent event) {
+        if (event.getNewTarget() instanceof SpawnProxyEntity) {
+            event.setNewTarget(null);
+            return;
+        }
         if (event.getEntity() instanceof Combatant<?>
                 && event.getNewTarget() instanceof Combatant<?>) {
             event.setNewTarget(null);
