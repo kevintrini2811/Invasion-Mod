@@ -36,6 +36,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 public final class IMFatZombieEntity extends EntityIMZombie {
     private static final int EAT_DURATION = 32;
     private static final int EAT_COOLDOWN = 200;
+    private static final float BASE_EAT_RADIUS = 2.0F;
     private static final float GROWTH_PER_MEAL = 0.05F;
     private static final EntityDataAccessor<Boolean> EATING =
             SynchedEntityData.defineId(
@@ -143,12 +144,14 @@ public final class IMFatZombieEntity extends EntityIMZombie {
     }
 
     private void findMeal() {
+        float eatRadius = getEatRadius();
         LivingEntity meal = level().getEntitiesOfClass(
-                        EntityIMLiving.class, getBoundingBox().inflate(2.0D),
+                        EntityIMLiving.class,
+                        getBoundingBox().inflate(eatRadius),
                         mob -> mob != this && mob.isAlive() && !mob.isRemoved())
                 .stream().min(java.util.Comparator.comparingDouble(this::distanceToSqr))
                 .orElse(null);
-        if (meal == null || distanceTo(meal) > 2.0F) {
+        if (meal == null || distanceTo(meal) > eatRadius) {
             return;
         }
         pendingHealth = meal.getHealth();
@@ -179,6 +182,10 @@ public final class IMFatZombieEntity extends EntityIMZombie {
 
     public float getGrowthScale() {
         return 1.0F + getMeals() * GROWTH_PER_MEAL;
+    }
+
+    public float getEatRadius() {
+        return BASE_EAT_RADIUS * getGrowthScale();
     }
 
     public float getEatAnimation(float partialTick) {
