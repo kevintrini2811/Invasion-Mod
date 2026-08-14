@@ -15,7 +15,7 @@ public final class MutantMonstersCompatibility {
     public static final String MOD_ID = "mutantmonsters";
     public static final List<String> MOB_NAMES = List.of(
             "mutant_zombie", "mutant_creeper", "mutant_skeleton",
-            "mutant_enderman", "spider_pig");
+            "mutant_enderman", "spider_pig", "creeper_minion");
 
     private MutantMonstersCompatibility() {
     }
@@ -45,8 +45,14 @@ public final class MutantMonstersCompatibility {
             case "mutant_skeleton" -> MutantMonstersEntities.MUTANT_SKELETON;
             case "mutant_enderman" -> MutantMonstersEntities.MUTANT_ENDERMAN;
             case "spider_pig" -> MutantMonstersEntities.SPIDER_PIG;
+            case "creeper_minion" -> MutantMonstersEntities.CREEPER_MINION;
             default -> null;
         };
+    }
+
+    public static List<EntityType<? extends Mob>> freeBossTypes() {
+        return isLoaded()
+                ? MutantMonstersEntities.freeBossTypes() : List.of();
     }
 
     public static boolean isMutant(EntityType<?> type) {

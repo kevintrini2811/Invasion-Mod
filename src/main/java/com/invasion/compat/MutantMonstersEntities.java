@@ -4,12 +4,14 @@ import java.util.List;
 
 import com.invasion.InvasionMod;
 import com.invasion.entity.mutant.IMMutantCreeperEntity;
+import com.invasion.entity.mutant.IMCreeperMinionEntity;
 import com.invasion.entity.mutant.IMMutantEndermanEntity;
 import com.invasion.entity.mutant.IMMutantSkeletonEntity;
 import com.invasion.entity.mutant.IMMutantZombieEntity;
 import com.invasion.entity.mutant.IMSpiderPigEntity;
 
 import fuzs.mutantmonsters.common.world.entity.mutant.MutantCreeper;
+import fuzs.mutantmonsters.common.world.entity.CreeperMinion;
 import fuzs.mutantmonsters.common.world.entity.mutant.MutantEnderman;
 import fuzs.mutantmonsters.common.world.entity.mutant.MutantSkeleton;
 import fuzs.mutantmonsters.common.world.entity.mutant.MutantZombie;
@@ -32,6 +34,10 @@ import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
 
 /** Entity registrations that are loaded only when Mutant Monsters is present. */
 public final class MutantMonstersEntities {
+    public static final EntityType<IMCreeperMinionEntity> CREEPER_MINION = register(
+            "creeper_minion", EntityType.Builder.of(
+                    IMCreeperMinionEntity::new, MobCategory.MONSTER)
+                    .sized(0.3F, 0.85F));
     public static final EntityType<IMMutantZombieEntity> MUTANT_ZOMBIE = register(
             "mutant_zombie", EntityType.Builder.of(
                     IMMutantZombieEntity::new, MobCategory.MONSTER)
@@ -60,7 +66,12 @@ public final class MutantMonstersEntities {
 
     public static List<EntityType<? extends Mob>> mobTypes() {
         return List.of(MUTANT_ZOMBIE, MUTANT_CREEPER, MUTANT_SKELETON,
-                MUTANT_ENDERMAN, SPIDER_PIG);
+                MUTANT_ENDERMAN, SPIDER_PIG, CREEPER_MINION);
+    }
+
+    public static List<EntityType<? extends Mob>> freeBossTypes() {
+        return List.of(MUTANT_ZOMBIE, MUTANT_CREEPER,
+                MUTANT_SKELETON, MUTANT_ENDERMAN);
     }
 
     public static void registerAttributes(EntityAttributeCreationEvent event) {
@@ -69,6 +80,7 @@ public final class MutantMonstersEntities {
         event.put(MUTANT_SKELETON, MutantSkeleton.createAttributes().build());
         event.put(MUTANT_ENDERMAN, MutantEnderman.createAttributes().build());
         event.put(SPIDER_PIG, SpiderPig.createAttributes().build());
+        event.put(CREEPER_MINION, CreeperMinion.createAttributes().build());
     }
 
     public static void bootstrap() {

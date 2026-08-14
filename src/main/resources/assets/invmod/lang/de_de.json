@@ -9,6 +9,8 @@
     "entity.invmod.mutant_enderman": "IM-Mutantenenderman",
     "entity.invmod.spider_pig": "IM-Spinnenschwein",
     "item.invmod.spider_pig_spawn_egg": "IM-Spinnenschwein-Spawn-Ei",
+    "item.invmod.creeper_minion_spawn_egg": "IM-Creeperdiener-Spawn-Ei",
+    "entity.invmod.creeper_minion": "IM-Creeperdiener",
     "item.invmod.phase_crystal": "Phasen-Kristall",
     "item.invmod.rift_flux": "Rift-Flux",
     "invmod.jei.rift_flux_generation": "Rift-Flux-Erzeugung",

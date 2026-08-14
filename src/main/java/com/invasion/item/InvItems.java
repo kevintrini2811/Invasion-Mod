@@ -169,6 +169,8 @@ public interface InvItems {
             "mutant_enderman", 0x161616, 0x8733CC);
     Item SPIDER_PIG_SPAWN_EGG = registerMutantSpawnEgg(
             "spider_pig", 0x343327, 0xF0A5A2);
+    Item CREEPER_MINION_SPAWN_EGG = registerMutantSpawnEgg(
+            "creeper_minion", 0x51943E, 0x00AFAF);
 
     private static Item registerMutantSpawnEgg(
             String mobName, int primaryColor, int secondaryColor) {

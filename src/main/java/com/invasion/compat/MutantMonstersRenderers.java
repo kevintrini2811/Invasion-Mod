@@ -1,6 +1,7 @@
 package com.invasion.compat;
 
 import fuzs.mutantmonsters.common.client.renderer.entity.MutantCreeperRenderer;
+import fuzs.mutantmonsters.common.client.renderer.entity.CreeperMinionRenderer;
 import fuzs.mutantmonsters.common.client.renderer.entity.MutantEndermanRenderer;
 import fuzs.mutantmonsters.common.client.renderer.entity.MutantSkeletonRenderer;
 import fuzs.mutantmonsters.common.client.renderer.entity.MutantZombieRenderer;
@@ -12,6 +13,9 @@ public final class MutantMonstersRenderers {
     }
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(
+                MutantMonstersEntities.CREEPER_MINION,
+                CreeperMinionRenderer::new);
         event.registerEntityRenderer(
                 MutantMonstersEntities.MUTANT_ZOMBIE,
                 MutantZombieRenderer::new);
