@@ -1,5 +1,7 @@
 package com.invasion.entity.ai.goal;
 
+import java.util.EnumSet;
+
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
@@ -11,11 +13,12 @@ import net.minecraft.world.phys.Vec3;
 public final class MutantAttackNexusGoal extends Goal {
     private final PathfinderMob mob;
     private final IMMutantMob boundMob;
-    private int cooldown;
+    private int nextAttackTick;
 
     public MutantAttackNexusGoal(PathfinderMob mob, IMMutantMob boundMob) {
         this.mob = mob;
         this.boundMob = boundMob;
+        setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
     @Override
@@ -34,9 +37,19 @@ public final class MutantAttackNexusGoal extends Goal {
     @Override
     public void tick() {
         NexusAccess nexus = boundMob.getNexus();
-        if (nexus != null && --cooldown <= 0
+        if (nexus == null) {
+            return;
+        }
+        mob.getNavigation().stop();
+        mob.getLookControl().setLookAt(
+                nexus.getOrigin().getX() + 0.5D,
+                nexus.getOrigin().getY() + 0.5D,
+                nexus.getOrigin().getZ() + 0.5D,
+                30.0F, 30.0F);
+        if (mob.tickCount >= nextAttackTick
                 && mob.level() instanceof net.minecraft.server.level.ServerLevel level) {
-            cooldown = boundMob.performNexusAttack(level, nexus);
+            nextAttackTick = mob.tickCount
+                    + boundMob.performNexusAttack(level, nexus);
         }
     }
 }

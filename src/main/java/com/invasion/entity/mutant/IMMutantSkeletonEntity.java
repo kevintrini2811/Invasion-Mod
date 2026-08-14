@@ -50,12 +50,23 @@ public final class IMMutantSkeletonEntity extends MutantSkeleton implements IMMu
         super.aiStep();
         NexusAccess boundNexus = getNexus();
         if (!(level() instanceof ServerLevel) || boundNexus == null
-                || getAnimation() != SHOOT_ANIMATION
-                || getAnimationTick() != 26) {
+                || getAnimation() != SHOOT_ANIMATION) {
             return;
         }
 
         Vec3 target = Vec3.atCenterOf(boundNexus.getOrigin());
+        getNavigation().stop();
+        getLookControl().setLookAt(target.x, target.y, target.z,
+                30.0F, 30.0F);
+        if (getAnimationTick() >= SHOOT_ANIMATION.duration()) {
+            AnimatedEntity.sendAnimationPacket(this,
+                    fuzs.mutantmonsters.common.world.entity.animation.EntityAnimation.NONE);
+            return;
+        }
+        if (getAnimationTick() != 26) {
+            return;
+        }
+
         SkeletonArrowEntity arrow = new SkeletonArrowEntity(level(), this,
                 getMainHandItem());
         double dX = target.x - getX();
