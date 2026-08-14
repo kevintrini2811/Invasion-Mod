@@ -9,6 +9,7 @@ import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
+import fuzs.mutantmonsters.common.world.entity.animation.AnimatedEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -43,14 +44,28 @@ public interface IMMutantMob
     /** Runs the Mutant Monsters attack against a marker at the Nexus. */
     default int performNexusAttack(ServerLevel level, NexusAccess nexus) {
         PathfinderMob mob = asEntity();
+        if (mob instanceof AnimatedEntity animated
+                && animated.isAnimationPlaying()) {
+            return 5;
+        }
         Entity marker = EntityTypes.MARKER.create(level, EntitySpawnReason.EVENT);
-        if (marker != null) {
-            marker.snapTo(
-                    nexus.getOrigin().getX() + 0.5D,
-                    nexus.getOrigin().getY() + 0.5D,
-                    nexus.getOrigin().getZ() + 0.5D,
-                    mob.getYRot(), mob.getXRot());
-            mob.doHurtTarget(level, marker);
+        if (marker == null) {
+            return 5;
+        }
+        marker.snapTo(
+                nexus.getOrigin().getX() + 0.5D,
+                nexus.getOrigin().getY() + 0.5D,
+                nexus.getOrigin().getZ() + 0.5D,
+                mob.getYRot(), mob.getXRot());
+        mob.getLookControl().setLookAt(marker, 30.0F, 30.0F);
+        mob.doHurtTarget(level, marker);
+
+        // Animated mutants only deal Nexus damage when doHurtTarget actually
+        // started their normal attack animation. Non-animated mutants execute
+        // their regular immediate melee action above.
+        if (mob instanceof AnimatedEntity animated
+                && !animated.isAnimationPlaying()) {
+            return 5;
         }
         int damage = Math.max(2,
                 (int) Math.ceil(mob.getAttributeValue(Attributes.ATTACK_DAMAGE)));

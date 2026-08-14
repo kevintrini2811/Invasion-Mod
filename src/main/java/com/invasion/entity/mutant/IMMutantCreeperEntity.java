@@ -13,9 +13,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.level.storage.loot.LootTable;
-import com.invasion.nexus.NexusAccess;
-import net.minecraft.server.level.ServerLevel;
-import fuzs.mutantmonsters.common.world.level.MutatedExplosionHelper;
 
 public final class IMMutantCreeperEntity extends MutantCreeper implements IMMutantMob {
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
@@ -26,10 +23,4 @@ public final class IMMutantCreeperEntity extends MutantCreeper implements IMMuta
     @Override public void readAdditionalSaveData(ValueInput in) { super.readAdditionalSaveData(in); nexus.readNbt(in); }
     @Override public boolean canAttack(LivingEntity target) { return !(target instanceof Combatant<?>) && super.canAttack(target); }
     @Override public boolean removeWhenFarAway(double distance) { return !hasNexus() && super.removeWhenFarAway(distance); }
-    @Override public int performNexusAttack(ServerLevel level, NexusAccess nexus) {
-        MutatedExplosionHelper.explode(this, isCharged() ? 6.0F : 4.0F,
-                isOnFire(), Level.ExplosionInteraction.MOB);
-        nexus.damage(damageSources().explosion(null, this), isCharged() ? 16 : 12);
-        return 80;
-    }
 }
