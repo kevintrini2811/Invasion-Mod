@@ -34,6 +34,7 @@ sourceSets {
 
 repositories {
     maven { name = 'JEI'; url = 'https://maven.blamejared.com' }
+    maven { name = 'Modrinth'; url = 'https://api.modrinth.com/maven' }
 }
 
 neoForge {
@@ -61,6 +62,7 @@ neoForge {
 
 dependencies {
     compileOnly "mezz.jei:jei-${project.minecraft_version}-neoforge-api:${project.jei_version}"
+    compileOnly "maven.modrinth:mutant-monsters:v21.1.1-1.21.1-NeoForge"
 }
 
 processResources {

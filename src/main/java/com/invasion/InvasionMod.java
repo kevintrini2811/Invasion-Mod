@@ -3,6 +3,7 @@ package com.invasion;
 import com.invasion.block.InvBlocks;
 import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
+import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
@@ -128,6 +129,7 @@ public class InvasionMod {
             InvBlocks.bootstrap();
         } else if (event.getRegistryKey() == Registries.ENTITY_TYPE) {
             InvEntities.bootstrap();
+            MutantMonstersCompatibility.bootstrapEntities();
         } else if (event.getRegistryKey() == Registries.MOB_EFFECT) {
             InvMobEffects.bootstrap();
         } else if (event.getRegistryKey() == Registries.ITEM) {
@@ -147,6 +149,7 @@ public class InvasionMod {
 
     private void registerAttributes(EntityAttributeCreationEvent event) {
         InvEntities.registerAttributes(event);
+        MutantMonstersCompatibility.registerAttributes(event);
     }
 
     private void addCreativeItems(BuildCreativeModeTabContentsEvent event) {

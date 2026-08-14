@@ -46,3 +46,10 @@ type="optional"
 versionRange="[21.1.0,)"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.invmod]]
+modId="mutantmonsters"
+type="optional"
+versionRange="[26.2.0,)"
+ordering="AFTER"
+side="BOTH"
