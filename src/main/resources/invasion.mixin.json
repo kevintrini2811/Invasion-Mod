@@ -6,6 +6,7 @@
     "mixins": [
       "EntityMixin",
       "NaturalMobSpawnMixin",
+      "NonCombatTargetMixin",
       "PathNodeMixin",
       "PhantomAccessor"
     ],
