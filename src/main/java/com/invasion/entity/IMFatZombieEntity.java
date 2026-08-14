@@ -7,6 +7,7 @@ import com.invasion.entity.ai.goal.MobMeleeAttackGoal;
 import com.invasion.entity.ai.goal.PredicatedGoal;
 import com.invasion.entity.ai.goal.target.CustomRangeActiveTargetGoal;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -17,6 +18,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -139,7 +141,10 @@ public final class IMFatZombieEntity extends EntityIMZombie {
         entityData.set(MEALS, getMeals() + 1);
         entityData.set(EATING, false);
         setAttackStrength(18.0D + getMeals());
-        setHealth(Math.min(getMaxHealth(), getHealth() + pendingHealth));
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(
+                getAttribute(Attributes.MAX_HEALTH).getBaseValue()
+                        + pendingHealth);
+        setHealth(getHealth() + pendingHealth);
         pendingHealth = 0.0F;
         refreshDimensions();
         playSound(SoundEvents.PLAYER_BURP, 1.0F, 1.0F);
@@ -159,6 +164,12 @@ public final class IMFatZombieEntity extends EntityIMZombie {
 
     private int getMeals() {
         return entityData.get(MEALS);
+    }
+
+    @Override
+    protected Component getTypeName() {
+        return Component.translatableWithFallback(
+                "entity.invmod.fat_zombie", "IM Fat Zombie");
     }
 
     @Override
