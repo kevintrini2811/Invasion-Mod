@@ -80,6 +80,6 @@ public final class FatZombieModel extends EntityModel<FatZombieRenderState>
         root.translateAndRotate(poseStack);
         (arm == HumanoidArm.RIGHT ? rightArm : leftArm)
                 .translateAndRotate(poseStack);
-        poseStack.translate(0.0F, 0.55F, 0.0F);
+        poseStack.translate(0.0F, 0.2375F, 0.0F);
     }
 }
