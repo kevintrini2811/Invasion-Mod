@@ -3,6 +3,7 @@ package com.invasion;
 import com.invasion.block.InvBlocks;
 import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
+import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
@@ -92,6 +93,7 @@ public class InvasionMod {
 		IronGolemTargetHandler.bootstrap();
         PlayerAllyTargetHandler.bootstrap();
         InfusedSwordChargeHandler.bootstrap();
+        MutantMonstersCompatibility.bootstrap();
 
         if (FMLEnvironment.getDist() == Dist.CLIENT) {
             InvasionModClient.register(modBus);

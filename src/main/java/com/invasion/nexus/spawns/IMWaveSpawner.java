@@ -329,6 +329,7 @@ public class IMWaveSpawner implements Spawner {
 			spawnConstruct = replaceWaterSpawnedDrownedWithGuardian(
 					spawnConstruct, world, spawnPoint.pos());
 			Mob mob = spawnConstruct.createMob(nexus);
+			com.invasion.compat.MutantMonstersCompatibility.markWaveMob(mob);
 			equipRandomWaveWeapon(mob, spawnConstruct);
 			equipRandomWaveArmor(mob, spawnConstruct);
 			mob.getPersistentData().putInt("invmodWavePhase", nexus.getWavePhaseToken());

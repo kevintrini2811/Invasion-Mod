@@ -103,7 +103,8 @@ public final class IMWitchEntity extends Witch
         return hasNexus() || super.requiresCustomPersistence();
     }
 
-    static boolean isPlayerAlly(LivingEntity candidate, ServerLevel level) {
+    public static boolean isPlayerAlly(
+            LivingEntity candidate, ServerLevel level) {
         if (candidate instanceof Player player) {
             return !player.isCreative() && !player.isSpectator();
         }

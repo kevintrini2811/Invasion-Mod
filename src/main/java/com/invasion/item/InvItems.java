@@ -8,6 +8,7 @@ import com.invasion.block.InvBlocks;
 import com.invasion.entity.TrapEntity;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.NexusEntity;
+import com.invasion.compat.MutantMonstersCompatibility;
 import net.minecraft.util.Util;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
@@ -157,6 +158,29 @@ public interface InvItems {
             p -> createSpawnEgg(p, InvEntities.WITHER, 0x141414, 0x4A4A4A));
     Item WARDEN_SPAWN_EGG = register("warden_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.WARDEN, 0x0F4649, 0x39D6E0));
+
+    Item MUTANT_ZOMBIE_SPAWN_EGG = registerMutantSpawnEgg(
+            "mutant_zombie", 0x799B65, 0x00AFAF);
+    Item MUTANT_CREEPER_SPAWN_EGG = registerMutantSpawnEgg(
+            "mutant_creeper", 0x51943E, 0xA80A46);
+    Item MUTANT_SKELETON_SPAWN_EGG = registerMutantSpawnEgg(
+            "mutant_skeleton", 0xC1C1C1, 0x604949);
+    Item MUTANT_ENDERMAN_SPAWN_EGG = registerMutantSpawnEgg(
+            "mutant_enderman", 0x161616, 0x8733CC);
+    Item MUTANT_SNOW_GOLEM_SPAWN_EGG = registerMutantSpawnEgg(
+            "mutant_snow_golem", 0xE5FFFF, 0xFFA31A);
+    Item SPIDER_PIG_SPAWN_EGG = registerMutantSpawnEgg(
+            "spider_pig", 0x343327, 0xF0A5A2);
+
+    private static Item registerMutantSpawnEgg(
+            String mobName, int primaryColor, int secondaryColor) {
+        EntityType<? extends Mob> type =
+                MutantMonstersCompatibility.mobType(mobName);
+        return type == null ? null : register(
+                mobName + "_spawn_egg",
+                properties -> createSpawnEgg(
+                        properties, type, primaryColor, secondaryColor));
+    }
 
     private static Item createSpawnEgg(Item.Properties properties, EntityType<? extends Mob> type, int primaryColor, int secondaryColor, CustomData data) {
         TypedEntityData<EntityType<?>> entityData = TypedEntityData.of(

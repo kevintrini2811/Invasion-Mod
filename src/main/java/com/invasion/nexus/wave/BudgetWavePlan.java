@@ -15,6 +15,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.neoforged.fml.ModList;
+import com.invasion.compat.MutantMonstersCompatibility;
 
 /** A complete, persistent purchase plan for one invasion wave. */
 public final class BudgetWavePlan {
@@ -118,7 +119,10 @@ public final class BudgetWavePlan {
     private static Option o(EntityType<? extends Mob> type, int tier, int cost) { return new Option(type, tier, cost); }
     private static Option o(EntityType<? extends Mob> type, int tier, int flavour, int cost) { return new Option(type, tier, flavour, cost); }
 
-    private static final List<Option> ALL = List.of(
+    private static final List<Option> ALL = makeAll();
+
+    private static List<Option> makeAll() {
+        List<Option> options = new ArrayList<>(List.of(
             o(InvEntities.ZOMBIE,1,1), o(InvEntities.ZOMBIE,2,3), o(InvEntities.ZOMBIE,3,6),
             o(InvEntities.FAT_ZOMBIE,3,30),
             o(InvEntities.ZOMBIE,2,2,5),
@@ -136,7 +140,11 @@ public final class BudgetWavePlan {
             o(InvEntities.BLAZE,1,8), o(InvEntities.BREEZE,1,6), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,15),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
-            o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5));
+            o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5)));
+        MutantMonstersCompatibility.mobTypes().forEach(
+                type -> options.add(o(type, 1, 200)));
+        return List.copyOf(options);
+    }
 
     /** Selects any purchasable IM combat mob without exposing it as a purchase. */
     public static EntityConstruct randomMobConstruct(RandomSource random) {
@@ -225,7 +233,10 @@ public final class BudgetWavePlan {
 			purchases.add(new Purchase(InvEntities.PIGMAN_ENGINEER, 1, 0, rollRules(theme, wave, random)));
 		}
         if (wave >= 15 && wave % 5 == 0 && index == phaseCount - 1) {
-            EntityType<? extends Mob> boss = random.nextBoolean() ? InvEntities.WITHER : InvEntities.WARDEN;
+            List<EntityType<? extends Mob>> bosses = new ArrayList<>(
+                    List.of(InvEntities.WITHER, InvEntities.WARDEN));
+            bosses.addAll(MutantMonstersCompatibility.mobTypes());
+            EntityType<? extends Mob> boss = bosses.get(random.nextInt(bosses.size()));
             purchases.add(new Purchase(boss, 1, 0, rollRules(theme, wave, random)));
         }
         return new Phase(theme, List.copyOf(purchases));
@@ -239,6 +250,9 @@ public final class BudgetWavePlan {
 	}
 
     private static int effectiveCost(Theme theme, Option option) {
+        if (MutantMonstersCompatibility.isMutant(option.type)) {
+            return option.cost;
+        }
         if (theme == Theme.RANDOMHELL) return option.cost >= 100 ? 20 : 5;
         return theme == Theme.RANDOM ? 5 : option.cost;
     }

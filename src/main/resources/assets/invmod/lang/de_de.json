@@ -1,4 +1,10 @@
 {
+    "item.invmod.mutant_zombie_spawn_egg": "IM-Mutantenzombie-Spawn-Ei",
+    "item.invmod.mutant_creeper_spawn_egg": "IM-Mutantencreeper-Spawn-Ei",
+    "item.invmod.mutant_skeleton_spawn_egg": "IM-Mutantenskelett-Spawn-Ei",
+    "item.invmod.mutant_enderman_spawn_egg": "IM-Mutantenenderman-Spawn-Ei",
+    "item.invmod.mutant_snow_golem_spawn_egg": "IM-Mutantenschneegolem-Spawn-Ei",
+    "item.invmod.spider_pig_spawn_egg": "IM-Spinnenschwein-Spawn-Ei",
     "item.invmod.phase_crystal": "Phasen-Kristall",
     "item.invmod.rift_flux": "Rift-Flux",
     "invmod.jei.rift_flux_generation": "Rift-Flux-Erzeugung",
