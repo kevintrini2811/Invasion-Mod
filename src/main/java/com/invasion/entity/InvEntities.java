@@ -63,6 +63,11 @@ public interface InvEntities {
                     .passengerAttachments(4.0625F).clientTrackingRange(10));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMFatZombieEntity> FAT_ZOMBIE = register("fat_zombie",
+            EntityType.Builder.<IMFatZombieEntity>of(
+                            IMFatZombieEntity::new, MobCategory.MONSTER)
+                    .sized(1.25F, 1.5F).eyeHeight(1.3F)
+                    .clientTrackingRange(10));
     EntityType<EntityIMSpeedyZombie> SPEEDY_ZOMBIE = register(
             "speedy_zombie",
             EntityType.Builder.<EntityIMSpeedyZombie>of(
@@ -262,6 +267,7 @@ public interface InvEntities {
         event.put(WITCH, Witch.createAttributes().build());
         event.put(GHAST, Ghast.createAttributes().build());
         event.put(ZOMBIE, EntityIMZombie.createTierT1V0Attributes().build());
+        event.put(FAT_ZOMBIE, IMFatZombieEntity.createAttributes().build());
         event.put(
                 SPEEDY_ZOMBIE,
                 EntityIMZombie.createTierT1V0Attributes().build());
