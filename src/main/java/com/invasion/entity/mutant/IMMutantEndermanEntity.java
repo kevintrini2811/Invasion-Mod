@@ -24,5 +24,12 @@ public final class IMMutantEndermanEntity extends MutantEnderman implements IMMu
     @Override public boolean canAttack(LivingEntity target) { return !(target instanceof Combatant<?>) && super.canAttack(target); }
     @Override public boolean removeWhenFarAway(double distance) { return !hasNexus() && super.removeWhenFarAway(distance); }
     @Override protected ResourceKey<LootTable> getDefaultLootTable() { return mutantLootTable(); }
-    @Override public void tick() { super.tick(); finishNexusAttackAnimation(this); }
+    @Override public void tick() {
+        super.tick();
+        finishNexusAttackAnimation(this);
+        if (hasNexus() && getTarget() == null && !isAnimationPlaying()) {
+            setAggressive(false);
+            hasTarget = 0;
+        }
+    }
 }
