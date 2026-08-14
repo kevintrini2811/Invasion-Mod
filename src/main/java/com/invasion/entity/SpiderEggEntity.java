@@ -49,6 +49,21 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     }
 
     @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public void push(Entity entity) {
+        // Spider eggs are anchored once laid and must not be displaced by mobs.
+    }
+
+    @Override
+    public void knockback(double strength, double x, double z) {
+        // Damage may hurt the egg, but it must not move it away from the nest.
+    }
+
+    @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean causedByPlayer) {
         super.dropCustomDeathLoot(source, looting, causedByPlayer);
         if (random.nextInt(4) == 0) {
@@ -73,6 +88,7 @@ public class SpiderEggEntity extends Mob implements Combatant<SpiderEggEntity> {
     @Override
     public void tick() {
         super.tick();
+        setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
         if (!level().isClientSide()) {
             ticks++;
             if (isHatched()) {
