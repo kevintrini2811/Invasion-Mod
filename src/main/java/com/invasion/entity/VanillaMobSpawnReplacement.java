@@ -66,6 +66,15 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
         net.minecraft.world.entity.Entity entity = event.getEntity();
+        if (entity instanceof SpawnProxyEntity proxy) {
+            event.setCanceled(true);
+            SpawnProxyEntity.generateMobGroup(world, replacement -> {
+                replacement.absSnapTo(proxy.getX(), proxy.getY(), proxy.getZ(),
+                        proxy.getYRot(), proxy.getXRot());
+                world.addFreshEntity(replacement);
+            });
+            return;
+        }
         if (converting || !(entity instanceof Mob mob)
                 || !isReplaceableType(mob.getType())) {
             return;
