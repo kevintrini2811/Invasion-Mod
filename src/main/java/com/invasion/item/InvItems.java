@@ -25,6 +25,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.TypedEntityData;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
@@ -34,8 +35,12 @@ public interface InvItems {
     List<Item> SPAWN_EGGS = new ArrayList<>();
 
     Item PHASE_CRYSTAL = register("phase_crystal", p -> new Item(p));
-    Item RIFT_FLUX = register("rift_flux", p -> new Item(p));
-    Item SMALL_REMNANTS = register("small_remnants", p -> new Item(p));
+    FoodProperties GLOWING_MOB_FOOD = new FoodProperties.Builder()
+            .nutrition(1).saturationModifier(0.1F).build();
+    Item RIFT_FLUX = register("rift_flux", p -> new GlowingMobFoodItem(
+            p.food(GLOWING_MOB_FOOD), 10 * 60 * 20));
+    Item SMALL_REMNANTS = register("small_remnants", p -> new GlowingMobFoodItem(
+            p.food(GLOWING_MOB_FOOD), 60 * 20));
 
     Item INFUSED_SWORD = register("infused_sword", InfusedSwordItem::new);
     Item SEARING_BOW = register("searing_bow", p -> new SearingBowItem(p.durability(384)));

@@ -29,8 +29,10 @@
 
     "item.invmod.phase_crystal": "Phase Crystal",
     "item.invmod.rift_flux": "Rift Flux",
+    "item.invmod.rift_flux.tooltip": "Makes all loaded IM mobs glow for 10 minutes",
     "invmod.jei.rift_flux_generation": "Rift Flux Generation",
     "item.invmod.small_remnants": "Small Remnants",
+    "item.invmod.small_remnants.tooltip": "Makes all loaded IM mobs glow for 1 minute",
     "item.invmod.infused_sword": "Infused Sword",
     "item.invmod.searing_bow": "Searing Bow",
     "item.invmod.engineer_hammer": "Engineer's Hammer",
