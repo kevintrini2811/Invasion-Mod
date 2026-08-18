@@ -993,7 +993,7 @@ public class Nexus implements ControllableNexusAccess {
 		int loadedPhaseMobs = 0;
 		for (Combatant<?> combatant : BoundIMMobRegistry.loaded(world)) {
 			LivingEntity entity = combatant.asEntity();
-			if (entity.isAddedToLevel() && entity.isAlive()
+			if (world.getEntity(entity.getId()) == entity && entity.isAlive()
 					&& !entity.isRemoved()
 					&& com.invasion.entity.WaveMobData.get(entity,
 							"invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {

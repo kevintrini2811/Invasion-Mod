@@ -211,7 +211,7 @@ public class InvasionCommand {
         List<LivingEntity> mobs = BoundIMMobRegistry.loaded(source.getLevel())
                 .stream()
                 .map(combatant -> (LivingEntity) combatant.asEntity())
-                .filter(entity -> entity.isAddedToLevel()
+                .filter(entity -> source.getLevel().getEntity(entity.getId()) == entity
                         && entity.isAlive() && !entity.isRemoved())
                 .sorted(Comparator
                         .comparing((LivingEntity entity) ->
@@ -267,10 +267,10 @@ public class InvasionCommand {
             ControllableNexusAccess nexus) {
         return nexus != null && entity instanceof Combatant<?> combatant
                 && combatant.getNexus() == nexus
-                && entity.getPersistentData().getIntOr(
+                && com.invasion.entity.WaveMobData.get(entity,
                         "invmodWaveNumber", Integer.MIN_VALUE)
                         == nexus.getCurrentWave()
-                && entity.getPersistentData().getIntOr(
+                && com.invasion.entity.WaveMobData.get(entity,
                         "invmodWavePhase", Integer.MIN_VALUE)
                         == nexus.getWavePhaseToken();
     }
