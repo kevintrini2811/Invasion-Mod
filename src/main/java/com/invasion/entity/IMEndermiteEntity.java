@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
@@ -10,6 +11,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.Endermite;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +27,11 @@ public final class IMEndermiteEntity extends Endermite
     public IMEndermiteEntity(EntityType<? extends Endermite> type, Level level) {
         super(type, level);
         setPersistenceRequired();
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new IMMobNavigation(this);
     }
 
     @Override
@@ -107,4 +114,3 @@ public final class IMEndermiteEntity extends Endermite
         return false;
     }
 }
-
