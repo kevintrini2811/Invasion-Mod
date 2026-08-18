@@ -63,7 +63,8 @@ import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.Vec3;
 
-public class IMCreeperEntity extends TieredIMMobEntity implements Leader {
+public class IMCreeperEntity extends TieredIMMobEntity
+        implements Leader, StationaryPathRecoveryExcluded {
     private static final Item[] CLASSIC_MUSIC_DISCS = {
             Items.MUSIC_DISC_13, Items.MUSIC_DISC_CAT, Items.MUSIC_DISC_BLOCKS,
             Items.MUSIC_DISC_CHIRP, Items.MUSIC_DISC_FAR, Items.MUSIC_DISC_MALL,

@@ -19,7 +19,11 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 /** Enforces the lifetime shared by every hostile Nexus-bound IM mob. */
 public final class NexusBoundMobLifecycle {
     private static final int MAX_DEATHS_PER_TICK = 10;
+    private static final int MAX_STATIONARY_TICKS = 20 * 10;
+    private static final double STATIONARY_TOLERANCE_SQR = 0.2D * 0.2D;
     private static final Map<ServerLevel, CleanupQueue> CLEANUP_QUEUES =
+            new WeakHashMap<>();
+    private static final Map<LivingEntity, StationaryState> STATIONARY_STATES =
             new WeakHashMap<>();
 
     private NexusBoundMobLifecycle() {
@@ -48,9 +52,67 @@ public final class NexusBoundMobLifecycle {
             NexusAccess nexus = combatant.getNexus();
             if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
                 enqueue(level, combatant, nexus);
+            } else {
+                tickStationaryPathRecovery(combatant, living, nexus);
             }
         }
         drain(level);
+    }
+
+    private static void tickStationaryPathRecovery(
+            Combatant<?> combatant, LivingEntity living, NexusAccess nexus) {
+        if (!(living instanceof Mob mob)
+                || living instanceof StationaryPathRecoveryExcluded
+                || mob.getTarget() != null
+                || mob.getNavigation().isDone()) {
+            STATIONARY_STATES.remove(living);
+            return;
+        }
+
+        StationaryState state = STATIONARY_STATES.computeIfAbsent(
+                living, ignored -> new StationaryState(living.position()));
+        if (living.position().distanceToSqr(state.anchor)
+                > STATIONARY_TOLERANCE_SQR) {
+            state.anchor = living.position();
+            state.ticks = 0;
+            return;
+        }
+        if (++state.ticks < MAX_STATIONARY_TICKS) {
+            return;
+        }
+
+        state.anchor = living.position();
+        state.ticks = 0;
+        findAlternativePath(mob, nexus);
+    }
+
+    private static void findAlternativePath(Mob mob, NexusAccess nexus) {
+        Vec3 origin = mob.position();
+        Vec3 nexusDirection = Vec3.atCenterOf(nexus.getOrigin())
+                .subtract(origin).multiply(1.0D, 0.0D, 1.0D).normalize();
+        if (nexusDirection.lengthSqr() < 1.0E-6D) {
+            nexusDirection = new Vec3(1.0D, 0.0D, 0.0D);
+        }
+        Vec3 sideways = new Vec3(-nexusDirection.z, 0.0D, nexusDirection.x);
+
+        mob.getNavigation().stop();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            double sideDistance = (attempt % 2 == 0 ? 1.0D : -1.0D)
+                    * (6.0D + mob.getRandom().nextDouble() * 6.0D);
+            double forwardDistance = 2.0D + mob.getRandom().nextDouble() * 5.0D;
+            Vec3 detour = origin.add(nexusDirection.scale(forwardDistance))
+                    .add(sideways.scale(sideDistance));
+            var path = mob.getNavigation().createPath(
+                    net.minecraft.core.BlockPos.containing(detour), 1);
+            if (path != null && path.canReach()
+                    && mob.getNavigation().moveTo(path, 1.0D)) {
+                return;
+            }
+        }
+        var directPath = mob.getNavigation().createPath(nexus.getOrigin(), 1);
+        if (directPath != null) {
+            mob.getNavigation().moveTo(directPath, 1.0D);
+        }
     }
 
     private static void enqueue(
@@ -127,5 +189,14 @@ public final class NexusBoundMobLifecycle {
         private final ArrayDeque<CleanupEntry> entries = new ArrayDeque<>();
         private final Set<Combatant<?>> pending = Collections.newSetFromMap(
                 new IdentityHashMap<>());
+    }
+
+    private static final class StationaryState {
+        private Vec3 anchor;
+        private int ticks;
+
+        private StationaryState(Vec3 anchor) {
+            this.anchor = anchor;
+        }
     }
 }
