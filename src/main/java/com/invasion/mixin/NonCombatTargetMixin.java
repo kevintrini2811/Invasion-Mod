@@ -1,6 +1,7 @@
 package com.invasion.mixin;
 
 import com.invasion.entity.SpawnProxyEntity;
+import com.invasion.entity.IMMobFriendlyFireHandler;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.Brain;
@@ -17,7 +18,7 @@ abstract class NonCombatTargetMixin {
             require = 0)
     private void invasion_preventHelperMobTarget(
             LivingEntity target, CallbackInfo info) {
-        if (target instanceof SpawnProxyEntity) {
+        if (!IMMobFriendlyFireHandler.allowTarget((Mob) (Object) this, target)) {
             info.cancel();
         }
     }
