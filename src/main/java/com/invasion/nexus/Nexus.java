@@ -303,6 +303,10 @@ public class Nexus implements ControllableNexusAccess {
 
     @Override
     public long getPhaseTimerTicks() {
+        if (waveDelayTimer >= 0L) {
+            return Math.max(0L,
+                    (waveDelay - waveDelayTimer + 49L) / 50L);
+        }
         return Math.max(0L, 2L * 60L * 20L
                 - (world.getGameTime() - lastPhaseKillTick));
     }
@@ -987,13 +991,14 @@ public class Nexus implements ControllableNexusAccess {
 		int loadedPhaseMobs = 0;
 		for (Combatant<?> combatant : BoundIMMobRegistry.loaded(world)) {
 			LivingEntity entity = combatant.asEntity();
-			if (entity.isAlive() && !entity.isRemoved()
+			if (entity.isAddedToLevel() && entity.isAlive()
+					&& !entity.isRemoved()
 					&& entity.getPersistentData().getIntOr(
 							"invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
 				loadedPhaseMobs++;
 			}
 		}
-		return mobsLeftInWave <= 0
+		return phaseMobsLeft <= 0 || mobsLeftInWave <= 0
 				|| waveSpawner.isWaveComplete() && loadedPhaseMobs == 0
 				|| world.getGameTime() - lastPhaseKillTick >= 2 * 60 * 20;
 	}
