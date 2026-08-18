@@ -2,35 +2,103 @@ package com.invasion.entity;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.InvasionMod;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 /** Prevents Nexus combatants from treating other Nexus combatants as enemies. */
 public final class IMMobFriendlyFireHandler {
+    private static final Map<ServerLevel, Set<Mob>> IM_TARGETING_MOBS =
+            new WeakHashMap<>();
+
     private IMMobFriendlyFireHandler() {
     }
 
     public static void bootstrap() {
         NeoForge.EVENT_BUS.addListener(IMMobFriendlyFireHandler::onTargetChanged);
         NeoForge.EVENT_BUS.addListener(IMMobFriendlyFireHandler::onIncomingDamage);
+        NeoForge.EVENT_BUS.addListener(IMMobFriendlyFireHandler::onLeave);
+        NeoForge.EVENT_BUS.addListener(IMMobFriendlyFireHandler::tickTargets);
     }
 
     private static void onTargetChanged(LivingChangeTargetEvent event) {
         LivingEntity target = event.getNewAboutToBeSetTarget();
+        Mob mob = event.getEntity() instanceof Mob source ? source : null;
         if (isHiddenInternalTarget(target)
-                || event.getEntity() instanceof net.minecraft.world.entity.Mob mob
-                        && isInvmodTarget(target)
+                || mob != null && isInvmodTarget(target)
                         && !mob.hasLineOfSight(target)) {
             event.setNewAboutToBeSetTarget(null);
+            untrack(mob);
             return;
         }
         if (event.getEntity() instanceof Combatant<?>
                 && event.getNewAboutToBeSetTarget() instanceof Combatant<?>) {
             event.setNewAboutToBeSetTarget(null);
+            untrack(mob);
+            return;
+        }
+        if (mob != null && isInvmodTarget(target)
+                && mob.level() instanceof ServerLevel level) {
+            IM_TARGETING_MOBS.computeIfAbsent(level, ignored ->
+                    Collections.newSetFromMap(new IdentityHashMap<>())).add(mob);
+        } else {
+            untrack(mob);
+        }
+    }
+
+    private static void tickTargets(LevelTickEvent.Post event) {
+        if (!(event.getLevel() instanceof ServerLevel level)
+                || level.getGameTime() % 10L != 0L) {
+            return;
+        }
+        Set<Mob> tracked = IM_TARGETING_MOBS.get(level);
+        if (tracked == null) {
+            return;
+        }
+        for (Mob mob : List.copyOf(tracked)) {
+            LivingEntity target = mob.getTarget();
+            if (!mob.isAlive() || mob.isRemoved() || !isInvmodTarget(target)) {
+                tracked.remove(mob);
+            } else if (isHiddenInternalTarget(target)
+                    || !mob.hasLineOfSight(target)) {
+                mob.setTarget(null);
+                tracked.remove(mob);
+            }
+        }
+        if (tracked.isEmpty()) {
+            IM_TARGETING_MOBS.remove(level);
+        }
+    }
+
+    private static void onLeave(EntityLeaveLevelEvent event) {
+        if (event.getEntity() instanceof Mob mob) {
+            untrack(mob);
+        }
+    }
+
+    private static void untrack(Mob mob) {
+        if (mob == null || !(mob.level() instanceof ServerLevel level)) {
+            return;
+        }
+        Set<Mob> tracked = IM_TARGETING_MOBS.get(level);
+        if (tracked != null) {
+            tracked.remove(mob);
+            if (tracked.isEmpty()) {
+                IM_TARGETING_MOBS.remove(level);
+            }
         }
     }
 

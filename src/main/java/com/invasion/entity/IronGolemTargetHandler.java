@@ -66,7 +66,6 @@ public final class IronGolemTargetHandler {
 				defender.setTarget(null);
 				current = null;
 			}
-			if (isGuardVillager(defender)) continue;
 			if (current != null && current.isAlive() && !current.isRemoved()
 					&& (current instanceof Combatant<?> ? loadedTargets.contains(current)
 								&& defender.hasLineOfSight(current)
@@ -92,13 +91,6 @@ public final class IronGolemTargetHandler {
 	private static boolean isDefender(Mob mob) {
 		return mob instanceof IronGolem
 				|| mob instanceof IMWolfEntity
-				|| mob instanceof Wolf wolf && wolf.isTame()
-				|| isGuardVillager(mob);
-	}
-
-	private static boolean isGuardVillager(Mob mob) {
-		return BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType())
-				.equals(net.minecraft.resources.ResourceLocation
-						.fromNamespaceAndPath("guardvillagers", "guard"));
+				|| mob instanceof Wolf wolf && wolf.isTame();
 	}
 }
