@@ -22,6 +22,7 @@ import net.minecraft.world.entity.LivingEntity;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.block.NexusBlockEntity;
+import com.invasion.nexus.Combatant;
 import com.invasion.nexus.ControllableNexusAccess;
 import com.invasion.nexus.Mode;
 import com.invasion.nexus.WorldNexusStorage;
@@ -204,13 +205,19 @@ public class InvasionCommand {
     }
 
     private static int debug(CommandSourceStack source) {
+        ControllableNexusAccess activeNexus = WorldNexusStorage
+                .of(source.getLevel()).getNexus()
+                .filter(ControllableNexusAccess::isActive).orElse(null);
         List<LivingEntity> mobs = BoundIMMobRegistry.loaded(source.getLevel())
                 .stream()
                 .map(combatant -> (LivingEntity) combatant.asEntity())
                 .filter(entity -> entity.isAddedToLevel()
                         && entity.isAlive() && !entity.isRemoved())
-                .sorted(Comparator.comparingDouble(
-                        entity -> entity.distanceToSqr(source.getPosition())))
+                .sorted(Comparator
+                        .comparing((LivingEntity entity) ->
+                                !isCurrentPhaseMob(entity, activeNexus))
+                        .thenComparingDouble(entity -> entity.distanceToSqr(
+                                source.getPosition())))
                 .toList();
 
         mobs.forEach(entity -> entity.addEffect(new MobEffectInstance(
@@ -220,6 +227,7 @@ public class InvasionCommand {
                 "invmod.message.command.debug_mobs", mobs.size())
                 .withStyle(ChatFormatting.YELLOW), false);
         mobs.stream().limit(10).forEach(entity -> {
+            boolean currentPhase = isCurrentPhaseMob(entity, activeNexus);
             BlockPos pos = entity.blockPosition();
             Component coordinates = ComponentUtils.wrapInSquareBrackets(
                     Component.translatable("chat.coordinates",
@@ -233,24 +241,38 @@ public class InvasionCommand {
                                     Component.translatable(
                                             "chat.coordinates.tooltip"))));
             source.sendSuccess(() -> Component.translatable(
-                    "invmod.message.command.debug_mob_entry",
+                    currentPhase
+                            ? "invmod.message.command.debug_phase_mob_entry"
+                            : "invmod.message.command.debug_mob_entry",
                     entity.getDisplayName(), coordinates), false);
         });
 
-        WorldNexusStorage.of(source.getLevel()).getNexus()
-                .filter(ControllableNexusAccess::isActive).ifPresentOrElse(
-                nexus -> {
-                    long timerTicks = nexus.getPhaseTimerTicks();
-                    String timer = String.format(Locale.ROOT, "%d:%02d",
-                            timerTicks / 1200, (timerTicks / 20) % 60);
-                    source.sendSuccess(() -> Component.translatable(
-                            "invmod.message.command.debug_phase",
-                            nexus.getMobsLeftInPhase(), timer)
-                            .withStyle(ChatFormatting.AQUA), false);
-                }, () -> source.sendFailure(Component.translatable(
-                        "invmod.message.command.debug_no_nexus")
-                        .withStyle(ChatFormatting.RED)));
+        if (activeNexus != null) {
+            long timerTicks = activeNexus.getPhaseTimerTicks();
+            String timer = String.format(Locale.ROOT, "%d:%02d",
+                    timerTicks / 1200, (timerTicks / 20) % 60);
+            source.sendSuccess(() -> Component.translatable(
+                    "invmod.message.command.debug_phase",
+                    activeNexus.getMobsLeftInPhase(), timer)
+                    .withStyle(ChatFormatting.AQUA), false);
+        } else {
+            source.sendFailure(Component.translatable(
+                    "invmod.message.command.debug_no_nexus")
+                    .withStyle(ChatFormatting.RED));
+        }
         return mobs.size();
+    }
+
+    private static boolean isCurrentPhaseMob(LivingEntity entity,
+            ControllableNexusAccess nexus) {
+        return nexus != null && entity instanceof Combatant<?> combatant
+                && combatant.getNexus() == nexus
+                && entity.getPersistentData().getIntOr(
+                        "invmodWaveNumber", Integer.MIN_VALUE)
+                        == nexus.getCurrentWave()
+                && entity.getPersistentData().getIntOr(
+                        "invmodWavePhase", Integer.MIN_VALUE)
+                        == nexus.getWavePhaseToken();
     }
 
 	private static int bolt(CommandSourceStack source) {
