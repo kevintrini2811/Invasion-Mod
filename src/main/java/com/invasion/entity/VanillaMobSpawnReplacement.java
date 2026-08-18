@@ -54,6 +54,11 @@ public final class VanillaMobSpawnReplacement {
 
     private static void blockNaturalSpawn(FinalizeSpawnEvent event) {
         ServerLevel world = event.getLevel().getLevel();
+        if (event.getEntity() instanceof SpawnProxyEntity proxy) {
+            event.setSpawnCancelled(true);
+            replaceSpawnProxy(world, proxy);
+            return;
+        }
         if (event.getSpawnType() == MobSpawnType.NATURAL
                 && world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
@@ -69,11 +74,7 @@ public final class VanillaMobSpawnReplacement {
         net.minecraft.world.entity.Entity entity = event.getEntity();
         if (entity instanceof SpawnProxyEntity proxy) {
             event.setCanceled(true);
-            SpawnProxyEntity.generateMobGroup(world, replacement -> {
-                replacement.moveTo(proxy.getX(), proxy.getY(), proxy.getZ(),
-                        proxy.getYRot(), proxy.getXRot());
-                world.addFreshEntity(replacement);
-            });
+            replaceSpawnProxy(world, proxy);
             return;
         }
         if (converting || !(entity instanceof Mob mob)
@@ -86,6 +87,15 @@ public final class VanillaMobSpawnReplacement {
             PENDING.computeIfAbsent(
                     world, ignored -> new HashSet<>()).add(mob.getUUID());
         }
+    }
+
+    private static void replaceSpawnProxy(
+            ServerLevel world, SpawnProxyEntity proxy) {
+        SpawnProxyEntity.generateMobGroup(world, replacement -> {
+            replacement.moveTo(proxy.getX(), proxy.getY(), proxy.getZ(),
+                    proxy.getYRot(), proxy.getXRot());
+            world.addFreshEntity(replacement);
+        });
     }
 
     private static void removeVanillaMob(EntityLeaveLevelEvent event) {
