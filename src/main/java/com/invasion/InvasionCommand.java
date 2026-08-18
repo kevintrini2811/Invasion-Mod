@@ -207,7 +207,8 @@ public class InvasionCommand {
         List<LivingEntity> mobs = BoundIMMobRegistry.loaded(source.getLevel())
                 .stream()
                 .map(combatant -> (LivingEntity) combatant.asEntity())
-                .filter(entity -> entity.isAlive() && !entity.isRemoved())
+                .filter(entity -> entity.isAddedToLevel()
+                        && entity.isAlive() && !entity.isRemoved())
                 .sorted(Comparator.comparingDouble(
                         entity -> entity.distanceToSqr(source.getPosition())))
                 .toList();
