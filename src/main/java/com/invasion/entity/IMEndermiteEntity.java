@@ -41,7 +41,8 @@ public final class IMEndermiteEntity extends Endermite
     @Override
     public boolean canAttack(LivingEntity candidate) {
         return level() instanceof ServerLevel serverLevel
-                && IMWitchEntity.isPlayerAlly(candidate, serverLevel)
+                && (candidate == getLastHurtByMob()
+                        || IMWitchEntity.isPlayerAlly(candidate, serverLevel))
                 && candidate.isAlive()
                 && candidate.canBeSeenAsEnemy()
                 && candidate.attackable()

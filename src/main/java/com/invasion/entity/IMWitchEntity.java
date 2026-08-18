@@ -136,7 +136,7 @@ public final class IMWitchEntity extends Witch
 
         @Override
         public boolean canUse() {
-            return hasNexus() && getNexus().isActive();
+            return hasActiveNexus() || isValidAttacker(getLastHurtByMob());
         }
 
         @Override
@@ -155,6 +155,10 @@ public final class IMWitchEntity extends Witch
                 cooldown--;
             }
             ServerLevel level = (ServerLevel) level();
+            LivingEntity attacker = getLastHurtByMob();
+            if (isValidAttacker(attacker)) {
+                cachedEnemy = attacker;
+            }
             if (!isValidEnemy(cachedEnemy, level)) {
                 cachedEnemy = null;
             }
@@ -164,11 +168,12 @@ public final class IMWitchEntity extends Witch
             if (targetSearchCooldown > 0) {
                 targetSearchCooldown--;
             } else {
-                if (cachedEnemy == null) {
+                if (cachedEnemy == null && hasActiveNexus()) {
                     cachedEnemy = nearest(level, THROW_RANGE,
                             candidate -> isPlayerAlly(candidate, level));
                 }
-                if (cachedEnemy == null && cachedAlly == null) {
+                if (cachedEnemy == null && cachedAlly == null
+                        && hasActiveNexus()) {
                     cachedAlly = nearest(level, FOLLOW_RANGE,
                             this::isNexusAlly);
                 }
@@ -176,9 +181,15 @@ public final class IMWitchEntity extends Witch
                         + getRandom().nextInt(TARGET_SEARCH_INTERVAL_VARIANCE);
             }
             if (cachedEnemy != null) {
-                getNavigation().stop();
                 getLookControl().setLookAt(cachedEnemy, 30.0F, 30.0F);
-                if (cooldown == 0 && hasLineOfSight(cachedEnemy)) {
+                double distance = distanceToSqr(cachedEnemy);
+                if (distance > THROW_RANGE * THROW_RANGE) {
+                    getNavigation().moveTo(cachedEnemy, 1.0D);
+                } else {
+                    getNavigation().stop();
+                }
+                if (cooldown == 0 && distance <= THROW_RANGE * THROW_RANGE
+                        && hasLineOfSight(cachedEnemy)) {
                     throwPotion(cachedEnemy, harmfulType());
                 }
                 return;
@@ -203,8 +214,21 @@ public final class IMWitchEntity extends Witch
         private boolean isValidEnemy(@Nullable LivingEntity candidate,
                 ServerLevel level) {
             return candidate != null && candidate.isAlive()
-                    && distanceToSqr(candidate) <= THROW_RANGE * THROW_RANGE
-                    && isPlayerAlly(candidate, level);
+                    && ((candidate == getLastHurtByMob()
+                            && isValidAttacker(candidate))
+                            || (distanceToSqr(candidate)
+                                    <= THROW_RANGE * THROW_RANGE
+                                    && isPlayerAlly(candidate, level)));
+        }
+
+        private boolean isValidAttacker(@Nullable LivingEntity candidate) {
+            return candidate != null && candidate != IMWitchEntity.this
+                    && candidate.isAlive() && !candidate.isRemoved()
+                    && candidate.attackable();
+        }
+
+        private boolean hasActiveNexus() {
+            return hasNexus() && getNexus().isActive();
         }
 
         private boolean isValidAlly(@Nullable LivingEntity candidate) {
