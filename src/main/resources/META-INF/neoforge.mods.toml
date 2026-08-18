@@ -53,3 +53,10 @@ type="optional"
 versionRange="[21.1.1,)"
 ordering="AFTER"
 side="BOTH"
+
+[[dependencies.invmod]]
+modId="infernalmobs"
+type="optional"
+versionRange="[1.21.1.3NF,)"
+ordering="AFTER"
+side="BOTH"
