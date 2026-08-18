@@ -211,7 +211,7 @@ public class InvasionCommand {
         List<LivingEntity> mobs = BoundIMMobRegistry.loaded(source.getLevel())
                 .stream()
                 .map(combatant -> (LivingEntity) combatant.asEntity())
-                .filter(entity -> entity.isAddedToLevel()
+                .filter(entity -> source.getLevel().getEntity(entity.getId()) == entity
                         && entity.isAlive() && !entity.isRemoved())
                 .sorted(Comparator
                         .comparing((LivingEntity entity) ->
@@ -234,10 +234,12 @@ public class InvasionCommand {
                             pos.getX(), pos.getY(), pos.getZ()))
                     .withStyle(style -> style
                             .withColor(ChatFormatting.GREEN)
-                            .withClickEvent(new ClickEvent.SuggestCommand(
+                            .withClickEvent(new ClickEvent(
+                                    ClickEvent.Action.SUGGEST_COMMAND,
                                     "/tp @s " + pos.getX() + " "
                                             + pos.getY() + " " + pos.getZ()))
-                            .withHoverEvent(new HoverEvent.ShowText(
+                            .withHoverEvent(new HoverEvent(
+                                    HoverEvent.Action.SHOW_TEXT,
                                     Component.translatable(
                                             "chat.coordinates.tooltip"))));
             source.sendSuccess(() -> Component.translatable(
@@ -267,11 +269,9 @@ public class InvasionCommand {
             ControllableNexusAccess nexus) {
         return nexus != null && entity instanceof Combatant<?> combatant
                 && combatant.getNexus() == nexus
-                && entity.getPersistentData().getIntOr(
-                        "invmodWaveNumber", Integer.MIN_VALUE)
+                && entity.getPersistentData().getInt("invmodWaveNumber")
                         == nexus.getCurrentWave()
-                && entity.getPersistentData().getIntOr(
-                        "invmodWavePhase", Integer.MIN_VALUE)
+                && entity.getPersistentData().getInt("invmodWavePhase")
                         == nexus.getWavePhaseToken();
     }
 
