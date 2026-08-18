@@ -20,7 +20,11 @@ public final class IMMobFriendlyFireHandler {
     }
 
     private static void onTargetChanged(LivingChangeTargetEvent event) {
-        if (isHiddenInternalTarget(event.getNewAboutToBeSetTarget())) {
+        LivingEntity target = event.getNewAboutToBeSetTarget();
+        if (isHiddenInternalTarget(target)
+                || event.getEntity() instanceof net.minecraft.world.entity.Mob mob
+                        && isInvmodTarget(target)
+                        && !mob.hasLineOfSight(target)) {
             event.setNewAboutToBeSetTarget(null);
             return;
         }
@@ -31,12 +35,16 @@ public final class IMMobFriendlyFireHandler {
     }
 
     public static boolean isHiddenInternalTarget(LivingEntity target) {
-        return target != null
-                && BuiltInRegistries.ENTITY_TYPE.getKey(target.getType())
-                        .getNamespace().equals(InvasionMod.MOD_ID)
+        return isInvmodTarget(target)
                 && (target instanceof SpawnProxyEntity
                         || target.isInvisible()
                         || !target.isAttackable());
+    }
+
+    public static boolean isInvmodTarget(LivingEntity target) {
+        return target != null
+                && BuiltInRegistries.ENTITY_TYPE.getKey(target.getType())
+                        .getNamespace().equals(InvasionMod.MOD_ID);
     }
 
     private static void onIncomingDamage(LivingIncomingDamageEvent event) {

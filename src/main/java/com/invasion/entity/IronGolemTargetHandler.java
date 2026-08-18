@@ -60,12 +60,16 @@ public final class IronGolemTargetHandler {
 		for (Mob defender : defenders) {
 			if (!isDefender(defender)) continue;
 			LivingEntity current = defender.getTarget();
-			if (IMMobFriendlyFireHandler.isHiddenInternalTarget(current)) {
+			if (IMMobFriendlyFireHandler.isHiddenInternalTarget(current)
+					|| IMMobFriendlyFireHandler.isInvmodTarget(current)
+							&& !defender.hasLineOfSight(current)) {
 				defender.setTarget(null);
 				current = null;
 			}
+			if (isGuardVillager(defender)) continue;
 			if (current != null && current.isAlive() && !current.isRemoved()
 					&& (current instanceof Combatant<?> ? loadedTargets.contains(current)
+								&& defender.hasLineOfSight(current)
 							: !BuiltInRegistries.ENTITY_TYPE.getKey(current.getType())
 									.getNamespace().equals(InvasionMod.MOD_ID))) continue;
 			if (current != null) defender.setTarget(null);
@@ -76,6 +80,7 @@ public final class IronGolemTargetHandler {
                 if (!candidate.isAlive() || candidate.isRemoved()
 						|| candidate == defender || candidate instanceof IMWolfEntity
 						|| IMMobFriendlyFireHandler.isHiddenInternalTarget(candidate)
+						|| !defender.hasLineOfSight(candidate)
 						|| !defender.canAttack(candidate)) continue;
 				double distance = defender.distanceToSqr(candidate);
                 if (distance < nearestDistance) { nearest = candidate; nearestDistance = distance; }
@@ -88,8 +93,12 @@ public final class IronGolemTargetHandler {
 		return mob instanceof IronGolem
 				|| mob instanceof IMWolfEntity
 				|| mob instanceof Wolf wolf && wolf.isTame()
-				|| BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType())
-						.equals(net.minecraft.resources.ResourceLocation
-								.fromNamespaceAndPath("guardvillagers", "guard"));
+				|| isGuardVillager(mob);
+	}
+
+	private static boolean isGuardVillager(Mob mob) {
+		return BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType())
+				.equals(net.minecraft.resources.ResourceLocation
+						.fromNamespaceAndPath("guardvillagers", "guard"));
 	}
 }
