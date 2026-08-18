@@ -8,7 +8,8 @@
       "NaturalMobSpawnMixin",
       "NonCombatTargetMixin",
       "PathNodeMixin",
-      "PhantomAccessor"
+      "PhantomAccessor",
+      "SpawnProxyEntityMixin"
     ],
     "client": [
       "AgeableMobRendererAccessor"
