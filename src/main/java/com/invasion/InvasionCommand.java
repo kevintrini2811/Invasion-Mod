@@ -1,5 +1,8 @@
 package com.invasion;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
@@ -9,7 +12,14 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.RangeArgument;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.block.NexusBlockEntity;
 import com.invasion.nexus.ControllableNexusAccess;
@@ -29,6 +39,7 @@ public class InvasionCommand {
                 .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
                 .then(Commands.literal("continue").executes(context -> continueInvasion(context.getSource())))
                 .then(Commands.literal("destroy").executes(context -> destroy(context.getSource())))
+                .then(Commands.literal("debug").executes(context -> debug(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
                 .then(Commands.literal("set")
                         .then(Commands.argument("wave", IntegerArgumentType.integer(1))
@@ -190,6 +201,55 @@ public class InvasionCommand {
             nexus.getStatus().forEach(line -> source.sendSuccess(() -> line, false));
         });
         return 0;
+    }
+
+    private static int debug(CommandSourceStack source) {
+        List<LivingEntity> mobs = BoundIMMobRegistry.loaded(source.getLevel())
+                .stream()
+                .map(combatant -> (LivingEntity) combatant.asEntity())
+                .filter(entity -> entity.isAlive() && !entity.isRemoved())
+                .sorted(Comparator.comparingDouble(
+                        entity -> entity.distanceToSqr(source.getPosition())))
+                .toList();
+
+        mobs.forEach(entity -> entity.addEffect(new MobEffectInstance(
+                MobEffects.GLOWING, 10 * 60 * 20)));
+
+        source.sendSuccess(() -> Component.translatable(
+                "invmod.message.command.debug_mobs", mobs.size())
+                .withStyle(ChatFormatting.YELLOW), false);
+        mobs.stream().limit(10).forEach(entity -> {
+            BlockPos pos = entity.blockPosition();
+            Component coordinates = ComponentUtils.wrapInSquareBrackets(
+                    Component.translatable("chat.coordinates",
+                            pos.getX(), pos.getY(), pos.getZ()))
+                    .withStyle(style -> style
+                            .withColor(ChatFormatting.GREEN)
+                            .withClickEvent(new ClickEvent.SuggestCommand(
+                                    "/tp @s " + pos.getX() + " "
+                                            + pos.getY() + " " + pos.getZ()))
+                            .withHoverEvent(new HoverEvent.ShowText(
+                                    Component.translatable(
+                                            "chat.coordinates.tooltip"))));
+            source.sendSuccess(() -> Component.translatable(
+                    "invmod.message.command.debug_mob_entry",
+                    entity.getDisplayName(), coordinates), false);
+        });
+
+        WorldNexusStorage.of(source.getLevel()).getNexus()
+                .filter(ControllableNexusAccess::isActive).ifPresentOrElse(
+                nexus -> {
+                    long timerTicks = nexus.getPhaseTimerTicks();
+                    String timer = String.format(Locale.ROOT, "%d:%02d",
+                            timerTicks / 1200, (timerTicks / 20) % 60);
+                    source.sendSuccess(() -> Component.translatable(
+                            "invmod.message.command.debug_phase",
+                            nexus.getMobsLeftInPhase(), timer)
+                            .withStyle(ChatFormatting.AQUA), false);
+                }, () -> source.sendFailure(Component.translatable(
+                        "invmod.message.command.debug_no_nexus")
+                        .withStyle(ChatFormatting.RED)));
+        return mobs.size();
     }
 
 	private static int bolt(CommandSourceStack source) {

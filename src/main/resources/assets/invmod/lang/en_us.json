@@ -1,4 +1,8 @@
 {
+  "invmod.message.command.debug_mobs": "Applied Glowing to %s loaded IM mob(s) for 10 minutes. Nearest mobs:",
+  "invmod.message.command.debug_mob_entry": "%s at %s",
+  "invmod.message.command.debug_phase": "Mobs remaining in current phase: %s | Phase timer: %s",
+  "invmod.message.command.debug_no_nexus": "No active Nexus found for phase information.",
     "item.invmod.mutant_zombie_spawn_egg": "IM Mutant Zombie Spawn Egg",
     "item.invmod.mutant_creeper_spawn_egg": "IM Mutant Creeper Spawn Egg",
     "item.invmod.mutant_skeleton_spawn_egg": "IM Mutant Skeleton Spawn Egg",

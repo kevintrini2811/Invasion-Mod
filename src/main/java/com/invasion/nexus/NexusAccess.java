@@ -68,6 +68,14 @@ public interface NexusAccess {
 
 	default int getWavePhaseToken() { return 0; }
 
+    default int getMobsLeftInPhase() {
+        return getMobsLeftInWave();
+    }
+
+    default long getPhaseTimerTicks() {
+        return 0L;
+    }
+
     default int getHealthPercent() {
         return 0;
     }

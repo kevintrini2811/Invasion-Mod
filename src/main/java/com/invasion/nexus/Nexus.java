@@ -296,6 +296,18 @@ public class Nexus implements ControllableNexusAccess {
 	public int getWavePhaseToken() { return phaseToken; }
 
     @Override
+    public int getMobsLeftInPhase() {
+        return budgetPlan == null ? getMobsLeftInWave()
+                : Math.max(0, phaseMobsLeft);
+    }
+
+    @Override
+    public long getPhaseTimerTicks() {
+        return Math.max(0L, 2L * 60L * 20L
+                - (world.getGameTime() - lastPhaseKillTick));
+    }
+
+    @Override
     public int getHealthPercent() {
         return Math.max(0, Math.min(100, hp * 100 / MAX_HEALTH));
     }
