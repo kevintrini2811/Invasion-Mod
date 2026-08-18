@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
+import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
@@ -27,6 +28,7 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.animal.AbstractGolem;
 import net.minecraft.world.entity.monster.Silverfish;
 import net.minecraft.world.entity.monster.Endermite;
@@ -47,6 +49,11 @@ public final class IMSilverfishEntity extends Silverfish
 
     public IMSilverfishEntity(EntityType<? extends Silverfish> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        return new IMMobNavigation(this);
     }
 
     @Override
