@@ -1,6 +1,7 @@
 package com.invasion.entity.mutant;
 
 import com.invasion.nexus.Combatant;
+import com.invasion.entity.StationaryPathRecoveryExcluded;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 
@@ -17,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 
 
 public final class IMCreeperMinionEntity extends CreeperMinion
-        implements IMMutantMob {
+        implements IMMutantMob, StationaryPathRecoveryExcluded {
     private static final int MAX_STATIONARY_TICKS = 20 * 10;
     private static final int SPAWN_IGNITION_GRACE_TICKS = 40;
     private static final double STATIONARY_TOLERANCE_SQR = 0.2D * 0.2D;
