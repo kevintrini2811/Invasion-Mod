@@ -33,7 +33,7 @@ public final class IronGolemTargetHandler {
 
     private static void onJoin(EntityJoinLevelEvent event) {
 		if (event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof Mob mob
-				&& (mob instanceof IronGolem || mob instanceof Wolf)) {
+				&& isDefender(mob)) {
 			DEFENDERS.computeIfAbsent(level, ignored -> Collections.newSetFromMap(new IdentityHashMap<>())).add(mob);
         }
     }
@@ -60,6 +60,10 @@ public final class IronGolemTargetHandler {
 		for (Mob defender : defenders) {
 			if (!isDefender(defender)) continue;
 			LivingEntity current = defender.getTarget();
+			if (IMMobFriendlyFireHandler.isHiddenInternalTarget(current)) {
+				defender.setTarget(null);
+				current = null;
+			}
 			if (current != null && current.isAlive() && !current.isRemoved()
 					&& (current instanceof Combatant<?> ? loadedTargets.contains(current)
 							: !BuiltInRegistries.ENTITY_TYPE.getKey(current.getType())
@@ -71,6 +75,7 @@ public final class IronGolemTargetHandler {
                 LivingEntity candidate = combatant.asEntity();
                 if (!candidate.isAlive() || candidate.isRemoved()
 						|| candidate == defender || candidate instanceof IMWolfEntity
+						|| IMMobFriendlyFireHandler.isHiddenInternalTarget(candidate)
 						|| !defender.canAttack(candidate)) continue;
 				double distance = defender.distanceToSqr(candidate);
                 if (distance < nearestDistance) { nearest = candidate; nearestDistance = distance; }
@@ -82,6 +87,9 @@ public final class IronGolemTargetHandler {
 	private static boolean isDefender(Mob mob) {
 		return mob instanceof IronGolem
 				|| mob instanceof IMWolfEntity
-				|| mob instanceof Wolf wolf && wolf.isTame();
+				|| mob instanceof Wolf wolf && wolf.isTame()
+				|| BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType())
+						.equals(net.minecraft.resources.ResourceLocation
+								.fromNamespaceAndPath("guardvillagers", "guard"));
 	}
 }

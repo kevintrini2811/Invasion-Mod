@@ -1,7 +1,10 @@
 package com.invasion.entity;
 
 import com.invasion.nexus.Combatant;
+import com.invasion.InvasionMod;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -17,7 +20,7 @@ public final class IMMobFriendlyFireHandler {
     }
 
     private static void onTargetChanged(LivingChangeTargetEvent event) {
-        if (event.getNewAboutToBeSetTarget() instanceof SpawnProxyEntity) {
+        if (isHiddenInternalTarget(event.getNewAboutToBeSetTarget())) {
             event.setNewAboutToBeSetTarget(null);
             return;
         }
@@ -25,6 +28,15 @@ public final class IMMobFriendlyFireHandler {
                 && event.getNewAboutToBeSetTarget() instanceof Combatant<?>) {
             event.setNewAboutToBeSetTarget(null);
         }
+    }
+
+    public static boolean isHiddenInternalTarget(LivingEntity target) {
+        return target != null
+                && BuiltInRegistries.ENTITY_TYPE.getKey(target.getType())
+                        .getNamespace().equals(InvasionMod.MOD_ID)
+                && (target instanceof SpawnProxyEntity
+                        || target.isInvisible()
+                        || !target.isAttackable());
     }
 
     private static void onIncomingDamage(LivingIncomingDamageEvent event) {
