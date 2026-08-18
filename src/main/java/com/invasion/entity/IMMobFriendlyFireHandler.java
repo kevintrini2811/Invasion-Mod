@@ -21,6 +21,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 /** Prevents Nexus combatants from treating other Nexus combatants as enemies. */
 public final class IMMobFriendlyFireHandler {
+    private static final Object TARGET_LOCK = new Object();
     private static final Map<ServerLevel, Set<Mob>> IM_TARGETING_MOBS =
             new WeakHashMap<>();
 
@@ -56,8 +57,11 @@ public final class IMMobFriendlyFireHandler {
     private static void track(Mob mob, LivingEntity target) {
         if (mob != null && isInvmodTarget(target)
                 && mob.level() instanceof ServerLevel level) {
-            IM_TARGETING_MOBS.computeIfAbsent(level, ignored ->
-                    Collections.newSetFromMap(new IdentityHashMap<>())).add(mob);
+            synchronized (TARGET_LOCK) {
+                IM_TARGETING_MOBS.computeIfAbsent(level, ignored ->
+                        Collections.newSetFromMap(new IdentityHashMap<>()))
+                        .add(mob);
+            }
         } else {
             untrack(mob);
         }
@@ -66,19 +70,22 @@ public final class IMMobFriendlyFireHandler {
     private static void tickTargets(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level)
                 || level.getGameTime() % 10L != 0L) return;
-        Set<Mob> tracked = IM_TARGETING_MOBS.get(level);
-        if (tracked == null) return;
-        for (Mob mob : List.copyOf(tracked)) {
+        List<Mob> snapshot;
+        synchronized (TARGET_LOCK) {
+            Set<Mob> tracked = IM_TARGETING_MOBS.get(level);
+            if (tracked == null) return;
+            snapshot = List.copyOf(tracked);
+        }
+        for (Mob mob : snapshot) {
             LivingEntity target = mob.getTarget();
             if (!mob.isAlive() || mob.isRemoved() || !isInvmodTarget(target)) {
-                tracked.remove(mob);
+                untrack(mob);
             } else if (isHiddenInternalTarget(target)
                     || !mob.hasLineOfSight(target)) {
                 mob.setTarget(null);
-                tracked.remove(mob);
+                untrack(mob);
             }
         }
-        if (tracked.isEmpty()) IM_TARGETING_MOBS.remove(level);
     }
 
     private static void onLeave(EntityLeaveLevelEvent event) {
@@ -87,10 +94,12 @@ public final class IMMobFriendlyFireHandler {
 
     private static void untrack(Mob mob) {
         if (mob == null || !(mob.level() instanceof ServerLevel level)) return;
-        Set<Mob> tracked = IM_TARGETING_MOBS.get(level);
-        if (tracked != null) {
-            tracked.remove(mob);
-            if (tracked.isEmpty()) IM_TARGETING_MOBS.remove(level);
+        synchronized (TARGET_LOCK) {
+            Set<Mob> tracked = IM_TARGETING_MOBS.get(level);
+            if (tracked != null) {
+                tracked.remove(mob);
+                if (tracked.isEmpty()) IM_TARGETING_MOBS.remove(level);
+            }
         }
     }
 
