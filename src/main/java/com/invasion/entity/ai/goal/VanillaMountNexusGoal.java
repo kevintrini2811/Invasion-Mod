@@ -9,6 +9,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.animal.camel.Camel;
 
 /** Lets a vanilla jockey mount carry its converted IM rider into battle. */
 public final class VanillaMountNexusGoal extends Goal {
@@ -42,6 +44,19 @@ public final class VanillaMountNexusGoal extends Goal {
 
     @Override
     public void tick() {
+        if (mount instanceof Camel camel) {
+            // Camels use Brain behaviours instead of goals. Their idle brain
+            // can install a random walk target immediately before this goal is
+            // ticked, and a sitting camel refuses all navigation movement.
+            // Clear that competing target and keep the mount standing while it
+            // is carrying an IM rider into the invasion.
+            camel.getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+            if (camel.refuseToMove()) {
+                camel.standUpInstantly();
+            }
+            moveToObjective();
+            return;
+        }
         if (--repathTimer <= 0 || mount.getNavigation().isDone()) moveToObjective();
     }
 
