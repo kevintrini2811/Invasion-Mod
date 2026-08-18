@@ -9,6 +9,7 @@ import com.invasion.nexus.NexusAccess;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.Mob;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -27,6 +28,8 @@ public final class InfernalMobsCompatibility {
 
     private static Method getMobModifiers;
     private static Method addEntityModifiersByString;
+    private static Method getNbtTag;
+    private static Method setMobWasSpawnedBefore;
     private static Object infernalMobs;
     private static boolean available;
 
@@ -48,8 +51,12 @@ public final class InfernalMobsCompatibility {
                     "addEntityModifiersByString",
                     net.minecraft.world.entity.LivingEntity.class,
                     String.class);
+            getNbtTag = core.getMethod("getNBTTag");
+            setMobWasSpawnedBefore = core.getMethod(
+                    "setMobWasSpawnedBefore",
+                    net.minecraft.world.entity.LivingEntity.class);
             available = true;
-            NeoForge.EVENT_BUS.addListener(
+            NeoForge.EVENT_BUS.addListener(EventPriority.HIGHEST,
                     InfernalMobsCompatibility::entityJoined);
         } catch (ReflectiveOperationException | LinkageError exception) {
             InvasionMod.LOGGER.error(
@@ -75,17 +82,23 @@ public final class InfernalMobsCompatibility {
         }
         mob.getPersistentData().putBoolean(ROLL_TAG, true);
 
-        int chancePercent = Math.clamp(nexus.getCurrentWave(), 0, 100);
-        if (mob.getRandom().nextInt(100) >= chancePercent) {
-            return;
-        }
-
         try {
-            // Infernal Mobs may already have selected an elite through its own
-            // spawn hook. Keep that result instead of replacing or stacking it.
-            if (getMobModifiers.invoke(null, mob) != null) {
+            String nbtTag = (String) getNbtTag.invoke(infernalMobs);
+            if (mob.getPersistentData().contains(nbtTag)) {
+                // Preserve modifiers (or the non-infernal marker) restored
+                // from disk instead of treating a loaded mob as a new spawn.
                 return;
             }
+
+            // Run before Infernal Mobs' regular spawn hook and mark the mob as
+            // handled. This leaves only the invasion wave roll while its Nexus
+            // is active.
+            setMobWasSpawnedBefore.invoke(null, mob);
+            int chancePercent = Math.clamp(nexus.getCurrentWave(), 0, 100);
+            if (mob.getRandom().nextInt(100) >= chancePercent) {
+                return;
+            }
+
             int start = mob.getRandom().nextInt(MODIFIERS.size());
             for (int offset = 0; offset < MODIFIERS.size(); offset++) {
                 String modifier = MODIFIERS.get(
