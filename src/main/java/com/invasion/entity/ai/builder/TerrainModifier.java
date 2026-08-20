@@ -93,9 +93,14 @@ public final class TerrainModifier implements ITerrainModify {
         if (timer == 1) {
             entryIndex++;
             timer = 0;
-            lastStatus = changeBlock(nextEntry);
+            Notifiable.Status entryStatus = changeBlock(nextEntry);
             lastEntry = nextEntry;
-            blockChangeCallback.notifyTask(lastStatus);
+            blockChangeCallback.notifyTask(entryStatus);
+            if (entryStatus != Notifiable.Status.SUCCESS) {
+                cancelTask(entryStatus);
+                return;
+            }
+            lastStatus = entryStatus;
         }
 
         if (entryIndex < modList.size()) {
