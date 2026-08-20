@@ -8,14 +8,11 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import com.invasion.compat.WildfireNexusGoal;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.damagesource.DamageSource;
@@ -26,53 +23,9 @@ import net.minecraft.world.level.Level;
 public abstract class WildfireNexusMixin extends Monster
         implements Combatant<Monster>, EntityConstruct.BuildableMob {
     @Unique private IHasNexus.Handle invmod$nexus;
-    @Unique private WildfireNexusGoal invmod$nexusGoal;
 
     protected WildfireNexusMixin(EntityType<? extends Monster> type, Level level) {
         super(type, level);
-    }
-
-    @Inject(method = "tick", at = @At("TAIL"))
-    private void invmod$tickNexusGoal(CallbackInfo ci) {
-        if (level().isClientSide()) return;
-        invmod$synchronizeAttackTarget();
-        if (invmod$nexusGoal == null) {
-            invmod$nexusGoal = new WildfireNexusGoal(this, this);
-        }
-        if (invmod$nexusGoal.canUse()) {
-            invmod$nexusGoal.tick();
-        } else {
-            invmod$nexusGoal.stop();
-        }
-    }
-
-    @Unique
-    private void invmod$synchronizeAttackTarget() {
-        LivingEntity brainTarget = getBrain().getMemory(
-                MemoryModuleType.ATTACK_TARGET).orElse(null);
-        if (invmod$isValidAttackTarget(brainTarget)) {
-            setTarget(brainTarget);
-            return;
-        }
-        if (brainTarget != null) {
-            getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
-        }
-
-        LivingEntity selectedTarget = getTarget();
-        if (invmod$isValidAttackTarget(selectedTarget)) {
-            getBrain().setMemory(MemoryModuleType.ATTACK_TARGET,
-                    selectedTarget);
-        } else if (selectedTarget != null) {
-            setTarget(null);
-        }
-    }
-
-    @Unique
-    private boolean invmod$isValidAttackTarget(@Nullable LivingEntity target) {
-        return target != null
-                && target.isAlive()
-                && !target.isRemoved()
-                && canAttack(target);
     }
 
     @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)

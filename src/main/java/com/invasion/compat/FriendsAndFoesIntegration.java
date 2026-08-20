@@ -30,6 +30,8 @@ public final class FriendsAndFoesIntegration {
                         .clientTrackingRange(10).build(id.toString()));
         MinecraftForge.EVENT_BUS.addListener(
                 WildfireNexusHandler::onProjectileImpact);
+        MinecraftForge.EVENT_BUS.addListener(
+                WildfireNexusHandler::onLevelTick);
     }
 
     public static void registerItem() {
