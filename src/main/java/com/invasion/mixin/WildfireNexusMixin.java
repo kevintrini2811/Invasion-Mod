@@ -14,6 +14,8 @@ import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.damagesource.DamageSource;
@@ -31,7 +33,8 @@ public abstract class WildfireNexusMixin extends Monster
     }
 
     @Inject(method = "customServerAiStep", at = @At("TAIL"))
-    private void invmod$tickNexusGoal(ServerLevel level, CallbackInfo ci) {
+    private void invmod$tickNexusGoal(CallbackInfo ci) {
+        invmod$synchronizeAttackTarget();
         if (invmod$nexusGoal == null) {
             invmod$nexusGoal = new WildfireNexusGoal(this, this);
         }
@@ -40,6 +43,35 @@ public abstract class WildfireNexusMixin extends Monster
         } else {
             invmod$nexusGoal.stop();
         }
+    }
+
+    @Unique
+    private void invmod$synchronizeAttackTarget() {
+        LivingEntity brainTarget = getBrain().getMemory(
+                MemoryModuleType.ATTACK_TARGET).orElse(null);
+        if (invmod$isValidAttackTarget(brainTarget)) {
+            setTarget(brainTarget);
+            return;
+        }
+        if (brainTarget != null) {
+            getBrain().eraseMemory(MemoryModuleType.ATTACK_TARGET);
+        }
+
+        LivingEntity selectedTarget = getTarget();
+        if (invmod$isValidAttackTarget(selectedTarget)) {
+            getBrain().setMemory(MemoryModuleType.ATTACK_TARGET,
+                    selectedTarget);
+        } else if (selectedTarget != null) {
+            setTarget(null);
+        }
+    }
+
+    @Unique
+    private boolean invmod$isValidAttackTarget(@Nullable LivingEntity target) {
+        return target != null
+                && target.isAlive()
+                && !target.isRemoved()
+                && canAttack(target);
     }
 
     @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
