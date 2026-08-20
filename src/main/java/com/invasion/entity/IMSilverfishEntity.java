@@ -6,7 +6,11 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
-import com.invasion.entity.pathfinding.IMMobNavigation;
+import com.invasion.Notifiable;
+import com.invasion.entity.ai.builder.ModifyBlockEntry;
+import com.invasion.entity.ai.builder.TerrainModifier;
+import com.invasion.entity.pathfinding.BuilderIMMobNavigation;
+import com.invasion.entity.pathfinding.path.PathAction;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
@@ -22,7 +26,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
@@ -41,11 +44,13 @@ import net.minecraft.world.level.pathfinder.Path;
 
 /** Silverfish support unit. It is registered but intentionally absent from waves. */
 public final class IMSilverfishEntity extends Silverfish
-        implements Combatant<Silverfish>, EntityConstruct.BuildableMob {
+        implements NexusEntity {
     public static final String INFECTED_TAG = "invmod.infected";
     private static final double SEARCH_RANGE = 16.0D;
+    private static final int BRIDGE_BUILD_TIME = 45;
 
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
 
     public IMSilverfishEntity(EntityType<? extends Silverfish> type, Level level) {
         super(type, level);
@@ -53,7 +58,7 @@ public final class IMSilverfishEntity extends Silverfish
 
     @Override
     protected PathNavigation createNavigation(Level level) {
-        return new IMMobNavigation(this);
+        return new BuilderIMMobNavigation(this);
     }
 
     @Override
@@ -82,6 +87,48 @@ public final class IMSilverfishEntity extends Silverfish
     @Override
     public Silverfish asEntity() {
         return this;
+    }
+
+    @Override
+    public void customServerAiStep() {
+        super.customServerAiStep();
+        terrainModifier.onUpdate();
+    }
+
+    @Override
+    public boolean handlePathAction(
+            BlockPos feetPos, PathAction action, Notifiable asker) {
+        if (action.getType() != PathAction.Type.BRIDGE) {
+            return false;
+        }
+
+        BlockState feetState = level().getBlockState(feetPos);
+        BlockPos placementPos = feetState.getFluidState().isEmpty()
+                ? feetPos.below()
+                : feetPos;
+        BlockState replacedState = level().getBlockState(placementPos);
+        if (!replacedState.isAir()
+                && replacedState.getFluidState().isEmpty()) {
+            return false;
+        }
+
+        var movement = getDeltaMovement();
+        setXxa(0);
+        setZza(0);
+        setSpeed(0);
+        setDeltaMovement(0, movement.y, 0);
+        return terrainModifier.requestTask(
+                java.util.List.of(new ModifyBlockEntry(
+                        placementPos,
+                        Blocks.STONE.defaultBlockState(),
+                        BRIDGE_BUILD_TIME)),
+                status -> {
+                    asker.notifyTask(status);
+                    if (status == Notifiable.Status.SUCCESS) {
+                        kill();
+                    }
+                },
+                null);
     }
 
     @Override
@@ -127,7 +174,8 @@ public final class IMSilverfishEntity extends Silverfish
         discard();
     }
 
-    private final class TransformUnbreakableBlockGoal extends Goal {
+    private final class TransformUnbreakableBlockGoal
+            extends net.minecraft.world.entity.ai.goal.Goal {
         private static final int HORIZONTAL_SEARCH_RANGE = 12;
         private static final int VERTICAL_SEARCH_RANGE = 6;
         private static final int SAMPLES_PER_TICK = 64;
@@ -337,7 +385,8 @@ public final class IMSilverfishEntity extends Silverfish
         }
     }
 
-    private final class InfectEntityGoal extends Goal {
+    private final class InfectEntityGoal
+            extends net.minecraft.world.entity.ai.goal.Goal {
         private final boolean invasionMob;
         @Nullable private LivingEntity target;
 
@@ -407,7 +456,8 @@ public final class IMSilverfishEntity extends Silverfish
         }
     }
 
-    private final class AttackNexusGoal extends Goal {
+    private final class AttackNexusGoal
+            extends net.minecraft.world.entity.ai.goal.Goal {
         private int attackCooldown;
 
         private AttackNexusGoal() {
