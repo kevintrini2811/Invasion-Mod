@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import com.invasion.Notifiable;
+import com.invasion.block.BlockMetadata;
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
@@ -428,7 +429,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                         navigation.resumeAfterTowerBuild();
                     }
                 },
-                null);
+                status -> {
+                    ModifyBlockEntry entry = terrainModifier.getLastBlockModified();
+                    if (status == Notifiable.Status.SUCCESS
+                            && entry != null
+                            && entry.newBlock().isAir()) {
+                        onBlockRemoved(entry.pos(), entry.getOldBlock());
+                    }
+                });
         if (!accepted) {
             buildingTower = false;
             towerInterruptedTicks = 0;
@@ -521,6 +529,25 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         if (!exitSpace.is(Blocks.LADDER) && !exitSpace.canBeReplaced()) {
             return false;
         }
+
+        // The engineer must be able to stand anywhere on the completed deck.
+        // Reject a tower site only when one of the two clearance layers
+        // contains a block that the engineer cannot remove.
+        for (int clearanceHeight = 1; clearanceHeight <= 2;
+                clearanceHeight++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos clearancePos = platformCenter.offset(
+                            x, clearanceHeight, z);
+                    BlockState clearanceState =
+                            level().getBlockState(clearancePos);
+                    if (!clearanceState.isAir()
+                            && BlockMetadata.isIndestructible(clearanceState)) {
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     }
 
@@ -528,10 +555,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             BlockPos ladderBase,
             BlockPos towerBase,
             Direction ladderFacing) {
-        List<ModifyBlockEntry> entries = new ArrayList<>(15);
+        List<ModifyBlockEntry> entries = new ArrayList<>(33);
         BlockState planks = getBuildingBlock();
         BlockState ladder = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, ladderFacing);
+
+        BlockPos platformCenter = towerBase.above(3);
 
         // Phase 1: three solid support blocks, accepting existing full blocks.
         for (int height = 0; height < 3; height++) {
@@ -556,7 +585,6 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         // support. Placing the ladder immediately afterwards guarantees that
         // the climbable column reaches through the platform before the
         // remaining deck blocks are filled in.
-        BlockPos platformCenter = towerBase.above(3);
         BlockPos ladderOpening = ladderBase.above(3);
         if (level().getBlockState(platformCenter).canBeReplaced()) {
             entries.add(new ModifyBlockEntry(
@@ -577,6 +605,23 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                         && level().getBlockState(platformPos).canBeReplaced()) {
                     entries.add(new ModifyBlockEntry(
                             platformPos, planks, TOWER_PLANK_BUILD_TIME));
+                }
+            }
+        }
+
+        // Phase 5: finish by clearing two full blocks of headroom over the
+        // completed platform, including the ladder exit.
+        for (int clearanceHeight = 1; clearanceHeight <= 2;
+                clearanceHeight++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos clearancePos = platformCenter.offset(
+                            x, clearanceHeight, z);
+                    if (!level().getBlockState(clearancePos).isAir()) {
+                        entries.add(ModifyBlockEntry.ofDeletion(
+                                clearancePos,
+                                (int) getBlockRemovalCost(clearancePos)));
+                    }
                 }
             }
         }
