@@ -1,7 +1,10 @@
 package com.invasion.entity.ai.goal;
 
 import java.util.EnumSet;
+import java.util.Collections;
+import java.util.Set;
 import java.util.Stack;
+import java.util.WeakHashMap;
 import org.jetbrains.annotations.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundSource;
@@ -26,6 +29,8 @@ import com.invasion.entity.Miner;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 
 public class MineBlockGoal extends Goal {
+    private static final Set<PathfinderMob> ACTIVE_MINERS =
+            Collections.newSetFromMap(new WeakHashMap<>());
     private final PathfinderMob mob;
     private final PathNavigation navigation;
 
@@ -65,7 +70,14 @@ public class MineBlockGoal extends Goal {
             );
             addClearRegion(navigation.getPath().getNextNodePos());
             navigation.stop();
+            if (!breakingBlockPos.isEmpty()) {
+                ACTIVE_MINERS.add(mob);
+            }
         }
+    }
+
+    public static boolean isMining(PathfinderMob mob) {
+        return ACTIVE_MINERS.contains(mob);
     }
 
     @Override
@@ -142,6 +154,7 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public void stop() {
+        ACTIVE_MINERS.remove(mob);
         if (currentEntry != null) {
             mob.level().destroyBlockProgress(
                     mob.getId(), currentEntry.pos(), -1);
