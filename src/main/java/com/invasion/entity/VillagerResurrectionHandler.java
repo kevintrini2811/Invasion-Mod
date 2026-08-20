@@ -13,6 +13,7 @@ import net.minecraft.world.entity.monster.illager.Evoker;
 import net.minecraft.world.entity.monster.illager.Pillager;
 import net.minecraft.world.entity.monster.illager.Vindicator;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
+import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.nexus.Combatant;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
@@ -35,7 +36,9 @@ public final class VillagerResurrectionHandler {
                         || victim instanceof Hoglin
                         || victim instanceof Pillager
                         || victim instanceof Vindicator
-                        || victim instanceof Evoker)
+                        || victim instanceof Evoker
+                        || FriendsAndFoesCompatibility.isTargetableIllager(
+                                victim.getType()))
                 || !(victim.level() instanceof ServerLevel world)
                 || !(source.getEntity() instanceof Combatant<?> killer)) {
             return;
@@ -45,6 +48,8 @@ public final class VillagerResurrectionHandler {
                         || victim instanceof Pillager
                         || victim instanceof Vindicator
                         || victim instanceof Evoker
+                        || FriendsAndFoesCompatibility.isTargetableIllager(
+                                victim.getType())
                 ? InvEntities.ZOMBIE_VILLAGER.create(
                         world, EntitySpawnReason.CONVERSION)
                 : victim instanceof AbstractPiglin
@@ -72,7 +77,9 @@ public final class VillagerResurrectionHandler {
         }
         if (victim instanceof Pillager
                 || victim instanceof Vindicator
-                || victim instanceof Evoker) {
+                || victim instanceof Evoker
+                || FriendsAndFoesCompatibility.isTargetableIllager(
+                        victim.getType())) {
             transferEquipment(victim, zombie);
         }
         if (zombie instanceof Combatant<?> combatant) {
