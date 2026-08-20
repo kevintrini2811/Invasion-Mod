@@ -58,7 +58,6 @@ public final class FriendsAndFoesIntegration {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public static void registerRenderer() {
         EntityRendererRegistry.register((EntityType) WILDFIRE,
                 WildfireEntityRenderer::new);
