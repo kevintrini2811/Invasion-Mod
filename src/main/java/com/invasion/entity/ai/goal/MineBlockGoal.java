@@ -29,7 +29,10 @@ import com.invasion.entity.Miner;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 
 public class MineBlockGoal extends Goal {
+    private static final int FAILURES_BEFORE_REPATH = 3;
     private static final Set<PathfinderMob> ACTIVE_MINERS =
+            Collections.newSetFromMap(new WeakHashMap<>());
+    private static final Set<PathfinderMob> RECOVERY_REQUESTS =
             Collections.newSetFromMap(new WeakHashMap<>());
     private final PathfinderMob mob;
     private final PathNavigation navigation;
@@ -39,6 +42,9 @@ public class MineBlockGoal extends Goal {
     private Stack<BreakEntry> breakingBlockPos = new Stack<>();
     @Nullable
     private BreakEntry currentEntry;
+    @Nullable
+    private BlockPos lastFailedBlock;
+    private int consecutiveFailures;
 
     public MineBlockGoal(PathfinderMob mob) {
         this.mob = mob;
@@ -80,6 +86,10 @@ public class MineBlockGoal extends Goal {
         return ACTIVE_MINERS.contains(mob);
     }
 
+    public static boolean consumeRecoveryRequest(PathfinderMob mob) {
+        return RECOVERY_REQUESTS.remove(mob);
+    }
+
     @Override
     public boolean canContinueToUse() {
         if (currentEntry != null) {
@@ -104,6 +114,7 @@ public class MineBlockGoal extends Goal {
         BlockPos pos = currentEntry.pos();
         BlockState breakingState = mob.level().getBlockState(pos);
         if (breakingState != currentEntry.lastKnownState()) {
+            clearFailures();
             currentEntry = null;
             return;
         }
@@ -131,6 +142,11 @@ public class MineBlockGoal extends Goal {
             if (removed && mob instanceof Miner miner) {
                 miner.onBlockRemoved(pos, breakingState);
             }
+            if (removed) {
+                clearFailures();
+            } else {
+                recordFailure(pos);
+            }
             breakProgress = 0;
             currentEntry = null;
             return;
@@ -156,10 +172,31 @@ public class MineBlockGoal extends Goal {
     public void stop() {
         ACTIVE_MINERS.remove(mob);
         if (currentEntry != null) {
+            recordFailure(currentEntry.pos());
             mob.level().destroyBlockProgress(
                     mob.getId(), currentEntry.pos(), -1);
             currentEntry = null;
         }
+    }
+
+    private void recordFailure(BlockPos pos) {
+        if (pos.equals(lastFailedBlock)) {
+            consecutiveFailures++;
+        } else {
+            lastFailedBlock = pos;
+            consecutiveFailures = 1;
+        }
+        if (consecutiveFailures >= FAILURES_BEFORE_REPATH) {
+            RECOVERY_REQUESTS.add(mob);
+            ACTIVE_MINERS.remove(mob);
+            breakingBlockPos.clear();
+            consecutiveFailures = 0;
+        }
+    }
+
+    private void clearFailures() {
+        lastFailedBlock = null;
+        consecutiveFailures = 0;
     }
 
     static float getDiggingSpeed(LivingEntity entity, BlockState state, BlockPos pos) {

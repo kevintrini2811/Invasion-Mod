@@ -65,17 +65,28 @@ public final class NexusBoundMobLifecycle {
             Combatant<?> combatant, LivingEntity living, NexusAccess nexus) {
         if (!(living instanceof Mob mob)
                 || living instanceof StationaryPathRecoveryExcluded
-                || mob.getTarget() != null
-                || mob instanceof PathfinderMob pathfinderMob
-                        && MineBlockGoal.isMining(pathfinderMob)
-                || living instanceof NexusEntity nexusMob
-                        && nexusMob.getNavigatorNew().isWaitingForTask()) {
+                || mob.getTarget() != null) {
             STATIONARY_STATES.remove(living);
             return;
         }
 
         StationaryState state = STATIONARY_STATES.computeIfAbsent(
                 living, ignored -> new StationaryState(living.blockPosition()));
+        if (mob instanceof PathfinderMob pathfinderMob
+                && MineBlockGoal.consumeRecoveryRequest(pathfinderMob)) {
+            state.anchor = living.blockPosition();
+            state.ticks = 0;
+            state.recoveryTarget = findAlternativePath(mob, nexus);
+            return;
+        }
+        if ((mob instanceof PathfinderMob pathfinderMob
+                        && MineBlockGoal.isMining(pathfinderMob))
+                || (living instanceof NexusEntity nexusMob
+                        && nexusMob.getNavigatorNew().isWaitingForTask())) {
+            STATIONARY_STATES.remove(living);
+            return;
+        }
+
         if (state.recoveryTarget != null
                 && (mob.getNavigation().isDone()
                         || living.blockPosition().closerThan(
