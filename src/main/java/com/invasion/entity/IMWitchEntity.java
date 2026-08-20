@@ -6,6 +6,7 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvMobEffects;
+import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
@@ -113,7 +114,9 @@ public final class IMWitchEntity extends Witch
                 || candidate instanceof AbstractPiglin
                 || candidate instanceof Hoglin
                 || candidate instanceof Pig
-                || candidate instanceof IMWolfEntity) {
+                || candidate instanceof IMWolfEntity
+                || FriendsAndFoesCompatibility.isTargetableIllager(
+                        candidate.getType())) {
             return true;
         }
         if (candidate instanceof OwnableEntity ownable
