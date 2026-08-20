@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import com.invasion.Notifiable;
+import com.invasion.block.BlockMetadata;
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
@@ -425,7 +426,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                         navigation.resumeAfterTowerBuild();
                     }
                 },
-                null);
+                status -> {
+                    ModifyBlockEntry entry = terrainModifier.getLastBlockModified();
+                    if (status == Notifiable.Status.SUCCESS
+                            && entry != null
+                            && entry.newBlock().isAir()) {
+                        onBlockRemoved(entry.pos(), entry.getOldBlock());
+                    }
+                });
         if (!accepted) {
             buildingTower = false;
             towerInterruptedTicks = 0;
@@ -518,6 +526,25 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         if (!exitSpace.is(Blocks.LADDER) && !exitSpace.canBeReplaced()) {
             return false;
         }
+
+        // The engineer must be able to stand anywhere on the completed deck.
+        // Reject a tower site only when one of the two clearance layers
+        // contains a block that the engineer cannot remove.
+        for (int clearanceHeight = 1; clearanceHeight <= 2;
+                clearanceHeight++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos clearancePos = platformCenter.offset(
+                            x, clearanceHeight, z);
+                    BlockState clearanceState =
+                            level().getBlockState(clearancePos);
+                    if (!clearanceState.isAir()
+                            && BlockMetadata.isIndestructible(clearanceState)) {
+                        return false;
+                    }
+                }
+            }
+        }
         return true;
     }
 
@@ -525,12 +552,32 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             BlockPos ladderBase,
             BlockPos towerBase,
             Direction ladderFacing) {
-        List<ModifyBlockEntry> entries = new ArrayList<>(15);
+        List<ModifyBlockEntry> entries = new ArrayList<>(33);
         BlockState planks = getBuildingBlock();
         BlockState ladder = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, ladderFacing);
 
-        // Phase 1: three solid support blocks, accepting existing full blocks.
+        BlockPos platformCenter = towerBase.above(3);
+
+        // Phase 1: clear two full blocks of headroom over the entire 3x3
+        // platform. This also clears the ladder exit before the engineer
+        // starts climbing toward it.
+        for (int clearanceHeight = 1; clearanceHeight <= 2;
+                clearanceHeight++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos clearancePos = platformCenter.offset(
+                            x, clearanceHeight, z);
+                    if (!level().getBlockState(clearancePos).isAir()) {
+                        entries.add(ModifyBlockEntry.ofDeletion(
+                                clearancePos,
+                                (int) getBlockRemovalCost(clearancePos)));
+                    }
+                }
+            }
+        }
+
+        // Phase 2: three solid support blocks, accepting existing full blocks.
         for (int height = 0; height < 3; height++) {
             BlockPos supportPos = towerBase.above(height);
             if (!level().getBlockState(supportPos)
@@ -540,7 +587,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
 
-        // Phase 2: ladders on the side of the column facing the engineer.
+        // Phase 3: ladders on the side of the column facing the engineer.
         for (int height = 0; height < 3; height++) {
             BlockPos ladderPos = ladderBase.above(height);
             if (!level().getBlockState(ladderPos).is(Blocks.LADDER)) {
@@ -549,11 +596,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
 
-        // Phase 3: build the platform centre first so the exit ladder has
+        // Phase 4: build the platform centre first so the exit ladder has
         // support. Placing the ladder immediately afterwards guarantees that
         // the climbable column reaches through the platform before the
         // remaining deck blocks are filled in.
-        BlockPos platformCenter = towerBase.above(3);
         BlockPos ladderOpening = ladderBase.above(3);
         if (level().getBlockState(platformCenter).canBeReplaced()) {
             entries.add(new ModifyBlockEntry(
@@ -564,7 +610,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                     ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
         }
 
-        // Phase 4: complete the 3x3 platform footprint. The ladder cell stays
+        // Phase 5: complete the 3x3 platform footprint. The ladder cell stays
         // open as the only way through the deck.
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
