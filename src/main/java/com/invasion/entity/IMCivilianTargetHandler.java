@@ -17,6 +17,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
+import net.minecraft.world.entity.monster.Ravager;
+import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.monster.illager.Evoker;
+import net.minecraft.world.entity.monster.illager.Pillager;
+import net.minecraft.world.entity.monster.illager.Vindicator;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.neoforged.neoforge.common.NeoForge;
@@ -24,7 +29,7 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
-/** Gives every hostile IM mob the shared civilian target set. */
+/** Gives every hostile IM mob the shared civilian and raider target set. */
 public final class IMCivilianTargetHandler {
     private static final double TARGET_RANGE = 32.0D;
     private static final int SEARCH_INTERVAL = 20;
@@ -81,7 +86,7 @@ public final class IMCivilianTargetHandler {
                 return;
             }
         }
-        List<Combatant<?>> attackers = BoundIMMobRegistry.activeBound(level);
+        List<Combatant<?>> attackers = BoundIMMobRegistry.loaded(level);
         if (attackers.isEmpty()) {
             return;
         }
@@ -110,7 +115,12 @@ public final class IMCivilianTargetHandler {
         return entity instanceof AbstractVillager
                 || entity instanceof AbstractPiglin
                 || entity instanceof Pig
-                || entity instanceof Hoglin;
+                || entity instanceof Hoglin
+                || entity instanceof Pillager
+                || entity instanceof Vindicator
+                || entity instanceof Evoker
+                || entity instanceof Ravager
+                || entity instanceof Vex;
     }
 
     private static long chunkKey(int x, int z) {
