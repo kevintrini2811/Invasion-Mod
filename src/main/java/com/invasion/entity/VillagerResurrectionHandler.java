@@ -5,10 +5,14 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
+import net.minecraft.world.entity.monster.illager.Evoker;
+import net.minecraft.world.entity.monster.illager.Pillager;
+import net.minecraft.world.entity.monster.illager.Vindicator;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import com.invasion.nexus.Combatant;
 
@@ -26,13 +30,19 @@ public final class VillagerResurrectionHandler {
                 || !(victim instanceof AbstractVillager
                         || victim instanceof AbstractPiglin
                         || victim instanceof Pig
-                        || victim instanceof Hoglin)
+                        || victim instanceof Hoglin
+                        || victim instanceof Pillager
+                        || victim instanceof Vindicator
+                        || victim instanceof Evoker)
                 || !(victim.level() instanceof ServerLevel world)
                 || !(source.getEntity() instanceof Combatant<?> killer)) {
             return;
         }
 
         Mob zombie = victim instanceof AbstractVillager
+                        || victim instanceof Pillager
+                        || victim instanceof Vindicator
+                        || victim instanceof Evoker
                 ? InvEntities.ZOMBIE_VILLAGER.create(
                         world, EntitySpawnReason.CONVERSION)
                 : victim instanceof AbstractPiglin
@@ -58,10 +68,24 @@ public final class VillagerResurrectionHandler {
         if (victim.isPersistenceRequired()) {
             zombie.setPersistenceRequired();
         }
+        if (victim instanceof Pillager
+                || victim instanceof Vindicator
+                || victim instanceof Evoker) {
+            transferEquipment(victim, zombie);
+        }
         if (zombie instanceof Combatant<?> combatant) {
             combatant.setNexus(killer.getNexus());
             combatant.resetHealth();
         }
         world.addFreshEntity(zombie);
+    }
+
+    private static void transferEquipment(Mob victim, Mob zombie) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            zombie.setItemSlot(slot, victim.getItemBySlot(slot).copy());
+            zombie.setDropChance(
+                    slot, victim.getDropChances().byEquipment(slot));
+            victim.setItemSlot(slot, net.minecraft.world.item.ItemStack.EMPTY);
+        }
     }
 }
