@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
@@ -111,14 +112,20 @@ public final class BudgetWavePlan {
         }
     }
 
-    private record Option(EntityType<? extends Mob> type, int tier, int flavour, int cost) {
+    private record Option(EntityType<? extends Mob> type, int tier, int flavour, int cost, int rules) {
         Option(EntityType<? extends Mob> type, int tier, int cost) {
-            this(type, tier, 0, cost);
+            this(type, tier, 0, cost, 0);
+        }
+        Option(EntityType<? extends Mob> type, int tier, int flavour, int cost) {
+            this(type, tier, flavour, cost, 0);
         }
     }
 	private enum Team { ZOMBIE_RUSH, WITHER_GANG, SPIDER_GANG, SPIDER_FAMILY, SKELETON_FAMILY, ENDER_SWARM }
     private static Option o(EntityType<? extends Mob> type, int tier, int cost) { return new Option(type, tier, cost); }
     private static Option o(EntityType<? extends Mob> type, int tier, int flavour, int cost) { return new Option(type, tier, flavour, cost); }
+    private static Option baby(EntityType<? extends Mob> type, int tier, int cost) {
+        return new Option(type, tier, 0, cost, RULE_BABY);
+    }
 
     private static final List<Option> ALL = makeAll();
 
@@ -142,6 +149,17 @@ public final class BudgetWavePlan {
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5)));
+        options.addAll(List.of(
+                baby(InvEntities.ZOMBIE,1,3), baby(InvEntities.ZOMBIE,2,5), baby(InvEntities.ZOMBIE,3,9),
+                baby(InvEntities.SPEEDY_ZOMBIE,1,4), baby(InvEntities.SPEEDY_ZOMBIE,2,6), baby(InvEntities.SPEEDY_ZOMBIE,3,10),
+                baby(InvEntities.HUSK,1,3), baby(InvEntities.HUSK,2,5), baby(InvEntities.HUSK,3,9),
+                baby(InvEntities.DROWNED,1,2), baby(InvEntities.DROWNED,2,4), baby(InvEntities.DROWNED,3,7)));
+        if (FabricLoader.getInstance().isModLoaded("tinyskeletons")) {
+            options.addAll(List.of(
+                    baby(InvEntities.SKELETON,1,3), baby(InvEntities.STRAY,1,4),
+                    baby(InvEntities.BOGGED,1,4), baby(InvEntities.PARCHED,1,4),
+                    baby(InvEntities.WITHER_SKELETON,1,6)));
+        }
         MutantMonstersCompatibility.freeBossTypes().forEach(
                 type -> options.add(o(type, 1, 200)));
         EntityType<? extends Mob> wildfire =
@@ -161,48 +179,84 @@ public final class BudgetWavePlan {
         Option option = ALL.get(random.nextInt(ALL.size()));
         return new EntityConstruct(
                 option.type(), 0, option.tier(), option.flavour(),
-                1.0F, 0, 360);
+                1.0F, option.rules(), 360);
     }
 
     private static final Map<Theme, List<Option>> POOLS = makePools();
     private static Map<Theme, List<Option>> makePools() {
         Map<Theme, List<Option>> pools = new EnumMap<>(Theme.class);
-        pools.put(Theme.SPIDER, filter(InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER));
-        pools.put(Theme.FLYING, filter(InvEntities.PHANTOM, InvEntities.GHAST, InvEntities.BREEZE, InvEntities.BLAZE, InvEntities.WITHER));
-        pools.put(Theme.NETHER, filter(InvEntities.ZOMBIE_PIGMAN, InvEntities.ZOMBIFIED_PIGLIN, InvEntities.PIGMAN_ENGINEER, InvEntities.BLAZE, InvEntities.IMP, InvEntities.GHAST, InvEntities.ZOGLIN, InvEntities.MAGMA_CUBE, InvEntities.WITHER_SKELETON, InvEntities.WITHER));
-        pools.put(Theme.UNDERGROUND, filter(InvEntities.BURROWER, InvEntities.ZOMBIE, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER, InvEntities.SKELETON, InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER, InvEntities.WARDEN, InvEntities.SILVERFISH, InvEntities.SLIME).stream().filter(option -> option.flavour != 2).toList());
-        pools.put(Theme.FAST, filter(InvEntities.SILVERFISH, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.JUMPING_SPIDER, InvEntities.SPEEDY_ZOMBIE, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.PARCHED, InvEntities.PHANTOM));
-        pools.put(Theme.SIEGE, filter(InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER, InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER, InvEntities.ENDERMAN, InvEntities.ZOGLIN, InvEntities.ZOMBIE, InvEntities.BURROWER, InvEntities.ENDERMITE));
-        pools.put(Theme.RANGED, filter(InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED, InvEntities.PARCHED, InvEntities.WITHER_SKELETON, InvEntities.ZOMBIE_PIGMAN, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST, InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.WITHER, InvEntities.WITCH));
+        pools.put(Theme.SPIDER, select(o -> isType(o, InvEntities.SPIDER, InvEntities.CAVE_SPIDER,
+                InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER)));
+        pools.put(Theme.FLYING, select(o -> isType(o, InvEntities.PHANTOM, InvEntities.GHAST,
+                InvEntities.BREEZE, InvEntities.BLAZE, InvEntities.WITHER)));
+        pools.put(Theme.NETHER, select(o -> isType(o, InvEntities.ZOMBIE_PIGMAN,
+                InvEntities.ZOMBIFIED_PIGLIN, InvEntities.PIGMAN_ENGINEER, InvEntities.BLAZE,
+                InvEntities.IMP, InvEntities.GHAST, InvEntities.ZOGLIN, InvEntities.MAGMA_CUBE,
+                InvEntities.WITHER_SKELETON, InvEntities.WITHER) && !isBaby(o)));
+        pools.put(Theme.UNDERGROUND, select(o ->
+                isType(o, InvEntities.BURROWER, InvEntities.ZOMBIE_BUILDER, InvEntities.ZOMBIE_MINER,
+                        InvEntities.SPIDER, InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER,
+                        InvEntities.QUEEN_SPIDER, InvEntities.WARDEN, InvEntities.SILVERFISH, InvEntities.SLIME)
+                || o.type == InvEntities.ZOMBIE && o.flavour == 0
+                || o.type == InvEntities.SKELETON));
+        pools.put(Theme.FAST, select(o ->
+                isType(o, InvEntities.SILVERFISH, InvEntities.BLAZE, InvEntities.BREEZE,
+                        InvEntities.JUMPING_SPIDER, InvEntities.PHANTOM)
+                || o.type == InvEntities.SPEEDY_ZOMBIE && o.tier <= 2
+                || isBaby(o) && o.tier <= 2 && isType(o, InvEntities.ZOMBIE,
+                        InvEntities.HUSK, InvEntities.DROWNED, InvEntities.SPEEDY_ZOMBIE)
+                || isBaby(o) && isType(o, InvEntities.SKELETON, InvEntities.STRAY,
+                        InvEntities.BOGGED, InvEntities.PARCHED)));
+        pools.put(Theme.SIEGE, select(o ->
+                isType(o, InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER,
+                        InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ENDERMAN,
+                        InvEntities.ZOGLIN, InvEntities.BURROWER)
+                || !isBaby(o) && o.type == InvEntities.ZOMBIE
+                        && (o.tier == 1 && o.flavour == 0 || o.flavour == 2)));
+        pools.put(Theme.RANGED, select(o ->
+                isType(o, InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER,
+                        InvEntities.ZOMBIE_PIGMAN) && !isBaby(o)
+                || o.type == InvEntities.ZOMBIE && o.flavour != 2
+                || isType(o, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED,
+                        InvEntities.PARCHED, InvEntities.WITHER_SKELETON)
+                || isType(o, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST,
+                        InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.WITHER, InvEntities.WITCH)
+                || o.type == InvEntities.ZOMBIE && o.flavour == 2));
         EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");
-        EntityType<? extends Mob> creeperMinion = MutantMonstersCompatibility.mobType("creeper_minion");
         EntityType<? extends Mob> mutantZombie = MutantMonstersCompatibility.mobType("mutant_zombie");
         EntityType<? extends Mob> mutantCreeper = MutantMonstersCompatibility.mobType("mutant_creeper");
         EntityType<? extends Mob> mutantSkeleton = MutantMonstersCompatibility.mobType("mutant_skeleton");
         EntityType<? extends Mob> mutantEnderman = MutantMonstersCompatibility.mobType("mutant_enderman");
         EntityType<? extends Mob> wildfire =
                 FriendsAndFoesCompatibility.imWildfireType();
-        pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN
-                && option.type != spiderPig && option.type != creeperMinion
-                && option.type != wildfire).toList());
-        pools.put(Theme.SWARM, ALL.stream().filter(option ->
-                option.type == InvEntities.FAT_ZOMBIE
-                        || option.cost <= 5 && option.type != InvEntities.ENDERMITE
-                                && option.flavour != 2).toList());
-        pools.put(Theme.MIXED, ALL.stream().filter(option -> option.type != InvEntities.WITHER
-                && option.type != InvEntities.WARDEN && option.type != spiderPig
-                && option.type != creeperMinion).toList());
-        pools.put(Theme.RANDOM, pools.get(Theme.MIXED));
-        pools.put(Theme.RANDOMHELL, ALL.stream().filter(option ->
-                option.type != spiderPig && option.type != creeperMinion).toList());
+        pools.put(Theme.ARMORED, select(o -> !isBaby(o) && (
+                isType(o, InvEntities.ZOMBIE, InvEntities.HUSK, InvEntities.DROWNED,
+                        InvEntities.ZOMBIE_VILLAGER, InvEntities.SKELETON, InvEntities.STRAY,
+                        InvEntities.BOGGED, InvEntities.PARCHED, InvEntities.WITHER_SKELETON,
+                        InvEntities.ZOMBIE_PIGMAN, InvEntities.PIGMAN_ENGINEER,
+                        InvEntities.ZOMBIE_BUILDER, InvEntities.GHAST, InvEntities.BLAZE,
+                        InvEntities.CREEPER, InvEntities.ENDERMAN, InvEntities.SPIDER,
+                        InvEntities.CAVE_SPIDER, InvEntities.JUMPING_SPIDER, InvEntities.QUEEN_SPIDER))));
+        pools.put(Theme.SWARM, select(o ->
+                !isBaby(o) && (o.tier == 1 && isType(o, InvEntities.ZOMBIE, InvEntities.HUSK,
+                        InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.ZOMBIE_PIGMAN,
+                        InvEntities.ZOMBIFIED_PIGLIN)
+                        || isType(o, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED,
+                                InvEntities.PARCHED, InvEntities.SPIDER, InvEntities.PIGMAN_ENGINEER,
+                                InvEntities.ZOMBIE_BUILDER, InvEntities.SILVERFISH,
+                                InvEntities.WITCH, InvEntities.FAT_ZOMBIE))
+                || isBaby(o) && o.tier == 1 && isType(o, InvEntities.ZOMBIE, InvEntities.HUSK,
+                        InvEntities.DROWNED, InvEntities.SKELETON, InvEntities.STRAY,
+                        InvEntities.BOGGED, InvEntities.PARCHED)));
+        pools.put(Theme.MIXED, ALL);
+        pools.put(Theme.RANDOM, ALL);
+        pools.put(Theme.RANDOMHELL, ALL);
         addToPool(pools, Theme.FAST, spiderPig);
         addToPool(pools, Theme.SPIDER, spiderPig);
-        addToPool(pools, Theme.UNDERGROUND, creeperMinion);
         addToPool(pools, Theme.UNDERGROUND, mutantZombie);
         addToPool(pools, Theme.UNDERGROUND, mutantCreeper);
         addToPool(pools, Theme.UNDERGROUND, mutantSkeleton);
         addToPool(pools, Theme.UNDERGROUND, mutantEnderman);
-        addToPool(pools, Theme.SIEGE, creeperMinion);
         addToPool(pools, Theme.RANGED, mutantSkeleton);
         addToPool(pools, Theme.FLYING, wildfire);
         addToPool(pools, Theme.NETHER, wildfire);
@@ -218,8 +272,20 @@ public final class BudgetWavePlan {
         pools.put(theme, List.copyOf(updated));
     }
 
-    @SafeVarargs private static List<Option> filter(EntityType<? extends Mob>... types) {
-        return ALL.stream().filter(o -> java.util.Arrays.asList(types).contains(o.type)).toList();
+    private static List<Option> select(Predicate<Option> predicate) {
+        return ALL.stream().filter(predicate).toList();
+    }
+
+    @SafeVarargs
+    private static boolean isType(Option option, EntityType<? extends Mob>... types) {
+        for (EntityType<? extends Mob> type : types) {
+            if (option.type == type) return true;
+        }
+        return false;
+    }
+
+    private static boolean isBaby(Option option) {
+        return (option.rules & RULE_BABY) != 0;
     }
 
     private final int wave;
@@ -272,34 +338,32 @@ public final class BudgetWavePlan {
         }
         while (remaining-- > 0) purchases.add(new Purchase(InvEntities.ZOMBIE, 1, 1, rollRules(theme, wave, random)));
         while (purchases.size() < wave * 5) purchases.add(new Purchase(InvEntities.ZOMBIE, 1, 0, rollRules(theme, wave, random)));
-		if (index == 0 && hasFreeEngineer(theme)) {
-			purchases.add(new Purchase(InvEntities.PIGMAN_ENGINEER, 1, 0, rollRules(theme, wave, random)));
-		}
+        purchases.add(rollVariant(o(InvEntities.PIGMAN_ENGINEER, 1, 5),
+                wave, theme, random, 0));
         if (wave >= 15 && wave % 5 == 0 && index == phaseCount - 1) {
             List<EntityType<? extends Mob>> bosses = new ArrayList<>(
                     List.of(InvEntities.WITHER, InvEntities.WARDEN));
             bosses.addAll(MutantMonstersCompatibility.freeBossTypes());
+            EntityType<? extends Mob> wildfire = FriendsAndFoesCompatibility.imWildfireType();
+            if (wildfire != null) bosses.add(wildfire);
             EntityType<? extends Mob> boss = bosses.get(random.nextInt(bosses.size()));
             purchases.add(new Purchase(boss, 1, 0, rollRules(theme, wave, random)));
         }
         return new Phase(theme, List.copyOf(purchases));
     }
 
-	private static boolean hasFreeEngineer(Theme theme) {
-		return switch (theme) {
-			case SWARM, ARMORED, UNDERGROUND, NETHER, SIEGE, FAST, MIXED, RANDOM, RANDOMHELL -> true;
-			default -> false;
-		};
-	}
-
     private static int effectiveCost(Theme theme, Option option) {
-        if (MutantMonstersCompatibility.isMutant(option.type)
-                || theme == Theme.RANDOM
-                        && option.type == FriendsAndFoesCompatibility.imWildfireType()) {
+        if (theme == Theme.RANDOM && isBoss(option.type)) {
             return option.cost;
         }
-        if (theme == Theme.RANDOMHELL) return option.cost >= 100 ? 20 : 5;
+        if (theme == Theme.RANDOMHELL) return isBoss(option.type) ? 20 : 5;
         return theme == Theme.RANDOM ? 5 : option.cost;
+    }
+
+    private static boolean isBoss(EntityType<? extends Mob> type) {
+        return type == InvEntities.WITHER || type == InvEntities.WARDEN
+                || MutantMonstersCompatibility.freeBossTypes().contains(type)
+                || type == FriendsAndFoesCompatibility.imWildfireType();
     }
 
 	private static List<Team> teams(Theme theme) {
@@ -361,8 +425,9 @@ public final class BudgetWavePlan {
 
     private static Purchase rollVariant(Option base, int wave, Theme theme, RandomSource random, int cost) {
         EntityType<? extends Mob> type = base.type;
-        int variantChance = Math.min(50, 3 + wave);
-        if (type == InvEntities.ZOMBIE && base.flavour != 3
+        int variantChance = Math.min(50, 5 + wave);
+        int rules = rollRules(theme, wave, random) | base.rules;
+        if (type == InvEntities.ZOMBIE && base.flavour == 0
                 && random.nextInt(100) < variantChance) {
             List<EntityType<? extends Mob>> variants = List.of(InvEntities.HUSK, InvEntities.DROWNED, InvEntities.ZOMBIE_VILLAGER, InvEntities.SPEEDY_ZOMBIE);
             type = variants.get(random.nextInt(variants.size()));
@@ -370,16 +435,14 @@ public final class BudgetWavePlan {
             List<EntityType<? extends Mob>> variants = List.of(InvEntities.STRAY, InvEntities.BOGGED, InvEntities.PARCHED, InvEntities.WITHER_SKELETON);
             type = variants.get(random.nextInt(variants.size()));
         } else if (type == InvEntities.CREEPER && base.tier == 1 && random.nextInt(100) < Math.min(100, wave)) {
-            return new Purchase(type, 2, cost, rollRules(theme, wave, random));
+            return new Purchase(type, 2, base.flavour, cost, rules);
         } else if (type == InvEntities.ZOMBIE_PIGMAN && random.nextInt(5) == 0) {
             type = InvEntities.ZOMBIFIED_PIGLIN;
+        } else if (type == InvEntities.PIGMAN_ENGINEER
+                && random.nextInt(100) < Math.min(100, 1 + wave)) {
+            type = random.nextBoolean() ? InvEntities.ZOMBIE_MINER : InvEntities.ZOMBIE_BUILDER;
         }
-        // Tiny Skeletons are deliberately only considered when the optional mod is present.
-        if (type == InvEntities.SKELETON && FabricLoader.getInstance().isModLoaded("tinyskeletons")) {
-            // The compatibility entity is selected by its own integration; preserving this roll in the plan is future-proof.
-            random.nextInt(100);
-        }
-        return new Purchase(type, base.tier, base.flavour, cost, rollRules(theme, wave, random));
+        return new Purchase(type, base.tier, base.flavour, cost, rules);
     }
 
     public int wave() { return wave; }

@@ -669,7 +669,7 @@ public class Nexus implements ControllableNexusAccess {
                     if (waveDelayTimer == -1L) {
                         boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_CHIME);
                         waveDelayTimer = 0L;
-						waveDelay = singlePhaseInvasion ? 0 : 60 * 1000;
+						waveDelay = 2 * 60 * 1000;
                         InvasionMod.LOGGER.debug("Next wave begins in: {}ticks", waveDelay);
                     } else {
                         waveDelayTimer += elapsed;
