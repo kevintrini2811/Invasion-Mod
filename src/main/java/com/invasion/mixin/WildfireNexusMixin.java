@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.invasion.compat.WildfireNexusGoal;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
@@ -14,6 +15,8 @@ import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -31,6 +34,15 @@ public abstract class WildfireNexusMixin extends Monster
     @Inject(method = "registerGoals", at = @At("TAIL"))
     private void invmod$registerNexusGoal(CallbackInfo ci) {
         goalSelector.addGoal(0, new WildfireNexusGoal(this, this));
+    }
+
+    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
+    private void invmod$preventFriendlyShieldRetaliation(
+            ServerLevel level, DamageSource source, float amount,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (source.getEntity() instanceof Combatant<?>) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
