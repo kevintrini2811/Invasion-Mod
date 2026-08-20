@@ -54,4 +54,14 @@ public final class FriendsAndFoesCompatibility {
     public static boolean isAnyWildfire(EntityType<?> type) {
         return type == imWildfireType() || isOriginalWildfire(type);
     }
+
+    public static boolean isTargetableIllager(EntityType<?> type) {
+        if (!isLoaded()) return false;
+        Identifier id = net.minecraft.core.registries.BuiltInRegistries
+                .ENTITY_TYPE.getKey(type);
+        return id != null
+                && MOD_ID.equals(id.getNamespace())
+                && ("iceologer".equals(id.getPath())
+                        || "illusioner".equals(id.getPath()));
+    }
 }
