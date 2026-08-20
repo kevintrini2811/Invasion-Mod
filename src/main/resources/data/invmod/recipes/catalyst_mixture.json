@@ -6,16 +6,16 @@
       "item": "minecraft:bowl"
     },
     {
-      "item": "minecraft:coal"
+      "item": "minecraft:redstone"
     },
     {
       "item": "minecraft:bone"
     },
     {
-      "item": "minecraft:bone"
+      "item": "minecraft:rotten_flesh"
     }
   ],
   "result": {
-    "id": "invmod:stable_catalyst_mixture"
+    "item": "invmod:catalyst_mixture"
   }
 }

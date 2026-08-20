@@ -3,15 +3,16 @@
   "category": "misc",
   "key": {
     "X": {
-      "item": "minecraft:iron_ingot"
+      "item": "invmod:rift_flux"
     }
   },
   "pattern": [
-    " X",
-    "XX",
-    "XX"
+    "X",
+    " ",
+    "X"
   ],
   "result": {
-    "id": "invmod:nexus_adjuster"
+    "item": "minecraft:blue_dye",
+    "count": 12
   }
 }

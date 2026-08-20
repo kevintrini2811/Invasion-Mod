@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "invmod:rift_flux"
+    },
+    {
+      "item": "invmod:rift_flux"
+    },
+    {
+      "item": "invmod:rift_flux"
+    },
+    {
+      "item": "minecraft:diamond_sword"
+    }
+  ],
+  "result": {
+    "item": "invmod:infused_sword"
+  }
+}

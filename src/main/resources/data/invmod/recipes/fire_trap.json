@@ -6,10 +6,10 @@
       "item": "invmod:empty_trap"
     },
     {
-      "item": "invmod:rift_flux"
+      "item": "minecraft:lava_bucket"
     }
   ],
   "result": {
-    "id": "invmod:rift_trap"
+    "item": "invmod:flame_trap"
   }
 }

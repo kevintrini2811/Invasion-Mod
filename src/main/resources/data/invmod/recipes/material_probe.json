@@ -3,16 +3,16 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "invmod:rift_flux"
+      "item": "minecraft:blaze_rod"
     },
     {
-      "item": "minecraft:lapis_lazuli"
+      "item": "invmod:nexus_adjuster"
     },
     {
-      "item": "minecraft:lapis_lazuli"
+      "item": "invmod:phase_crystal"
     }
   ],
   "result": {
-    "id": "invmod:damping_agent"
+    "item": "invmod:material_probe"
   }
 }

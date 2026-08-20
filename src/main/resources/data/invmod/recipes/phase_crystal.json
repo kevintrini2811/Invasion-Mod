@@ -2,22 +2,27 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "X": {
-      "item": "invmod:phase_crystal"
-    },
+    "X": [
+      {
+        "item": "minecraft:lapis_lazuli"
+      },
+      {
+        "item": "minecraft:blue_dye"
+      }
+    ],
     "#": {
       "item": "minecraft:redstone"
     },
     "D": {
-      "item": "minecraft:obsidian"
+      "item": "minecraft:diamond"
     }
   },
   "pattern": [
     " X ",
     "#D#",
-    " # "
+    " X "
   ],
   "result": {
-    "id": "invmod:nexus_core"
+    "item": "invmod:phase_crystal"
   }
 }

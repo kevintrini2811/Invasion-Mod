@@ -3,15 +3,15 @@
   "category": "misc",
   "key": {
     "X": {
-      "item": "invmod:small_remnants"
+      "item": "invmod:rift_flux"
     }
   },
   "pattern": [
-    "XXX",
-    "XXX",
-    "XXX"
+    " X ",
+    "X X",
+    " X "
   ],
   "result": {
-    "id": "invmod:rift_flux"
+    "item": "minecraft:diamond"
   }
 }

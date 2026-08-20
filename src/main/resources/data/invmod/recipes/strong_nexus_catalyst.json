@@ -3,13 +3,13 @@
   "category": "misc",
   "ingredients": [
     {
-      "item": "invmod:empty_trap"
+      "item": "invmod:nexus_catalyst"
     },
     {
-      "item": "minecraft:lava_bucket"
+      "item": "invmod:phase_crystal"
     }
   ],
   "result": {
-    "id": "invmod:flame_trap"
+    "item": "invmod:strong_nexus_catalyst"
   }
 }

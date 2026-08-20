@@ -3,14 +3,15 @@
   "category": "misc",
   "key": {
     "X": {
-      "item": "invmod:rift_flux"
+      "item": "invmod:small_remnants"
     }
   },
   "pattern": [
-    "X X"
+    "XXX",
+    "XXX",
+    "XXX"
   ],
   "result": {
-    "id": "minecraft:redstone",
-    "count": 24
+    "item": "invmod:rift_flux"
   }
 }

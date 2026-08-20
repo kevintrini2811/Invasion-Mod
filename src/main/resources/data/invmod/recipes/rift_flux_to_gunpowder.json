@@ -10,18 +10,10 @@
     },
     {
       "item": "invmod:rift_flux"
-    },
-    {
-      "item": "invmod:rift_flux"
-    },
-    {
-      "item": "invmod:rift_flux"
-    },
-    {
-      "item": "minecraft:bow"
     }
   ],
   "result": {
-    "id": "invmod:searing_bow"
+    "item": "minecraft:gunpowder",
+    "count": 16
   }
 }

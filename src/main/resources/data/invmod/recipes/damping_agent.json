@@ -6,13 +6,13 @@
       "item": "invmod:rift_flux"
     },
     {
-      "item": "invmod:rift_flux"
+      "item": "minecraft:lapis_lazuli"
     },
     {
-      "item": "minecraft:bone"
+      "item": "minecraft:lapis_lazuli"
     }
   ],
   "result": {
-    "id": "invmod:strange_bone"
+    "item": "invmod:damping_agent"
   }
 }
