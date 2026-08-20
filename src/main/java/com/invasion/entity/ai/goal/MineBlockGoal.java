@@ -30,6 +30,9 @@ import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 
 public class MineBlockGoal extends Goal {
     private static final int FAILURES_BEFORE_REPATH = 3;
+    private static final int STALLED_UPWARD_CHECKS_BEFORE_MINING = 3;
+    private static final double UPWARD_PROGRESS_TOLERANCE = 0.1D;
+    private static final double UPWARD_NODE_HORIZONTAL_RANGE_SQR = 2.25D;
     private static final Set<PathfinderMob> ACTIVE_MINERS =
             Collections.newSetFromMap(new WeakHashMap<>());
     private static final Set<PathfinderMob> RECOVERY_REQUESTS =
@@ -45,6 +48,10 @@ public class MineBlockGoal extends Goal {
     @Nullable
     private BlockPos lastFailedBlock;
     private int consecutiveFailures;
+    @Nullable
+    private Double lastUpwardProbeY;
+    private int stalledUpwardChecks;
+    private boolean clearingStalledUpwardPath;
 
     public MineBlockGoal(PathfinderMob mob) {
         this.mob = mob;
@@ -54,10 +61,16 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return ((net.minecraft.server.level.ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)
-                && !navigation.isDone()
-                && mob.tickCount % 5 == 0
-                && mob.pick(1, 1, false).getType() == Type.BLOCK;
+        if (!((net.minecraft.server.level.ServerLevel) mob.level())
+                .getGameRules().get(GameRules.MOB_GRIEFING)
+                || navigation.isDone()
+                || mob.tickCount % 5 != 0) {
+            return false;
+        }
+
+        clearingStalledUpwardPath = isStalledBelowUpwardNode();
+        return clearingStalledUpwardPath
+                || mob.pick(1, 1, false).getType() == Type.BLOCK;
     }
 
     @Override
@@ -69,17 +82,17 @@ public class MineBlockGoal extends Goal {
     public void start() {
         breakProgress = 0;
         breakingBlockPos.clear();
-        if (canUse()) {
-            mob.playSound(InvSounds.ENTITY_SCRAPE,
-                    (float)mob.getRandom().triangle(0.5F, 0.5F),
-                    (float)mob.getRandom().triangle(mob.getVoicePitch(), 0.2F)
-            );
-            addClearRegion(navigation.getPath().getNextNodePos());
-            navigation.stop();
-            if (!breakingBlockPos.isEmpty()) {
-                ACTIVE_MINERS.add(mob);
-            }
+        mob.playSound(InvSounds.ENTITY_SCRAPE,
+                (float)mob.getRandom().triangle(0.5F, 0.5F),
+                (float)mob.getRandom().triangle(mob.getVoicePitch(), 0.2F)
+        );
+        addClearRegion(navigation.getPath().getNextNodePos(),
+                clearingStalledUpwardPath);
+        navigation.stop();
+        if (!breakingBlockPos.isEmpty()) {
+            ACTIVE_MINERS.add(mob);
         }
+        clearingStalledUpwardPath = false;
     }
 
     public static boolean isMining(PathfinderMob mob) {
@@ -219,14 +232,41 @@ public class MineBlockGoal extends Goal {
         return multiplier / hardness / speed;
     }
 
-    private void addClearRegion(BlockPos center) {
+    private boolean isStalledBelowUpwardNode() {
+        BlockPos nextNode = navigation.getPath().getNextNodePos();
+        double horizontalDistanceSqr = Mth.square(
+                mob.getX() - (nextNode.getX() + 0.5D))
+                + Mth.square(mob.getZ() - (nextNode.getZ() + 0.5D));
+        if (nextNode.getY() <= mob.blockPosition().getY()
+                || horizontalDistanceSqr > UPWARD_NODE_HORIZONTAL_RANGE_SQR) {
+            lastUpwardProbeY = null;
+            stalledUpwardChecks = 0;
+            return false;
+        }
+
+        double currentY = mob.getY();
+        if (lastUpwardProbeY == null
+                || currentY - lastUpwardProbeY > UPWARD_PROGRESS_TOLERANCE) {
+            lastUpwardProbeY = currentY;
+            stalledUpwardChecks = 0;
+            return false;
+        }
+        lastUpwardProbeY = Math.max(lastUpwardProbeY, currentY);
+        return ++stalledUpwardChecks >= STALLED_UPWARD_CHECKS_BEFORE_MINING;
+    }
+
+    private void addClearRegion(BlockPos center, boolean useNodeHeight) {
+        int feetY = useNodeHeight
+                ? Math.max(center.getY(), mob.blockPosition().getY())
+                : mob.blockPosition().getY();
         var bounds = mob.getDimensions(mob.getPose()).makeBoundingBox(
                 com.invasion.util.math.PosUtils.bottomCenter(new BlockPos(
-                        center.getX(), mob.blockPosition().getY(), center.getZ())));
+                        center.getX(), feetY, center.getZ())));
         for (BlockPos mutablePos : BlockPos.betweenClosed(
                 Mth.floor(bounds.minX), Mth.floor(bounds.minY),
-                Mth.floor(bounds.minZ), Mth.floor(bounds.maxX),
-                Mth.floor(bounds.maxY), Mth.floor(bounds.maxZ))) {
+                Mth.floor(bounds.minZ), Mth.floor(bounds.maxX - 1.0E-6D),
+                Mth.floor(bounds.maxY - 1.0E-6D),
+                Mth.floor(bounds.maxZ - 1.0E-6D))) {
             BlockState state = mob.level().getBlockState(mutablePos);
             if (!IMLandPathNodeMaker.canMineBlock(mob, mutablePos)
                     && !state.is(InvBlocks.NEXUS_CORE)) {
