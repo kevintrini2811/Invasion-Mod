@@ -21,12 +21,20 @@ import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.context.UseOnContext;
 
 public final class InvasionSpawnEggItem extends SpawnEggItem {
-    private final EntityType<? extends Mob> entityType;
+    private final Supplier<? extends EntityType<? extends Mob>> entityType;
     private final CompoundTag variantData;
 
     public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
             int primaryColor, int secondaryColor) {
         super(entityType, primaryColor, secondaryColor, properties);
+        this.entityType = () -> entityType;
+        this.variantData = null;
+    }
+
+    public InvasionSpawnEggItem(Properties properties,
+            Supplier<? extends EntityType<? extends Mob>> entityType,
+            int primaryColor, int secondaryColor) {
+        super(null, primaryColor, secondaryColor, properties);
         this.entityType = entityType;
         this.variantData = null;
     }
@@ -34,18 +42,18 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
     public InvasionSpawnEggItem(Properties properties, EntityType<? extends Mob> entityType,
             int primaryColor, int secondaryColor, CompoundTag variantData) {
         super(entityType, primaryColor, secondaryColor, properties);
-        this.entityType = entityType;
+        this.entityType = () -> entityType;
         this.variantData = variantData.copy();
     }
 
     @Override
     public EntityType<?> getType(CompoundTag tag) {
-        return entityType;
+        return entityType.get();
     }
 
     @Override
     public FeatureFlagSet requiredFeatures() {
-        return entityType.requiredFeatures();
+        return entityType.get().requiredFeatures();
     }
 
     @Override
@@ -71,13 +79,15 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
 
         Set<Integer> existingEntities = new HashSet<>();
         serverLevel.getEntitiesOfClass(Mob.class, player.getBoundingBox().inflate(16),
-                mob -> mob.getType() == entityType).forEach(mob -> existingEntities.add(mob.getId()));
+                mob -> mob.getType() == entityType.get())
+                .forEach(mob -> existingEntities.add(mob.getId()));
 
         InteractionResult result = spawnAction.get();
 
         List<Mob> spawnedEntities = serverLevel.getEntitiesOfClass(Mob.class,
                 player.getBoundingBox().inflate(16),
-                mob -> mob.getType() == entityType && !existingEntities.contains(mob.getId()));
+                mob -> mob.getType() == entityType.get()
+                        && !existingEntities.contains(mob.getId()));
         spawnedEntities.forEach(this::applyEntityData);
 
         WorldNexusStorage.of(serverLevel).getNexus()
@@ -94,7 +104,7 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
     }
 
     public boolean appliesTo(Mob mob) {
-        return mob.getType() == entityType;
+        return mob.getType() == entityType.get();
     }
 
     public void applyEntityData(Mob mob) {

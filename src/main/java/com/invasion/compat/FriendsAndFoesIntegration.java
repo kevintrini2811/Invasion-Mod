@@ -37,7 +37,8 @@ public final class FriendsAndFoesIntegration {
         IM_WILDFIRE_SPAWN_EGG = InvasionMod.INSTANCE.register(
                 Registries.ITEM, id,
                 new InvasionSpawnEggItem(
-                        new Item.Properties(), WILDFIRE, 0xF4B41B, 0x6B3514));
+                        new Item.Properties(), () -> WILDFIRE,
+                        0x6C3100, 0xFFD528));
         InvItems.REGISTRY.add(IM_WILDFIRE_SPAWN_EGG);
         InvItems.SPAWN_EGGS.add(IM_WILDFIRE_SPAWN_EGG);
     }
