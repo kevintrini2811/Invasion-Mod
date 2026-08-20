@@ -10,6 +10,7 @@ import java.util.WeakHashMap;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
@@ -21,7 +22,6 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 public final class NexusBoundMobLifecycle {
     private static final int MAX_DEATHS_PER_TICK = 10;
     private static final int MAX_STATIONARY_TICKS = 20 * 10;
-    private static final double STATIONARY_TOLERANCE_SQR = 0.2D * 0.2D;
     private static final Map<ServerLevel, CleanupQueue> CLEANUP_QUEUES =
             new WeakHashMap<>();
     private static final Map<LivingEntity, StationaryState> STATIONARY_STATES =
@@ -68,16 +68,25 @@ public final class NexusBoundMobLifecycle {
         if (!(living instanceof Mob mob)
                 || living instanceof StationaryPathRecoveryExcluded
                 || mob.getTarget() != null
-                || mob.getNavigation().isDone()) {
+                || living instanceof NexusEntity nexusMob
+                        && nexusMob.getNavigatorNew().isWaitingForTask()) {
             STATIONARY_STATES.remove(living);
             return;
         }
 
         StationaryState state = STATIONARY_STATES.computeIfAbsent(
-                living, ignored -> new StationaryState(living.position()));
-        if (living.position().distanceToSqr(state.anchor)
-                > STATIONARY_TOLERANCE_SQR) {
-            state.anchor = living.position();
+                living, ignored -> new StationaryState(living.blockPosition()));
+        if (state.recoveryTarget != null
+                && (mob.getNavigation().isDone()
+                        || living.blockPosition().closerThan(
+                                state.recoveryTarget, 2.0D))) {
+            state.recoveryTarget = null;
+            state.anchor = living.blockPosition();
+            state.ticks = 0;
+            return;
+        }
+        if (!living.blockPosition().equals(state.anchor)) {
+            state.anchor = living.blockPosition();
             state.ticks = 0;
             return;
         }
@@ -85,12 +94,18 @@ public final class NexusBoundMobLifecycle {
             return;
         }
 
-        state.anchor = living.position();
+        state.anchor = living.blockPosition();
         state.ticks = 0;
-        findAlternativePath(mob, nexus);
+        state.recoveryTarget = findAlternativePath(mob, nexus);
     }
 
-    private static void findAlternativePath(Mob mob, NexusAccess nexus) {
+    /** True while the normal Nexus goal must leave a recovery detour intact. */
+    public static boolean isFollowingRecoveryPath(Mob mob) {
+        StationaryState state = STATIONARY_STATES.get(mob);
+        return state != null && state.recoveryTarget != null;
+    }
+
+    private static BlockPos findAlternativePath(Mob mob, NexusAccess nexus) {
         Vec3 origin = mob.position();
         Vec3 nexusDirection = Vec3.atCenterOf(nexus.getOrigin())
                 .subtract(origin).multiply(1.0D, 0.0D, 1.0D).normalize();
@@ -106,17 +121,17 @@ public final class NexusBoundMobLifecycle {
             double forwardDistance = 2.0D + mob.getRandom().nextDouble() * 5.0D;
             Vec3 detour = origin.add(nexusDirection.scale(forwardDistance))
                     .add(sideways.scale(sideDistance));
-            var path = mob.getNavigation().createPath(
-                    net.minecraft.core.BlockPos.containing(detour), 1);
-            if (path != null && path.canReach()
-                    && mob.getNavigation().moveTo(path, 1.0D)) {
-                return;
+            BlockPos detourPos = BlockPos.containing(detour);
+            var path = mob.getNavigation().createPath(detourPos, 1);
+            if (path != null && mob.getNavigation().moveTo(path, 1.0D)) {
+                return detourPos;
             }
         }
         var directPath = mob.getNavigation().createPath(nexus.getOrigin(), 1);
         if (directPath != null) {
             mob.getNavigation().moveTo(directPath, 1.0D);
         }
+        return null;
     }
 
     private static void enqueue(
@@ -196,10 +211,11 @@ public final class NexusBoundMobLifecycle {
     }
 
     private static final class StationaryState {
-        private Vec3 anchor;
+        private BlockPos anchor;
+        private BlockPos recoveryTarget;
         private int ticks;
 
-        private StationaryState(Vec3 anchor) {
+        private StationaryState(BlockPos anchor) {
             this.anchor = anchor;
         }
     }
