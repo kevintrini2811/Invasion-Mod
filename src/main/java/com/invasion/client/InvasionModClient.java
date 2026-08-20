@@ -24,6 +24,7 @@ public class InvasionModClient implements ClientModInitializer {
                 (handler, client) -> NexusHud.update(com.invasion.network.NexusHudPayload.hidden()));
         NexusHud.bootstrap();
         InvRenderers.bootstrap();
+        com.invasion.compat.FriendsAndFoesCompatibility.registerRenderer();
         if (MutantMonstersCompatibility.isLoaded()) {
             MutantMonstersRenderers.bootstrap();
         }

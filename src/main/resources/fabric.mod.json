@@ -45,6 +45,7 @@
     "modmenu": "*",
     "jei": "*",
     "tinyskeletons": "*",
-    "mutantmonsters": "*"
+    "mutantmonsters": "*",
+    "friendsandfoes": ">=4.0.26"
   }
 }

@@ -9,7 +9,8 @@
       "NonCombatTargetMixin",
       "PathNodeMixin",
       "PhantomAccessor",
-      "SpawnProxyEntityMixin"
+      "SpawnProxyEntityMixin",
+      "WildfireNexusMixin"
     ],
     "client": [
       "AgeableMobRendererAccessor"

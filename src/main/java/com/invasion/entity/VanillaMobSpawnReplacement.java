@@ -134,7 +134,15 @@ public final class VanillaMobSpawnReplacement {
         EntityType<? extends Mob> mutantReplacement =
                 com.invasion.compat.MutantMonstersCompatibility
                         .replacementFor(mob.getType());
-        if (mutantReplacement != null) {
+        EntityType<? extends Mob> wildfireReplacement =
+                com.invasion.compat.FriendsAndFoesCompatibility
+                        .isOriginalWildfire(mob.getType())
+                                ? com.invasion.compat.FriendsAndFoesCompatibility
+                                        .imWildfireType()
+                                : null;
+        if (wildfireReplacement != null) {
+            convertMutant(mob, wildfireReplacement, nexus);
+        } else if (mutantReplacement != null) {
             convertMutant(mob, mutantReplacement, nexus);
         } else if (isTinySkeleton(typeId, "baby_skeleton")) {
             convert(mob, InvEntities.SKELETON, nexus);
@@ -211,6 +219,8 @@ public final class VanillaMobSpawnReplacement {
         Identifier typeId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         return com.invasion.compat.MutantMonstersCompatibility
                         .replacementFor(type) != null
+                || com.invasion.compat.FriendsAndFoesCompatibility
+                        .isOriginalWildfire(type)
                 || isTinySkeleton(typeId, "baby_skeleton")
                 || isTinySkeleton(typeId, "baby_bogged")
                 || isTinySkeleton(typeId, "baby_parched")
