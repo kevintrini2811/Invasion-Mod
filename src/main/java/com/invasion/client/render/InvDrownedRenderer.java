@@ -33,16 +33,16 @@ public final class InvDrownedRenderer extends HumanoidMobRenderer<
                 new BabyDrownedModel(
                         context.bakeLayer(ModelLayers.DROWNED_BABY)),
                 0.5F);
-        ArmorModelSet<HumanoidModel<ZombieRenderState>> adultArmor =
+        ArmorModelSet<DrownedModel> adultArmor =
                 ArmorModelSet.bake(
                         ModelLayers.DROWNED_ARMOR,
                         context.getModelSet(),
-                        HumanoidModel::new);
-        ArmorModelSet<HumanoidModel<ZombieRenderState>> babyArmor =
+                        DrownedModel::new);
+        ArmorModelSet<DrownedModel> babyArmor =
                 ArmorModelSet.bake(
                         ModelLayers.DROWNED_BABY_ARMOR,
                         context.getModelSet(),
-                        HumanoidModel::new);
+                        BabyDrownedModel::new);
         addLayer(new HumanoidArmorLayer<>(
                 this, adultArmor, babyArmor,
                 context.getEquipmentRenderer()));
