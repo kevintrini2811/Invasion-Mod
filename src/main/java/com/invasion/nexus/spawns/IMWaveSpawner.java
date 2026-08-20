@@ -336,7 +336,7 @@ public class IMWaveSpawner implements Spawner {
                     (ServerLevel) nexus.getWorld(), mob)) {
                 successfulSpawns++;
 
-                equipWitherSkeletonWeapon(mob);
+				equipWitherSkeletonWeapon(mob, spawnConstruct);
                 applyBabyVariant(mob, spawnConstruct);
                 markAsInvasionAlly(mob);
                 if (debugMode) {
@@ -609,13 +609,14 @@ public class IMWaveSpawner implements Spawner {
 		return construct;
 	}
 
-	private void equipWitherSkeletonWeapon(Mob mob) {
+	private void equipWitherSkeletonWeapon(Mob mob, EntityConstruct construct) {
 		if (!(mob instanceof IMWitherSkeletonEntity)) {
 			return;
 		}
-		List<Item> weaponPool = getRandom().nextBoolean()
-				? randomMeleeWaveWeapons
-				: randomRangedWaveWeapons;
+		boolean ranged = (construct.rules() & BudgetWavePlan.RULE_RANGED) != 0;
+		List<Item> weaponPool = ranged ? randomRangedWaveWeapons
+				: getRandom().nextBoolean() ? randomMeleeWaveWeapons
+						: randomRangedWaveWeapons;
 		if (weaponPool.isEmpty()) {
 			weaponPool = randomWaveWeapons;
 		}
@@ -662,20 +663,20 @@ public class IMWaveSpawner implements Spawner {
 		if (!(mob instanceof EntityIMZombie
 				|| mob instanceof EntityIMZombiePigman
 				|| mob instanceof IMZombifiedPiglinEntity
-				|| mob instanceof ImpEnitty)
-				|| !mob.getMainHandItem().isEmpty()) {
+				|| mob instanceof ImpEnitty)) {
 			return;
 		}
 
 		boolean planned = (construct.rules() & BudgetWavePlan.RULE_PLANNED) != 0;
+		boolean ranged = (construct.rules() & BudgetWavePlan.RULE_RANGED) != 0;
+		if (!ranged && !mob.getMainHandItem().isEmpty()) return;
 		int chancePercent = (construct.rules() & (BudgetWavePlan.RULE_RANGED | BudgetWavePlan.RULE_WEAPON)) != 0
 				? 100 : planned ? 0 : nexus.getRandomEquipmentChancePercent();
 		if (getRandom().nextInt(100) >= chancePercent) {
 			return;
 		}
 
-		List<Item> weaponPool = (construct.rules() & BudgetWavePlan.RULE_RANGED) != 0
-				? randomRangedWaveWeapons : randomWaveWeapons;
+		List<Item> weaponPool = ranged ? randomRangedWaveWeapons : randomWaveWeapons;
 		if (weaponPool.isEmpty()) {
 			return;
 		}
