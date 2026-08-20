@@ -146,8 +146,6 @@ public final class BudgetWavePlan {
                 FriendsAndFoesCompatibility.imWildfireType();
         if (wildfire != null) options.add(o(wildfire, 1, 200));
         EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");
-        EntityType<? extends Mob> wildfire =
-                FriendsAndFoesCompatibility.imWildfireType();
         EntityType<? extends Mob> minion = MutantMonstersCompatibility.mobType("creeper_minion");
         if (spiderPig != null) options.add(o(spiderPig, 1, 25));
         if (minion != null) options.add(o(minion, 1, 5));
@@ -277,7 +275,10 @@ public final class BudgetWavePlan {
 	}
 
     private static int effectiveCost(Theme theme, Option option) {
-        if (MutantMonstersCompatibility.isMutant(option.type)) return option.cost;
+        if (MutantMonstersCompatibility.isMutant(option.type)
+                || option.type == FriendsAndFoesCompatibility.imWildfireType()) {
+            return option.cost;
+        }
         if (theme == Theme.RANDOMHELL) return option.cost >= 100 ? 20 : 5;
         return theme == Theme.RANDOM ? 5 : option.cost;
     }
