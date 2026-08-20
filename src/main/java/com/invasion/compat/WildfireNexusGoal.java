@@ -4,11 +4,11 @@ import java.util.EnumSet;
 import org.jetbrains.annotations.Nullable;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
+import com.faboslav.friendsandfoes.common.entity.WildfireShieldDebrisEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -47,10 +47,17 @@ public final class WildfireNexusGoal extends Goal {
         if (cooldown-- > 0) return;
         Vec3 shot = shotTarget(target, nexus.getOrigin());
         if (shot == null || mob.distanceToSqr(shot) > 1024.0D) return;
-        SmallFireball fireball = new SmallFireball(mob.level(), mob,
-                shot.subtract(mob.getX(), mob.getY(0.5D), mob.getZ()).normalize());
-        fireball.setPos(mob.getX(), mob.getY(0.5D) + 0.5D, mob.getZ());
-        mob.level().addFreshEntity(fireball);
+        Vec3 direction = shot.subtract(mob.getX(), mob.getY(0.5D), mob.getZ());
+        double spread = Math.sqrt(Math.sqrt(direction.lengthSqr())) * 0.5D;
+        for (int i = 0; i < 8; i++) {
+            WildfireShieldDebrisEntity debris =
+                    new WildfireShieldDebrisEntity(mob.level(), mob, new Vec3(
+                            mob.getRandom().triangle(direction.x, 2.297D * spread),
+                            direction.y,
+                            mob.getRandom().triangle(direction.z, 2.297D * spread)));
+            debris.setPos(debris.getX(), mob.getY(0.5D) + 0.5D, debris.getZ());
+            mob.level().addFreshEntity(debris);
+        }
         mob.level().levelEvent(null, 1018, mob.blockPosition(), 0);
         cooldown = 60;
     }
