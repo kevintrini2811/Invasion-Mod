@@ -6,6 +6,7 @@ import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.ClipContext;
@@ -28,7 +29,10 @@ public final class WildfireNexusGoal extends Goal {
 
     @Override public boolean canUse() {
         NexusAccess nexus = combatant.getNexus();
-        return nexus != null && nexus.isActive() && mob.getTarget() == null;
+        return nexus != null && nexus.isActive()
+                && mob.getTarget() == null
+                && !mob.getBrain().hasMemoryValue(MemoryModuleType.ATTACK_TARGET)
+                && !mob.getBrain().hasMemoryValue(MemoryModuleType.AVOID_TARGET);
     }
     @Override public boolean canContinueToUse() { return canUse(); }
     @Override public boolean requiresUpdateEveryTick() { return true; }
