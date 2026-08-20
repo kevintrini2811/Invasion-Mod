@@ -559,9 +559,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         BlockPos platformCenter = towerBase.above(3);
 
-        // Phase 1: clear two full blocks of headroom over the entire 3x3
-        // platform. This also clears the ladder exit before the engineer
-        // starts climbing toward it.
+        // Phase 1: clear two full blocks of headroom before placing any
+        // ladders, so the engineer cannot climb into an unfinished exit.
         for (int clearanceHeight = 1; clearanceHeight <= 2;
                 clearanceHeight++) {
             for (int x = -1; x <= 1; x++) {
@@ -632,6 +631,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private void stopHorizontalMovementForTower() {
+        getNavigation().stop();
         var movement = getDeltaMovement();
         setXxa(0);
         setZza(0);
