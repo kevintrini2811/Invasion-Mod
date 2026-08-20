@@ -6,12 +6,12 @@ import java.util.WeakHashMap;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
+import com.faboslav.friendsandfoes.common.entity.WildfireShieldDebrisEntity;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
@@ -24,19 +24,19 @@ final class WildfireNexusHandler {
     }
 
     static void onProjectileImpact(ProjectileImpactEvent event) {
-        if (!(event.getProjectile() instanceof SmallFireball fireball)
-                || !(fireball.getOwner() instanceof Combatant<?> combatant)
+        if (!(event.getProjectile() instanceof WildfireShieldDebrisEntity debris)
+                || !(debris.getOwner() instanceof Combatant<?> combatant)
                 || !FriendsAndFoesCompatibility.isAnyWildfire(
-                        fireball.getOwner().getType())
+                        debris.getOwner().getType())
                 || !(event.getRayTraceResult() instanceof BlockHitResult hit)) {
             return;
         }
         NexusAccess nexus = combatant.getNexus();
         if (nexus != null && hit.getBlockPos().equals(nexus.getOrigin())) {
-            nexus.damage(fireball.damageSources().fireball(
-                    fireball, fireball.getOwner()), 2);
+            nexus.damage(debris.damageSources().fireball(
+                    debris, debris.getOwner()), 5);
             event.setCanceled(true);
-            fireball.discard();
+            debris.discard();
         }
     }
 
