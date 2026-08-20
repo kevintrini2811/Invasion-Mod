@@ -3,7 +3,7 @@ package com.invasion.compat;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
 
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.phys.BlockHitResult;
 import net.neoforged.neoforge.event.entity.ProjectileImpactEvent;
 

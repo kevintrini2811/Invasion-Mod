@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.invasion.InvasionMod;
 
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.neoforged.fml.ModList;
@@ -45,9 +45,9 @@ public final class FriendsAndFoesCompatibility {
 
     public static boolean isOriginalWildfire(EntityType<?> type) {
         if (!isLoaded()) return false;
-        Identifier id = net.minecraft.core.registries.BuiltInRegistries
+        ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries
                 .ENTITY_TYPE.getKey(type);
-        return id != null && id.equals(Identifier.fromNamespaceAndPath(
+        return id != null && id.equals(ResourceLocation.fromNamespaceAndPath(
                 MOD_ID, "wildfire"));
     }
 
@@ -57,7 +57,7 @@ public final class FriendsAndFoesCompatibility {
 
     public static boolean isTargetableIllager(EntityType<?> type) {
         if (!isLoaded()) return false;
-        Identifier id = net.minecraft.core.registries.BuiltInRegistries
+        ResourceLocation id = net.minecraft.core.registries.BuiltInRegistries
                 .ENTITY_TYPE.getKey(type);
         return id != null
                 && MOD_ID.equals(id.getNamespace())

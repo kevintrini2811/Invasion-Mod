@@ -8,7 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.projectile.hurtingprojectile.SmallFireball;
+import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -80,7 +80,7 @@ public final class WildfireNexusGoal extends Goal {
                 || hit.getBlockPos().equals(nexusPos)) return target.add(0, 2, 0);
         BlockPos wall = hit.getBlockPos();
         for (int y = Math.max(wall.getY() + 1, mob.blockPosition().getY());
-                y < mob.level().getMaxY() - 1; y++) {
+                y < mob.level().getMaxBuildHeight() - 1; y++) {
             BlockPos lower = new BlockPos(wall.getX(), y, wall.getZ());
             if (mob.level().getBlockState(lower).getCollisionShape(
                             mob.level(), lower).isEmpty()

@@ -17,11 +17,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
 
 @Pseudo
 @Mixin(targets = "com.faboslav.friendsandfoes.common.entity.WildfireEntity")
@@ -35,7 +33,7 @@ public abstract class WildfireNexusMixin extends Monster
     }
 
     @Inject(method = "customServerAiStep", at = @At("TAIL"))
-    private void invmod$tickNexusGoal(ServerLevel level, CallbackInfo ci) {
+    private void invmod$tickNexusGoal(CallbackInfo ci) {
         invmod$synchronizeAttackTarget();
         if (invmod$nexusGoal == null) {
             invmod$nexusGoal = new WildfireNexusGoal(this, this);
@@ -76,9 +74,9 @@ public abstract class WildfireNexusMixin extends Monster
                 && canAttack(target);
     }
 
-    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
     private void invmod$preventFriendlyShieldRetaliation(
-            ServerLevel level, DamageSource source, float amount,
+            DamageSource source, float amount,
             CallbackInfoReturnable<Boolean> cir) {
         if (source.getEntity() instanceof Combatant<?>) {
             cir.setReturnValue(false);
@@ -86,12 +84,12 @@ public abstract class WildfireNexusMixin extends Monster
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    private void invmod$writeNexus(ValueOutput output, CallbackInfo ci) {
+    private void invmod$writeNexus(CompoundTag output, CallbackInfo ci) {
         getNexusHandle().writeNbt(output);
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
-    private void invmod$readNexus(ValueInput input, CallbackInfo ci) {
+    private void invmod$readNexus(CompoundTag input, CallbackInfo ci) {
         getNexusHandle().readNbt(input);
     }
 
