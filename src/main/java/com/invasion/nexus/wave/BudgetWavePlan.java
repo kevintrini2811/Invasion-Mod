@@ -2,6 +2,7 @@ package com.invasion.nexus.wave;
 
 import com.invasion.entity.InvEntities;
 import com.invasion.compat.MutantMonstersCompatibility;
+import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.nexus.EntityConstruct;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -141,7 +142,12 @@ public final class BudgetWavePlan {
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5)));
         MutantMonstersCompatibility.freeBossTypes().forEach(type -> options.add(o(type, 1, 200)));
+        EntityType<? extends Mob> wildfire =
+                FriendsAndFoesCompatibility.imWildfireType();
+        if (wildfire != null) options.add(o(wildfire, 1, 200));
         EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");
+        EntityType<? extends Mob> wildfire =
+                FriendsAndFoesCompatibility.imWildfireType();
         EntityType<? extends Mob> minion = MutantMonstersCompatibility.mobType("creeper_minion");
         if (spiderPig != null) options.add(o(spiderPig, 1, 25));
         if (minion != null) options.add(o(minion, 1, 5));
@@ -180,6 +186,8 @@ public final class BudgetWavePlan {
         pools.put(Theme.MIXED, ALL.stream().filter(option -> option.type != InvEntities.WITHER && option.type != InvEntities.WARDEN && option.type != spiderPig && option.type != minion).toList());
         pools.put(Theme.RANDOM, pools.get(Theme.MIXED));
         pools.put(Theme.RANDOMHELL, ALL.stream().filter(o -> o.type != spiderPig && o.type != minion).toList());
+        addToPool(pools, Theme.FLYING, wildfire);
+        addToPool(pools, Theme.NETHER, wildfire);
         addToPool(pools, Theme.FAST, spiderPig); addToPool(pools, Theme.SPIDER, spiderPig);
         addToPool(pools, Theme.UNDERGROUND, minion); addToPool(pools, Theme.SIEGE, minion);
         addToPool(pools, Theme.UNDERGROUND, mz); addToPool(pools, Theme.UNDERGROUND, mc);

@@ -61,6 +61,7 @@ public final class InvasionModClient {
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         InvRenderers.register(event);
+        com.invasion.compat.FriendsAndFoesCompatibility.registerRenderer(event);
         if (MutantMonstersCompatibility.isLoaded()) MutantMonstersRenderers.register(event);
     }
 

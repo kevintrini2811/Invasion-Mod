@@ -5,6 +5,7 @@ import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.compat.InfernalMobsCompatibility;
 import com.invasion.compat.MutantMonstersCompatibility;
+import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
@@ -132,10 +133,12 @@ public class InvasionMod {
         } else if (event.getRegistryKey() == Registries.ENTITY_TYPE) {
             InvEntities.bootstrap();
             MutantMonstersCompatibility.bootstrapEntities();
+            FriendsAndFoesCompatibility.registerEntity();
         } else if (event.getRegistryKey() == Registries.MOB_EFFECT) {
             InvMobEffects.bootstrap();
         } else if (event.getRegistryKey() == Registries.ITEM) {
             InvItems.bootstrap();
+            FriendsAndFoesCompatibility.registerItem();
         } else if (event.getRegistryKey() == Registries.BLOCK_ENTITY_TYPE) {
             com.invasion.block.InvBlockEntities.bootstrap();
         } else if (event.getRegistryKey() == Registries.SOUND_EVENT) {
@@ -152,6 +155,7 @@ public class InvasionMod {
     private void registerAttributes(EntityAttributeCreationEvent event) {
         InvEntities.registerAttributes(event);
         MutantMonstersCompatibility.registerAttributes(event);
+        FriendsAndFoesCompatibility.registerAttributes(event);
     }
 
     private void addCreativeItems(BuildCreativeModeTabContentsEvent event) {
