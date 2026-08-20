@@ -38,8 +38,13 @@ public final class InvasionModClient {
     private static void registerItemColors(
             RegisterColorHandlersEvent.Item event) {
         event.register(
-                (stack, tintIndex) -> FastColor.ARGB32.opaque(
-                        ((SpawnEggItem) stack.getItem()).getColor(tintIndex)),
+                (stack, tintIndex) -> com.invasion.compat
+                        .FriendsAndFoesCompatibility
+                        .hasFixedWildfireEggTexture(stack.getItem())
+                                ? 0xFFFFFFFF
+                                : FastColor.ARGB32.opaque(
+                                        ((SpawnEggItem) stack.getItem())
+                                                .getColor(tintIndex)),
                 InvItems.SPAWN_EGGS.toArray(Item[]::new));
     }
 
