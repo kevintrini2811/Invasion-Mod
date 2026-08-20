@@ -74,7 +74,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         return true;
     }
 
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 4.5F);
+    // Reaches the far upper corner of a 3x3 tower platform while the
+    // engineer remains at the ladder base during construction.
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 6.0F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private boolean buildingTower;
     private int towerBuildCooldown;
