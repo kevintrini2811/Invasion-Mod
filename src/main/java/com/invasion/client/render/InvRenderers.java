@@ -29,6 +29,7 @@ public final class InvRenderers {
     }
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
+        com.invasion.compat.FriendsAndFoesCompatibility.registerRenderer(event);
         if (com.invasion.compat.MutantMonstersCompatibility.isLoaded()) {
             com.invasion.compat.MutantMonstersRenderers.register(event);
         }

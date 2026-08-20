@@ -222,6 +222,8 @@
     "invmod.message.bone.debugfailed": "Der Nexus konnte nicht im Debug-Modus aktiviert werden.",
 
     "entity.invmod.blaze": "IM Blaze",
+    "entity.invmod.wildfire": "IM Wildfire",
+    "item.invmod.wildfire_spawn_egg": "IM Wildfire-Spawn-Ei",
     "item.invmod.blaze_spawn_egg": "IM Blaze-Spawn-Ei",
     "entity.invmod.breeze": "IM Breeze",
     "item.invmod.breeze_spawn_egg": "IM Breeze-Spawn-Ei",

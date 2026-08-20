@@ -63,6 +63,8 @@ neoForge {
 dependencies {
     compileOnly "mezz.jei:jei-${project.minecraft_version}-neoforge-api:${project.jei_version}"
     compileOnly "maven.modrinth:mutant-monsters:26.2.1"
+    compileOnly "maven.modrinth:BOCJKD49:neoforge-4.0.27+mc26.2"
+    compileOnly "maven.modrinth:G1hIVOrD:5.0.3"
 }
 
 processResources {

@@ -16,6 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.neoforged.fml.ModList;
 import com.invasion.compat.MutantMonstersCompatibility;
+import com.invasion.compat.FriendsAndFoesCompatibility;
 
 /** A complete, persistent purchase plan for one invasion wave. */
 public final class BudgetWavePlan {
@@ -143,6 +144,9 @@ public final class BudgetWavePlan {
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5)));
         MutantMonstersCompatibility.freeBossTypes().forEach(
                 type -> options.add(o(type, 1, 200)));
+        EntityType<? extends Mob> wildfire =
+                FriendsAndFoesCompatibility.imWildfireType();
+        if (wildfire != null) options.add(o(wildfire, 1, 200));
         EntityType<? extends Mob> spiderPig =
                 MutantMonstersCompatibility.mobType("spider_pig");
         EntityType<? extends Mob> creeperMinion =
@@ -176,8 +180,11 @@ public final class BudgetWavePlan {
         EntityType<? extends Mob> mutantCreeper = MutantMonstersCompatibility.mobType("mutant_creeper");
         EntityType<? extends Mob> mutantSkeleton = MutantMonstersCompatibility.mobType("mutant_skeleton");
         EntityType<? extends Mob> mutantEnderman = MutantMonstersCompatibility.mobType("mutant_enderman");
+        EntityType<? extends Mob> wildfire =
+                FriendsAndFoesCompatibility.imWildfireType();
         pools.put(Theme.ARMORED, ALL.stream().filter(option -> option.type != InvEntities.WARDEN
-                && option.type != spiderPig && option.type != creeperMinion).toList());
+                && option.type != spiderPig && option.type != creeperMinion
+                && option.type != wildfire).toList());
         pools.put(Theme.SWARM, ALL.stream().filter(option ->
                 option.type == InvEntities.FAT_ZOMBIE
                         || option.cost <= 5 && option.type != InvEntities.ENDERMITE
@@ -197,6 +204,8 @@ public final class BudgetWavePlan {
         addToPool(pools, Theme.UNDERGROUND, mutantEnderman);
         addToPool(pools, Theme.SIEGE, creeperMinion);
         addToPool(pools, Theme.RANGED, mutantSkeleton);
+        addToPool(pools, Theme.FLYING, wildfire);
+        addToPool(pools, Theme.NETHER, wildfire);
         return pools;
     }
 

@@ -6,7 +6,8 @@
     "mixins": [
       "EntityMixin",
       "PathNodeMixin",
-      "PhantomAccessor"
+      "PhantomAccessor",
+      "WildfireNexusMixin"
     ],
     "client": [
       "AgeableMobRendererAccessor"
