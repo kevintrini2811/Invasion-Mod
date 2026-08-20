@@ -10,6 +10,7 @@ import java.util.WeakHashMap;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.entity.ai.goal.MineBlockGoal;
+import com.invasion.entity.pathfinding.Navigation;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -81,8 +82,7 @@ public final class NexusBoundMobLifecycle {
         }
         if ((mob instanceof PathfinderMob pathfinderMob
                         && MineBlockGoal.isMining(pathfinderMob))
-                || (living instanceof NexusEntity nexusMob
-                        && nexusMob.getNavigatorNew().isWaitingForTask())) {
+                || isWaitingForTerrainTask(living)) {
             STATIONARY_STATES.remove(living);
             return;
         }
@@ -108,6 +108,14 @@ public final class NexusBoundMobLifecycle {
         state.anchor = living.blockPosition();
         state.ticks = 0;
         state.recoveryTarget = findAlternativePath(mob, nexus);
+    }
+
+    private static boolean isWaitingForTerrainTask(LivingEntity living) {
+        if (!(living instanceof NexusEntity nexusMob)) {
+            return false;
+        }
+        Navigation navigation = nexusMob.getNavigatorNew();
+        return navigation != null && navigation.isWaitingForTask();
     }
 
     /** True while the normal Nexus goal must leave a recovery detour intact. */
