@@ -82,6 +82,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private int towerBuildCooldown;
     private int towerInterruptedTicks;
     private BlockPos towerBuildPosition;
+    private BlockPos towerPlatformCenter;
 
 
 
@@ -414,35 +415,56 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         buildingTower = true;
         towerInterruptedTicks = 0;
         towerBuildPosition = basePos;
+        towerPlatformCenter = towerBase.above(3);
         boolean accepted = terrainModifier.requestTask(
                 entries,
-                status -> {
-                    buildingTower = false;
-                    towerInterruptedTicks = 0;
-                    towerBuildPosition = null;
-                    towerBuildCooldown = status == Notifiable.Status.SUCCESS
-                            ? 20
-                            : 80;
-                    if (status == Notifiable.Status.SUCCESS
-                            && getNavigation()
-                                    instanceof BuilderIMMobNavigation navigation) {
-                        navigation.resumeAfterTowerBuild();
-                    }
-                },
-                status -> {
-                    ModifyBlockEntry entry = terrainModifier.getLastBlockModified();
-                    if (status == Notifiable.Status.SUCCESS
-                            && entry != null
-                            && entry.newBlock().isAir()) {
-                        onBlockRemoved(entry.pos(), entry.getOldBlock());
-                    }
-                });
+                this::verifyTowerClearanceAfterBuild,
+                this::onTowerBlockChanged);
         if (!accepted) {
             buildingTower = false;
             towerInterruptedTicks = 0;
             towerBuildPosition = null;
+            towerPlatformCenter = null;
         }
         return accepted;
+    }
+
+    private void verifyTowerClearanceAfterBuild(Notifiable.Status status) {
+        if (status == Notifiable.Status.SUCCESS
+                && towerPlatformCenter != null) {
+            List<ModifyBlockEntry> clearance = createTowerClearancePlan(
+                    towerPlatformCenter);
+            if (!clearance.isEmpty()
+                    && terrainModifier.requestTask(
+                            clearance,
+                            this::verifyTowerClearanceAfterBuild,
+                            this::onTowerBlockChanged)) {
+                return;
+            }
+        }
+        finishTowerBuild(status);
+    }
+
+    private void finishTowerBuild(Notifiable.Status status) {
+        buildingTower = false;
+        towerInterruptedTicks = 0;
+        towerBuildPosition = null;
+        towerPlatformCenter = null;
+        towerBuildCooldown = status == Notifiable.Status.SUCCESS ? 20 : 80;
+        if (status == Notifiable.Status.SUCCESS
+                && getNavigation()
+                        instanceof BuilderIMMobNavigation navigation) {
+            navigation.resumeAfterTowerBuild();
+        }
+    }
+
+    private void onTowerBlockChanged(Notifiable.Status status) {
+        ModifyBlockEntry entry = terrainModifier.getLastBlockModified();
+        if (status == Notifiable.Status.SUCCESS
+                && entry != null
+                && entry.newBlock().isAir()) {
+            onBlockRemoved(entry.pos(), entry.getOldBlock());
+        }
     }
 
     private boolean isStandingOnSolidGround() {
@@ -564,20 +586,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         // Phase 1: clear two full blocks of headroom before placing any
         // ladders, so the engineer cannot climb into an unfinished exit.
-        for (int clearanceHeight = 1; clearanceHeight <= 2;
-                clearanceHeight++) {
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    BlockPos clearancePos = platformCenter.offset(
-                            x, clearanceHeight, z);
-                    if (!level().getBlockState(clearancePos).isAir()) {
-                        entries.add(ModifyBlockEntry.ofDeletion(
-                                clearancePos,
-                                (int) getBlockRemovalCost(clearancePos)));
-                    }
-                }
-            }
-        }
+        entries.addAll(createTowerClearancePlan(platformCenter));
 
         // Phase 2: three solid support blocks, accepting existing full blocks.
         for (int height = 0; height < 3; height++) {
@@ -622,6 +631,26 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                         && level().getBlockState(platformPos).canBeReplaced()) {
                     entries.add(new ModifyBlockEntry(
                             platformPos, planks, TOWER_PLANK_BUILD_TIME));
+                }
+            }
+        }
+        return entries;
+    }
+
+    private List<ModifyBlockEntry> createTowerClearancePlan(
+            BlockPos platformCenter) {
+        List<ModifyBlockEntry> entries = new ArrayList<>(18);
+        for (int clearanceHeight = 1; clearanceHeight <= 2;
+                clearanceHeight++) {
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos clearancePos = platformCenter.offset(
+                            x, clearanceHeight, z);
+                    if (!level().getBlockState(clearancePos).isAir()) {
+                        entries.add(ModifyBlockEntry.ofDeletion(
+                                clearancePos,
+                                (int) getBlockRemovalCost(clearancePos)));
+                    }
                 }
             }
         }
