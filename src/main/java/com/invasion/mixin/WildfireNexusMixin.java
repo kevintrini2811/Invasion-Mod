@@ -26,14 +26,22 @@ import net.minecraft.world.level.storage.ValueOutput;
 public abstract class WildfireNexusMixin extends Monster
         implements Combatant<Monster>, EntityConstruct.BuildableMob {
     @Unique private IHasNexus.Handle invmod$nexus;
+    @Unique private WildfireNexusGoal invmod$nexusGoal;
 
     protected WildfireNexusMixin(EntityType<? extends Monster> type, Level level) {
         super(type, level);
     }
 
-    @Inject(method = "registerGoals", at = @At("TAIL"))
-    private void invmod$registerNexusGoal(CallbackInfo ci) {
-        goalSelector.addGoal(0, new WildfireNexusGoal(this, this));
+    @Inject(method = "customServerAiStep", at = @At("TAIL"))
+    private void invmod$tickNexusGoal(ServerLevel level, CallbackInfo ci) {
+        if (invmod$nexusGoal == null) {
+            invmod$nexusGoal = new WildfireNexusGoal(this, this);
+        }
+        if (invmod$nexusGoal.canUse()) {
+            invmod$nexusGoal.tick();
+        } else {
+            invmod$nexusGoal.stop();
+        }
     }
 
     @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
