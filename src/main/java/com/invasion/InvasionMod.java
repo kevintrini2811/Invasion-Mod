@@ -11,6 +11,8 @@ import com.invasion.entity.IronGolemTargetHandler;
 import com.invasion.entity.PlayerAllyTargetHandler;
 import com.invasion.util.ChatUtils;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -20,6 +22,9 @@ import net.fabricmc.fabric.api.loot.v3.LootTableSource;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.projectile.Projectile;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +101,27 @@ public class InvasionMod implements ModInitializer {
                 ServerPlayNetworking.send(player, NexusHudPayload.hidden());
             }
             WorldNexusStorage.of(destination).onPlayerJoined(player);
+        });
+        EntitySleepEvents.ALLOW_SLEEPING.register((player, sleepingPos) -> {
+            if (SERVER == null || java.util.stream.StreamSupport.stream(
+                    SERVER.getAllLevels().spliterator(), false)
+                    .noneMatch(level -> WorldNexusStorage.of(level).hasStableNexus())) {
+                return null;
+            }
+            player.sendSystemMessage(net.minecraft.network.chat.Component
+                    .translatable("invmod.message.nexus.sleep_blocked")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+            return net.minecraft.world.entity.player.Player.BedSleepingProblem.OTHER_PROBLEM;
+        });
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (!(entity instanceof Mob)
+                    || !(damageSource.getEntity() instanceof ServerPlayer)
+                    || SERVER == null) {
+                return;
+            }
+            boolean ranged = damageSource.getDirectEntity() instanceof Projectile;
+            SERVER.getAllLevels().forEach(level ->
+                    WorldNexusStorage.of(level).recordPlayerMobKill(ranged));
         });
         InvBlocks.bootstrap();
         InvItems.bootstrap();
