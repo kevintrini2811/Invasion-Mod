@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.nexus.Combatant;
 
 import net.minecraft.server.level.ServerLevel;
@@ -121,7 +122,9 @@ public final class IMCivilianTargetHandler {
                 || entity instanceof Vindicator
                 || entity instanceof Evoker
                 || entity instanceof Ravager
-                || entity instanceof Vex;
+                || entity instanceof Vex
+                || FriendsAndFoesCompatibility.isTargetableIllager(
+                        entity.getType());
     }
 
     private static long chunkKey(int x, int z) {
