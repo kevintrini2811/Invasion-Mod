@@ -293,7 +293,8 @@ public final class BudgetWavePlan {
 	}
 
     private static int effectiveCost(Theme theme, Option option) {
-        if (MutantMonstersCompatibility.isMutant(option.type)) {
+        if (MutantMonstersCompatibility.isMutant(option.type)
+                || option.type == FriendsAndFoesCompatibility.imWildfireType()) {
             return option.cost;
         }
         if (theme == Theme.RANDOMHELL) return option.cost >= 100 ? 20 : 5;
