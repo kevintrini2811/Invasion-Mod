@@ -171,6 +171,7 @@ public class InvasionMod {
     private void registerAttributes(EntityAttributeCreationEvent event) {
         InvEntities.registerAttributes(event);
         MutantMonstersCompatibility.registerAttributes(event);
+        FriendsAndFoesCompatibility.registerAttributes(event);
     }
 
     private void addCreativeItems(BuildCreativeModeTabContentsEvent event) {

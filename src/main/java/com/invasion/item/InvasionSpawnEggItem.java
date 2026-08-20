@@ -17,6 +17,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.item.context.UseOnContext;
 
 public final class InvasionSpawnEggItem extends SpawnEggItem {
@@ -35,6 +36,16 @@ public final class InvasionSpawnEggItem extends SpawnEggItem {
         super(entityType, primaryColor, secondaryColor, properties);
         this.entityType = entityType;
         this.variantData = variantData.copy();
+    }
+
+    @Override
+    public EntityType<?> getType(CompoundTag tag) {
+        return entityType;
+    }
+
+    @Override
+    public FeatureFlagSet requiredFeatures() {
+        return entityType.requiredFeatures();
     }
 
     @Override
