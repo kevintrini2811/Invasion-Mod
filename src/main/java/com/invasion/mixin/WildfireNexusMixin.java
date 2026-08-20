@@ -32,8 +32,9 @@ public abstract class WildfireNexusMixin extends Monster
         super(type, level);
     }
 
-    @Inject(method = "customServerAiStep", at = @At("TAIL"))
+    @Inject(method = "tick", at = @At("TAIL"))
     private void invmod$tickNexusGoal(CallbackInfo ci) {
+        if (level().isClientSide()) return;
         invmod$synchronizeAttackTarget();
         if (invmod$nexusGoal == null) {
             invmod$nexusGoal = new WildfireNexusGoal(this, this);
