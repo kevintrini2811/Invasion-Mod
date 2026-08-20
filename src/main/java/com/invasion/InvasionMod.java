@@ -145,10 +145,12 @@ public class InvasionMod {
             } else if (event.getRegistryKey().equals(Registries.ENTITY_TYPE)) {
                 InvEntities.bootstrap();
                 MutantMonstersCompatibility.bootstrapEntities();
+                FriendsAndFoesCompatibility.registerEntity();
             } else if (event.getRegistryKey().equals(Registries.MOB_EFFECT)) {
                 InvMobEffects.bootstrap();
             } else if (event.getRegistryKey().equals(Registries.ITEM)) {
                 InvItems.bootstrap(event);
+                FriendsAndFoesCompatibility.registerItem();
             } else if (event.getRegistryKey().equals(Registries.BLOCK_ENTITY_TYPE)) {
                 com.invasion.block.InvBlockEntities.bootstrap();
             } else if (event.getRegistryKey().equals(Registries.SOUND_EVENT)) {

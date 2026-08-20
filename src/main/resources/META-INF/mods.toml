@@ -55,6 +55,13 @@ ordering="AFTER"
 side="BOTH"
 
 [[dependencies.invmod]]
+modId="friendsandfoes"
+mandatory=false
+versionRange="[3.0.9,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.invmod]]
 modId="infernalmobs"
 mandatory=false
 versionRange="[1.20.1.11,)"
