@@ -8,9 +8,9 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
-import net.minecraft.world.entity.monster.illager.Evoker;
-import net.minecraft.world.entity.monster.illager.Pillager;
-import net.minecraft.world.entity.monster.illager.Vindicator;
+import net.minecraft.world.entity.monster.Evoker;
+import net.minecraft.world.entity.monster.Pillager;
+import net.minecraft.world.entity.monster.Vindicator;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import com.invasion.nexus.Combatant;
 import net.minecraftforge.common.MinecraftForge;
@@ -80,8 +80,6 @@ public final class VillagerResurrectionHandler {
     private static void transferEquipment(Mob victim, Mob zombie) {
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             zombie.setItemSlot(slot, victim.getItemBySlot(slot).copy());
-            zombie.setDropChance(
-                    slot, victim.getEquipmentDropChance(slot));
             victim.setItemSlot(slot, net.minecraft.world.item.ItemStack.EMPTY);
         }
     }
