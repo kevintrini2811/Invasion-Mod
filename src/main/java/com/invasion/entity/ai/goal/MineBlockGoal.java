@@ -50,6 +50,8 @@ public class MineBlockGoal extends Goal {
     private int consecutiveFailures;
     @Nullable
     private Double lastUpwardProbeY;
+    @Nullable
+    private BlockPos pendingMiningCenter;
     private int stalledUpwardChecks;
     private boolean clearingStalledUpwardPath;
 
@@ -61,6 +63,7 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
+        pendingMiningCenter = null;
         if (!((net.minecraft.server.level.ServerLevel) mob.level())
                 .getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
                 || navigation.isDone()
@@ -68,6 +71,7 @@ public class MineBlockGoal extends Goal {
             return false;
         }
 
+        pendingMiningCenter = navigation.getPath().getNextNodePos();
         clearingStalledUpwardPath = isStalledBelowUpwardNode();
         return clearingStalledUpwardPath
                 || mob.pick(1, 1, false).getType() == Type.BLOCK;
@@ -80,14 +84,18 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public void start() {
+        BlockPos miningCenter = pendingMiningCenter;
+        pendingMiningCenter = null;
+        if (miningCenter == null) {
+            return;
+        }
         breakProgress = 0;
         breakingBlockPos.clear();
         mob.playSound(InvSounds.ENTITY_SCRAPE,
                 (float)mob.getRandom().triangle(0.5F, 0.5F),
                 (float)mob.getRandom().triangle(mob.getVoicePitch(), 0.2F)
         );
-        addClearRegion(navigation.getPath().getNextNodePos(),
-                clearingStalledUpwardPath);
+        addClearRegion(miningCenter, clearingStalledUpwardPath);
         navigation.stop();
         if (!breakingBlockPos.isEmpty()) {
             ACTIVE_MINERS.add(mob);
