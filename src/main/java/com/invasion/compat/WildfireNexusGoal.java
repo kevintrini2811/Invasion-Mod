@@ -47,8 +47,10 @@ public final class WildfireNexusGoal extends Goal {
         if (cooldown-- > 0) return;
         Vec3 shot = shotTarget(target, nexus.getOrigin());
         if (shot == null || mob.distanceToSqr(shot) > 1024.0D) return;
-        SmallFireball fireball = new SmallFireball(mob.level(), mob,
-                shot.subtract(mob.getX(), mob.getY(0.5D), mob.getZ()).normalize());
+        Vec3 direction = shot.subtract(
+                mob.getX(), mob.getY(0.5D), mob.getZ()).normalize();
+        SmallFireball fireball = new SmallFireball(
+                mob.level(), mob, direction.x, direction.y, direction.z);
         fireball.setPos(mob.getX(), mob.getY(0.5D) + 0.5D, mob.getZ());
         mob.level().addFreshEntity(fireball);
         mob.level().levelEvent(null, 1018, mob.blockPosition(), 0);

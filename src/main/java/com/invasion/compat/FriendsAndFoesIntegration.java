@@ -26,7 +26,7 @@ public final class FriendsAndFoesIntegration {
         WILDFIRE = InvasionMod.INSTANCE.register(Registries.ENTITY_TYPE, id,
                 EntityType.Builder.<WildfireEntity>of(
                                 WildfireEntity::new, MobCategory.MONSTER)
-                        .fireImmune().sized(1.1F, 2.8F).eyeHeight(2.3F)
+                        .fireImmune().sized(1.1F, 2.8F)
                         .clientTrackingRange(10).build(id.toString()));
         MinecraftForge.EVENT_BUS.addListener(
                 WildfireNexusHandler::onProjectileImpact);

@@ -5,6 +5,7 @@ import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.compat.InfernalMobsCompatibility;
 import com.invasion.compat.MutantMonstersCompatibility;
+import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
