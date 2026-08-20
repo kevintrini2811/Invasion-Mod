@@ -367,6 +367,12 @@ public final class VanillaMobSpawnReplacement {
         // Remove the original before adding its replacement. convertTo adds the
         // new entity first, which lets both entities coexist in the tracker for
         // part of a tick and can appear as duplicate spawns on the client.
+        // Optional mobs can already implement Combatant through a compatibility
+        // mixin. Clear that temporary binding so their conversion discard is
+        // not interpreted as a vanished wave mob that must be respawned.
+        if (source instanceof Combatant<?> sourceCombatant) {
+            sourceCombatant.setNexus(null);
+        }
         source.discard();
         if (!world.addFreshEntity(converted)) {
             return;
