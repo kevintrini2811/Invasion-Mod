@@ -7,6 +7,7 @@ import com.invasion.InvasionMod;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.Item;
 import net.minecraftforge.fml.ModList;
 
 /** Safe entry point that keeps Friends & Foes classes behind a mod check. */
@@ -52,6 +53,11 @@ public final class FriendsAndFoesCompatibility {
 
     public static boolean isAnyWildfire(EntityType<?> type) {
         return type == imWildfireType() || isOriginalWildfire(type);
+    }
+
+    public static boolean hasFixedWildfireEggTexture(Item item) {
+        return isLoaded() && item == FriendsAndFoesIntegration
+                .IM_WILDFIRE_SPAWN_EGG;
     }
 
     public static boolean isTargetableIllager(EntityType<?> type) {
