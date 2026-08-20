@@ -562,55 +562,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
         BlockPos platformCenter = towerBase.above(3);
 
-        // Phase 1: three solid support blocks, accepting existing full blocks.
-        for (int height = 0; height < 3; height++) {
-            BlockPos supportPos = towerBase.above(height);
-            if (!level().getBlockState(supportPos)
-                    .isCollisionShapeFullBlock(level(), supportPos)) {
-                entries.add(new ModifyBlockEntry(
-                        supportPos, planks, TOWER_PLANK_BUILD_TIME));
-            }
-        }
-
-        // Phase 2: ladders on the side of the column facing the engineer.
-        for (int height = 0; height < 3; height++) {
-            BlockPos ladderPos = ladderBase.above(height);
-            if (!level().getBlockState(ladderPos).is(Blocks.LADDER)) {
-                entries.add(new ModifyBlockEntry(
-                        ladderPos, ladder, TOWER_LADDER_BUILD_TIME));
-            }
-        }
-
-        // Phase 3: build the platform centre first so the exit ladder has
-        // support. Placing the ladder immediately afterwards guarantees that
-        // the climbable column reaches through the platform before the
-        // remaining deck blocks are filled in.
-        BlockPos ladderOpening = ladderBase.above(3);
-        if (level().getBlockState(platformCenter).canBeReplaced()) {
-            entries.add(new ModifyBlockEntry(
-                    platformCenter, planks, TOWER_PLANK_BUILD_TIME));
-        }
-        if (!level().getBlockState(ladderOpening).is(Blocks.LADDER)) {
-            entries.add(new ModifyBlockEntry(
-                    ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
-        }
-
-        // Phase 4: complete the 3x3 platform footprint. The ladder cell stays
-        // open as the only way through the deck.
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos platformPos = platformCenter.offset(x, 0, z);
-                if (!platformPos.equals(platformCenter)
-                        && !platformPos.equals(ladderOpening)
-                        && level().getBlockState(platformPos).canBeReplaced()) {
-                    entries.add(new ModifyBlockEntry(
-                            platformPos, planks, TOWER_PLANK_BUILD_TIME));
-                }
-            }
-        }
-
-        // Phase 5: finish by clearing two full blocks of headroom over the
-        // completed platform, including the ladder exit.
+        // Phase 1: clear two full blocks of headroom before placing any
+        // ladders, so the engineer cannot climb into an unfinished exit.
         for (int clearanceHeight = 1; clearanceHeight <= 2;
                 clearanceHeight++) {
             for (int x = -1; x <= 1; x++) {
@@ -625,6 +578,54 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 }
             }
         }
+
+        // Phase 2: three solid support blocks, accepting existing full blocks.
+        for (int height = 0; height < 3; height++) {
+            BlockPos supportPos = towerBase.above(height);
+            if (!level().getBlockState(supportPos)
+                    .isCollisionShapeFullBlock(level(), supportPos)) {
+                entries.add(new ModifyBlockEntry(
+                        supportPos, planks, TOWER_PLANK_BUILD_TIME));
+            }
+        }
+
+        // Phase 3: ladders on the side of the column facing the engineer.
+        for (int height = 0; height < 3; height++) {
+            BlockPos ladderPos = ladderBase.above(height);
+            if (!level().getBlockState(ladderPos).is(Blocks.LADDER)) {
+                entries.add(new ModifyBlockEntry(
+                        ladderPos, ladder, TOWER_LADDER_BUILD_TIME));
+            }
+        }
+
+        // Phase 4: build the platform centre first so the exit ladder has
+        // support. Placing the ladder immediately afterwards guarantees that
+        // the climbable column reaches through the platform before the
+        // remaining deck blocks are filled in.
+        BlockPos ladderOpening = ladderBase.above(3);
+        if (level().getBlockState(platformCenter).canBeReplaced()) {
+            entries.add(new ModifyBlockEntry(
+                    platformCenter, planks, TOWER_PLANK_BUILD_TIME));
+        }
+        if (!level().getBlockState(ladderOpening).is(Blocks.LADDER)) {
+            entries.add(new ModifyBlockEntry(
+                    ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
+        }
+
+        // Phase 5: complete the 3x3 platform footprint. The ladder cell stays
+        // open as the only way through the deck.
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos platformPos = platformCenter.offset(x, 0, z);
+                if (!platformPos.equals(platformCenter)
+                        && !platformPos.equals(ladderOpening)
+                        && level().getBlockState(platformPos).canBeReplaced()) {
+                    entries.add(new ModifyBlockEntry(
+                            platformPos, planks, TOWER_PLANK_BUILD_TIME));
+                }
+            }
+        }
+
         return entries;
     }
 
@@ -634,6 +635,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private void stopHorizontalMovementForTower() {
+        getNavigation().stop();
         var movement = getDeltaMovement();
         setXxa(0);
         setZza(0);
