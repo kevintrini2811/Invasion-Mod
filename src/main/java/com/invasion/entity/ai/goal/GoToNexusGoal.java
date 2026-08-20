@@ -11,6 +11,7 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.NexusEntity;
+import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.ZombieBuilderEntity;
@@ -98,6 +99,9 @@ public class GoToNexusGoal extends Goal {
 
     @Override
     public void tick() {
+        if (NexusBoundMobLifecycle.isFollowingRecoveryPath(mob)) {
+            return;
+        }
         // Engineers intentionally stop while their terrain modifier builds a
         // path node. Repathing here used to cancel that job and discard the
         // ladder-tower path before the engineer could climb it.

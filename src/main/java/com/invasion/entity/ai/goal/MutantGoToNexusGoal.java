@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.entity.NexusBoundMobLifecycle;
 
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -32,6 +33,9 @@ public final class MutantGoToNexusGoal extends Goal {
 
     @Override
     public void tick() {
+        if (NexusBoundMobLifecycle.isFollowingRecoveryPath(mob)) {
+            return;
+        }
         NexusAccess nexus = boundMob.getNexus();
         if (nexus != null && (--repathCooldown <= 0
                 || mob.getNavigation().isDone())) {
