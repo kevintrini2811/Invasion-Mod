@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.Monster;
@@ -69,6 +70,7 @@ public final class WildfireNexusGoal extends Goal {
                 velocity.x * 0.35D / speed, velocity.y,
                 velocity.z * 0.35D / speed);
         mob.setDeltaMovement(velocity);
+        mob.move(MoverType.SELF, velocity);
     }
 
     private Vec3 flightTarget(Vec3 target, BlockPos nexusPos) {
