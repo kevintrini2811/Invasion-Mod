@@ -9,11 +9,13 @@ import java.util.WeakHashMap;
 
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.entity.ai.goal.MineBlockGoal;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
@@ -68,6 +70,8 @@ public final class NexusBoundMobLifecycle {
         if (!(living instanceof Mob mob)
                 || living instanceof StationaryPathRecoveryExcluded
                 || mob.getTarget() != null
+                || mob instanceof PathfinderMob pathfinderMob
+                        && MineBlockGoal.isMining(pathfinderMob)
                 || living instanceof NexusEntity nexusMob
                         && nexusMob.getNavigatorNew().isWaitingForTask()) {
             STATIONARY_STATES.remove(living);
