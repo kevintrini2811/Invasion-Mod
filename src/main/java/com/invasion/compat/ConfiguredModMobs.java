@@ -34,6 +34,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.Items;
+import com.invasion.entity.SkeletonArrowEntity;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -83,7 +85,10 @@ public final class ConfiguredModMobs {
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
                     boolean active = value.has("active") && value.get("active").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
-                    result.put(id, new Entry(active, cost, readThemes(value)));
+                    boolean invMob = id.getNamespace().equals(InvasionMod.MOD_ID);
+                    boolean armor = value.has("canWearArmor") ? value.get("canWearArmor").getAsBoolean() : invMob;
+                    boolean weapons = value.has("canUseWeapons") ? value.get("canUseWeapons").getAsBoolean() : invMob;
+                    result.put(id, new Entry(active, cost, readThemes(value), armor, weapons));
                 }
             } catch (Exception exception) {
                 InvasionMod.LOGGER.error("Could not read {}; leaving it unchanged", FILE, exception);
@@ -98,9 +103,9 @@ public final class ConfiguredModMobs {
                 .filter(registryEntry -> !isSpecializedOriginal(registryEntry.getKey().identifier()))
                 .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
-                        registryEntry.getKey().identifier(), new Entry(false, 5, DEFAULT_THEMES)));
+                        registryEntry.getKey().identifier(), new Entry(false, 5, DEFAULT_THEMES, false, false)));
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
-                mob.id(), new Entry(true, mob.cost(), mob.themes())));
+                mob.id(), new Entry(true, mob.cost(), mob.themes(), true, true)));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -155,6 +160,8 @@ public final class ConfiguredModMobs {
             JsonObject value = new JsonObject();
             value.addProperty("active", entry.active());
             value.addProperty("cost", entry.cost());
+            value.addProperty("canWearArmor", entry.canWearArmor());
+            value.addProperty("canUseWeapons", entry.canUseWeapons());
             com.google.gson.JsonArray themes = new com.google.gson.JsonArray();
             entry.themes().forEach(themes::add);
             value.add("themes", themes);
@@ -196,6 +203,7 @@ public final class ConfiguredModMobs {
         if (entry == null || !entry.active()
                 || !isExternalMonster(id, mob.getType())) return;
         mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
+        mob.goalSelector.addGoal(2, new RangedAttackNexusGoal(mob));
         mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
         mob.goalSelector.addGoal(4, new GoToNexusGoal(mob));
     }
@@ -225,6 +233,16 @@ public final class ConfiguredModMobs {
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         Entry entry = ENTRIES.get(id);
         return entry != null && entry.active() && isExternalMonster(id, type);
+    }
+
+    public static synchronized boolean allowsArmor(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.canWearArmor();
+    }
+
+    public static synchronized boolean allowsWeapons(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.canUseWeapons();
     }
 
     private static NexusAccess activeNexus(Mob mob) {
@@ -393,6 +411,61 @@ public final class ConfiguredModMobs {
         }
     }
 
+    private static final class RangedAttackNexusGoal extends Goal {
+        private final Mob mob;
+        private NexusAccess nexus;
+        private int cooldown;
+
+        private RangedAttackNexusGoal(Mob mob) {
+            this.mob = mob;
+            setFlags(EnumSet.of(Flag.LOOK));
+        }
+
+        @Override public boolean canUse() {
+            nexus = activeNexus(mob);
+            double distance = nexus == null ? 0 : mob.distanceToSqr(PosUtils.center(nexus.getOrigin()));
+            return nexus != null && (mob.getTarget() == null || !mob.getTarget().isAlive())
+                    && allowsWeapons(mob.getType(), false) && hasRangedWeapon()
+                    && distance > 16 && distance <= 256 && hasClearShot();
+        }
+
+        @Override public boolean canContinueToUse() { return canUse(); }
+        @Override public void start() { cooldown = 0; mob.getNavigation().stop(); }
+
+        @Override public void tick() {
+            var target = PosUtils.center(nexus.getOrigin());
+            mob.getNavigation().stop();
+            mob.getLookControl().setLookAt(target);
+            if (--cooldown <= 0) {
+                SkeletonArrowEntity arrow = new SkeletonArrowEntity(
+                        mob.level(), mob, mob.getMainHandItem());
+                double dx = target.x - mob.getX();
+                double dy = target.y - arrow.getY();
+                double dz = target.z - mob.getZ();
+                double horizontal = Math.sqrt(dx * dx + dz * dz);
+                arrow.shoot(dx, dy + horizontal * 0.2D, dz, 1.1F, 12.0F);
+                mob.level().addFreshEntity(arrow);
+                cooldown = 65;
+            }
+        }
+
+        private boolean hasRangedWeapon() {
+            return mob.getMainHandItem().is(Items.BOW)
+                    || mob.getMainHandItem().is(Items.CROSSBOW)
+                    || mob.getMainHandItem().is(Items.TRIDENT);
+        }
+
+        private boolean hasClearShot() {
+            var target = PosUtils.center(nexus.getOrigin());
+            var hit = mob.level().clip(new net.minecraft.world.level.ClipContext(
+                    mob.getEyePosition(), target,
+                    net.minecraft.world.level.ClipContext.Block.COLLIDER,
+                    net.minecraft.world.level.ClipContext.Fluid.NONE, mob));
+            return hit.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK
+                    && hit.getBlockPos().equals(nexus.getOrigin());
+        }
+    }
+
     private static final class AttackNexusGoal extends Goal {
         private final Mob mob;
         private NexusAccess nexus;
@@ -421,6 +494,7 @@ public final class ConfiguredModMobs {
         }
     }
 
-    private record Entry(boolean active, int cost, List<String> themes) {}
+    private record Entry(boolean active, int cost, List<String> themes,
+            boolean canWearArmor, boolean canUseWeapons) {}
     public record WaveMob(EntityType<? extends Mob> type, int cost) {}
 }

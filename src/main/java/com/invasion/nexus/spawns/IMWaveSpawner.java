@@ -46,6 +46,7 @@ import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.compat.ConfiguredModMobs;
 
 public class IMWaveSpawner implements Spawner {
 	private static final int MAX_SPAWN_TRIES = 20;
@@ -623,7 +624,8 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void equipWitherSkeletonWeapon(Mob mob, EntityConstruct construct) {
-		if (!(mob instanceof IMWitherSkeletonEntity)) {
+		if (!(mob instanceof IMWitherSkeletonEntity)
+				|| !ConfiguredModMobs.allowsWeapons(mob.getType(), true)) {
 			return;
 		}
 		boolean ranged = (construct.rules() & BudgetWavePlan.RULE_RANGED) != 0;
@@ -677,10 +679,11 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	private void equipRandomWaveWeapon(Mob mob, EntityConstruct construct) {
-		if (!(mob instanceof EntityIMZombie
+		boolean normallyUsesWeapons = mob instanceof EntityIMZombie
 				|| mob instanceof EntityIMZombiePigman
 				|| mob instanceof IMZombifiedPiglinEntity
-				|| mob instanceof ImpEnitty)) {
+				|| mob instanceof ImpEnitty;
+		if (!ConfiguredModMobs.allowsWeapons(mob.getType(), normallyUsesWeapons)) {
 			return;
 		}
 
@@ -717,7 +720,7 @@ public class IMWaveSpawner implements Spawner {
 				|| mob instanceof IMEndermanEntity
 				|| mob instanceof IMBlazeEntity
 				|| mob instanceof IMGhastEntity;
-		if (!canWearWaveArmor) {
+		if (!ConfiguredModMobs.allowsArmor(mob.getType(), canWearWaveArmor)) {
 			return;
 		}
 
