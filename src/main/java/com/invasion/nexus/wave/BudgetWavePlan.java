@@ -18,6 +18,7 @@ import net.minecraft.world.entity.Mob;
 import net.fabricmc.loader.api.FabricLoader;
 import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.compat.FriendsAndFoesCompatibility;
+import com.invasion.compat.ConfiguredModMobs;
 
 /** A complete, persistent purchase plan for one invasion wave. */
 public final class BudgetWavePlan {
@@ -315,7 +316,7 @@ public final class BudgetWavePlan {
 		if (bias.swarm) choices.add(Theme.SWARM);
         if (wave >= 20 && wave % 5 == 0 && random.nextBoolean()) choices.add(Theme.RANDOMHELL);
         Theme theme = choices.get(random.nextInt(choices.size()));
-        List<Option> pool = POOLS.get(theme);
+        List<Option> pool = poolFor(theme);
         int budget = wave * 10;
         int remaining = budget;
         List<Purchase> purchases = new ArrayList<>();
@@ -350,6 +351,16 @@ public final class BudgetWavePlan {
             purchases.add(new Purchase(boss, 1, 0, rollRules(theme, wave, random)));
         }
         return new Phase(theme, List.copyOf(purchases));
+    }
+
+    private static List<Option> poolFor(Theme theme) {
+        List<Option> pool = POOLS.get(theme);
+        if (theme != Theme.MIXED && theme != Theme.RANDOM
+                && theme != Theme.RANDOMHELL) return pool;
+        List<Option> expanded = new ArrayList<>(pool);
+        ConfiguredModMobs.activeWaveMobs().forEach(
+                mob -> expanded.add(o(mob.type(), 1, mob.cost())));
+        return List.copyOf(expanded);
     }
 
     private static int effectiveCost(Theme theme, Option option) {

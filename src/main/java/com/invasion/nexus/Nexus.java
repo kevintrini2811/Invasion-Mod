@@ -15,6 +15,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity.RemovalReason;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -528,6 +529,26 @@ public class Nexus implements ControllableNexusAccess {
                 copy.setNexus(this);
                 waveSpawner.askForRespawn(copy);
             }
+        }
+    }
+
+    @Override
+    public void notifyExternalWaveMobKilled(Entity entity) {
+        nexusKills++;
+        boolean belongsToCurrentWave = entity.getPersistentData()
+                .getIntOr("invmodWaveNumber", Integer.MIN_VALUE) == currentWave;
+        if (belongsToCurrentWave) mobsLeftInWave--;
+        if (belongsToCurrentWave && entity.getPersistentData()
+                .getIntOr("invmodWavePhase", Integer.MIN_VALUE) == phaseToken) {
+            phaseKills++;
+            phaseMobsLeft = Math.max(0, phaseMobsLeft - 1);
+            lastPhaseKillTick = world.getGameTime();
+        }
+        storage.setDirty();
+        updateWaveProgressHud();
+        if (belongsToCurrentWave && mobsLeftInWave <= 0 && lastMobsLeftInWave > 0) {
+            boundPlayers.sendMessage(ChatFormatting.GREEN, "invmod.message.nexus.stableagain");
+            lastMobsLeftInWave = mobsLeftInWave;
         }
     }
 

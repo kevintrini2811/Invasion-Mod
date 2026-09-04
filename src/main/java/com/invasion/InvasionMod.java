@@ -3,6 +3,7 @@ package com.invasion;
 import com.invasion.compat.AsyncCompatibility;
 import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.compat.FriendsAndFoesCompatibility;
+import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
@@ -87,6 +88,7 @@ public class InvasionMod implements ModInitializer {
         });
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             SERVER = server;
+            ConfiguredModMobs.refresh();
             AsyncCompatibility.registerSynchronizedEntities();
         });
 
@@ -139,6 +141,7 @@ public class InvasionMod implements ModInitializer {
         IronGolemTargetHandler.bootstrap();
         PlayerAllyTargetHandler.bootstrap();
         InfusedSwordChargeHandler.bootstrap();
+        ConfiguredModMobs.bootstrap();
         InvParticles.bootstrap();
         InvScreenHandlers.bootstrap();
     }
