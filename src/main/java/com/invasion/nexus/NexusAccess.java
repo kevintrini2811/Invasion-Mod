@@ -68,6 +68,8 @@ public interface NexusAccess {
 
 	default int getWavePhaseToken() { return 0; }
 
+    default String getCurrentWaveTheme() { return "LEGACY"; }
+
     default int getMobsLeftInPhase() {
         return getMobsLeftInWave();
     }
