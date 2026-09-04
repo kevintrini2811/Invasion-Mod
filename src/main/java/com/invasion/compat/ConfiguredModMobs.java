@@ -236,6 +236,10 @@ public final class ConfiguredModMobs {
         private int columnZ;
         private int exitY;
         private boolean previousNoGravity;
+        private boolean completedExit;
+        private int completedColumnX;
+        private int completedColumnZ;
+        private int completedExitY;
 
         private ClimbNexusLadderGoal(Mob mob) {
             this.mob = mob;
@@ -246,6 +250,17 @@ public final class ConfiguredModMobs {
             if (activeNexus(mob) == null || mob.getTarget() != null && mob.getTarget().isAlive()) return false;
             BlockPos ladder = targetedLadder();
             if (ladder == null) return false;
+            if (completedExit
+                    && ladder.getX() == completedColumnX
+                    && ladder.getZ() == completedColumnZ
+                    && mob.getY() >= completedExitY - 0.5D) {
+                return false;
+            }
+            if (completedExit && (Math.abs(mob.getX() - (completedColumnX + 0.5D)) > 0.8D
+                    || Math.abs(mob.getZ() - (completedColumnZ + 0.5D)) > 0.8D
+                    || mob.getY() < completedExitY - 0.5D)) {
+                completedExit = false;
+            }
             columnX = ladder.getX();
             columnZ = ladder.getZ();
             exitY = ladder.getY();
@@ -290,6 +305,11 @@ public final class ConfiguredModMobs {
             if (mob.getY() >= exitY - 0.3D) {
                 mob.setPos(columnX + 0.5D, exitY + 0.05D, columnZ + 0.5D);
                 mob.setDeltaMovement(0, 0, 0);
+                completedExit = true;
+                completedColumnX = columnX;
+                completedColumnZ = columnZ;
+                completedExitY = exitY;
+                mob.getNavigation().stop();
             }
             mob.setNoGravity(previousNoGravity);
             mob.fallDistance = 0;
