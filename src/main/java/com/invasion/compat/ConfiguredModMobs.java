@@ -40,11 +40,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import com.invasion.entity.SkeletonArrowEntity;
-import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
 
 /** Configurable, loader-independent support for hostile mobs from other mods. */
 public final class ConfiguredModMobs {
@@ -64,7 +63,7 @@ public final class ConfiguredModMobs {
             new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:verdant",
             new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT));
-    private static final Path FILE = FMLPaths.CONFIGDIR.get()
+    private static final Path FILE = FabricLoader.getInstance().getConfigDir()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Identifier, Entry> ENTRIES = new LinkedHashMap<>();
@@ -74,9 +73,12 @@ public final class ConfiguredModMobs {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityJoin);
-        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onLivingDeath);
-        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityTick);
+        ServerEntityEvents.ENTITY_LOAD.register(ConfiguredModMobs::onEntityJoin);
+        ServerLivingEntityEvents.AFTER_DEATH.register(ConfiguredModMobs::onLivingDeath);
+        ServerTickEvents.END_LEVEL_TICK.register(level ->
+                level.getAllEntities().forEach(entity -> {
+                    if (entity instanceof Mob mob) onEntityTick(mob, level);
+                }));
     }
 
     /** Reloads user choices, then adds newly installed hostile entity types. */
@@ -238,9 +240,8 @@ public final class ConfiguredModMobs {
                 ? legacy.get(legacyKey).getAsBoolean() : fallback;
     }
 
-    private static void onEntityJoin(EntityJoinLevelEvent event) {
-        if (!(event.getLevel() instanceof ServerLevel)
-                || !(event.getEntity() instanceof Mob mob)) return;
+    private static void onEntityJoin(net.minecraft.world.entity.Entity entity, ServerLevel level) {
+        if (!(entity instanceof Mob mob)) return;
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         Entry entry;
         synchronized (ConfiguredModMobs.class) {
@@ -248,16 +249,19 @@ public final class ConfiguredModMobs {
         }
         if (entry == null || !entry.active()
                 || !isExternalMonster(id, mob.getType())) return;
-        mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
-        mob.goalSelector.addGoal(2, new RangedAttackNexusGoal(mob));
-        mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
-        mob.goalSelector.addGoal(4, new GoToNexusGoal(mob));
+        var goals = ((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector();
+        goals.addGoal(1, new AttackNexusGoal(mob));
+        goals.addGoal(2, new RangedAttackNexusGoal(mob));
+        goals.addGoal(3, new ClimbNexusLadderGoal(mob));
+        goals.addGoal(4, new GoToNexusGoal(mob));
     }
 
-    private static void onLivingDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof Mob mob)
+    private static void onLivingDeath(net.minecraft.world.entity.LivingEntity entity,
+            net.minecraft.world.damagesource.DamageSource source) {
+        if (!(entity instanceof Mob mob)
                 || !(mob.level() instanceof ServerLevel level)
-                || !mob.getPersistentData().contains("invmodWaveNumber")) return;
+                || com.invasion.entity.WaveMobData.get(
+                        mob, "invmodWaveNumber", Integer.MIN_VALUE) == Integer.MIN_VALUE) return;
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         synchronized (ConfiguredModMobs.class) {
             Entry entry = ENTRIES.get(id);
@@ -267,10 +271,8 @@ public final class ConfiguredModMobs {
                 nexus -> nexus.notifyExternalWaveMobKilled(mob));
     }
 
-    private static void onEntityTick(EntityTickEvent.Pre event) {
-        if (!(event.getEntity() instanceof Mob mob)
-                || !(mob.level() instanceof ServerLevel level)
-                || !isActive(mob.getType())) return;
+    private static void onEntityTick(Mob mob, ServerLevel level) {
+        if (!isActive(mob.getType())) return;
 
         if (level.getSkyDarken() < 4 && mob.isOnFire()
                 && activeNexus(mob) != null) {

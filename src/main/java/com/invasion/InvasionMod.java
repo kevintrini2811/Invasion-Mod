@@ -50,6 +50,7 @@ import net.fabricmc.loader.api.FabricLoader;
 
 
 public class InvasionMod implements ModInitializer {
+    public static final String MOD_ID = "invmod";
     public static final Logger LOGGER = LoggerFactory.getLogger(InvasionMod.class);
     public static MinecraftServer SERVER;
     private static final InvasionConfig CONFIG = new InvasionConfig();

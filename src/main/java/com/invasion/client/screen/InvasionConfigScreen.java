@@ -23,12 +23,12 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.ChatFormatting;
-import net.neoforged.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 
 /** Widget-based editor exposed through NeoForge's Mods configuration button. */
 public final class InvasionConfigScreen extends Screen {
-    private static final Path CFG = FMLPaths.CONFIGDIR.get().resolve("invasion_config.cfg");
-    private static final Path MOBS = FMLPaths.CONFIGDIR.get().resolve("invasion_mod_mobs.json");
+    private static final Path CFG = FabricLoader.getInstance().getConfigDir().resolve("invasion_config.cfg");
+    private static final Path MOBS = FabricLoader.getInstance().getConfigDir().resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int PAGE_SIZE = 9;
     private static final int MOB_PAGE_SIZE = 5;
