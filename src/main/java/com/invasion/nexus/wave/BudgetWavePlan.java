@@ -355,10 +355,8 @@ public final class BudgetWavePlan {
 
     private static List<Option> poolFor(Theme theme) {
         List<Option> pool = POOLS.get(theme);
-        if (theme != Theme.MIXED && theme != Theme.RANDOM
-                && theme != Theme.RANDOMHELL) return pool;
         List<Option> expanded = new ArrayList<>(pool);
-        ConfiguredModMobs.activeWaveMobs().forEach(
+        ConfiguredModMobs.activeWaveMobs(theme).forEach(
                 mob -> expanded.add(o(mob.type(), 1, mob.cost())));
         return List.copyOf(expanded);
     }
