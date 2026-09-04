@@ -31,6 +31,7 @@ public final class InvasionConfigScreen extends Screen {
     private static final Path MOBS = FMLPaths.CONFIGDIR.get().resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int PAGE_SIZE = 9;
+    private static final int MOB_PAGE_SIZE = 5;
 
     private final Screen parent;
     private final Properties properties = new Properties();
@@ -86,7 +87,8 @@ public final class InvasionConfigScreen extends Screen {
         mobsTab.active = !mobTab;
 
         if (mobTab) addMobRows(left, contentWidth); else addCfgRows(left, contentWidth);
-        int pages = Math.max(1, (keys().size() + PAGE_SIZE - 1) / PAGE_SIZE);
+        int pageSize = mobTab ? MOB_PAGE_SIZE : PAGE_SIZE;
+        int pages = Math.max(1, (keys().size() + pageSize - 1) / pageSize);
         Button previous = addRenderableWidget(Button.builder(Component.literal("<"), button -> {
             page--;
             rebuild();
@@ -140,24 +142,29 @@ public final class InvasionConfigScreen extends Screen {
 
     private void addMobRows(int left, int width) {
         List<String> keys = keys();
-        for (int index = page * PAGE_SIZE; index < Math.min(keys.size(), (page + 1) * PAGE_SIZE); index++) {
+        for (int index = page * MOB_PAGE_SIZE;
+                index < Math.min(keys.size(), (page + 1) * MOB_PAGE_SIZE); index++) {
             String id = keys.get(index);
             JsonObject mob = mobs.getAsJsonObject(id);
-            int y = 56 + index % PAGE_SIZE * 24;
-            labels.add(new Label(id, left, y + 6));
+            int y = 53 + index % MOB_PAGE_SIZE * 40;
+            labels.add(new Label(id, left, y));
+            int controlsY = y + 13;
             boolean active = mob.has("active") && mob.get("active").getAsBoolean();
-            addRenderableWidget(coloredBooleanBuilder(active).displayOnlyValue().create(
-                    left + width - 260, y, 46, 20, Component.literal("active"),
+            addRenderableWidget(coloredBooleanBuilder(active).create(
+                    left, controlsY, 100, 20, Component.translatable("invmod.config.active"),
                     (button, selected) -> mob.addProperty("active", selected)));
             boolean armor = mob.has("canWearArmor") && mob.get("canWearArmor").getAsBoolean();
-            addRenderableWidget(coloredBooleanBuilder(armor).displayOnlyValue().create(
-                    left + width - 210, y, 46, 20, Component.literal("armor"),
+            addRenderableWidget(coloredBooleanBuilder(armor).create(
+                    left + 104, controlsY, 105, 20, Component.translatable("invmod.config.armor"),
                     (button, selected) -> mob.addProperty("canWearArmor", selected)));
             boolean weapons = mob.has("canUseWeapons") && mob.get("canUseWeapons").getAsBoolean();
-            addRenderableWidget(coloredBooleanBuilder(weapons).displayOnlyValue().create(
-                    left + width - 160, y, 46, 20, Component.literal("weapons"),
+            addRenderableWidget(coloredBooleanBuilder(weapons).create(
+                    left + 213, controlsY, 105, 20, Component.translatable("invmod.config.weapons"),
                     (button, selected) -> mob.addProperty("canUseWeapons", selected)));
-            EditBox cost = new EditBox(font, left + width - 110, y, 38, 20, Component.literal("cost"));
+            labels.add(new Label(Component.translatable("invmod.config.cost").getString(),
+                    left + 323, controlsY + 6));
+            EditBox cost = new EditBox(font, left + 365, controlsY, 43, 20,
+                    Component.translatable("invmod.config.cost"));
             cost.setMaxLength(8);
             cost.setValue(mob.has("cost") ? mob.get("cost").getAsString() : "5");
             cost.setResponder(text -> {
@@ -169,7 +176,7 @@ public final class InvasionConfigScreen extends Screen {
             addRenderableWidget(cost);
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.themes"),
                     button -> minecraft.setScreenAndShow(new MobThemesScreen(this, id, mob)))
-                    .bounds(left + width - 68, y, 68, 20).build());
+                    .bounds(left + 412, controlsY, Math.max(68, width - 412), 20).build());
         }
     }
 
