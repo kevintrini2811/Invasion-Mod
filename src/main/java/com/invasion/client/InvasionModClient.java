@@ -6,6 +6,9 @@ import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.compat.MutantMonstersRenderers;
 import com.invasion.client.screen.NexusScreen;
 import net.fabricmc.api.ClientModInitializer;
+import com.terraformersmc.modmenu.api.ConfigScreenFactory;
+import com.terraformersmc.modmenu.api.ModMenuApi;
+import com.invasion.client.screen.InvasionConfigScreen;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
@@ -13,7 +16,12 @@ import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
 import com.invasion.block.InvBlockEntities;
 
-public class InvasionModClient implements ClientModInitializer {
+public class InvasionModClient implements ClientModInitializer, ModMenuApi {
+
+    @Override
+    public ConfigScreenFactory<?> getModConfigScreenFactory() {
+        return InvasionConfigScreen::new;
+    }
 
     @Override
     public void onInitializeClient() {

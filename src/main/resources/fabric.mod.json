@@ -30,6 +30,9 @@
     ],
     "jei_mod_plugin": [
       "com.invasion.compat.jei.InvasionJeiPlugin"
+    ],
+    "modmenu": [
+      "com.invasion.client.InvasionModClient"
     ]
   },
   "mixins": [

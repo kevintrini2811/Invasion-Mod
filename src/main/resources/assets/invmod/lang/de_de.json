@@ -1,4 +1,12 @@
 {
+  "invmod.config.title": "Invasion-Konfiguration",
+  "invmod.config.empty": "Diese Konfigurationsdatei ist leer.",
+  "invmod.config.editor": "Konfigurationseditor",
+  "invmod.config.save": "Speichern",
+  "invmod.config.saved": "Konfiguration gespeichert und neu geladen.",
+  "invmod.config.regenerate": "Neu erzeugen",
+  "invmod.config.regenerated": "Mob-Konfiguration auf erkannte Standardwerte zurückgesetzt.",
+  "invmod.config.regenerate.confirm": "Alle Mob-Einstellungen zurücksetzen? Dies kann nicht rückgängig gemacht werden.",
   "invmod.message.command.debug_mobs": "%s geladene IM-Mob(s) leuchten nun 10 Minuten lang. Nächste Mobs:",
   "invmod.message.command.debug_mob_entry": "%s bei %s",
   "invmod.message.command.debug_phase_mob_entry": "★ %s bei %s",
