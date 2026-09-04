@@ -64,8 +64,16 @@ public final class ConfiguredModMobs {
 
     /** Reloads user choices, then adds newly installed hostile entity types. */
     public static synchronized void refresh() {
+        refresh(false);
+    }
+
+    public static synchronized void regenerate() {
+        refresh(true);
+    }
+
+    private static void refresh(boolean reset) {
         Map<Identifier, Entry> result = new LinkedHashMap<>();
-        if (Files.isRegularFile(FILE)) {
+        if (!reset && Files.isRegularFile(FILE)) {
             try (Reader reader = Files.newBufferedReader(FILE)) {
                 JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
                 for (Map.Entry<String, JsonElement> jsonEntry : root.entrySet()) {
