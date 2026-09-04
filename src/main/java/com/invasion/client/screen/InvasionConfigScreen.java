@@ -21,6 +21,8 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.ChatFormatting;
 import net.neoforged.fml.loading.FMLPaths;
 
 /** Widget-based editor exposed through NeoForge's Mods configuration button. */
@@ -123,7 +125,7 @@ public final class InvasionConfigScreen extends Screen {
             labels.add(new Label(key, left, y + 6));
             if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
                 boolean initial = Boolean.parseBoolean(value);
-                addRenderableWidget(CycleButton.onOffBuilder(initial).displayOnlyValue().create(
+                addRenderableWidget(coloredBooleanBuilder(initial).displayOnlyValue().create(
                         left + width - 130, y, 130, 20, Component.literal(key),
                         (button, selected) -> properties.setProperty(key, selected.toString())));
             } else {
@@ -144,7 +146,7 @@ public final class InvasionConfigScreen extends Screen {
             int y = 56 + index % PAGE_SIZE * 24;
             labels.add(new Label(id, left, y + 6));
             boolean active = mob.has("active") && mob.get("active").getAsBoolean();
-            addRenderableWidget(CycleButton.onOffBuilder(active).displayOnlyValue().create(
+            addRenderableWidget(coloredBooleanBuilder(active).displayOnlyValue().create(
                     left + width - 205, y, 70, 20, Component.literal("active"),
                     (button, selected) -> mob.addProperty("active", selected)));
             EditBox cost = new EditBox(font, left + width - 131, y, 55, 20, Component.literal("cost"));
@@ -198,6 +200,12 @@ public final class InvasionConfigScreen extends Screen {
         return exception.getMessage() == null ? exception.getClass().getSimpleName() : exception.getMessage();
     }
 
+    private static CycleButton.Builder<Boolean> coloredBooleanBuilder(boolean initial) {
+        return CycleButton.booleanBuilder(
+                CommonComponents.OPTION_ON.copy().withStyle(ChatFormatting.GREEN),
+                CommonComponents.OPTION_OFF.copy().withStyle(ChatFormatting.RED), initial);
+    }
+
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
@@ -229,7 +237,7 @@ public final class InvasionConfigScreen extends Screen {
                 boolean enabled = selected.contains(theme);
                 int x = width / 2 - 204 + index % 2 * 208;
                 int y = 42 + index / 2 * 24;
-                addRenderableWidget(CycleButton.onOffBuilder(enabled).create(x, y, 200, 20,
+                addRenderableWidget(coloredBooleanBuilder(enabled).create(x, y, 200, 20,
                         Component.literal(theme), (button, value) -> {
                             if (value && !selected.contains(theme)) selected.add(theme);
                             if (!value) selected.remove(theme);
