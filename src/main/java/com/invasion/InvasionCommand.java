@@ -253,7 +253,8 @@ public class InvasionCommand {
                     timerTicks / 1200, (timerTicks / 20) % 60);
             source.sendSuccess(() -> Component.translatable(
                     "invmod.message.command.debug_phase",
-                    activeNexus.getMobsLeftInPhase(), timer)
+                    activeNexus.getMobsLeftInPhase(), timer,
+                    activeNexus.getCurrentWaveTheme())
                     .withStyle(ChatFormatting.AQUA), false);
         } else {
             source.sendFailure(Component.translatable(
