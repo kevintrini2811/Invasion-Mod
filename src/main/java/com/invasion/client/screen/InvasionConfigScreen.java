@@ -147,9 +147,17 @@ public final class InvasionConfigScreen extends Screen {
             labels.add(new Label(id, left, y + 6));
             boolean active = mob.has("active") && mob.get("active").getAsBoolean();
             addRenderableWidget(coloredBooleanBuilder(active).displayOnlyValue().create(
-                    left + width - 205, y, 70, 20, Component.literal("active"),
+                    left + width - 260, y, 46, 20, Component.literal("active"),
                     (button, selected) -> mob.addProperty("active", selected)));
-            EditBox cost = new EditBox(font, left + width - 131, y, 55, 20, Component.literal("cost"));
+            boolean armor = mob.has("canWearArmor") && mob.get("canWearArmor").getAsBoolean();
+            addRenderableWidget(coloredBooleanBuilder(armor).displayOnlyValue().create(
+                    left + width - 210, y, 46, 20, Component.literal("armor"),
+                    (button, selected) -> mob.addProperty("canWearArmor", selected)));
+            boolean weapons = mob.has("canUseWeapons") && mob.get("canUseWeapons").getAsBoolean();
+            addRenderableWidget(coloredBooleanBuilder(weapons).displayOnlyValue().create(
+                    left + width - 160, y, 46, 20, Component.literal("weapons"),
+                    (button, selected) -> mob.addProperty("canUseWeapons", selected)));
+            EditBox cost = new EditBox(font, left + width - 110, y, 38, 20, Component.literal("cost"));
             cost.setMaxLength(8);
             cost.setValue(mob.has("cost") ? mob.get("cost").getAsString() : "5");
             cost.setResponder(text -> {
@@ -161,7 +169,7 @@ public final class InvasionConfigScreen extends Screen {
             addRenderableWidget(cost);
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.themes"),
                     button -> minecraft.setScreenAndShow(new MobThemesScreen(this, id, mob)))
-                    .bounds(left + width - 72, y, 72, 20).build());
+                    .bounds(left + width - 68, y, 68, 20).build());
         }
     }
 
