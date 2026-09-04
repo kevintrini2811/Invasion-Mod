@@ -370,6 +370,10 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // Darf dieser Zombie-Typ überhaupt "buddeln"?
     // Darf dieser konkrete Zombie-Typ nach unten buddeln?
     protected boolean canDigDown() {
+        if (!com.invasion.compat.ConfiguredModMobs.allowsMining(getType(), true)
+                || !com.invasion.compat.ConfiguredModMobs.allowsStairing(getType(), true)) {
+            return false;
+        }
         int tier = getTier();
         int flavour = getFlavour();
 

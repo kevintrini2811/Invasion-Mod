@@ -234,6 +234,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     public boolean handlePathAction(BlockPos pos, PathAction action, Notifiable asker) {
         if (action.getType() == PathAction.Type.BRIDGE) {
+            if (!com.invasion.compat.ConfiguredModMobs.allowsBridging(getType(), true)) {
+                return false;
+            }
             return beginBridgeAction(pos, asker);
         }
 
@@ -340,7 +343,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
      * platform and therefore cannot take the safe walking recovery above.
      */
     public boolean tryBridgeMissingPath(Notifiable asker) {
-        if (!hasNexus() || buildingTower || terrainModifier.isBusy()) {
+        if (!com.invasion.compat.ConfiguredModMobs.allowsBridging(getType(), true)
+                || !hasNexus() || buildingTower || terrainModifier.isBusy()) {
             return false;
         }
 
@@ -378,7 +382,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     public boolean tryStartTowerBuild() {
-        if (buildingTower || towerBuildCooldown > 0 || !hasNexus()
+        if (!com.invasion.compat.ConfiguredModMobs.allowsTowering(getType(), true)
+                || buildingTower || towerBuildCooldown > 0 || !hasNexus()
                 || !isStandingOnSolidGround()) {
             return false;
         }

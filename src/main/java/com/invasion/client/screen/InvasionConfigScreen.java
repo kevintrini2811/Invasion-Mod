@@ -153,17 +153,9 @@ public final class InvasionConfigScreen extends Screen {
             addRenderableWidget(coloredBooleanBuilder(active).create(
                     left, controlsY, 100, 20, Component.translatable("invmod.config.active"),
                     (button, selected) -> mob.addProperty("active", selected)));
-            boolean armor = mob.has("canWearArmor") && mob.get("canWearArmor").getAsBoolean();
-            addRenderableWidget(coloredBooleanBuilder(armor).create(
-                    left + 104, controlsY, 105, 20, Component.translatable("invmod.config.armor"),
-                    (button, selected) -> mob.addProperty("canWearArmor", selected)));
-            boolean weapons = mob.has("canUseWeapons") && mob.get("canUseWeapons").getAsBoolean();
-            addRenderableWidget(coloredBooleanBuilder(weapons).create(
-                    left + 213, controlsY, 105, 20, Component.translatable("invmod.config.weapons"),
-                    (button, selected) -> mob.addProperty("canUseWeapons", selected)));
             labels.add(new Label(Component.translatable("invmod.config.cost").getString(),
-                    left + 323, controlsY + 6));
-            EditBox cost = new EditBox(font, left + 365, controlsY, 43, 20,
+                    left + 108, controlsY + 6));
+            EditBox cost = new EditBox(font, left + 150, controlsY, 48, 20,
                     Component.translatable("invmod.config.cost"));
             cost.setMaxLength(8);
             cost.setValue(mob.has("cost") ? mob.get("cost").getAsString() : "5");
@@ -174,9 +166,12 @@ public final class InvasionConfigScreen extends Screen {
                 }
             });
             addRenderableWidget(cost);
+            addRenderableWidget(Button.builder(Component.translatable("invmod.config.abilities"),
+                    button -> minecraft.setScreenAndShow(new MobAbilitiesScreen(this, id, mob)))
+                    .bounds(left + 202, controlsY, 135, 20).build());
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.themes"),
                     button -> minecraft.setScreenAndShow(new MobThemesScreen(this, id, mob)))
-                    .bounds(left + 412, controlsY, Math.max(68, width - 412), 20).build());
+                    .bounds(left + 341, controlsY, Math.max(100, width - 341), 20).build());
         }
     }
 
@@ -266,6 +261,62 @@ public final class InvasionConfigScreen extends Screen {
             JsonArray themes = new JsonArray();
             THEMES.stream().filter(selected::contains).forEach(themes::add);
             mob.add("themes", themes);
+            minecraft.setScreenAndShow(parent);
+        }
+
+        @Override public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y, float delta) {
+            super.extractRenderState(graphics, x, y, delta);
+            graphics.centeredText(font, title, width / 2, 15, 0xFFFFFFFF);
+        }
+        @Override public void onClose() { done(); }
+    }
+
+    private static final class MobAbilitiesScreen extends Screen {
+        private static final List<String> ABILITIES = List.of(
+                "weapons", "armor", "mining", "stairing", "bridging", "towering");
+        private final InvasionConfigScreen parent;
+        private final JsonObject mob;
+        private final JsonObject abilities;
+
+        MobAbilitiesScreen(InvasionConfigScreen parent, String id, JsonObject mob) {
+            super(Component.literal(id));
+            this.parent = parent;
+            this.mob = mob;
+            this.abilities = mob.has("abilities") && mob.get("abilities").isJsonObject()
+                    ? mob.getAsJsonObject("abilities").deepCopy() : new JsonObject();
+            migrateLegacy("weapons", "canUseWeapons");
+            migrateLegacy("armor", "canWearArmor");
+        }
+
+        private void migrateLegacy(String ability, String legacy) {
+            if (!abilities.has(ability)) {
+                abilities.addProperty(ability,
+                        mob.has(legacy) && mob.get(legacy).getAsBoolean());
+            }
+        }
+
+        @Override protected void init() {
+            for (int index = 0; index < ABILITIES.size(); index++) {
+                String ability = ABILITIES.get(index);
+                boolean enabled = abilities.has(ability)
+                        && abilities.get(ability).getAsBoolean();
+                int x = width / 2 - 204 + index % 2 * 208;
+                int y = 42 + index / 2 * 24;
+                addRenderableWidget(coloredBooleanBuilder(enabled).create(x, y, 200, 20,
+                        Component.translatable("invmod.config.ability." + ability),
+                        (button, value) -> abilities.addProperty(ability, value)));
+            }
+            addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> done())
+                    .bounds(width / 2 - 50, 122, 100, 20).build());
+        }
+
+        private void done() {
+            ABILITIES.forEach(ability -> {
+                if (!abilities.has(ability)) abilities.addProperty(ability, false);
+            });
+            mob.add("abilities", abilities);
+            mob.remove("canUseWeapons");
+            mob.remove("canWearArmor");
             minecraft.setScreenAndShow(parent);
         }
 

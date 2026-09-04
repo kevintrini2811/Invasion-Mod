@@ -41,7 +41,9 @@ public interface Miner extends NexusEntity {
     }
 
     default boolean canClearBlock(BlockPos pos) {
-        return IMLandPathNodeMaker.canMineBlock(asEntity(), pos);
+        return com.invasion.compat.ConfiguredModMobs.allowsMining(
+                asEntity().getType(), true)
+                && IMLandPathNodeMaker.canMineBlock(asEntity(), pos);
     }
 
     default void onBlockRemoved(BlockPos pos, BlockState state) {
