@@ -32,6 +32,7 @@ import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /** Configurable, loader-independent support for hostile mobs from other mods. */
 public final class ConfiguredModMobs {
@@ -47,6 +48,7 @@ public final class ConfiguredModMobs {
     public static void bootstrap() {
         NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityJoin);
         NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onLivingDeath);
+        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityTick);
     }
 
     /** Reloads user choices, then adds newly installed hostile entity types. */
@@ -144,6 +146,19 @@ public final class ConfiguredModMobs {
         }
         WorldNexusStorage.of(level).getNexus().ifPresent(
                 nexus -> nexus.notifyExternalWaveMobKilled(mob));
+    }
+
+    private static void onEntityTick(EntityTickEvent.Pre event) {
+        if (!(event.getEntity() instanceof Mob mob)
+                || !(mob.level() instanceof ServerLevel level)
+                || level.getSkyDarken() >= 4
+                || !mob.isOnFire() || !isActive(mob.getType())) return;
+        if (activeNexus(mob) != null) mob.clearFire();
+    }
+
+    private static synchronized boolean isActive(EntityType<?> type) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry != null && entry.active();
     }
 
     private static NexusAccess activeNexus(Mob mob) {
