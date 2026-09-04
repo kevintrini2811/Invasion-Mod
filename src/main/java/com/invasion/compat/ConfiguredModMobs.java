@@ -71,6 +71,7 @@ public final class ConfiguredModMobs {
                 for (Map.Entry<String, JsonElement> jsonEntry : root.entrySet()) {
                     Identifier id = Identifier.tryParse(jsonEntry.getKey());
                     if (id == null || !jsonEntry.getValue().isJsonObject()) continue;
+                    if (isSpecializedOriginal(id) || isUnavailableSpecializedImMob(id)) continue;
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
                     boolean active = value.has("active") && value.get("active").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
@@ -86,6 +87,7 @@ public final class ConfiguredModMobs {
 
         BuiltInRegistries.ENTITY_TYPE.entrySet().stream()
                 .filter(registryEntry -> isExternalMonster(registryEntry.getKey().identifier(), registryEntry.getValue()))
+                .filter(registryEntry -> !isSpecializedOriginal(registryEntry.getKey().identifier()))
                 .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
                         registryEntry.getKey().identifier(), new Entry(false, 5, DEFAULT_THEMES)));
@@ -115,6 +117,26 @@ public final class ConfiguredModMobs {
         return !id.getNamespace().equals("minecraft")
                 && !id.getNamespace().equals(InvasionMod.MOD_ID)
                 && type.getCategory() == MobCategory.MONSTER;
+    }
+
+    private static boolean isSpecializedOriginal(Identifier id) {
+        String namespace = id.getNamespace();
+        String path = id.getPath();
+        return namespace.equals(MutantMonstersCompatibility.MOD_ID)
+                        && MutantMonstersCompatibility.MOB_NAMES.contains(path)
+                || namespace.equals(FriendsAndFoesCompatibility.MOD_ID)
+                        && path.equals("wildfire")
+                || namespace.equals("tinyskeletons") && List.of(
+                        "baby_skeleton", "baby_bogged", "baby_parched",
+                        "baby_stray", "baby_wither_skeleton").contains(path);
+    }
+
+    private static boolean isUnavailableSpecializedImMob(Identifier id) {
+        if (!id.getNamespace().equals(InvasionMod.MOD_ID)) return false;
+        return MutantMonstersCompatibility.MOB_NAMES.contains(id.getPath())
+                        && !MutantMonstersCompatibility.isLoaded()
+                || id.getPath().equals("wildfire")
+                        && !FriendsAndFoesCompatibility.isLoaded();
     }
 
     private static void write() {
