@@ -297,6 +297,11 @@ public class Nexus implements ControllableNexusAccess {
 	public int getWavePhaseToken() { return phaseToken; }
 
     @Override
+    public String getCurrentWaveTheme() {
+        return budgetPlan == null ? "LEGACY" : budgetPlan.currentPhase().theme().name();
+    }
+
+    @Override
     public int getMobsLeftInPhase() {
         return budgetPlan == null ? getMobsLeftInWave()
                 : Math.max(0, phaseMobsLeft);
