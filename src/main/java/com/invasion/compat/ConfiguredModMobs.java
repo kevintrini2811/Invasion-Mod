@@ -9,6 +9,7 @@ import com.invasion.InvasionMod;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.wave.BudgetWavePlan.Theme;
+import com.invasion.nexus.wave.BudgetWavePlan;
 import com.invasion.util.math.PosUtils;
 import java.io.IOException;
 import java.io.Reader;
@@ -88,6 +89,8 @@ public final class ConfiguredModMobs {
                 .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
                         registryEntry.getKey().identifier(), new Entry(false, 5, DEFAULT_THEMES)));
+        BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
+                mob.id(), new Entry(true, mob.cost(), mob.themes())));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -160,7 +163,8 @@ public final class ConfiguredModMobs {
         synchronized (ConfiguredModMobs.class) {
             entry = ENTRIES.get(id);
         }
-        if (entry == null || !entry.active()) return;
+        if (entry == null || !entry.active()
+                || !isExternalMonster(id, mob.getType())) return;
         mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
         mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
         mob.goalSelector.addGoal(4, new GoToNexusGoal(mob));
@@ -173,7 +177,7 @@ public final class ConfiguredModMobs {
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         synchronized (ConfiguredModMobs.class) {
             Entry entry = ENTRIES.get(id);
-            if (entry == null || !entry.active()) return;
+            if (entry == null || !entry.active() || !isExternalMonster(id, mob.getType())) return;
         }
         WorldNexusStorage.of(level).getNexus().ifPresent(
                 nexus -> nexus.notifyExternalWaveMobKilled(mob));
@@ -188,8 +192,9 @@ public final class ConfiguredModMobs {
     }
 
     private static synchronized boolean isActive(EntityType<?> type) {
-        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
-        return entry != null && entry.active();
+        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        Entry entry = ENTRIES.get(id);
+        return entry != null && entry.active() && isExternalMonster(id, type);
     }
 
     private static NexusAccess activeNexus(Mob mob) {
