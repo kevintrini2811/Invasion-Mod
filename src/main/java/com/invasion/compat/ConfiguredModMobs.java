@@ -55,15 +55,15 @@ public final class ConfiguredModMobs {
             "MIXED", "RANDOM", "RANDOMHELL");
     private static final Map<String, Entry> MOD_DEFAULTS = Map.of(
             "mutantmonsters:endersoul_clone",
-            new Entry(true, 3, DEFAULT_THEMES, false, false),
+            new Entry(true, 3, DEFAULT_THEMES, Abilities.NONE),
             "variantsandventures:gelid",
-            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), true, true),
+            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:murk",
-            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), true, true),
+            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:thicket",
-            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), true, true),
+            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:verdant",
-            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), true, true));
+            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT));
     private static final Path FILE = FMLPaths.CONFIGDIR.get()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -101,9 +101,8 @@ public final class ConfiguredModMobs {
                     boolean active = value.has("active") && value.get("active").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
                     Entry defaults = defaultEntry(id);
-                    boolean armor = value.has("canWearArmor") ? value.get("canWearArmor").getAsBoolean() : defaults.canWearArmor();
-                    boolean weapons = value.has("canUseWeapons") ? value.get("canUseWeapons").getAsBoolean() : defaults.canUseWeapons();
-                    result.put(id, new Entry(active, cost, readThemes(value), armor, weapons));
+                    result.put(id, new Entry(active, cost, readThemes(value),
+                            readAbilities(value, defaults.abilities())));
                 }
             } catch (Exception exception) {
                 InvasionMod.LOGGER.error("Could not read {}; leaving it unchanged", FILE, exception);
@@ -120,8 +119,9 @@ public final class ConfiguredModMobs {
                 .forEach(registryEntry -> result.putIfAbsent(
                         registryEntry.getKey().identifier(), defaultEntry(registryEntry.getKey().identifier())));
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
-                mob.id(), new Entry(true, mob.cost(), mob.themes(),
-                        mob.canWearArmor(), mob.canUseWeapons())));
+                mob.id(), new Entry(true, mob.cost(), mob.themes(), new Abilities(
+                        mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
+                        mob.canStair(), mob.canBridge(), mob.canTower()))));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -176,8 +176,14 @@ public final class ConfiguredModMobs {
             JsonObject value = new JsonObject();
             value.addProperty("active", entry.active());
             value.addProperty("cost", entry.cost());
-            value.addProperty("canWearArmor", entry.canWearArmor());
-            value.addProperty("canUseWeapons", entry.canUseWeapons());
+            JsonObject abilities = new JsonObject();
+            abilities.addProperty("weapons", entry.abilities().weapons());
+            abilities.addProperty("armor", entry.abilities().armor());
+            abilities.addProperty("mining", entry.abilities().mining());
+            abilities.addProperty("stairing", entry.abilities().stairing());
+            abilities.addProperty("bridging", entry.abilities().bridging());
+            abilities.addProperty("towering", entry.abilities().towering());
+            value.add("abilities", abilities);
             com.google.gson.JsonArray themes = new com.google.gson.JsonArray();
             entry.themes().forEach(themes::add);
             value.add("themes", themes);
@@ -210,7 +216,26 @@ public final class ConfiguredModMobs {
 
     private static Entry defaultEntry(Identifier id) {
         return MOD_DEFAULTS.getOrDefault(id.toString(),
-                new Entry(false, 5, DEFAULT_THEMES, false, false));
+                new Entry(false, 5, DEFAULT_THEMES, Abilities.NONE));
+    }
+
+    private static Abilities readAbilities(JsonObject value, Abilities defaults) {
+        JsonObject abilities = value.has("abilities") && value.get("abilities").isJsonObject()
+                ? value.getAsJsonObject("abilities") : new JsonObject();
+        return new Abilities(
+                ability(abilities, "weapons", value, "canUseWeapons", defaults.weapons()),
+                ability(abilities, "armor", value, "canWearArmor", defaults.armor()),
+                ability(abilities, "mining", value, null, defaults.mining()),
+                ability(abilities, "stairing", value, null, defaults.stairing()),
+                ability(abilities, "bridging", value, null, defaults.bridging()),
+                ability(abilities, "towering", value, null, defaults.towering()));
+    }
+
+    private static boolean ability(JsonObject abilities, String key,
+            JsonObject legacy, String legacyKey, boolean fallback) {
+        if (abilities.has(key)) return abilities.get(key).getAsBoolean();
+        return legacyKey != null && legacy.has(legacyKey)
+                ? legacy.get(legacyKey).getAsBoolean() : fallback;
     }
 
     private static void onEntityJoin(EntityJoinLevelEvent event) {
@@ -285,12 +310,32 @@ public final class ConfiguredModMobs {
 
     public static synchronized boolean allowsArmor(EntityType<?> type, boolean fallback) {
         Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
-        return entry == null ? fallback : entry.canWearArmor();
+        return entry == null ? fallback : entry.abilities().armor();
     }
 
     public static synchronized boolean allowsWeapons(EntityType<?> type, boolean fallback) {
         Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
-        return entry == null ? fallback : entry.canUseWeapons();
+        return entry == null ? fallback : entry.abilities().weapons();
+    }
+
+    public static synchronized boolean allowsMining(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().mining();
+    }
+
+    public static synchronized boolean allowsStairing(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().stairing();
+    }
+
+    public static synchronized boolean allowsBridging(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().bridging();
+    }
+
+    public static synchronized boolean allowsTowering(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().towering();
     }
 
     private static NexusAccess activeNexus(Mob mob) {
@@ -542,7 +587,11 @@ public final class ConfiguredModMobs {
         }
     }
 
-    private record Entry(boolean active, int cost, List<String> themes,
-            boolean canWearArmor, boolean canUseWeapons) {}
+    private record Entry(boolean active, int cost, List<String> themes, Abilities abilities) {}
+    private record Abilities(boolean weapons, boolean armor, boolean mining,
+            boolean stairing, boolean bridging, boolean towering) {
+        private static final Abilities NONE = new Abilities(false, false, false, false, false, false);
+        private static final Abilities EQUIPMENT = new Abilities(true, true, false, false, false, false);
+    }
     public record WaveMob(EntityType<? extends Mob> type, int cost) {}
 }

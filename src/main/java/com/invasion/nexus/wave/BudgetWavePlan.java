@@ -188,7 +188,8 @@ public final class BudgetWavePlan {
     private static final Map<Theme, List<Option>> POOLS = makePools();
 
     public record ConfigMobDefault(Identifier id, int cost, List<String> themes,
-            boolean canWearArmor, boolean canUseWeapons) {}
+            boolean canWearArmor, boolean canUseWeapons, boolean canMine,
+            boolean canStair, boolean canBridge, boolean canTower) {}
 
     private static final Set<String> DEFAULT_ARMOR_MOBS = Set.of(
             "blaze", "bogged", "breeze", "cave_spider", "creeper", "drowned",
@@ -202,6 +203,18 @@ public final class BudgetWavePlan {
             "mystery_zombie", "parched", "skeleton", "speedy_zombie", "stray",
             "wither_skeleton", "zombie", "zombie_pigman", "zombie_villager",
             "zombified_piglin");
+    private static final Set<String> DEFAULT_MINING_MOBS = Set.of(
+            "bogged", "burrower", "cave_spider", "drowned", "enderman",
+            "fat_zombie", "husk", "jumping_spider", "mystery_zombie", "parched",
+            "pigman_engineer", "queen_spider", "skeleton", "speedy_zombie",
+            "spider", "stray", "thrower", "wither_skeleton", "zombie",
+            "zombie_builder", "zombie_miner", "zombie_pigman", "zombie_villager",
+            "zombified_piglin");
+    private static final Set<String> DEFAULT_STAIRING_MOBS = Set.of(
+            "drowned", "husk", "mystery_zombie", "speedy_zombie", "zombie",
+            "zombie_villager");
+    private static final Set<String> DEFAULT_BUILDING_MOBS = Set.of(
+            "pigman_engineer", "zombie_builder", "zombie_miner");
 
     /** Canonical JSON defaults for every directly purchasable IM mob type. */
     public static List<ConfigMobDefault> configMobDefaults() {
@@ -220,7 +233,9 @@ public final class BudgetWavePlan {
                     String path = id == null ? "" : id.getPath();
                     return new ConfigMobDefault(id, entry.getValue(),
                             List.copyOf(themes.getOrDefault(entry.getKey(), new LinkedHashSet<>())),
-                            DEFAULT_ARMOR_MOBS.contains(path), DEFAULT_WEAPON_MOBS.contains(path));
+                            DEFAULT_ARMOR_MOBS.contains(path), DEFAULT_WEAPON_MOBS.contains(path),
+                            DEFAULT_MINING_MOBS.contains(path), DEFAULT_STAIRING_MOBS.contains(path),
+                            DEFAULT_BUILDING_MOBS.contains(path), DEFAULT_BUILDING_MOBS.contains(path));
                 })
                 .filter(entry -> entry.id() != null)
                 .sorted(Comparator.comparing(entry -> entry.id().toString()))
