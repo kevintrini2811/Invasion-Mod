@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
+import java.util.Comparator;
 import java.util.function.Predicate;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -182,6 +185,39 @@ public final class BudgetWavePlan {
     }
 
     private static final Map<Theme, List<Option>> POOLS = makePools();
+
+    public record ConfigMobDefault(Identifier id, int cost, List<String> themes) {}
+
+    /** Canonical JSON defaults for every directly purchasable IM mob type. */
+    public static List<ConfigMobDefault> configMobDefaults() {
+        Map<EntityType<? extends Mob>, Integer> costs = new IdentityHashMap<>();
+        ALL.forEach(option -> costs.merge(option.type, option.cost, Math::min));
+        Map<EntityType<? extends Mob>, LinkedHashSet<String>> themes = new IdentityHashMap<>();
+        POOLS.forEach((theme, options) -> options.forEach(option -> themes
+                .computeIfAbsent(option.type, ignored -> new LinkedHashSet<>())
+                .add(theme.name())));
+        addConfigAlias(costs, themes, InvEntities.MYSTERY_ZOMBIE, InvEntities.SPEEDY_ZOMBIE);
+        addConfigAlias(costs, themes, InvEntities.GUARDIAN, InvEntities.DROWNED);
+        addConfigAlias(costs, themes, InvEntities.ELDER_GUARDIAN, InvEntities.DROWNED);
+        return costs.entrySet().stream()
+                .map(entry -> new ConfigMobDefault(
+                        BuiltInRegistries.ENTITY_TYPE.getKey(entry.getKey()), entry.getValue(),
+                        List.copyOf(themes.getOrDefault(entry.getKey(), new LinkedHashSet<>()))))
+                .filter(entry -> entry.id() != null)
+                .sorted(Comparator.comparing(entry -> entry.id().toString()))
+                .toList();
+    }
+
+    private static void addConfigAlias(
+            Map<EntityType<? extends Mob>, Integer> costs,
+            Map<EntityType<? extends Mob>, LinkedHashSet<String>> themes,
+            EntityType<? extends Mob> type, EntityType<? extends Mob> source) {
+        Integer cost = costs.get(source);
+        if (cost == null) return;
+        costs.putIfAbsent(type, cost);
+        themes.putIfAbsent(type, new LinkedHashSet<>(
+                themes.getOrDefault(source, new LinkedHashSet<>())));
+    }
     private static Map<Theme, List<Option>> makePools() {
         Map<Theme, List<Option>> pools = new EnumMap<>(Theme.class);
         pools.put(Theme.SPIDER, select(o -> isType(o, InvEntities.SPIDER, InvEntities.CAVE_SPIDER,
