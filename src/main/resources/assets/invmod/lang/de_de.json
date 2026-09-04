@@ -11,7 +11,7 @@
   "invmod.message.command.debug_mobs": "%s geladene IM-Mob(s) leuchten nun 10 Minuten lang. Nächste Mobs:",
   "invmod.message.command.debug_mob_entry": "%s bei %s",
   "invmod.message.command.debug_phase_mob_entry": "★ %s bei %s",
-  "invmod.message.command.debug_phase": "Verbleibende Mobs der aktuellen Phase: %s | Phasen-Timer: %s",
+  "invmod.message.command.debug_phase": "Verbleibende Mobs der aktuellen Phase: %s | Phasen-Timer: %s | Thema: %s",
   "invmod.message.command.debug_no_nexus": "Kein aktiver Nexus für Phaseninformationen gefunden.",
     "item.invmod.mutant_zombie_spawn_egg": "IM-Mutantenzombie-Spawn-Ei",
     "item.invmod.mutant_creeper_spawn_egg": "IM-Mutantencreeper-Spawn-Ei",
