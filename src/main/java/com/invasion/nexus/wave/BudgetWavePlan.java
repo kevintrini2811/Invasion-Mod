@@ -187,7 +187,7 @@ public final class BudgetWavePlan {
 
     private static final Map<Theme, List<Option>> POOLS = makePools();
 
-    public record ConfigMobDefault(Identifier id, int cost, List<String> themes,
+    public record ConfigMobDefault(ResourceLocation id, int cost, List<String> themes,
             boolean canWearArmor, boolean canUseWeapons, boolean canMine,
             boolean canStair, boolean canBridge, boolean canTower) {}
 
@@ -229,7 +229,7 @@ public final class BudgetWavePlan {
         addConfigAlias(costs, themes, InvEntities.ELDER_GUARDIAN, InvEntities.DROWNED);
         return costs.entrySet().stream()
                 .map(entry -> {
-                    Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entry.getKey());
+                    ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entry.getKey());
                     String path = id == null ? "" : id.getPath();
                     return new ConfigMobDefault(id, entry.getValue(),
                             List.copyOf(themes.getOrDefault(entry.getKey(), new LinkedHashSet<>())),

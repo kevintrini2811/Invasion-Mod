@@ -27,7 +27,7 @@ import java.util.LinkedHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -40,11 +40,11 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import com.invasion.entity.SkeletonArrowEntity;
-import net.neoforged.fml.loading.FMLPaths;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 
 /** Configurable, loader-independent support for hostile mobs from other mods. */
 public final class ConfiguredModMobs {
@@ -67,16 +67,16 @@ public final class ConfiguredModMobs {
     private static final Path FILE = FMLPaths.CONFIGDIR.get()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Map<Identifier, Entry> ENTRIES = new LinkedHashMap<>();
+    private static final Map<ResourceLocation, Entry> ENTRIES = new LinkedHashMap<>();
     private static boolean loaded;
 
     private ConfiguredModMobs() {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityJoin);
-        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onLivingDeath);
-        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityTick);
+        MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityJoin);
+        MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onLivingDeath);
+        MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityTick);
     }
 
     /** Reloads user choices, then adds newly installed hostile entity types. */
@@ -89,12 +89,12 @@ public final class ConfiguredModMobs {
     }
 
     private static void refresh(boolean reset) {
-        Map<Identifier, Entry> result = new LinkedHashMap<>();
+        Map<ResourceLocation, Entry> result = new LinkedHashMap<>();
         if (!reset && Files.isRegularFile(FILE)) {
             try (Reader reader = Files.newBufferedReader(FILE)) {
                 JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
                 for (Map.Entry<String, JsonElement> jsonEntry : root.entrySet()) {
-                    Identifier id = Identifier.tryParse(jsonEntry.getKey());
+                    ResourceLocation id = ResourceLocation.tryParse(jsonEntry.getKey());
                     if (id == null || !jsonEntry.getValue().isJsonObject()) continue;
                     if (isSpecializedOriginal(id) || isUnavailableSpecializedImMob(id)) continue;
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
@@ -113,11 +113,11 @@ public final class ConfiguredModMobs {
         }
 
         BuiltInRegistries.ENTITY_TYPE.entrySet().stream()
-                .filter(registryEntry -> isExternalMonster(registryEntry.getKey().identifier(), registryEntry.getValue()))
-                .filter(registryEntry -> !isSpecializedOriginal(registryEntry.getKey().identifier()))
-                .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
+                .filter(registryEntry -> isExternalMonster(registryEntry.getKey().location(), registryEntry.getValue()))
+                .filter(registryEntry -> !isSpecializedOriginal(registryEntry.getKey().location()))
+                .sorted(Comparator.comparing(entry -> entry.getKey().location().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
-                        registryEntry.getKey().identifier(), defaultEntry(registryEntry.getKey().identifier())));
+                        registryEntry.getKey().location(), defaultEntry(registryEntry.getKey().location())));
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
                 mob.id(), new Entry(true, mob.cost(), mob.themes(), new Abilities(
                         mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
@@ -134,7 +134,7 @@ public final class ConfiguredModMobs {
         List<WaveMob> result = new ArrayList<>();
         ENTRIES.forEach((id, entry) -> {
             if (!entry.active() || !entry.themes().contains(theme.name())) return;
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(id);
             if (type != null && isExternalMonster(id, type)) {
                 result.add(new WaveMob((EntityType<? extends Mob>) type, entry.cost()));
             }
@@ -142,13 +142,13 @@ public final class ConfiguredModMobs {
         return List.copyOf(result);
     }
 
-    private static boolean isExternalMonster(Identifier id, EntityType<?> type) {
+    private static boolean isExternalMonster(ResourceLocation id, EntityType<?> type) {
         return !id.getNamespace().equals("minecraft")
                 && !id.getNamespace().equals(InvasionMod.MOD_ID)
                 && type.getCategory() == MobCategory.MONSTER;
     }
 
-    private static boolean isSpecializedOriginal(Identifier id) {
+    private static boolean isSpecializedOriginal(ResourceLocation id) {
         String namespace = id.getNamespace();
         String path = id.getPath();
         return namespace.equals(MutantMonstersCompatibility.MOD_ID)
@@ -160,7 +160,7 @@ public final class ConfiguredModMobs {
                         "baby_stray", "baby_wither_skeleton").contains(path);
     }
 
-    private static boolean isUnavailableSpecializedImMob(Identifier id) {
+    private static boolean isUnavailableSpecializedImMob(ResourceLocation id) {
         if (!id.getNamespace().equals(InvasionMod.MOD_ID)) return false;
         return MutantMonstersCompatibility.MOB_NAMES.contains(id.getPath())
                         && !MutantMonstersCompatibility.isLoaded()
@@ -214,7 +214,7 @@ public final class ConfiguredModMobs {
         return List.copyOf(themes);
     }
 
-    private static Entry defaultEntry(Identifier id) {
+    private static Entry defaultEntry(ResourceLocation id) {
         return MOD_DEFAULTS.getOrDefault(id.toString(),
                 new Entry(false, 5, DEFAULT_THEMES, Abilities.NONE));
     }
@@ -241,7 +241,7 @@ public final class ConfiguredModMobs {
     private static void onEntityJoin(EntityJoinLevelEvent event) {
         if (!(event.getLevel() instanceof ServerLevel)
                 || !(event.getEntity() instanceof Mob mob)) return;
-        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         Entry entry;
         synchronized (ConfiguredModMobs.class) {
             entry = ENTRIES.get(id);
@@ -258,7 +258,7 @@ public final class ConfiguredModMobs {
         if (!(event.getEntity() instanceof Mob mob)
                 || !(mob.level() instanceof ServerLevel level)
                 || !mob.getPersistentData().contains("invmodWaveNumber")) return;
-        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         synchronized (ConfiguredModMobs.class) {
             Entry entry = ENTRIES.get(id);
             if (entry == null || !entry.active() || !isExternalMonster(id, mob.getType())) return;
@@ -267,7 +267,7 @@ public final class ConfiguredModMobs {
                 nexus -> nexus.notifyExternalWaveMobKilled(mob));
     }
 
-    private static void onEntityTick(EntityTickEvent.Pre event) {
+    private static void onEntityTick(LivingEvent.LivingTickEvent event) {
         if (!(event.getEntity() instanceof Mob mob)
                 || !(mob.level() instanceof ServerLevel level)
                 || !isActive(mob.getType())) return;
@@ -303,7 +303,7 @@ public final class ConfiguredModMobs {
     }
 
     private static synchronized boolean isActive(EntityType<?> type) {
-        Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
+        ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         Entry entry = ENTRIES.get(id);
         return entry != null && entry.active() && isExternalMonster(id, type);
     }
