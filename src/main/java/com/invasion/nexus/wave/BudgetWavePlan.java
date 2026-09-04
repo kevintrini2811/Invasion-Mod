@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Comparator;
@@ -186,7 +187,21 @@ public final class BudgetWavePlan {
 
     private static final Map<Theme, List<Option>> POOLS = makePools();
 
-    public record ConfigMobDefault(Identifier id, int cost, List<String> themes) {}
+    public record ConfigMobDefault(Identifier id, int cost, List<String> themes,
+            boolean canWearArmor, boolean canUseWeapons) {}
+
+    private static final Set<String> DEFAULT_ARMOR_MOBS = Set.of(
+            "blaze", "bogged", "breeze", "cave_spider", "creeper", "drowned",
+            "enderman", "ghast", "husk", "jumping_spider", "mystery_zombie",
+            "parched", "pigman_engineer", "queen_spider", "skeleton",
+            "speedy_zombie", "spider", "stray", "wither_skeleton", "zombie",
+            "zombie_builder", "zombie_miner", "zombie_pigman", "zombie_villager",
+            "zombified_piglin");
+    private static final Set<String> DEFAULT_WEAPON_MOBS = Set.of(
+            "bogged", "drowned", "husk", "imp", "jumping_spider",
+            "mystery_zombie", "parched", "skeleton", "speedy_zombie", "stray",
+            "wither_skeleton", "zombie", "zombie_pigman", "zombie_villager",
+            "zombified_piglin");
 
     /** Canonical JSON defaults for every directly purchasable IM mob type. */
     public static List<ConfigMobDefault> configMobDefaults() {
@@ -200,9 +215,13 @@ public final class BudgetWavePlan {
         addConfigAlias(costs, themes, InvEntities.GUARDIAN, InvEntities.DROWNED);
         addConfigAlias(costs, themes, InvEntities.ELDER_GUARDIAN, InvEntities.DROWNED);
         return costs.entrySet().stream()
-                .map(entry -> new ConfigMobDefault(
-                        BuiltInRegistries.ENTITY_TYPE.getKey(entry.getKey()), entry.getValue(),
-                        List.copyOf(themes.getOrDefault(entry.getKey(), new LinkedHashSet<>()))))
+                .map(entry -> {
+                    Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entry.getKey());
+                    String path = id == null ? "" : id.getPath();
+                    return new ConfigMobDefault(id, entry.getValue(),
+                            List.copyOf(themes.getOrDefault(entry.getKey(), new LinkedHashSet<>())),
+                            DEFAULT_ARMOR_MOBS.contains(path), DEFAULT_WEAPON_MOBS.contains(path));
+                })
                 .filter(entry -> entry.id() != null)
                 .sorted(Comparator.comparing(entry -> entry.id().toString()))
                 .toList();

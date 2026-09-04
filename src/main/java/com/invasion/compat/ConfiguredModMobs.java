@@ -53,6 +53,17 @@ public final class ConfiguredModMobs {
             "NETHER", "SIEGE", "FAST", "MIXED", "RANDOM", "RANDOMHELL");
     private static final List<String> DEFAULT_THEMES = List.of(
             "MIXED", "RANDOM", "RANDOMHELL");
+    private static final Map<String, Entry> MOD_DEFAULTS = Map.of(
+            "mutantmonsters:endersoul_clone",
+            new Entry(true, 3, DEFAULT_THEMES, false, false),
+            "variantsandventures:gelid",
+            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), true, true),
+            "variantsandventures:murk",
+            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), true, true),
+            "variantsandventures:thicket",
+            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), true, true),
+            "variantsandventures:verdant",
+            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), true, true));
     private static final Path FILE = FMLPaths.CONFIGDIR.get()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -89,9 +100,9 @@ public final class ConfiguredModMobs {
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
                     boolean active = value.has("active") && value.get("active").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
-                    boolean invMob = id.getNamespace().equals(InvasionMod.MOD_ID);
-                    boolean armor = value.has("canWearArmor") ? value.get("canWearArmor").getAsBoolean() : invMob;
-                    boolean weapons = value.has("canUseWeapons") ? value.get("canUseWeapons").getAsBoolean() : invMob;
+                    Entry defaults = defaultEntry(id);
+                    boolean armor = value.has("canWearArmor") ? value.get("canWearArmor").getAsBoolean() : defaults.canWearArmor();
+                    boolean weapons = value.has("canUseWeapons") ? value.get("canUseWeapons").getAsBoolean() : defaults.canUseWeapons();
                     result.put(id, new Entry(active, cost, readThemes(value), armor, weapons));
                 }
             } catch (Exception exception) {
@@ -107,9 +118,10 @@ public final class ConfiguredModMobs {
                 .filter(registryEntry -> !isSpecializedOriginal(registryEntry.getKey().identifier()))
                 .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
-                        registryEntry.getKey().identifier(), new Entry(false, 5, DEFAULT_THEMES, false, false)));
+                        registryEntry.getKey().identifier(), defaultEntry(registryEntry.getKey().identifier())));
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
-                mob.id(), new Entry(true, mob.cost(), mob.themes(), true, true)));
+                mob.id(), new Entry(true, mob.cost(), mob.themes(),
+                        mob.canWearArmor(), mob.canUseWeapons())));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -194,6 +206,11 @@ public final class ConfiguredModMobs {
             }
         });
         return List.copyOf(themes);
+    }
+
+    private static Entry defaultEntry(Identifier id) {
+        return MOD_DEFAULTS.getOrDefault(id.toString(),
+                new Entry(false, 5, DEFAULT_THEMES, false, false));
     }
 
     private static void onEntityJoin(EntityJoinLevelEvent event) {
