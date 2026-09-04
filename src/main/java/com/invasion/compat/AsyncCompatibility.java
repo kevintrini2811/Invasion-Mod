@@ -7,6 +7,10 @@ import java.util.Set;
 
 import com.invasion.InvasionMod;
 import net.neoforged.fml.ModList;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
 
 public final class AsyncCompatibility {
     private static final String ASYNC_CONFIG =
@@ -19,6 +23,16 @@ public final class AsyncCompatibility {
             "minecraft:villager");
 
     private AsyncCompatibility() {
+    }
+
+    public static void pickUpEquipment(Mob mob, ServerLevel level, ItemEntity entity) {
+        ItemStack stack = entity.getItem();
+        ItemStack equipped = mob.equipItemIfPossible(stack.copy());
+        if (equipped.isEmpty()) return;
+        mob.onItemPickup(entity);
+        mob.take(entity, equipped.getCount());
+        stack.shrink(equipped.getCount());
+        if (stack.isEmpty()) entity.discard();
     }
 
     public static void registerSynchronizedEntities() {

@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -167,10 +167,10 @@ public final class InvasionConfigScreen extends Screen {
             });
             addRenderableWidget(cost);
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.abilities"),
-                    button -> minecraft.setScreenAndShow(new MobAbilitiesScreen(this, id, mob)))
+                    button -> minecraft.setScreen(new MobAbilitiesScreen(this, id, mob)))
                     .bounds(left + 202, controlsY, 135, 20).build());
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.themes"),
-                    button -> minecraft.setScreenAndShow(new MobThemesScreen(this, id, mob)))
+                    button -> minecraft.setScreen(new MobThemesScreen(this, id, mob)))
                     .bounds(left + 341, controlsY, Math.max(100, width - 341), 20).build());
         }
     }
@@ -193,8 +193,8 @@ public final class InvasionConfigScreen extends Screen {
     }
 
     private void regenerate() {
-        minecraft.setScreenAndShow(new ConfirmScreen(confirmed -> {
-            minecraft.setScreenAndShow(this);
+        minecraft.setScreen(new ConfirmScreen(confirmed -> {
+            minecraft.setScreen(this);
             if (confirmed) {
                 ConfiguredModMobs.regenerate();
                 loadFiles();
@@ -213,18 +213,18 @@ public final class InvasionConfigScreen extends Screen {
     private static CycleButton.Builder<Boolean> coloredBooleanBuilder(boolean initial) {
         return CycleButton.booleanBuilder(
                 CommonComponents.OPTION_ON.copy().withStyle(ChatFormatting.GREEN),
-                CommonComponents.OPTION_OFF.copy().withStyle(ChatFormatting.RED), initial);
+                CommonComponents.OPTION_OFF.copy().withStyle(ChatFormatting.RED)).withInitialValue(initial);
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
-        graphics.centeredText(font, title, width / 2, 10, 0xFFFFFFFF);
-        labels.forEach(label -> graphics.text(font, label.text(), label.x(), label.y(), 0xFFFFFFFF, false));
-        graphics.text(font, status, Math.max(10, width / 2 - 245), height - 24, 0xFF55FF55, false);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        super.render(graphics, mouseX, mouseY, delta);
+        graphics.drawCenteredString(font, title, width / 2, 10, 0xFFFFFFFF);
+        labels.forEach(label -> graphics.drawString(font, label.text(), label.x(), label.y(), 0xFFFFFFFF, false));
+        graphics.drawString(font, status, Math.max(10, width / 2 - 245), height - 24, 0xFF55FF55, false);
     }
 
-    @Override public void onClose() { minecraft.setScreenAndShow(parent); }
+    @Override public void onClose() { minecraft.setScreen(parent); }
     private record Label(String text, int x, int y) {}
 
     private static final class MobThemesScreen extends Screen {
@@ -261,12 +261,12 @@ public final class InvasionConfigScreen extends Screen {
             JsonArray themes = new JsonArray();
             THEMES.stream().filter(selected::contains).forEach(themes::add);
             mob.add("themes", themes);
-            minecraft.setScreenAndShow(parent);
+            minecraft.setScreen(parent);
         }
 
-        @Override public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y, float delta) {
-            super.extractRenderState(graphics, x, y, delta);
-            graphics.centeredText(font, title, width / 2, 15, 0xFFFFFFFF);
+        @Override public void render(GuiGraphics graphics, int x, int y, float delta) {
+            super.render(graphics, x, y, delta);
+            graphics.drawCenteredString(font, title, width / 2, 15, 0xFFFFFFFF);
         }
         @Override public void onClose() { done(); }
     }
@@ -317,12 +317,12 @@ public final class InvasionConfigScreen extends Screen {
             mob.add("abilities", abilities);
             mob.remove("canUseWeapons");
             mob.remove("canWearArmor");
-            minecraft.setScreenAndShow(parent);
+            minecraft.setScreen(parent);
         }
 
-        @Override public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y, float delta) {
-            super.extractRenderState(graphics, x, y, delta);
-            graphics.centeredText(font, title, width / 2, 15, 0xFFFFFFFF);
+        @Override public void render(GuiGraphics graphics, int x, int y, float delta) {
+            super.render(graphics, x, y, delta);
+            graphics.drawCenteredString(font, title, width / 2, 15, 0xFFFFFFFF);
         }
         @Override public void onClose() { done(); }
     }
