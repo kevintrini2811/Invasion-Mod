@@ -287,6 +287,10 @@ public final class ConfiguredModMobs {
         }
 
         @Override public void stop() {
+            if (mob.getY() >= exitY - 0.3D) {
+                mob.setPos(columnX + 0.5D, exitY + 0.05D, columnZ + 0.5D);
+                mob.setDeltaMovement(0, 0, 0);
+            }
             mob.setNoGravity(previousNoGravity);
             mob.fallDistance = 0;
         }
@@ -294,12 +298,11 @@ public final class ConfiguredModMobs {
         private BlockPos targetedLadder() {
             BlockPos current = mob.blockPosition();
             if (mob.level().getBlockState(current).is(Blocks.LADDER)) return current;
-            if (mob.level().getBlockState(current.below()).is(Blocks.LADDER)) return current.below();
             net.minecraft.world.level.pathfinder.Path path = mob.getNavigation().getPath();
             if (path == null || path.isDone()) return null;
             BlockPos next = path.getNextNodePos();
             if (mob.level().getBlockState(next).is(Blocks.LADDER)) return next;
-            return mob.level().getBlockState(next.below()).is(Blocks.LADDER) ? next.below() : null;
+            return null;
         }
     }
 
