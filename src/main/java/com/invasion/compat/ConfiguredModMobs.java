@@ -8,6 +8,7 @@ import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
+import com.invasion.nexus.wave.BudgetWavePlan.Theme;
 import com.invasion.util.math.PosUtils;
 import java.io.IOException;
 import java.io.Reader;
@@ -20,6 +21,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -36,6 +38,11 @@ import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /** Configurable, loader-independent support for hostile mobs from other mods. */
 public final class ConfiguredModMobs {
+    private static final List<String> AVAILABLE_THEMES = List.of(
+            "SWARM", "ARMORED", "RANGED", "UNDERGROUND", "SPIDER", "FLYING",
+            "NETHER", "SIEGE", "FAST", "MIXED", "RANDOM", "RANDOMHELL");
+    private static final List<String> DEFAULT_THEMES = List.of(
+            "MIXED", "RANDOM", "RANDOMHELL");
     private static final Path FILE = FMLPaths.CONFIGDIR.get()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -63,7 +70,7 @@ public final class ConfiguredModMobs {
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
                     boolean active = value.has("active") && value.get("active").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
-                    result.put(id, new Entry(active, cost));
+                    result.put(id, new Entry(active, cost, readThemes(value)));
                 }
             } catch (Exception exception) {
                 InvasionMod.LOGGER.error("Could not read {}; leaving it unchanged", FILE, exception);
@@ -77,7 +84,7 @@ public final class ConfiguredModMobs {
                 .filter(registryEntry -> isExternalMonster(registryEntry.getKey().identifier(), registryEntry.getValue()))
                 .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
-                        registryEntry.getKey().identifier(), new Entry(false, 5)));
+                        registryEntry.getKey().identifier(), new Entry(false, 5, DEFAULT_THEMES)));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -85,11 +92,11 @@ public final class ConfiguredModMobs {
     }
 
     @SuppressWarnings("unchecked")
-    public static synchronized List<WaveMob> activeWaveMobs() {
+    public static synchronized List<WaveMob> activeWaveMobs(Theme theme) {
         if (!loaded) refresh();
         List<WaveMob> result = new ArrayList<>();
         ENTRIES.forEach((id, entry) -> {
-            if (!entry.active()) return;
+            if (!entry.active() || !entry.themes().contains(theme.name())) return;
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
             if (type != null && isExternalMonster(id, type)) {
                 result.add(new WaveMob((EntityType<? extends Mob>) type, entry.cost()));
@@ -106,10 +113,15 @@ public final class ConfiguredModMobs {
 
     private static void write() {
         JsonObject root = new JsonObject();
+        root.addProperty("_comment", "Available themes: "
+                + String.join(", ", AVAILABLE_THEMES));
         ENTRIES.forEach((id, entry) -> {
             JsonObject value = new JsonObject();
             value.addProperty("active", entry.active());
             value.addProperty("cost", entry.cost());
+            com.google.gson.JsonArray themes = new com.google.gson.JsonArray();
+            entry.themes().forEach(themes::add);
+            value.add("themes", themes);
             root.add(id.toString(), value);
         });
         try {
@@ -120,6 +132,21 @@ public final class ConfiguredModMobs {
         } catch (IOException exception) {
             InvasionMod.LOGGER.error("Could not update {}", FILE, exception);
         }
+    }
+
+    private static List<String> readThemes(JsonObject value) {
+        if (!value.has("themes") || !value.get("themes").isJsonArray()) return DEFAULT_THEMES;
+        LinkedHashSet<String> themes = new LinkedHashSet<>();
+        value.getAsJsonArray("themes").forEach(element -> {
+            if (!element.isJsonPrimitive()) return;
+            String name = element.getAsString().toUpperCase(java.util.Locale.ROOT);
+            if (AVAILABLE_THEMES.contains(name)) {
+                themes.add(name);
+            } else {
+                InvasionMod.LOGGER.warn("Ignoring unknown mod mob theme {}", name);
+            }
+        });
+        return List.copyOf(themes);
     }
 
     private static void onEntityJoin(EntityJoinLevelEvent event) {
@@ -227,6 +254,6 @@ public final class ConfiguredModMobs {
         }
     }
 
-    private record Entry(boolean active, int cost) {}
+    private record Entry(boolean active, int cost, List<String> themes) {}
     public record WaveMob(EntityType<? extends Mob> type, int cost) {}
 }
