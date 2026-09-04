@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
+import com.invasion.entity.EquipmentUtil;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.wave.BudgetWavePlan.Theme;
@@ -29,11 +30,14 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import com.invasion.entity.SkeletonArrowEntity;
 import net.neoforged.fml.loading.FMLPaths;
@@ -224,9 +228,36 @@ public final class ConfiguredModMobs {
     private static void onEntityTick(EntityTickEvent.Pre event) {
         if (!(event.getEntity() instanceof Mob mob)
                 || !(mob.level() instanceof ServerLevel level)
-                || level.getSkyDarken() >= 4
-                || !mob.isOnFire() || !isActive(mob.getType())) return;
-        if (activeNexus(mob) != null) mob.clearFire();
+                || !isActive(mob.getType())) return;
+
+        if (level.getSkyDarken() < 4 && mob.isOnFire()
+                && activeNexus(mob) != null) {
+            mob.clearFire();
+        }
+        if (mob.tickCount % 15 == 0) {
+            pickUpAllowedEquipment(mob, level);
+        }
+    }
+
+    private static void pickUpAllowedEquipment(Mob mob, ServerLevel level) {
+        boolean armorAllowed = allowsArmor(mob.getType(), false);
+        boolean weaponsAllowed = allowsWeapons(mob.getType(), false);
+        if (!armorAllowed && !weaponsAllowed) return;
+
+        for (ItemEntity item : level.getEntitiesOfClass(
+                ItemEntity.class, mob.getBoundingBox().inflate(1.25D),
+                candidate -> !candidate.hasPickUpDelay()
+                        && isAllowedEquipment(mob, candidate.getItem(),
+                                armorAllowed, weaponsAllowed))) {
+            AsyncCompatibility.pickUpEquipment(mob, level, item);
+        }
+    }
+
+    private static boolean isAllowedEquipment(Mob mob, ItemStack stack,
+            boolean armorAllowed, boolean weaponsAllowed) {
+        EquipmentSlot slot = mob.getEquipmentSlotForItem(stack);
+        return armorAllowed && slot.isArmor()
+                || weaponsAllowed && EquipmentUtil.isWeapon(stack);
     }
 
     private static synchronized boolean isActive(EntityType<?> type) {
