@@ -100,7 +100,7 @@ public class InvasionMod {
         ConfiguredModMobs.bootstrap();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
-            InvasionModClient.register(modBus);
+            InvasionModClient.register(modBus, container);
         }
     }
 

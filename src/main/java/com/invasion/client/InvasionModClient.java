@@ -21,12 +21,17 @@ import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import com.invasion.client.screen.InvasionConfigScreen;
 
 public final class InvasionModClient {
     private InvasionModClient() {
     }
 
-    public static void register(IEventBus modBus) {
+    public static void register(IEventBus modBus, ModContainer container) {
+        container.registerExtensionPoint(IConfigScreenFactory.class,
+                (IConfigScreenFactory) (ignored, parent) -> new InvasionConfigScreen(parent));
         modBus.addListener(InvasionModClient::clientSetup);
         modBus.addListener(InvasionModClient::registerRenderers);
         modBus.addListener(InvasionModClient::registerGuiLayers);
