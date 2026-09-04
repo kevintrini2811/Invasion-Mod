@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -30,6 +31,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.block.Blocks;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
@@ -159,6 +161,7 @@ public final class ConfiguredModMobs {
         }
         if (entry == null || !entry.active()) return;
         mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
+        mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
         mob.goalSelector.addGoal(4, new GoToNexusGoal(mob));
     }
 
@@ -223,6 +226,80 @@ public final class ConfiguredModMobs {
         private void move() {
             mob.getNavigation().moveTo(nexus.getOrigin().getX() + 0.5,
                     nexus.getOrigin().getY(), nexus.getOrigin().getZ() + 0.5, 1.0);
+        }
+    }
+
+    /** Uses the same locked-column climb used by IM ground-mob navigation. */
+    private static final class ClimbNexusLadderGoal extends Goal {
+        private final Mob mob;
+        private int columnX;
+        private int columnZ;
+        private int exitY;
+        private boolean previousNoGravity;
+
+        private ClimbNexusLadderGoal(Mob mob) {
+            this.mob = mob;
+            setFlags(EnumSet.of(Flag.MOVE));
+        }
+
+        @Override public boolean canUse() {
+            if (activeNexus(mob) == null || mob.getTarget() != null && mob.getTarget().isAlive()) return false;
+            BlockPos ladder = targetedLadder();
+            if (ladder == null) return false;
+            columnX = ladder.getX();
+            columnZ = ladder.getZ();
+            exitY = ladder.getY();
+            BlockPos.MutableBlockPos scan = ladder.mutable();
+            for (int offset = 1; offset <= 32; offset++) {
+                scan.set(ladder).move(net.minecraft.core.Direction.UP, offset);
+                if (!mob.level().getBlockState(scan).is(Blocks.LADDER)) break;
+                exitY = scan.getY();
+            }
+            exitY++;
+            return true;
+        }
+
+        @Override public boolean canContinueToUse() {
+            return activeNexus(mob) != null
+                    && (mob.getTarget() == null || !mob.getTarget().isAlive())
+                    && mob.getY() < exitY - 0.05D;
+        }
+
+        @Override public void start() {
+            previousNoGravity = mob.isNoGravity();
+            mob.setNoGravity(true);
+        }
+
+        @Override public void tick() {
+            double targetX = columnX + 0.5D;
+            double targetZ = columnZ + 0.5D;
+            mob.setPos(targetX, mob.getY(), targetZ);
+            mob.setDeltaMovement(0, 0.2D, 0);
+            mob.setXxa(0);
+            mob.setZza(0);
+            mob.fallDistance = 0;
+            mob.setShiftKeyDown(false);
+            mob.setJumping(false);
+            if (mob.getY() >= exitY - 0.05D) {
+                mob.setPos(targetX, exitY - 0.05D, targetZ);
+                mob.setDeltaMovement(0, 0, 0);
+            }
+        }
+
+        @Override public void stop() {
+            mob.setNoGravity(previousNoGravity);
+            mob.fallDistance = 0;
+        }
+
+        private BlockPos targetedLadder() {
+            BlockPos current = mob.blockPosition();
+            if (mob.level().getBlockState(current).is(Blocks.LADDER)) return current;
+            if (mob.level().getBlockState(current.below()).is(Blocks.LADDER)) return current.below();
+            net.minecraft.world.level.pathfinder.Path path = mob.getNavigation().getPath();
+            if (path == null || path.isDone()) return null;
+            BlockPos next = path.getNextNodePos();
+            if (mob.level().getBlockState(next).is(Blocks.LADDER)) return next;
+            return mob.level().getBlockState(next.below()).is(Blocks.LADDER) ? next.below() : null;
         }
     }
 
