@@ -92,5 +92,8 @@ public interface NexusAccess {
 
     void notifyCombatantRemoved(Combatant<?> combatant, Entity.RemovalReason reason);
 
+    default void notifyExternalWaveMobKilled(Entity entity) {
+    }
+
     void damage(DamageSource source, int amount);
 }

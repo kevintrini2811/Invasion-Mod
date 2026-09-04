@@ -6,6 +6,7 @@ import com.invasion.compat.AsyncCompatibility;
 import com.invasion.compat.InfernalMobsCompatibility;
 import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.compat.FriendsAndFoesCompatibility;
+import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
@@ -109,6 +110,7 @@ public class InvasionMod {
         PlayerAllyTargetHandler.bootstrap();
         InfusedSwordChargeHandler.bootstrap();
         InfernalMobsCompatibility.bootstrap();
+        ConfiguredModMobs.bootstrap();
 
         if (FMLEnvironment.dist == Dist.CLIENT) {
             InvasionModClient.register(modBus);
@@ -202,6 +204,7 @@ public class InvasionMod {
 
     private void serverStarting(ServerStartingEvent event) {
         SERVER = event.getServer();
+        ConfiguredModMobs.refresh();
         AsyncCompatibility.registerSynchronizedEntities();
     }
 
