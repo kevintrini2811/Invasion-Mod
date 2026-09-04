@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.LinkedHashSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
@@ -303,16 +304,47 @@ public final class ConfiguredModMobs {
 
         @Override public void stop() {
             if (mob.getY() >= exitY - 0.3D) {
-                mob.setPos(columnX + 0.5D, exitY + 0.05D, columnZ + 0.5D);
+                BlockPos exit = findSafeExit();
+                mob.setPos(exit.getX() + 0.5D, exit.getY(), exit.getZ() + 0.5D);
                 mob.setDeltaMovement(0, 0, 0);
                 completedExit = true;
                 completedColumnX = columnX;
                 completedColumnZ = columnZ;
                 completedExitY = exitY;
                 mob.getNavigation().stop();
+                NexusAccess nexus = activeNexus(mob);
+                if (nexus != null) {
+                    mob.getNavigation().moveTo(nexus.getOrigin().getX() + 0.5D,
+                            nexus.getOrigin().getY(), nexus.getOrigin().getZ() + 0.5D, 1.0D);
+                }
             }
             mob.setNoGravity(previousNoGravity);
             mob.fallDistance = 0;
+        }
+
+        private BlockPos findSafeExit() {
+            BlockPos ladderTop = new BlockPos(columnX, exitY - 1, columnZ);
+            NexusAccess nexus = activeNexus(mob);
+            BlockPos best = null;
+            double bestDistance = Double.MAX_VALUE;
+            for (Direction direction : Direction.Plane.HORIZONTAL) {
+                BlockPos candidate = ladderTop.relative(direction).above();
+                BlockPos support = candidate.below();
+                if (!mob.level().getBlockState(support)
+                        .isFaceSturdy(mob.level(), support, Direction.UP)) continue;
+                double dx = candidate.getX() + 0.5D - mob.getX();
+                double dy = candidate.getY() - mob.getY();
+                double dz = candidate.getZ() + 0.5D - mob.getZ();
+                if (!mob.level().noCollision(mob, mob.getBoundingBox().move(dx, dy, dz))) continue;
+                double distance = nexus == null ? 0.0D
+                        : candidate.distToCenterSqr(nexus.getOrigin().getX() + 0.5D,
+                                nexus.getOrigin().getY(), nexus.getOrigin().getZ() + 0.5D);
+                if (distance < bestDistance) {
+                    best = candidate;
+                    bestDistance = distance;
+                }
+            }
+            return best != null ? best : ladderTop.above();
         }
 
         private BlockPos targetedLadder() {
