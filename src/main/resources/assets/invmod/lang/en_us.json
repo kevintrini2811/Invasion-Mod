@@ -1,4 +1,12 @@
 {
+  "invmod.config.title": "Invasion Configuration",
+  "invmod.config.empty": "This configuration file is empty.",
+  "invmod.config.editor": "Configuration editor",
+  "invmod.config.save": "Save",
+  "invmod.config.saved": "Configuration saved and reloaded.",
+  "invmod.config.regenerate": "Regenerate",
+  "invmod.config.regenerated": "Mob configuration reset to detected defaults.",
+  "invmod.config.regenerate.confirm": "Reset all mob settings? This cannot be undone.",
   "invmod.message.command.debug_mobs": "Applied Glowing to %s loaded IM mob(s) for 10 minutes. Nearest mobs:",
   "invmod.message.command.debug_mob_entry": "%s at %s",
   "invmod.message.command.debug_phase_mob_entry": "★ %s at %s",

@@ -6,6 +6,7 @@ import com.invasion.client.render.legacy.InvRenderers;
 import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.compat.MutantMonstersRenderers;
 import com.invasion.client.screen.NexusScreen;
+import com.invasion.client.screen.InvasionConfigScreen;
 import com.invasion.item.InvItems;
 import com.invasion.network.NexusHudPayload;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -16,6 +17,8 @@ import net.minecraft.world.item.SpawnEggItem;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
@@ -25,7 +28,10 @@ public final class InvasionModClient {
     private InvasionModClient() {
     }
 
-    public static void register(IEventBus modBus) {
+    public static void register(IEventBus modBus, ModContainer container) {
+        container.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory(
+                        (minecraft, parent) -> new InvasionConfigScreen(parent)));
         modBus.addListener(InvasionModClient::clientSetup);
         modBus.addListener(InvasionModClient::registerRenderers);
         modBus.addListener(InvasionModClient::registerGuiLayers);
