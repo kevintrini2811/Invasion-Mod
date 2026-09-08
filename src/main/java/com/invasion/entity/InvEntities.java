@@ -163,6 +163,12 @@ public interface InvEntities {
 
     EntityType<ThrowerEntity> THROWER = register("thrower", EntityType.Builder.<ThrowerEntity>of(ThrowerEntity::new, MobCategory.MONSTER)
             .sized(1.8F, 1.95F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<ThrowerEntity> BIG_THROWER = register("big_thrower", EntityType.Builder.<ThrowerEntity>of((type, level) -> {
+                ThrowerEntity thrower = new ThrowerEntity(type, level);
+                thrower.setTier(2);
+                return thrower;
+            }, MobCategory.MONSTER)
+            .sized(1.8F, 1.95F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<BurrowerEntity> BURROWER = register("burrower", EntityType.Builder.<BurrowerEntity>of(BurrowerEntity::new, MobCategory.MONSTER)
             .sized(0.5F, 0.5F).eyeHeight(0.25F).clientTrackingRange(10));
     EntityType<BurrowerTailEntity> BURROWER_TAIL = register("burrower_tail",
@@ -248,6 +254,7 @@ public interface InvEntities {
     }
 
     static void registerAttributes(EntityAttributeCreationEvent event) {
+        event.put(BIG_THROWER, ThrowerEntity.createT2V0Attributes().build());
         event.put(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(
                 BOGGED, IMBoggedEntity.createAttributes().build());

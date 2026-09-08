@@ -99,6 +99,7 @@ public final class InvRenderers {
         event.registerEntityRenderer(InvEntities.ENDERMAN, VariantMobRenderers.Enderman::new);
         event.registerEntityRenderer(InvEntities.PHANTOM, PhantomRenderer::new);
         event.registerEntityRenderer(InvEntities.THROWER, ThrowerEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.BIG_THROWER, ThrowerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.BURROWER, BurrowerEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.BURROWER_TAIL, NoopRenderer::new);
         event.registerEntityRenderer(InvEntities.BOULDER, BoulderEntityRenderer::new);

@@ -150,7 +150,7 @@ public final class BudgetWavePlan {
             o(InvEntities.WITHER_SKELETON,1,5), o(InvEntities.SPIDER,1,2), o(InvEntities.CAVE_SPIDER,1,3),
             o(InvEntities.JUMPING_SPIDER,1,3), o(InvEntities.QUEEN_SPIDER,1,8), o(InvEntities.PIGMAN_ENGINEER,1,5),
             o(InvEntities.ZOMBIE_BUILDER,1,7), o(InvEntities.ZOMBIE_MINER,1,9), o(InvEntities.SILVERFISH,1,3), o(InvEntities.ENDERMITE,1,4),
-            o(InvEntities.WITCH,1,5), o(InvEntities.THROWER,1,5), o(InvEntities.THROWER,2,10), o(InvEntities.IMP,1,5),
+            o(InvEntities.WITCH,1,5), o(InvEntities.THROWER,1,5), o(InvEntities.BIG_THROWER,2,10), o(InvEntities.IMP,1,5),
             o(InvEntities.BLAZE,1,8), o(InvEntities.BREEZE,1,6), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,15),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
             o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
@@ -205,7 +205,7 @@ public final class BudgetWavePlan {
             "wither_skeleton", "zombie", "zombie_pigman", "zombie_villager",
             "zombified_piglin");
     private static final Set<String> DEFAULT_MINING_MOBS = Set.of(
-            "bogged", "burrower", "cave_spider", "drowned", "enderman",
+            "big_thrower", "bogged", "burrower", "cave_spider", "drowned", "enderman",
             "fat_zombie", "husk", "jumping_spider", "mystery_zombie", "parched",
             "pigman_engineer", "queen_spider", "skeleton", "speedy_zombie",
             "spider", "stray", "thrower", "wither_skeleton", "zombie",
@@ -278,7 +278,7 @@ public final class BudgetWavePlan {
                 || isBaby(o) && isType(o, InvEntities.SKELETON, InvEntities.STRAY,
                         InvEntities.BOGGED)));
         pools.put(Theme.SIEGE, select(o ->
-                isType(o, InvEntities.THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER,
+                isType(o, InvEntities.THROWER, InvEntities.BIG_THROWER, InvEntities.GHAST, InvEntities.PIGMAN_ENGINEER,
                         InvEntities.CREEPER, InvEntities.ZOMBIE_BUILDER, InvEntities.ENDERMAN,
                         InvEntities.ZOGLIN, InvEntities.BURROWER)
                 || !isBaby(o) && o.type == InvEntities.ZOMBIE
@@ -289,7 +289,7 @@ public final class BudgetWavePlan {
                 || o.type == InvEntities.ZOMBIE && o.flavour != 2
                 || isType(o, InvEntities.SKELETON, InvEntities.STRAY, InvEntities.BOGGED,
                         InvEntities.WITHER_SKELETON)
-                || isType(o, InvEntities.IMP, InvEntities.THROWER, InvEntities.GHAST,
+                || isType(o, InvEntities.IMP, InvEntities.THROWER, InvEntities.BIG_THROWER, InvEntities.GHAST,
                         InvEntities.BLAZE, InvEntities.BREEZE, InvEntities.WITHER, InvEntities.WITCH)
                 || o.type == InvEntities.ZOMBIE && o.flavour == 2));
         EntityType<? extends Mob> spiderPig = MutantMonstersCompatibility.mobType("spider_pig");

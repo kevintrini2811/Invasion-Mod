@@ -187,7 +187,7 @@ public class ThrowerEntity extends TieredIMMobEntity {
     @Override
     protected Component getTypeName() {
         if (isBig()) {
-            return Component.translatable(getType().getDescriptionId() + ".big");
+            return Component.translatable("entity.invmod.big_thrower");
         }
         return super.getTypeName();
     }

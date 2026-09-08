@@ -127,7 +127,7 @@ public interface InvItems {
     Item ZOMBIE_BUILDER_SPAWN_EGG = register("zombie_builder_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_BUILDER, 0x4B7328, 0xF1C232));
     Item ZOMBIE_MINER_SPAWN_EGG = register("zombie_miner_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_MINER, 0x4B7328, 0x55FFFF));
     Item THROWER_SPAWN_EGG = register("thrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.THROWER, 0x586039, 0x06090C));
-    Item BIG_THROWER_SPAWN_EGG = register("big_thrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.THROWER, 0x394119, 0x181C0A, NexusEntity.createVariant(0, 2)));
+    Item BIG_THROWER_SPAWN_EGG = register("big_thrower_spawn_egg", p -> createSpawnEgg(p, InvEntities.BIG_THROWER, 0x394119, 0x181C0A, NexusEntity.createVariant(0, 2)));
     Item IMP_SPAWN_EGG = register("imp_spawn_egg", p -> createSpawnEgg(p, InvEntities.IMP, 0xB40113, 0xFF0000));
     Item BLAZE_SPAWN_EGG = register("blaze_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.BLAZE, 0xF6B201, 0xFFF87E));
