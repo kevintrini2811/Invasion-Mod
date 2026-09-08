@@ -1,4 +1,5 @@
 {
+    "entity.invmod.big_thrower": "IM Big Thrower",
   "invmod.config.title": "Invasion Configuration",
   "invmod.config.empty": "This configuration file is empty.",
   "invmod.config.editor": "Configuration editor",

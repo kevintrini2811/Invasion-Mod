@@ -100,6 +100,7 @@ public final class InvRenderers {
                         ModelLayers.ZOMBIFIED_PIGLIN_ARMOR,
                         ModelLayers.ZOMBIFIED_PIGLIN_BABY_ARMOR));
         EntityRendererRegistry.register(InvEntities.THROWER, ThrowerRenderer::new);
+        EntityRendererRegistry.register(InvEntities.BIG_THROWER, ThrowerRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER, BurrowerRenderer::new);
         EntityRendererRegistry.register(InvEntities.BURROWER_TAIL, NoopRenderer::new);
         EntityRendererRegistry.register(InvEntities.BOULDER, BoulderProjectileRenderer::new);
