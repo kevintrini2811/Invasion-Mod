@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import com.invasion.nexus.Combatant;
+import com.invasion.compat.ConfiguredModMobs;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ public final class IMMobFriendlyFireHandler {
         ServerTickEvents.END_LEVEL_TICK.register(level -> {
             for (Combatant<?> combatant : BoundIMMobRegistry.loaded(level)) {
                 LivingEntity entity = combatant.asEntity();
-                if (entity instanceof Mob mob && mob.getTarget() instanceof Combatant<?>) {
+                if (entity instanceof Mob mob && isInvasionAlly(mob.getTarget())) {
                     mob.setTarget(null);
                 }
             }
@@ -44,11 +45,11 @@ public final class IMMobFriendlyFireHandler {
     public static boolean allowTarget(Mob mob, LivingEntity target) {
         if (isHiddenInternalTarget(target)
                 || isInvmodTarget(target) && !mob.hasLineOfSight(target)
-                || mob instanceof Combatant<?> && target instanceof Combatant<?>) {
+                || isInvasionAlly(mob) && isInvasionAlly(target)) {
             untrack(mob);
             return false;
         }
-        if (isInvmodTarget(target) && mob.level() instanceof ServerLevel level) {
+        if ((isInvmodTarget(target) || isInvasionAlly(target)) && mob.level() instanceof ServerLevel level) {
             synchronized (TARGET_LOCK) {
                 IM_TARGETING_MOBS.computeIfAbsent(level, ignored ->
                         Collections.newSetFromMap(new IdentityHashMap<>()))
@@ -70,10 +71,12 @@ public final class IMMobFriendlyFireHandler {
         }
         for (Mob mob : snapshot) {
             LivingEntity target = mob.getTarget();
-            if (!mob.isAlive() || mob.isRemoved() || !isInvmodTarget(target)) {
+            if (!mob.isAlive() || mob.isRemoved()
+                    || !(isInvmodTarget(target) || isInvasionAlly(target))) {
                 untrack(mob);
-            } else if (isHiddenInternalTarget(target)
-                    || !mob.hasLineOfSight(target)) {
+            } else if (isInvasionAlly(mob) && isInvasionAlly(target)
+                    || isHiddenInternalTarget(target)
+                    || isInvmodTarget(target) && !mob.hasLineOfSight(target)) {
                 mob.setTarget(null);
                 untrack(mob);
             }
@@ -104,9 +107,14 @@ public final class IMMobFriendlyFireHandler {
                         .getNamespace().equals("invmod");
     }
 
+    private static boolean isInvasionAlly(Entity entity) {
+        return entity instanceof Combatant<?>
+                || entity instanceof Mob mob && ConfiguredModMobs.isInvasionAlly(mob);
+    }
+
     private static boolean allowDamage(
             LivingEntity victim, net.minecraft.world.damagesource.DamageSource source, float amount) {
         Entity attacker = source.getEntity();
-        return !(victim instanceof Combatant<?> && attacker instanceof Combatant<?>);
+        return !(isInvasionAlly(victim) && isInvasionAlly(attacker));
     }
 }
