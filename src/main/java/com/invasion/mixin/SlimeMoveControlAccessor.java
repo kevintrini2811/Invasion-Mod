@@ -1,10 +1,11 @@
 package com.invasion.mixin;
 
+import com.invasion.compat.NexusJumpControl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(targets = "net.minecraft.world.entity.monster.Slime$SlimeMoveControl")
-public interface SlimeMoveControlAccessor {
+public interface SlimeMoveControlAccessor extends NexusJumpControl {
     @Invoker("setDirection")
     void invasion$setDirection(float direction, boolean aggressive);
 
