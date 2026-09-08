@@ -24,6 +24,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashSet;
+import java.util.UUID;
+import com.invasion.nexus.Combatant;
+import net.minecraftforge.event.TickEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -69,6 +72,7 @@ public final class ConfiguredModMobs {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<ResourceLocation, Entry> ENTRIES = new LinkedHashMap<>();
     private static boolean loaded;
+    private static final String NEXUS_OWNER = "invmodConfiguredNexus";
 
     private ConfiguredModMobs() {
     }
@@ -77,6 +81,45 @@ public final class ConfiguredModMobs {
         MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityJoin);
         MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onLivingDeath);
         MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityTick);
+        MinecraftForge.EVENT_BUS.addListener(ConfiguredModMobs::onLevelTick);
+    }
+
+    /** Includes natural and egg spawns, not just mobs purchased by a wave. */
+    public static void cleanupNexusMobs(ServerLevel level, NexusAccess nexus) {
+        String owner = nexus.getUuid().toString();
+        List<Mob> removals = new ArrayList<>();
+        for (var entity : level.getAllEntities()) {
+            if (!(entity instanceof Mob mob) || mob instanceof Combatant<?>) continue;
+            String binding = mob.getPersistentData().getString(NEXUS_OWNER);
+            if (owner.equals(binding) || binding.isEmpty() && isActive(mob.getType())) {
+                removals.add(mob);
+            }
+        }
+        // Snapshot first: removing entities may mutate the level's entity index.
+        removals.forEach(Mob::discard);
+    }
+
+    private static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel level)) return;
+        List<Mob> removals = new ArrayList<>();
+        for (var entity : level.getAllEntities()) {
+            if (!(entity instanceof Mob mob) || mob instanceof Combatant<?>) continue;
+            String binding = mob.getPersistentData().getString(NEXUS_OWNER);
+            if (!binding.isEmpty()) {
+                NexusAccess owner = null;
+                try {
+                    owner = WorldNexusStorage.of(level).getNexus(UUID.fromString(binding));
+                } catch (IllegalArgumentException ignored) {
+                    // Invalid saved bindings must not leave invasion mobs orphaned.
+                }
+                if (owner == null || owner.isDiscarded() || !owner.isActive()) {
+                    removals.add(mob);
+                }
+            } else if (isActive(mob.getType())) {
+                activeNexus(mob);
+            }
+        }
+        removals.forEach(Mob::discard);
     }
 
     /** Reloads user choices, then adds newly installed hostile entity types. */
@@ -248,6 +291,7 @@ public final class ConfiguredModMobs {
         }
         if (entry == null || !entry.active()
                 || !isExternalMonster(id, mob.getType())) return;
+        activeNexus(mob);
         mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
         mob.goalSelector.addGoal(2, new RangedAttackNexusGoal(mob));
         mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
@@ -340,9 +384,14 @@ public final class ConfiguredModMobs {
 
     private static NexusAccess activeNexus(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return null;
-        return WorldNexusStorage.of(level).getNexus()
-                .filter(nexus -> nexus.isActive() && !nexus.isDiscarded())
+        NexusAccess nexus = WorldNexusStorage.of(level).getNexus()
+                .filter(candidate -> candidate.isActive() && !candidate.isDiscarded())
                 .orElse(null);
+        if (nexus != null && !(mob instanceof Combatant<?>)
+                && !mob.getPersistentData().contains(NEXUS_OWNER)) {
+            mob.getPersistentData().putString(NEXUS_OWNER, nexus.getUuid().toString());
+        }
+        return nexus;
     }
 
     private static final class GoToNexusGoal extends Goal {
