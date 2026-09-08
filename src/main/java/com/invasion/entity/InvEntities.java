@@ -63,6 +63,20 @@ public interface InvEntities {
                     .passengerAttachments(4.0625F).clientTrackingRange(10));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<EntityIMZombie> TAR_ZOMBIE = register("tar_zombie", EntityType.Builder.<EntityIMZombie>of((type, level) -> {
+                EntityIMZombie zombie = new EntityIMZombie(type, level);
+                // Set flavour first so tier 2 does not equip the plain variant's armor.
+                zombie.setFlavour(2);
+                zombie.setTier(2);
+                return zombie;
+            }, MobCategory.MONSTER)
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<EntityIMZombie> ZOMBIE_BRUTE = register("zombie_brute", EntityType.Builder.<EntityIMZombie>of((type, level) -> {
+                EntityIMZombie zombie = new EntityIMZombie(type, level);
+                zombie.setTier(3);
+                return zombie;
+            }, MobCategory.MONSTER)
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMFatZombieEntity> FAT_ZOMBIE = register("fat_zombie",
             EntityType.Builder.<IMFatZombieEntity>of(
                             IMFatZombieEntity::new, MobCategory.MONSTER)
@@ -261,6 +275,8 @@ public interface InvEntities {
     }
 
     static void bootstrap() {
+        FabricDefaultAttributeRegistry.register(ZOMBIE_BRUTE, EntityIMZombie.createTierT3V0Attributes());
+        FabricDefaultAttributeRegistry.register(TAR_ZOMBIE, EntityIMZombie.createTierT2V2ttributes());
         FabricDefaultAttributeRegistry.register(BIG_THROWER, ThrowerEntity.createT2V0Attributes());
         FabricDefaultAttributeRegistry.register(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes());
         FabricDefaultAttributeRegistry.register(

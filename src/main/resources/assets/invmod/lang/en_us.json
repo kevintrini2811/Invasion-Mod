@@ -1,4 +1,6 @@
 {
+    "entity.invmod.zombie_brute": "IM Zombie Brute",
+    "entity.invmod.tar_zombie": "IM Tar Zombie",
     "entity.invmod.big_thrower": "IM Big Thrower",
   "invmod.config.title": "Invasion Configuration",
   "invmod.config.empty": "This configuration file is empty.",
