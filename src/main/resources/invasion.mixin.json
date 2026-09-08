@@ -8,6 +8,8 @@
       "PathNodeMixin",
       "PhantomAccessor",
       "CubeMobMoveControlAccessor",
+      "EndSlimeMoveControlAccessor",
+      "TropicalSlimeMoveControlAccessor",
       "WildfireNexusMixin"
     ],
     "client": [

@@ -15,7 +15,6 @@ import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.monster.Vex;
-import com.invasion.mixin.CubeMobMoveControlAccessor;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.wave.BudgetWavePlan.Theme;
@@ -424,7 +423,7 @@ public final class ConfiguredModMobs {
         }
 
         private boolean usesSpecialMovement() {
-            return mob.getMoveControl() instanceof CubeMobMoveControlAccessor
+            return mob.getMoveControl() instanceof NexusJumpControl
                     || mob.getMoveControl() instanceof FlyingMoveControl
                     || mob.getNavigation() instanceof FlyingPathNavigation
                     || mob instanceof Ghast || mob instanceof Phantom
@@ -448,7 +447,7 @@ public final class ConfiguredModMobs {
         @Override public void tick() {
             var target = PosUtils.center(nexus.getOrigin());
             mob.getLookControl().setLookAt(target);
-            if (mob.getMoveControl() instanceof CubeMobMoveControlAccessor control) {
+            if (mob.getMoveControl() instanceof NexusJumpControl control) {
                 float yaw = (float)(Mth.atan2(target.z - mob.getZ(),
                         target.x - mob.getX()) * 180.0D / Math.PI) - 90.0F;
                 control.invasion$setDirection(yaw, true);
@@ -484,7 +483,7 @@ public final class ConfiguredModMobs {
         @Override public void stop() {
             mob.getNavigation().stop();
             mob.getMoveControl().setWantedPosition(mob.getX(), mob.getY(), mob.getZ(), 0);
-            if (mob.getMoveControl() instanceof CubeMobMoveControlAccessor control) {
+            if (mob.getMoveControl() instanceof NexusJumpControl control) {
                 control.invasion$setWantedMovement(0);
             }
             if (mob instanceof Phantom) {
