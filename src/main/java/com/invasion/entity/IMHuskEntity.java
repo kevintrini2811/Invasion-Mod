@@ -63,12 +63,14 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     private void convertToIMZombie(ServerLevel world) {
-        EntityIMZombie zombie = InvEntities.ZOMBIE.create(
+        EntityIMZombie zombie = ZombieVariants.resolve(InvEntities.ZOMBIE, getTier(), getFlavour()).create(
                 world, EntitySpawnReason.CONVERSION);
         if (zombie == null) {
             return;
         }
 
+        zombie.setFlavour(getFlavour());
+        zombie.setTier(getTier());
         Entity vehicle = getVehicle();
         stopRiding();
         zombie.snapTo(

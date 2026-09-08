@@ -1,4 +1,13 @@
 {
+    "entity.invmod.zombie_pigman_brute": "IM Zombie Pigman Brute",
+    "item.invmod.zombie_villager_brute_spawn_egg": "IM Zombie-Dorfbewohner-Brute-Spawn-Ei",
+    "entity.invmod.zombie_villager_brute": "IM Zombie-Dorfbewohner-Brute",
+    "item.invmod.drowned_brute_spawn_egg": "IM Ertrunkener Brute-Spawn-Ei",
+    "entity.invmod.drowned_brute": "IM Ertrunkener Brute",
+    "item.invmod.husk_brute_spawn_egg": "IM Wüstenzombie-Brute-Spawn-Ei",
+    "entity.invmod.husk_brute": "IM Wüstenzombie-Brute",
+    "item.invmod.speedy_zombie_brute_spawn_egg": "IM Speedy Zombie Brute-Spawn-Ei",
+    "entity.invmod.speedy_zombie_brute": "IM Speedy Zombie Brute",
     "entity.invmod.zombie_brute": "IM Zombie-Grobian",
     "entity.invmod.tar_zombie": "IM Teer-Zombie",
     "entity.invmod.big_thrower": "IM Großer Werfer",

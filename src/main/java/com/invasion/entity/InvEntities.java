@@ -89,6 +89,17 @@ public interface InvEntities {
                     .sized(0.6F, 1.8F).eyeHeight(1.53F)
                     .passengerAttachments(1.865F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
+    EntityType<EntityIMSpeedyZombie> SPEEDY_ZOMBIE_BRUTE = register(
+            "speedy_zombie_brute",
+            EntityType.Builder.<EntityIMSpeedyZombie>of(
+                            (type, level) -> {
+                                EntityIMSpeedyZombie brute = new EntityIMSpeedyZombie(type, level);
+                                brute.setTier(3);
+                                return brute;
+                            }, MobCategory.MONSTER)
+                    .sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .passengerAttachments(1.865F).ridingOffset(-0.7F)
+                    .clientTrackingRange(8));
     EntityType<MysteryZombieEntity> MYSTERY_ZOMBIE = register(
             "mystery_zombie",
             EntityType.Builder.<MysteryZombieEntity>of(
@@ -103,10 +114,32 @@ public interface InvEntities {
                     .sized(0.6F, 1.95F).eyeHeight(1.74F)
                     .passengerAttachments(2.0125F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
+    EntityType<IMHuskEntity> HUSK_BRUTE = register(
+            "husk_brute",
+            EntityType.Builder.<IMHuskEntity>of(
+                            (type, level) -> {
+                                IMHuskEntity brute = new IMHuskEntity(type, level);
+                                brute.setTier(3);
+                                return brute;
+                            }, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F).eyeHeight(1.74F)
+                    .passengerAttachments(2.0125F).ridingOffset(-0.7F)
+                    .clientTrackingRange(8));
     EntityType<IMDrownedEntity> DROWNED = register(
             "drowned",
             EntityType.Builder.<IMDrownedEntity>of(
                             IMDrownedEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.95F).eyeHeight(1.74F)
+                    .passengerAttachments(2.0125F).ridingOffset(-0.7F)
+                    .clientTrackingRange(8));
+    EntityType<IMDrownedEntity> DROWNED_BRUTE = register(
+            "drowned_brute",
+            EntityType.Builder.<IMDrownedEntity>of(
+                            (type, level) -> {
+                                IMDrownedEntity brute = new IMDrownedEntity(type, level);
+                                brute.setTier(3);
+                                return brute;
+                            }, MobCategory.MONSTER)
                     .sized(0.6F, 1.95F).eyeHeight(1.74F)
                     .passengerAttachments(2.0125F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
@@ -129,7 +162,24 @@ public interface InvEntities {
                     .sized(0.6F, 1.8F).eyeHeight(1.53F)
                     .passengerAttachments(1.865F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
+    EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER_BRUTE = register(
+            "zombie_villager_brute",
+            EntityType.Builder.<IMZombieVillagerEntity>of(
+                            (type, level) -> {
+                                IMZombieVillagerEntity brute = new IMZombieVillagerEntity(type, level);
+                                brute.setTier(3);
+                                return brute;
+                            }, MobCategory.MONSTER)
+                    .sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .passengerAttachments(1.865F).ridingOffset(-0.7F)
+                    .clientTrackingRange(8));
     EntityType<EntityIMZombiePigman> ZOMBIE_PIGMAN = register("zombie_pigman", EntityType.Builder.<EntityIMZombiePigman>of(EntityIMZombiePigman::new, MobCategory.MONSTER)
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<EntityIMZombiePigman> ZOMBIE_PIGMAN_BRUTE = register("zombie_pigman_brute", EntityType.Builder.<EntityIMZombiePigman>of((type, level) -> {
+                                EntityIMZombiePigman brute = new EntityIMZombiePigman(type, level);
+                                brute.setTier(3);
+                                return brute;
+                            }, MobCategory.MONSTER)
             .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMZoglinEntity> ZOGLIN = register("zoglin",
             EntityType.Builder.<IMZoglinEntity>of(IMZoglinEntity::new, MobCategory.MONSTER)
@@ -275,6 +325,11 @@ public interface InvEntities {
     }
 
     static void bootstrap() {
+        FabricDefaultAttributeRegistry.register(ZOMBIE_PIGMAN_BRUTE, EntityIMZombiePigman.createT3Attributes());
+        FabricDefaultAttributeRegistry.register(ZOMBIE_VILLAGER_BRUTE, EntityIMZombie.createTierT3V0Attributes());
+        FabricDefaultAttributeRegistry.register(DROWNED_BRUTE, IMDrownedEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(HUSK_BRUTE, EntityIMZombie.createTierT3V0Attributes());
+        FabricDefaultAttributeRegistry.register(SPEEDY_ZOMBIE_BRUTE, EntityIMZombie.createTierT3V0Attributes());
         FabricDefaultAttributeRegistry.register(ZOMBIE_BRUTE, EntityIMZombie.createTierT3V0Attributes());
         FabricDefaultAttributeRegistry.register(TAR_ZOMBIE, EntityIMZombie.createTierT2V2ttributes());
         FabricDefaultAttributeRegistry.register(BIG_THROWER, ThrowerEntity.createT2V0Attributes());

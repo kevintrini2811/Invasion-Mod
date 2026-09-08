@@ -105,6 +105,18 @@ public interface InvItems {
     Item TIER_TWO_ARMED_ZOMBIE_SPAWN_EGG = register("tier_two_armed_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE, 0x497533, 0xA0A0A0, NexusEntity.createVariant(1, 2)));
     Item TAR_ZOMBIE_SPAWN_EGG = register("tar_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.TAR_ZOMBIE, 0x3A4225, 0x191C13, NexusEntity.createVariant(2, 2)));
     Item ZOMBIE_BRUTE_SPAWN_EGG = register("zombie_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_BRUTE, 0x3A4225, 0x191C13, NexusEntity.createVariant(0, 3)));
+    Item SPEEDY_ZOMBIE_BRUTE_SPAWN_EGG = register("speedy_zombie_brute_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.SPEEDY_ZOMBIE_BRUTE, 0x3A4225, 0x191C13,
+                    NexusEntity.createVariant(0, 3)));
+    Item HUSK_BRUTE_SPAWN_EGG = register("husk_brute_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.HUSK_BRUTE, 0x3A4225, 0x191C13,
+                    NexusEntity.createVariant(0, 3)));
+    Item DROWNED_BRUTE_SPAWN_EGG = register("drowned_brute_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.DROWNED_BRUTE, 0x3A4225, 0x191C13,
+                    NexusEntity.createVariant(0, 3)));
+    Item ZOMBIE_VILLAGER_BRUTE_SPAWN_EGG = register("zombie_villager_brute_spawn_egg",
+            p -> createSpawnEgg(p, InvEntities.ZOMBIE_VILLAGER_BRUTE, 0x3A4225, 0x191C13,
+                    NexusEntity.createVariant(0, 3)));
     Item SKELETON_SPAWN_EGG = register("skeleton_spawn_egg", p -> createSpawnEgg(p, InvEntities.SKELETON, 0x9B9B9B, 0x797979));
     Item BOGGED_SPAWN_EGG = register(
             "bogged_spawn_egg",
@@ -156,7 +168,7 @@ public interface InvItems {
             p -> createSpawnEgg(
                     p, InvEntities.ZOMBIFIED_PIGLIN, 0xEA9393, 0x4C7129));
     Item TIER_TWO_ZOMBIE_PIGMAN_SPAWN_EGG = register("tier_two_pigman_zombie_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 2)));
-    Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
+    Item ZOMBIE_PIGMAN_BRUTE_SPAWN_EGG = register("zombie_pigman_brute_spawn_egg", p -> createSpawnEgg(p, InvEntities.ZOMBIE_PIGMAN_BRUTE, 0xEB8E91, 0x49652F, NexusEntity.createVariant(1, 3)));
     Item ZOGLIN_SPAWN_EGG = register("zoglin_spawn_egg",
             p -> createSpawnEgg(p, InvEntities.ZOGLIN, 0xC66E55, 0x5F6464));
     Item WITHER_SPAWN_EGG = register("wither_spawn_egg",

@@ -41,17 +41,27 @@ public final class InvRenderers {
                 InvEntities.SPEEDY_ZOMBIE,
                 SpeedyZombieRenderer::new);
         EntityRendererRegistry.register(
+                InvEntities.SPEEDY_ZOMBIE_BRUTE,
+                SpeedyZombieRenderer::new);
+        EntityRendererRegistry.register(
                 InvEntities.MYSTERY_ZOMBIE,
                 MysteryZombieRenderer::new);
         EntityRendererRegistry.register(InvEntities.HUSK, InvHuskRenderer::new);
+        EntityRendererRegistry.register(InvEntities.HUSK_BRUTE, InvHuskRenderer::new);
         EntityRendererRegistry.register(InvEntities.DROWNED, InvDrownedRenderer::new);
+        EntityRendererRegistry.register(InvEntities.DROWNED_BRUTE, InvDrownedRenderer::new);
         EntityRendererRegistry.register(InvEntities.GUARDIAN, IMGuardianRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.ELDER_GUARDIAN, IMElderGuardianRenderer::new);
         EntityRendererRegistry.register(
                 InvEntities.ZOMBIE_VILLAGER,
                 IMZombieVillagerRenderer::new);
+        EntityRendererRegistry.register(
+                InvEntities.ZOMBIE_VILLAGER_BRUTE,
+                IMZombieVillagerRenderer::new);
         EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN,
+                context -> new InvasionZombieRenderer<>(context, true));
+        EntityRendererRegistry.register(InvEntities.ZOMBIE_PIGMAN_BRUTE,
                 context -> new InvasionZombieRenderer<>(context, true));
         EntityRendererRegistry.register(InvEntities.ZOGLIN, IMZoglinRenderer::new);
         EntityRendererRegistry.register(InvEntities.WITHER, WitherBossRenderer::new);
