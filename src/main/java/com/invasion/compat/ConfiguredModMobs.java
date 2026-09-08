@@ -404,6 +404,12 @@ public final class ConfiguredModMobs {
                 .filter(nexus -> nexus.isActive() && !nexus.isDiscarded()).isPresent();
     }
 
+    /** Checks the saved owner without binding mobs as a side effect of debugging. */
+    public static boolean isBoundToNexus(Mob mob, NexusAccess nexus) {
+        return nexus.getUuid().toString().equals(
+                mob.getPersistentData().getStringOr(NEXUS_OWNER, ""));
+    }
+
     public static NexusAccess activeNexus(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return null;
         NexusAccess nexus = WorldNexusStorage.of(level).getNexus()
