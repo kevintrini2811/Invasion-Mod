@@ -45,8 +45,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
@@ -127,9 +129,6 @@ public final class ConfiguredModMobs {
                 }
             } else if (isActive(mob.getType())) {
                 activeNexus(mob);
-            }
-            if (isActive(mob.getType()) && activeNexus(mob) != null) {
-                IMCivilianTargetHandler.targetCivilian(mob, level);
             }
         }
         removals.forEach(Mob::discard);
@@ -305,6 +304,7 @@ public final class ConfiguredModMobs {
         if (entry == null || !entry.active()
                 || !isExternalMonster(id, mob.getType())) return;
         activeNexus(mob);
+        mob.targetSelector.addGoal(0, new InvasionTargetGoal(mob));
         mob.goalSelector.addGoal(0, new SpecialMovementNexusGoal(mob));
         mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
         mob.goalSelector.addGoal(2, new RangedAttackNexusGoal(mob));
@@ -414,6 +414,34 @@ public final class ConfiguredModMobs {
             mob.getPersistentData().putString(NEXUS_OWNER, nexus.getUuid().toString());
         }
         return nexus;
+    }
+
+    /** Owns the target through the selector so native target goals cannot clear it each tick. */
+    private static final class InvasionTargetGoal extends NearestAttackableTargetGoal<LivingEntity> {
+        private InvasionTargetGoal(Mob mob) {
+            super(mob, LivingEntity.class, 10, true, false,
+                    (target, level) -> IMCivilianTargetHandler.isSharedInvasionTarget(target));
+        }
+
+        @Override
+        public boolean canUse() {
+            return isActive(mob.getType()) && activeNexus(mob) != null
+                    && (mob.getTarget() == null || !mob.getTarget().isAlive())
+                    && super.canUse();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return isActive(mob.getType()) && activeNexus(mob) != null
+                    && mob.getTarget() != null
+                    && IMCivilianTargetHandler.isSharedInvasionTarget(mob.getTarget())
+                    && super.canContinueToUse();
+        }
+
+        @Override
+        protected double getFollowDistance() {
+            return 32.0D;
+        }
     }
 
     /** Steers native jumping/flight controls instead of asking them for ground paths. */

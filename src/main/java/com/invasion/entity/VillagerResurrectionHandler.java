@@ -32,6 +32,8 @@ public final class VillagerResurrectionHandler {
         Entity entity = event.getEntity();
         DamageSource source = event.getSource();
         if (!(entity instanceof Mob victim)
+                || victim instanceof Combatant<?>
+                || ConfiguredModMobs.isInvasionAlly(victim)
                 || !(victim instanceof AbstractVillager
                         || victim instanceof AbstractPiglin
                         || victim instanceof Pig

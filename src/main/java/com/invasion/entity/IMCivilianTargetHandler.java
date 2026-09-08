@@ -18,6 +18,9 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.Ravager;
 import net.minecraft.world.entity.monster.Vex;
@@ -119,6 +122,16 @@ public final class IMCivilianTargetHandler {
             NEXT_SEARCH.remove(mob);
             mob.setTarget(target);
         }
+    }
+
+    /** The civilian targets plus the players and defenders targeted by native IM AI. */
+    public static boolean isSharedInvasionTarget(LivingEntity entity) {
+        return !(entity instanceof Combatant<?>)
+                && !(entity instanceof Mob mob && ConfiguredModMobs.isInvasionAlly(mob))
+                && (isCivilian(entity)
+                        || entity instanceof Player
+                        || entity instanceof IronGolem
+                        || entity instanceof Wolf wolf && wolf.isTame());
     }
 
     private static boolean isCivilian(LivingEntity entity) {
