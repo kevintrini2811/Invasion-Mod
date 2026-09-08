@@ -306,7 +306,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     private void convertToDrowned(ServerLevel world) {
-        IMDrownedEntity drowned = InvEntities.DROWNED.create(
+        IMDrownedEntity drowned = ZombieVariants.resolve(InvEntities.DROWNED, getTier(), getFlavour()).create(
                 world, EntitySpawnReason.CONVERSION);
         if (drowned == null) {
             return;

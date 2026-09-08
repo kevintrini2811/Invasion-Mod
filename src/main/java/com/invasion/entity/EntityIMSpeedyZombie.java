@@ -56,7 +56,7 @@ public final class EntityIMSpeedyZombie extends EntityIMZombie {
                 || source instanceof EntityIMSpeedyZombie) {
             return;
         }
-        EntityIMSpeedyZombie speedy = InvEntities.SPEEDY_ZOMBIE.create(
+        EntityIMSpeedyZombie speedy = ZombieVariants.resolve(InvEntities.SPEEDY_ZOMBIE, source.getTier(), source.getFlavour()).create(
                 world, EntitySpawnReason.CONVERSION);
         if (speedy == null) {
             return;
