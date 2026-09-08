@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
 import com.invasion.entity.EquipmentUtil;
+import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.mixin.PhantomAccessor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
@@ -43,8 +44,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.item.ItemStack;
@@ -123,6 +126,7 @@ public final class ConfiguredModMobs {
                 }
                 if (owner == null || owner.isDiscarded() || !owner.isActive()) {
                     removals.add(mob);
+                    continue;
                 }
             } else if (isActive(mob.getType())) {
                 activeNexus(mob);
@@ -300,6 +304,8 @@ public final class ConfiguredModMobs {
         if (entry == null || !entry.active()
                 || !isExternalMonster(id, mob.getType())) return;
         activeNexus(mob);
+        ((com.invasion.mixin.MobAccessor) mob).invmod$getTargetSelector()
+                .addGoal(0, new InvasionTargetGoal(mob));
         var goals = ((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector();
         goals.addGoal(1, new AttackNexusGoal(mob));
         goals.addGoal(2, new RangedAttackNexusGoal(mob));
@@ -405,7 +411,7 @@ public final class ConfiguredModMobs {
                 .filter(nexus -> nexus.isActive() && !nexus.isDiscarded()).isPresent();
     }
 
-    private static NexusAccess activeNexus(Mob mob) {
+    public static NexusAccess activeNexus(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return null;
         NexusAccess nexus = WorldNexusStorage.of(level).getNexus()
                 .filter(candidate -> candidate.isActive() && !candidate.isDiscarded())
@@ -415,6 +421,34 @@ public final class ConfiguredModMobs {
             mob.addTag(NEXUS_OWNER + ":" + nexus.getUuid());
         }
         return nexus;
+    }
+
+    /** Owns the target through the selector so native target goals cannot clear it each tick. */
+    private static final class InvasionTargetGoal extends NearestAttackableTargetGoal<LivingEntity> {
+        private InvasionTargetGoal(Mob mob) {
+            super(mob, LivingEntity.class, 10, true, false,
+                    (target, level) -> IMCivilianTargetHandler.isSharedInvasionTarget(target));
+        }
+
+        @Override
+        public boolean canUse() {
+            return isActive(mob.getType()) && activeNexus(mob) != null
+                    && (mob.getTarget() == null || !mob.getTarget().isAlive())
+                    && super.canUse();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return isActive(mob.getType()) && activeNexus(mob) != null
+                    && mob.getTarget() != null
+                    && IMCivilianTargetHandler.isSharedInvasionTarget(mob.getTarget())
+                    && super.canContinueToUse();
+        }
+
+        @Override
+        protected double getFollowDistance() {
+            return 32.0D;
+        }
     }
 
     /** Steers native jumping/flight controls instead of asking them for ground paths. */
