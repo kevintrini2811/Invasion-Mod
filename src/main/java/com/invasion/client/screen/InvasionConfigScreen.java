@@ -31,7 +31,9 @@ public final class InvasionConfigScreen extends Screen {
     private static final Path MOBS = FMLPaths.CONFIGDIR.get().resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int PAGE_SIZE = 9;
-    private static final int MOB_PAGE_SIZE = 5;
+    private static final int MOB_ROWS_TOP = 53;
+    private static final int MOB_ROW_HEIGHT = 40;
+    private static final int FOOTER_HEIGHT = 50;
 
     private final Screen parent;
     private final Properties properties = new Properties();
@@ -39,6 +41,7 @@ public final class InvasionConfigScreen extends Screen {
     private JsonObject mobs = new JsonObject();
     private boolean mobTab;
     private int page;
+    private int mobPageSize = 5;
     private Component status = Component.empty();
 
     public InvasionConfigScreen(Screen parent) {
@@ -86,9 +89,16 @@ public final class InvasionConfigScreen extends Screen {
         }).bounds(left + contentWidth / 2 + 2, 28, contentWidth / 2 - 2, 20).build());
         mobsTab.active = !mobTab;
 
-        if (mobTab) addMobRows(left, contentWidth); else addCfgRows(left, contentWidth);
-        int pageSize = mobTab ? MOB_PAGE_SIZE : PAGE_SIZE;
+        int newMobPageSize = Math.max(1, (height - MOB_ROWS_TOP - FOOTER_HEIGHT) / MOB_ROW_HEIGHT);
+        if (mobTab && newMobPageSize != mobPageSize) {
+            // Keep the first previously visible entry on screen after resizing.
+            page = page * mobPageSize / newMobPageSize;
+        }
+        mobPageSize = newMobPageSize;
+        int pageSize = mobTab ? mobPageSize : PAGE_SIZE;
         int pages = Math.max(1, (keys().size() + pageSize - 1) / pageSize);
+        page = Math.clamp(page, 0, pages - 1);
+        if (mobTab) addMobRows(left, contentWidth); else addCfgRows(left, contentWidth);
         Button previous = addRenderableWidget(Button.builder(Component.literal("<"), button -> {
             page--;
             rebuild();
@@ -142,11 +152,11 @@ public final class InvasionConfigScreen extends Screen {
 
     private void addMobRows(int left, int width) {
         List<String> keys = keys();
-        for (int index = page * MOB_PAGE_SIZE;
-                index < Math.min(keys.size(), (page + 1) * MOB_PAGE_SIZE); index++) {
+        for (int index = page * mobPageSize;
+                index < Math.min(keys.size(), (page + 1) * mobPageSize); index++) {
             String id = keys.get(index);
             JsonObject mob = mobs.getAsJsonObject(id);
-            int y = 53 + index % MOB_PAGE_SIZE * 40;
+            int y = MOB_ROWS_TOP + index % mobPageSize * MOB_ROW_HEIGHT;
             labels.add(new Label(id, left, y));
             int controlsY = y + 13;
             boolean active = mob.has("active") && mob.get("active").getAsBoolean();
