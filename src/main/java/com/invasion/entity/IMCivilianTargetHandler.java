@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import com.invasion.compat.FriendsAndFoesCompatibility;
+import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.nexus.Combatant;
 
 import net.minecraft.server.level.ServerLevel;
@@ -93,22 +94,30 @@ public final class IMCivilianTargetHandler {
         }
         for (Combatant<?> combatant : attackers) {
             LivingEntity entity = combatant.asEntity();
-            if (!(entity instanceof Mob mob)
-                    || entity instanceof IMWolfEntity
-                    || !mob.isAlive()
-                    || mob.getTarget() != null && mob.getTarget().isAlive()
-                    || Math.floorMod(gameTime + mob.getId(),
-                            SEARCH_INTERVAL) != 0L
-                    || NEXT_SEARCH.getOrDefault(mob, 0L) > gameTime) {
-                continue;
+            if (entity instanceof Mob mob) {
+                targetCivilian(mob, level);
             }
-            LivingEntity target = index.nearestAttackable(mob);
-            if (target == null) {
-                NEXT_SEARCH.put(mob, gameTime + FAILED_SEARCH_BACKOFF);
-            } else {
-                NEXT_SEARCH.remove(mob);
-                mob.setTarget(target);
-            }
+        }
+    }
+
+    /** Shared by native IM combatants and configured external invasion mobs. */
+    public static void targetCivilian(Mob mob, ServerLevel level) {
+        CivilianIndex index = LEVELS.get(level);
+        long gameTime = level.getGameTime();
+        if (index == null || index.isEmpty()
+                || mob instanceof IMWolfEntity
+                || !mob.isAlive()
+                || mob.getTarget() != null && mob.getTarget().isAlive()
+                || Math.floorMod(gameTime + mob.getId(), SEARCH_INTERVAL) != 0L
+                || NEXT_SEARCH.getOrDefault(mob, 0L) > gameTime) {
+            return;
+        }
+        LivingEntity target = index.nearestAttackable(mob);
+        if (target == null) {
+            NEXT_SEARCH.put(mob, gameTime + FAILED_SEARCH_BACKOFF);
+        } else {
+            NEXT_SEARCH.remove(mob);
+            mob.setTarget(target);
         }
     }
 
@@ -178,6 +187,9 @@ public final class IMCivilianTargetHandler {
                         if (distance <= nearestDistance
                                 && candidate.isAlive()
                                 && !candidate.isRemoved()
+                                && !(candidate instanceof Combatant<?>)
+                                && !(candidate instanceof Mob other
+                                        && ConfiguredModMobs.isInvasionAlly(other))
                                 && mob.canAttack(candidate)) {
                             nearest = candidate;
                             nearestDistance = distance;

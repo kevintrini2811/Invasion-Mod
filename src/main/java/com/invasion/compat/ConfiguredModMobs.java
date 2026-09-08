@@ -7,6 +7,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
 import com.invasion.entity.EquipmentUtil;
+import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.mixin.PhantomAccessor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
@@ -122,9 +123,13 @@ public final class ConfiguredModMobs {
                 }
                 if (owner == null || owner.isDiscarded() || !owner.isActive()) {
                     removals.add(mob);
+                    continue;
                 }
             } else if (isActive(mob.getType())) {
                 activeNexus(mob);
+            }
+            if (isActive(mob.getType()) && activeNexus(mob) != null) {
+                IMCivilianTargetHandler.targetCivilian(mob, level);
             }
         }
         removals.forEach(Mob::discard);
@@ -399,7 +404,7 @@ public final class ConfiguredModMobs {
                 .filter(nexus -> nexus.isActive() && !nexus.isDiscarded()).isPresent();
     }
 
-    private static NexusAccess activeNexus(Mob mob) {
+    public static NexusAccess activeNexus(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return null;
         NexusAccess nexus = WorldNexusStorage.of(level).getNexus()
                 .filter(candidate -> candidate.isActive() && !candidate.isDiscarded())
