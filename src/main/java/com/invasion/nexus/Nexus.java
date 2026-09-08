@@ -1065,6 +1065,7 @@ public class Nexus implements ControllableNexusAccess {
 
     private void killAllMobs() {
         NexusBoundMobLifecycle.schedule((ServerLevel)getWorld(), this);
+        com.invasion.compat.ConfiguredModMobs.cleanupNexusMobs(world, this);
     }
 
     private boolean zapEnemy(boolean sfx) {
