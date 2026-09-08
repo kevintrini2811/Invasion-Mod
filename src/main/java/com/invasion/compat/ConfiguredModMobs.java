@@ -361,7 +361,7 @@ public final class ConfiguredModMobs {
                 || weaponsAllowed && EquipmentUtil.isWeapon(stack);
     }
 
-    private static synchronized boolean isActive(EntityType<?> type) {
+    public static synchronized boolean isActive(EntityType<?> type) {
         ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         Entry entry = ENTRIES.get(id);
         return entry != null && entry.active() && isExternalMonster(id, type);

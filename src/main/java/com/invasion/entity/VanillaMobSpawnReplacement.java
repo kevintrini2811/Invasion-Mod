@@ -62,7 +62,9 @@ public final class VanillaMobSpawnReplacement {
         if (event.getSpawnType() == MobSpawnType.NATURAL
                 && world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
-                && isReplaceableType(event.getEntity().getType())) {
+                && (isReplaceableType(event.getEntity().getType())
+                        || com.invasion.compat.ConfiguredModMobs
+                                .isActive(event.getEntity().getType()))) {
             event.setSpawnCancelled(true);
         }
     }
