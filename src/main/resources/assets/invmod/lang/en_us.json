@@ -19,6 +19,8 @@
   "invmod.config.ability.bridging": "Bridging",
   "invmod.config.ability.towering": "Towering",
   "invmod.config.cost": "Cost",
+  "invmod.config.search": "Search mobs...",
+  "invmod.config.search.no_results": "No matching mobs found.",
   "invmod.message.command.debug_mobs": "Applied Glowing to %s loaded IM mob(s) for 10 minutes. Nearest mobs:",
   "invmod.message.command.debug_mob_entry": "%s at %s",
   "invmod.message.command.debug_phase_mob_entry": "★ %s at %s",

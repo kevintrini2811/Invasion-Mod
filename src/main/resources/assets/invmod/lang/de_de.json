@@ -19,6 +19,8 @@
   "invmod.config.ability.bridging": "Brückenbau",
   "invmod.config.ability.towering": "Turmbau",
   "invmod.config.cost": "Kosten",
+  "invmod.config.search": "Mobs suchen...",
+  "invmod.config.search.no_results": "Keine passenden Mobs gefunden.",
   "invmod.message.command.debug_mobs": "%s geladene IM-Mob(s) leuchten nun 10 Minuten lang. Nächste Mobs:",
   "invmod.message.command.debug_mob_entry": "%s bei %s",
   "invmod.message.command.debug_phase_mob_entry": "★ %s bei %s",

@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -31,7 +32,8 @@ public final class InvasionConfigScreen extends Screen {
     private static final Path MOBS = FMLPaths.CONFIGDIR.get().resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int PAGE_SIZE = 9;
-    private static final int MOB_ROWS_TOP = 53;
+    private static final int MOB_SEARCH_TOP = 53;
+    private static final int MOB_ROWS_TOP = 77;
     private static final int MOB_ROW_HEIGHT = 40;
     private static final int FOOTER_HEIGHT = 50;
 
@@ -42,6 +44,8 @@ public final class InvasionConfigScreen extends Screen {
     private boolean mobTab;
     private int page;
     private int mobPageSize = 5;
+    private String mobSearch = "";
+    private EditBox mobSearchBox;
     private Component status = Component.empty();
 
     public InvasionConfigScreen(Screen parent) {
@@ -98,7 +102,12 @@ public final class InvasionConfigScreen extends Screen {
         int pageSize = mobTab ? mobPageSize : PAGE_SIZE;
         int pages = Math.max(1, (keys().size() + pageSize - 1) / pageSize);
         page = Math.clamp(page, 0, pages - 1);
-        if (mobTab) addMobRows(left, contentWidth); else addCfgRows(left, contentWidth);
+        if (mobTab) {
+            addMobSearch(left, contentWidth);
+            addMobRows(left, contentWidth);
+        } else {
+            addCfgRows(left, contentWidth);
+        }
         Button previous = addRenderableWidget(Button.builder(Component.literal("<"), button -> {
             page--;
             rebuild();
@@ -125,7 +134,27 @@ public final class InvasionConfigScreen extends Screen {
 
     private List<String> keys() {
         if (!mobTab) return properties.stringPropertyNames().stream().sorted().toList();
-        return mobs.keySet().stream().filter(key -> !key.startsWith("_")).sorted().toList();
+        String query = mobSearch.strip().toLowerCase(Locale.ROOT);
+        return mobs.keySet().stream()
+                .filter(key -> !key.startsWith("_"))
+                .filter(key -> query.isEmpty() || key.toLowerCase(Locale.ROOT).contains(query))
+                .sorted()
+                .toList();
+    }
+
+    private void addMobSearch(int left, int width) {
+        mobSearchBox = new EditBox(font, left, MOB_SEARCH_TOP, width, 20,
+                Component.translatable("invmod.config.search"));
+        mobSearchBox.setMaxLength(256);
+        mobSearchBox.setHint(Component.translatable("invmod.config.search"));
+        mobSearchBox.setValue(mobSearch);
+        mobSearchBox.setResponder(text -> {
+            mobSearch = text;
+            page = 0;
+            rebuild();
+            setFocused(mobSearchBox);
+        });
+        addRenderableWidget(mobSearchBox);
     }
 
     private void addCfgRows(int left, int width) {
@@ -152,6 +181,11 @@ public final class InvasionConfigScreen extends Screen {
 
     private void addMobRows(int left, int width) {
         List<String> keys = keys();
+        if (keys.isEmpty()) {
+            labels.add(new Label(Component.translatable("invmod.config.search.no_results").getString(),
+                    left, MOB_ROWS_TOP + 6));
+            return;
+        }
         for (int index = page * mobPageSize;
                 index < Math.min(keys.size(), (page + 1) * mobPageSize); index++) {
             String id = keys.get(index);
