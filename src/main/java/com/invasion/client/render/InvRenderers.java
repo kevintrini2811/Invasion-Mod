@@ -35,6 +35,10 @@ public final class InvRenderers {
         }
         event.registerEntityRenderer(InvEntities.ZOMBIE,
                 context -> new InvasionZombieRenderer<>(context, false));
+        event.registerEntityRenderer(InvEntities.TAR_ZOMBIE,
+                context -> new InvasionZombieRenderer<>(context, false));
+        event.registerEntityRenderer(InvEntities.ZOMBIE_BRUTE,
+                context -> new InvasionZombieRenderer<>(context, false));
         event.registerEntityRenderer(InvEntities.FAT_ZOMBIE,
                 FatZombieRenderer::new);
         event.registerEntityRenderer(
