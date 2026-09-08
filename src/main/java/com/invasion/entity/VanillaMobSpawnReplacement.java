@@ -113,7 +113,9 @@ public final class VanillaMobSpawnReplacement {
     public static boolean shouldBlockNaturalSpawn(Mob mob, ServerLevel world) {
         return world.getDifficulty() != Difficulty.HARD
                 && hasActiveNexus(world)
-                && isReplaceableType(mob.getType());
+                && (isReplaceableType(mob.getType())
+                        || com.invasion.compat.ConfiguredModMobs
+                                .isActive(mob.getType()));
     }
 
     static boolean hasActiveNexus(ServerLevel world) {
