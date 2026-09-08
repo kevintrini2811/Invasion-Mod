@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.StreamSupport;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.commands.CommandBuildContext;
@@ -19,7 +20,8 @@ import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import com.invasion.entity.BoundIMMobRegistry;
+import net.minecraft.world.entity.Mob;
+import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.block.InvBlockEntities;
 import com.invasion.block.NexusBlockEntity;
 import com.invasion.nexus.Combatant;
@@ -208,9 +210,14 @@ public class InvasionCommand {
         ControllableNexusAccess activeNexus = WorldNexusStorage
                 .of(source.getLevel()).getNexus()
                 .filter(ControllableNexusAccess::isActive).orElse(null);
-        List<LivingEntity> mobs = BoundIMMobRegistry.loaded(source.getLevel())
-                .stream()
-                .map(combatant -> (LivingEntity) combatant.asEntity())
+        List<LivingEntity> mobs = StreamSupport.stream(
+                        source.getLevel().getAllEntities().spliterator(), false)
+                .filter(entity -> entity instanceof LivingEntity
+                        && (entity instanceof Combatant<?>
+                                || entity instanceof Mob mob
+                                && (ConfiguredModMobs.isActive(mob.getType())
+                                        || ConfiguredModMobs.isInvasionAlly(mob))))
+                .map(entity -> (LivingEntity) entity)
                 .filter(entity -> source.getLevel().getEntity(entity.getId()) == entity
                         && entity.isAlive() && !entity.isRemoved())
                 .sorted(Comparator
@@ -268,8 +275,11 @@ public class InvasionCommand {
 
     private static boolean isCurrentPhaseMob(LivingEntity entity,
             ControllableNexusAccess nexus) {
-        return nexus != null && entity instanceof Combatant<?> combatant
-                && combatant.getNexus() == nexus
+        return nexus != null
+                && (entity instanceof Combatant<?> combatant
+                        ? combatant.getNexus() == nexus
+                        : entity instanceof Mob mob
+                                && ConfiguredModMobs.isBoundToNexus(mob, nexus))
                 && entity.getPersistentData().getInt("invmodWaveNumber")
                         == nexus.getCurrentWave()
                 && entity.getPersistentData().getInt("invmodWavePhase")
