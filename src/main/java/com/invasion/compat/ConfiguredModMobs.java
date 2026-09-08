@@ -7,6 +7,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
 import com.invasion.entity.EquipmentUtil;
+import com.invasion.mixin.PhantomAccessor;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.ai.control.FlyingMoveControl;
+import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
+import net.minecraft.world.entity.monster.Blaze;
+import net.minecraft.world.entity.monster.Ghast;
+import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.monster.Vex;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
 import com.invasion.nexus.wave.BudgetWavePlan.Theme;
@@ -407,6 +415,87 @@ public final class ConfiguredModMobs {
             mob.addTag(NEXUS_OWNER + ":" + nexus.getUuid());
         }
         return nexus;
+    }
+
+    /** Steers native jumping/flight controls instead of asking them for ground paths. */
+    private static final class SpecialMovementNexusGoal extends Goal {
+        private final Mob mob;
+        private NexusAccess nexus;
+        private int attackCooldown;
+
+        private SpecialMovementNexusGoal(Mob mob) {
+            this.mob = mob;
+            setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK, Flag.JUMP));
+        }
+
+        private boolean usesSpecialMovement() {
+            return mob.getMoveControl() instanceof NexusJumpControl
+                    || mob.getMoveControl() instanceof FlyingMoveControl
+                    || mob.getNavigation() instanceof FlyingPathNavigation
+                    || mob instanceof Ghast || mob instanceof Phantom
+                    || mob instanceof Vex || mob instanceof Blaze
+                    || mob.isNoGravity();
+        }
+
+        @Override public boolean canUse() {
+            nexus = activeNexus(mob);
+            return nexus != null && usesSpecialMovement()
+                    && (mob.getTarget() == null || !mob.getTarget().isAlive());
+        }
+
+        @Override public boolean canContinueToUse() { return canUse(); }
+        @Override public boolean requiresUpdateEveryTick() { return true; }
+        @Override public void start() {
+            mob.getNavigation().stop();
+            attackCooldown = 20;
+        }
+
+        @Override public void tick() {
+            var target = PosUtils.center(nexus.getOrigin());
+            mob.getLookControl().setLookAt(target);
+            if (mob.getMoveControl() instanceof NexusJumpControl control) {
+                float yaw = (float)(Mth.atan2(target.z - mob.getZ(),
+                        target.x - mob.getX()) * 180.0D / Math.PI) - 90.0F;
+                control.invasion$setDirection(yaw, true);
+                control.invasion$setWantedMovement(1.0D);
+            } else if (mob instanceof Phantom) {
+                // Phantom's move control reads this field, not setWantedPosition.
+                ((PhantomAccessor)mob).invasion$setMoveTargetPoint(target);
+            } else {
+                if (mob.getNavigation() instanceof FlyingPathNavigation) {
+                    if (mob.getNavigation().isDone()) {
+                        mob.getNavigation().moveTo(target.x, target.y, target.z, 1.0D);
+                    }
+                }
+                if (mob.getNavigation().isDone()) {
+                    mob.getMoveControl().setWantedPosition(target.x, target.y, target.z, 1.0D);
+                }
+                if (mob instanceof Blaze) {
+                    // Blazes use ordinary move control and supply vertical lift themselves.
+                    double lift = Mth.clamp(target.y - mob.getY(), -1.0D, 1.0D) * 0.3D;
+                    var velocity = mob.getDeltaMovement();
+                    mob.setDeltaMovement(velocity.add(0, (lift - velocity.y) * 0.3D, 0));
+                }
+            }
+            if (attackCooldown > 0) attackCooldown--;
+            double range = Math.max(4.0D, mob.getBbWidth() * 0.5D + 1.0D);
+            if (mob.distanceToSqr(target) <= range * range && attackCooldown == 0) {
+                mob.swing(InteractionHand.MAIN_HAND);
+                nexus.damage(mob.damageSources().mobAttack(mob), 2);
+                attackCooldown = 20;
+            }
+        }
+
+        @Override public void stop() {
+            mob.getNavigation().stop();
+            mob.getMoveControl().setWantedPosition(mob.getX(), mob.getY(), mob.getZ(), 0);
+            if (mob.getMoveControl() instanceof NexusJumpControl control) {
+                control.invasion$setWantedMovement(0);
+            }
+            if (mob instanceof Phantom) {
+                ((PhantomAccessor)mob).invasion$setMoveTargetPoint(mob.position());
+            }
+        }
     }
 
     private static final class GoToNexusGoal extends Goal {

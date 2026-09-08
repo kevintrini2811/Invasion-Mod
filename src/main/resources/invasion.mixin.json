@@ -11,6 +11,9 @@
       "NonCombatTargetMixin",
       "PathNodeMixin",
       "PhantomAccessor",
+      "CubeMobMoveControlAccessor",
+      "EndSlimeMoveControlAccessor",
+      "TropicalSlimeMoveControlAccessor",
       "SpawnProxyEntityMixin",
       "WildfireNexusMixin"
     ],
