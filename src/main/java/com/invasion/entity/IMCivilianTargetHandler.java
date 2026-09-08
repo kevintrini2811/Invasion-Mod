@@ -10,12 +10,16 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import com.invasion.compat.FriendsAndFoesCompatibility;
+import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.nexus.Combatant;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.Ravager;
@@ -94,23 +98,41 @@ public final class IMCivilianTargetHandler {
         }
         for (Combatant<?> combatant : attackers) {
             LivingEntity entity = combatant.asEntity();
-            if (!(entity instanceof Mob mob)
-                    || entity instanceof IMWolfEntity
-                    || !mob.isAlive()
-                    || mob.getTarget() != null && mob.getTarget().isAlive()
-                    || Math.floorMod(gameTime + mob.getId(),
-                            SEARCH_INTERVAL) != 0L
-                    || NEXT_SEARCH.getOrDefault(mob, 0L) > gameTime) {
-                continue;
-            }
-            LivingEntity target = index.nearestAttackable(mob);
-            if (target == null) {
-                NEXT_SEARCH.put(mob, gameTime + FAILED_SEARCH_BACKOFF);
-            } else {
-                NEXT_SEARCH.remove(mob);
-                mob.setTarget(target);
+            if (entity instanceof Mob mob) {
+                targetCivilian(mob, level);
             }
         }
+    }
+
+    /** Shared by native IM combatants and configured external invasion mobs. */
+    public static void targetCivilian(Mob mob, ServerLevel level) {
+        CivilianIndex index = LEVELS.get(level);
+        long gameTime = level.getGameTime();
+        if (index == null || index.isEmpty()
+                || mob instanceof IMWolfEntity
+                || !mob.isAlive()
+                || mob.getTarget() != null && mob.getTarget().isAlive()
+                || Math.floorMod(gameTime + mob.getId(), SEARCH_INTERVAL) != 0L
+                || NEXT_SEARCH.getOrDefault(mob, 0L) > gameTime) {
+            return;
+        }
+        LivingEntity target = index.nearestAttackable(mob);
+        if (target == null) {
+            NEXT_SEARCH.put(mob, gameTime + FAILED_SEARCH_BACKOFF);
+        } else {
+            NEXT_SEARCH.remove(mob);
+            mob.setTarget(target);
+        }
+    }
+
+    /** The civilian targets plus the players and defenders targeted by native IM AI. */
+    public static boolean isSharedInvasionTarget(LivingEntity entity) {
+        return !(entity instanceof Combatant<?>)
+                && !(entity instanceof Mob mob && ConfiguredModMobs.isInvasionAlly(mob))
+                && (isCivilian(entity)
+                        || entity instanceof Player
+                        || entity instanceof IronGolem
+                        || entity instanceof Wolf wolf && wolf.isTame());
     }
 
     private static boolean isCivilian(LivingEntity entity) {
@@ -179,6 +201,9 @@ public final class IMCivilianTargetHandler {
                         if (distance <= nearestDistance
                                 && candidate.isAlive()
                                 && !candidate.isRemoved()
+                                && !(candidate instanceof Combatant<?>)
+                                && !(candidate instanceof Mob other
+                                        && ConfiguredModMobs.isInvasionAlly(other))
                                 && mob.canAttack(candidate)) {
                             nearest = candidate;
                             nearestDistance = distance;

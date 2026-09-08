@@ -13,6 +13,8 @@ import net.minecraft.world.entity.monster.Pillager;
 import net.minecraft.world.entity.monster.Vindicator;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import com.invasion.compat.FriendsAndFoesCompatibility;
+import com.invasion.compat.ConfiguredModMobs;
+import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.Combatant;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -29,6 +31,8 @@ public final class VillagerResurrectionHandler {
         Entity entity = event.getEntity();
         DamageSource source = event.getSource();
         if (!(entity instanceof Mob victim)
+                || victim instanceof Combatant<?>
+                || ConfiguredModMobs.isInvasionAlly(victim)
                 || !(victim instanceof AbstractVillager
                         || victim instanceof AbstractPiglin
                         || victim instanceof Pig
@@ -38,8 +42,18 @@ public final class VillagerResurrectionHandler {
                         || victim instanceof Evoker
                         || FriendsAndFoesCompatibility.isTargetableIllager(
                                 victim.getType()))
-                || !(victim.level() instanceof ServerLevel world)
-                || !(source.getEntity() instanceof Combatant<?> killer)) {
+                || !(victim.level() instanceof ServerLevel world)) {
+            return;
+        }
+
+        NexusAccess nexus;
+        if (source.getEntity() instanceof Combatant<?> killer) {
+            nexus = killer.getNexus();
+        } else if (source.getEntity() instanceof Mob killer
+                && ConfiguredModMobs.isInvasionAlly(killer)) {
+            nexus = ConfiguredModMobs.activeNexus(killer);
+            if (nexus == null) return;
+        } else {
             return;
         }
 
@@ -78,7 +92,7 @@ public final class VillagerResurrectionHandler {
             transferEquipment(victim, zombie);
         }
         if (zombie instanceof Combatant<?> combatant) {
-            combatant.setNexus(killer.getNexus());
+            combatant.setNexus(nexus);
             combatant.resetHealth();
         }
         world.addFreshEntity(zombie);
