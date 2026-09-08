@@ -2,6 +2,7 @@ package com.invasion.entity;
 
 import com.invasion.InvasionMod;
 import com.invasion.nexus.Combatant;
+import com.invasion.compat.ConfiguredModMobs;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -45,8 +46,7 @@ public final class IMMobFriendlyFireHandler {
             untrack(mob);
             return;
         }
-        if (event.getEntity() instanceof Combatant<?>
-                && target instanceof Combatant<?>) {
+        if (isInvasionAlly(event.getEntity()) && isInvasionAlly(target)) {
             event.setNewTarget(null);
             untrack(mob);
             return;
@@ -55,7 +55,7 @@ public final class IMMobFriendlyFireHandler {
     }
 
     private static void track(Mob mob, LivingEntity target) {
-        if (mob != null && isInvmodTarget(target)
+        if (mob != null && (isInvmodTarget(target) || isInvasionAlly(target))
                 && mob.level() instanceof ServerLevel level) {
             synchronized (TARGET_LOCK) {
                 IM_TARGETING_MOBS.computeIfAbsent(level, ignored ->
@@ -79,10 +79,12 @@ public final class IMMobFriendlyFireHandler {
         }
         for (Mob mob : snapshot) {
             LivingEntity target = mob.getTarget();
-            if (!mob.isAlive() || mob.isRemoved() || !isInvmodTarget(target)) {
+            if (!mob.isAlive() || mob.isRemoved()
+                    || !(isInvmodTarget(target) || isInvasionAlly(target))) {
                 untrack(mob);
-            } else if (isHiddenInternalTarget(target)
-                    || !mob.hasLineOfSight(target)) {
+            } else if (isInvasionAlly(mob) && isInvasionAlly(target)
+                    || isHiddenInternalTarget(target)
+                    || isInvmodTarget(target) && !mob.hasLineOfSight(target)) {
                 mob.setTarget(null);
                 untrack(mob);
             }
@@ -117,9 +119,14 @@ public final class IMMobFriendlyFireHandler {
                         .getNamespace().equals(InvasionMod.MOD_ID);
     }
 
+    private static boolean isInvasionAlly(Entity entity) {
+        return entity instanceof Combatant<?>
+                || entity instanceof Mob mob && ConfiguredModMobs.isInvasionAlly(mob);
+    }
+
     private static void onLivingAttack(LivingAttackEvent event) {
         Entity attacker = event.getSource().getEntity();
-        if (event.getEntity() instanceof Combatant<?> && attacker instanceof Combatant<?>) {
+        if (isInvasionAlly(event.getEntity()) && isInvasionAlly(attacker)) {
             event.setCanceled(true);
         }
     }

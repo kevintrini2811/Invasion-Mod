@@ -382,6 +382,14 @@ public final class ConfiguredModMobs {
         return entry == null ? fallback : entry.abilities().towering();
     }
 
+    /** Recognizes configured invasion allies without changing their Nexus binding. */
+    public static boolean isInvasionAlly(Mob mob) {
+        if (!(mob.level() instanceof ServerLevel level)) return false;
+        if (!mob.getPersistentData().getString(NEXUS_OWNER).isEmpty()) return true;
+        return isActive(mob.getType()) && WorldNexusStorage.of(level).getNexus()
+                .filter(nexus -> nexus.isActive() && !nexus.isDiscarded()).isPresent();
+    }
+
     private static NexusAccess activeNexus(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return null;
         NexusAccess nexus = WorldNexusStorage.of(level).getNexus()
