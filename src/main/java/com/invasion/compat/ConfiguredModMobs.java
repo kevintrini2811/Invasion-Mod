@@ -44,6 +44,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobCategory;
@@ -70,15 +72,15 @@ public final class ConfiguredModMobs {
             "MIXED", "RANDOM", "RANDOMHELL");
     private static final Map<String, Entry> MOD_DEFAULTS = Map.of(
             "mutantmonsters:endersoul_clone",
-            new Entry(true, false, 3, DEFAULT_THEMES, Abilities.NONE),
+            new Entry(Mode.ACTIVE, false, 3, DEFAULT_THEMES, Abilities.NONE, null),
             "variantsandventures:gelid",
-            new Entry(true, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
+            new Entry(Mode.ACTIVE, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null),
             "variantsandventures:murk",
-            new Entry(true, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
+            new Entry(Mode.ACTIVE, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null),
             "variantsandventures:thicket",
-            new Entry(true, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
+            new Entry(Mode.ACTIVE, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null),
             "variantsandventures:verdant",
-            new Entry(true, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT));
+            new Entry(Mode.ACTIVE, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null));
     private static final Path FILE = FMLPaths.CONFIGDIR.get()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -154,12 +156,14 @@ public final class ConfiguredModMobs {
                     if (id == null || !jsonEntry.getValue().isJsonObject()) continue;
                     if (isSpecializedOriginal(id) || isUnavailableSpecializedImMob(id)) continue;
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
-                    boolean active = value.has("active") && value.get("active").getAsBoolean();
+                    Mode mode = readMode(value);
                     boolean boss = value.has("boss") && value.get("boss").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
                     Entry defaults = defaultEntry(id);
-                    result.put(id, new Entry(active, boss, cost, readThemes(value),
-                            readAbilities(value, defaults.abilities())));
+                    Identifier replacement = value.has("replace")
+                            ? Identifier.tryParse(value.get("replace").getAsString()) : null;
+                    result.put(id, new Entry(mode, boss, cost, readThemes(value),
+                            readAbilities(value, defaults.abilities()), replacement));
                 }
             } catch (Exception exception) {
                 InvasionMod.LOGGER.error("Could not read {}; leaving it unchanged", FILE, exception);
@@ -176,9 +180,9 @@ public final class ConfiguredModMobs {
                 .forEach(registryEntry -> result.putIfAbsent(
                         registryEntry.getKey().identifier(), defaultEntry(registryEntry.getKey().identifier())));
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
-                mob.id(), new Entry(true, false, mob.cost(), mob.themes(), new Abilities(
+                mob.id(), new Entry(Mode.ACTIVE, false, mob.cost(), mob.themes(), new Abilities(
                         mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
-                        mob.canStair(), mob.canBridge(), mob.canTower()))));
+                        mob.canStair(), mob.canBridge(), mob.canTower()), null)));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -190,7 +194,7 @@ public final class ConfiguredModMobs {
         if (!loaded) refresh();
         List<WaveMob> result = new ArrayList<>();
         ENTRIES.forEach((id, entry) -> {
-            if (!entry.active() || !entry.themes().contains(theme.name())) return;
+            if (entry.mode() != Mode.ACTIVE || !entry.themes().contains(theme.name())) return;
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
             if (type != null && isExternalMonster(id, type)) {
                 result.add(new WaveMob((EntityType<? extends Mob>) type, entry.cost()));
@@ -204,7 +208,7 @@ public final class ConfiguredModMobs {
         if (!loaded) refresh();
         List<EntityType<? extends Mob>> result = new ArrayList<>();
         ENTRIES.forEach((id, entry) -> {
-            if (!entry.active() || !entry.boss()) return;
+            if (entry.mode() != Mode.ACTIVE || !entry.boss()) return;
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
             if (type != null && type.getCategory() == MobCategory.MONSTER) {
                 result.add((EntityType<? extends Mob>) type);
@@ -245,7 +249,8 @@ public final class ConfiguredModMobs {
                 + String.join(", ", AVAILABLE_THEMES));
         ENTRIES.forEach((id, entry) -> {
             JsonObject value = new JsonObject();
-            value.addProperty("active", entry.active());
+            if (entry.mode() == Mode.ATTACK) value.addProperty("active", "attack");
+            else value.addProperty("active", entry.mode() == Mode.ACTIVE);
             value.addProperty("boss", entry.boss());
             value.addProperty("cost", entry.cost());
             JsonObject abilities = new JsonObject();
@@ -259,6 +264,9 @@ public final class ConfiguredModMobs {
             com.google.gson.JsonArray themes = new com.google.gson.JsonArray();
             entry.themes().forEach(themes::add);
             value.add("themes", themes);
+            if (entry.replacement() != null) {
+                value.addProperty("replace", entry.replacement().toString());
+            }
             root.add(id.toString(), value);
         });
         try {
@@ -288,7 +296,16 @@ public final class ConfiguredModMobs {
 
     private static Entry defaultEntry(Identifier id) {
         return MOD_DEFAULTS.getOrDefault(id.toString(),
-                new Entry(false, false, 5, DEFAULT_THEMES, Abilities.NONE));
+                new Entry(Mode.INACTIVE, false, 5, DEFAULT_THEMES, Abilities.NONE, null));
+    }
+
+    private static Mode readMode(JsonObject value) {
+        if (!value.has("active")) return Mode.INACTIVE;
+        JsonElement active = value.get("active");
+        if (active.isJsonPrimitive() && active.getAsJsonPrimitive().isString()) {
+            return "attack".equalsIgnoreCase(active.getAsString()) ? Mode.ATTACK : Mode.INACTIVE;
+        }
+        return active.getAsBoolean() ? Mode.ACTIVE : Mode.INACTIVE;
     }
 
     private static Abilities readAbilities(JsonObject value, Abilities defaults) {
@@ -318,7 +335,7 @@ public final class ConfiguredModMobs {
         synchronized (ConfiguredModMobs.class) {
             entry = ENTRIES.get(id);
         }
-        if (entry == null || !entry.active()
+        if (entry == null || entry.mode() != Mode.ACTIVE
                 || !isExternalMonster(id, mob.getType())) return;
         if (mob.fireImmune()) {
             mob.setPathfindingMalus(PathType.LAVA, 0.0F);
@@ -334,15 +351,36 @@ public final class ConfiguredModMobs {
 
     private static void onLivingDeath(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof Mob mob)
-                || !(mob.level() instanceof ServerLevel level)
-                || !mob.getPersistentData().contains("invmodWaveNumber")) return;
+                || !(mob.level() instanceof ServerLevel level)) return;
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+        Entry entry;
         synchronized (ConfiguredModMobs.class) {
-            Entry entry = ENTRIES.get(id);
-            if (entry == null || !entry.active() || !isExternalMonster(id, mob.getType())) return;
+            entry = ENTRIES.get(id);
         }
+        if (entry == null) return;
+        if (entry.mode() == Mode.ATTACK) {
+            replaceKilledTarget(mob, level, entry.replacement());
+            return;
+        }
+        if (entry.mode() != Mode.ACTIVE || !isExternalMonster(id, mob.getType())
+                || !mob.getPersistentData().contains("invmodWaveNumber")) return;
         WorldNexusStorage.of(level).getNexus().ifPresent(
                 nexus -> nexus.notifyExternalWaveMobKilled(mob));
+    }
+
+    private static void replaceKilledTarget(Mob mob, ServerLevel level, Identifier replacementId) {
+        if (replacementId == null || WorldNexusStorage.of(level).getNexus()
+                .filter(nexus -> nexus.isActive() && !nexus.isDiscarded()).isEmpty()) return;
+        EntityType<?> replacementType = BuiltInRegistries.ENTITY_TYPE.getValue(replacementId);
+        if (replacementType == null || !replacementType.canSummon()) return;
+        Entity replacement = replacementType.create(level, EntitySpawnReason.CONVERSION);
+        if (replacement == null) return;
+        replacement.snapTo(mob.getX(), mob.getY(), mob.getZ(), mob.getYRot(), mob.getXRot());
+        if (mob.hasCustomName()) {
+            replacement.setCustomName(mob.getCustomName());
+            replacement.setCustomNameVisible(mob.isCustomNameVisible());
+        }
+        level.addFreshEntity(replacement);
     }
 
     private static void onEntityTick(EntityTickEvent.Pre event) {
@@ -383,7 +421,16 @@ public final class ConfiguredModMobs {
     public static synchronized boolean isActive(EntityType<?> type) {
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(type);
         Entry entry = ENTRIES.get(id);
-        return entry != null && entry.active() && isExternalMonster(id, type);
+        return entry != null && entry.mode() == Mode.ACTIVE && isExternalMonster(id, type);
+    }
+
+    public static synchronized boolean isAttackTarget(EntityType<?> type) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry != null && entry.mode() == Mode.ATTACK;
+    }
+
+    public static synchronized boolean hasAttackTargets() {
+        return ENTRIES.values().stream().anyMatch(entry -> entry.mode() == Mode.ATTACK);
     }
 
     public static synchronized boolean allowsArmor(EntityType<?> type, boolean fallback) {
@@ -793,7 +840,9 @@ public final class ConfiguredModMobs {
         }
     }
 
-    private record Entry(boolean active, boolean boss, int cost, List<String> themes, Abilities abilities) {}
+    private enum Mode { INACTIVE, ACTIVE, ATTACK }
+    private record Entry(Mode mode, boolean boss, int cost, List<String> themes,
+            Abilities abilities, Identifier replacement) {}
     private record Abilities(boolean weapons, boolean armor, boolean mining,
             boolean stairing, boolean bridging, boolean towering) {
         private static final Abilities NONE = new Abilities(false, false, false, false, false, false);

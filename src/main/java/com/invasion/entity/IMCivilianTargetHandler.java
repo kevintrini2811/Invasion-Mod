@@ -80,15 +80,15 @@ public final class IMCivilianTargetHandler {
             return;
         }
         CivilianIndex index = LEVELS.get(level);
-        if (index == null || index.isEmpty()) {
+        if ((index == null || index.isEmpty()) && !ConfiguredModMobs.hasAttackTargets()) {
             return;
         }
         long gameTime = level.getGameTime();
-        if (gameTime % SEARCH_INTERVAL == 0L) {
+        if (index != null && gameTime % SEARCH_INTERVAL == 0L) {
             index.rebuild();
             if (index.isEmpty()) {
                 LEVELS.remove(level);
-                return;
+                index = null;
             }
         }
         List<Combatant<?>> attackers = BoundIMMobRegistry.loaded(level);
@@ -105,17 +105,21 @@ public final class IMCivilianTargetHandler {
 
     /** Shared by native IM combatants and configured external invasion mobs. */
     public static void targetCivilian(Mob mob, ServerLevel level) {
-        CivilianIndex index = LEVELS.get(level);
         long gameTime = level.getGameTime();
-        if (index == null || index.isEmpty()
-                || mob instanceof IMWolfEntity
-                || !mob.isAlive()
+        if (!mob.isAlive()
                 || mob.getTarget() != null && mob.getTarget().isAlive()
                 || Math.floorMod(gameTime + mob.getId(), SEARCH_INTERVAL) != 0L
                 || NEXT_SEARCH.getOrDefault(mob, 0L) > gameTime) {
             return;
         }
-        LivingEntity target = index.nearestAttackable(mob);
+        CivilianIndex index = LEVELS.get(level);
+        LivingEntity target = index == null || mob instanceof IMWolfEntity
+                ? null : index.nearestAttackable(mob);
+        LivingEntity configuredTarget = nearestConfiguredTarget(mob, level);
+        if (configuredTarget != null && (target == null
+                || mob.distanceToSqr(configuredTarget) < mob.distanceToSqr(target))) {
+            target = configuredTarget;
+        }
         if (target == null) {
             NEXT_SEARCH.put(mob, gameTime + FAILED_SEARCH_BACKOFF);
         } else {
@@ -129,9 +133,24 @@ public final class IMCivilianTargetHandler {
         return !(entity instanceof Combatant<?>)
                 && !(entity instanceof Mob mob && ConfiguredModMobs.isInvasionAlly(mob))
                 && (isCivilian(entity)
+                        || ConfiguredModMobs.isAttackTarget(entity.getType())
                         || entity instanceof Player
                         || entity instanceof IronGolem
                         || entity instanceof Wolf wolf && wolf.isTame());
+    }
+
+    private static LivingEntity nearestConfiguredTarget(Mob mob, ServerLevel level) {
+        if (!ConfiguredModMobs.hasAttackTargets()
+                || com.invasion.nexus.WorldNexusStorage.of(level).getNexus()
+                        .filter(nexus -> nexus.isActive() && !nexus.isDiscarded()).isEmpty()) {
+            return null;
+        }
+        return level.getEntitiesOfClass(Mob.class, mob.getBoundingBox().inflate(TARGET_RANGE),
+                candidate -> candidate != mob
+                        && ConfiguredModMobs.isAttackTarget(candidate.getType())
+                        && candidate.isAlive() && mob.canAttack(candidate)).stream()
+                .min(java.util.Comparator.comparingDouble(mob::distanceToSqr))
+                .orElse(null);
     }
 
     private static boolean isCivilian(LivingEntity entity) {
