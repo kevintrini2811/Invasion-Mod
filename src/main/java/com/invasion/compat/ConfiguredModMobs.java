@@ -523,6 +523,7 @@ public final class ConfiguredModMobs {
         private final Mob mob;
         private BlockPos target;
         private BlockState replacement;
+        private boolean stealBlock;
         private int actionTicks;
         private double lastX = Double.NaN;
         private double lastY;
@@ -538,6 +539,7 @@ public final class ConfiguredModMobs {
         public boolean canUse() {
             target = null;
             replacement = null;
+            stealBlock = false;
             NexusAccess nexus = activeNexus(mob);
             updateStalledTicks();
             if (nexus == null || usesSpecialMovement()
@@ -553,6 +555,13 @@ public final class ConfiguredModMobs {
             Direction direction = horizontalDirection(current, objective);
             BlockPos forward = current.relative(direction);
 
+            if (allowsEndermanBlockTheft(mob.getType(), false)) {
+                target = miningTarget(forward, current, objective);
+                if (target != null) {
+                    stealBlock = true;
+                    return true;
+                }
+            }
             if (allowsMining(mob.getType(), false)) {
                 target = miningTarget(forward, current, objective);
                 if (target != null) return true;
@@ -560,11 +569,14 @@ public final class ConfiguredModMobs {
             int deltaY = objective.getY() - current.getY();
             int horizontalDistance = Math.abs(objective.getX() - current.getX())
                     + Math.abs(objective.getZ() - current.getZ());
-            if (allowsTowering(mob.getType(), false) && deltaY >= 2
+            boolean engineerTower = allowsEngineerTower(mob.getType(), false);
+            if ((allowsTowering(mob.getType(), false) || engineerTower) && deltaY >= 2
                     && horizontalDistance <= 4
                     && canReplace(current) && hasRoomAt(current.above())) {
                 target = current;
-                replacement = Blocks.COBBLESTONE.defaultBlockState();
+                replacement = engineerTower
+                        ? Blocks.OAK_PLANKS.defaultBlockState()
+                        : Blocks.COBBLESTONE.defaultBlockState();
                 return true;
             }
             if (allowsBridging(mob.getType(), false)) {
@@ -606,8 +618,14 @@ public final class ConfiguredModMobs {
             ServerLevel level = (ServerLevel) mob.level();
             if (replacement == null) {
                 if (canMine(target)) {
-                    level.destroyBlock(target,
-                            InvasionMod.getConfig().destructedBlocksDrop, mob);
+                    if (stealBlock) {
+                        int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS
+                                | Block.UPDATE_SUPPRESS_DROPS;
+                        level.setBlock(target, Blocks.AIR.defaultBlockState(), flags);
+                    } else {
+                        level.destroyBlock(target,
+                                InvasionMod.getConfig().destructedBlocksDrop, mob);
+                    }
                     stalledTicks = 0;
                 }
             } else if (canReplace(target)) {
@@ -627,6 +645,7 @@ public final class ConfiguredModMobs {
         public void stop() {
             target = null;
             replacement = null;
+            stealBlock = false;
             mob.getNavigation().stop();
         }
 
