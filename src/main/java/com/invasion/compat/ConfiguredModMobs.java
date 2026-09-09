@@ -52,6 +52,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import com.invasion.entity.SkeletonArrowEntity;
@@ -304,6 +305,9 @@ public final class ConfiguredModMobs {
         }
         if (entry == null || !entry.active()
                 || !isExternalMonster(id, mob.getType())) return;
+        if (mob.fireImmune()) {
+            mob.setPathfindingMalus(PathType.LAVA, 0.0F);
+        }
         activeNexus(mob);
         mob.targetSelector.addGoal(0, new InvasionTargetGoal(mob));
         mob.goalSelector.addGoal(0, new SpecialMovementNexusGoal(mob));
