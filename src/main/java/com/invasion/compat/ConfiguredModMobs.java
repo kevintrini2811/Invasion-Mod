@@ -81,7 +81,6 @@ public final class ConfiguredModMobs {
             "NETHER", "SIEGE", "FAST", "MIXED", "RANDOM", "RANDOMHELL");
     private static final List<String> DEFAULT_THEMES = List.of(
             "MIXED", "RANDOM", "RANDOMHELL");
-    private static final Map<String, Entry> MOD_DEFAULTS = loadDefaults();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -160,6 +159,7 @@ public final class ConfiguredModMobs {
                     Identifier id = Identifier.tryParse(jsonEntry.getKey());
                     if (id == null || !jsonEntry.getValue().isJsonObject()) continue;
                     if (isSpecializedOriginal(id) || isUnavailableSpecializedImMob(id)) continue;
+                    if (BuiltInRegistries.ENTITY_TYPE.getOptional(id).isEmpty()) continue;
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
                     Mode mode = readMode(value);
                     boolean boss = value.has("boss") && value.get("boss").getAsBoolean();
@@ -192,7 +192,7 @@ public final class ConfiguredModMobs {
                         mob.id().equals(InvasionMod.id("enderman")),
                         mob.id().equals(InvasionMod.id("pigman_engineer"))
                                 ? Blocks.OAK_PLANKS : Blocks.COBBLESTONE), null);
-            result.putIfAbsent(mob.id(), MOD_DEFAULTS.getOrDefault(
+            result.putIfAbsent(mob.id(), ModDefaults.VALUES.getOrDefault(
                     mob.id().toString(), generatedDefault));
         });
         ENTRIES.clear();
@@ -311,7 +311,7 @@ public final class ConfiguredModMobs {
     }
 
     private static Entry defaultEntry(Identifier id) {
-        Entry configuredDefault = MOD_DEFAULTS.get(id.toString());
+        Entry configuredDefault = ModDefaults.VALUES.get(id.toString());
         if (configuredDefault != null) return configuredDefault;
         Abilities abilities = new Abilities(
                 false, false, false, false, false, false,
@@ -349,6 +349,10 @@ public final class ConfiguredModMobs {
         return Map.copyOf(defaults);
     }
 
+    private static final class ModDefaults {
+        private static final Map<String, Entry> VALUES = loadDefaults();
+    }
+
     private static Mode readMode(JsonObject value) {
         if (!value.has("active")) return Mode.INACTIVE;
         JsonElement active = value.get("active");
@@ -379,7 +383,7 @@ public final class ConfiguredModMobs {
         if (id == null) return fallback;
         return BuiltInRegistries.BLOCK.getOptional(id)
                 .filter(block -> block != Blocks.AIR
-                        && !new ItemStack(block.asItem()).isEmpty()
+                        && block.asItem() != Items.AIR
                         && block.defaultBlockState().isCollisionShapeFullBlock(
                                 EmptyBlockGetter.INSTANCE, BlockPos.ZERO))
                 .orElse(fallback);
