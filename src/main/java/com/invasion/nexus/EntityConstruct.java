@@ -1,6 +1,7 @@
 package com.invasion.nexus;
 
 import com.invasion.entity.IMSilverfishEntity;
+import com.invasion.entity.InvEntities;
 import com.invasion.entity.IMEndermiteEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -20,6 +21,14 @@ public record EntityConstruct (
         int maxAngle,
         int rules
     ) {
+
+    public EntityConstruct {
+        // Mixed and saved legacy patterns still describe these as zombie tiers.
+        if (entityType == InvEntities.ZOMBIE) {
+            if (tier == 3) entityType = InvEntities.ZOMBIE_BRUTE;
+            else if (tier == 2 && flavour == 2) entityType = InvEntities.TAR_ZOMBIE;
+        }
+    }
 
     public EntityConstruct(EntityType<? extends Mob> entityType, int texture, int tier, int flavour,
             float scaling, int minAngle, int maxAngle) {

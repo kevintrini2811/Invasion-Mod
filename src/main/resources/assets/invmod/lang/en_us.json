@@ -123,6 +123,8 @@
     "entity.invmod.guardian": "IM Guardian",
     "entity.invmod.elder_guardian": "IM Elder Guardian",
     "entity.invmod.zombie_villager": "IM Zombie Villager",
+    "entity.invmod.tar_zombie": "IM Tar Zombie",
+    "entity.invmod.zombie_brute": "IM Zombie Brute",
     "entity.invmod.zombie.brute": "IM Zombie Brute",
     "entity.invmod.zombie.tar": "IM Tar Zombie",
     "entity.invmod.zombie.pigman": "IM Pigman Zombie",

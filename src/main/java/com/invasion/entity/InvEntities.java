@@ -10,101 +10,131 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.Blaze;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Silverfish;
-import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.monster.Endermite;
-import net.minecraft.world.entity.monster.MagmaCube;
+import net.minecraft.world.entity.monster.cubemob.Slime;
+import net.minecraft.world.entity.monster.cubemob.MagmaCube;
 import net.minecraft.world.entity.monster.Witch;
 import net.minecraft.world.entity.monster.Ghast;
 import net.minecraft.world.entity.monster.Guardian;
 import net.minecraft.world.entity.monster.ElderGuardian;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
 public interface InvEntities {
     EntityType<IMSkeletonEntity> SKELETON = register("skeleton", EntityType.Builder.<IMSkeletonEntity>of(IMSkeletonEntity::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.99F).clientTrackingRange(8));
+            .sized(0.6F, 1.99F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMBoggedEntity> BOGGED = register(
+            "bogged",
+            EntityType.Builder.<IMBoggedEntity>of(
+                            IMBoggedEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.99F).eyeHeight(1.74F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<IMParchedEntity> PARCHED = register(
+            "parched",
+            EntityType.Builder.<IMParchedEntity>of(
+                            IMParchedEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.99F).eyeHeight(1.74F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMStrayEntity> STRAY = register(
             "stray",
             EntityType.Builder.<IMStrayEntity>of(
                             IMStrayEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.99F)
-                    .clientTrackingRange(8));
+                    .sized(0.6F, 1.99F).eyeHeight(1.74F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMWitherSkeletonEntity> WITHER_SKELETON = register(
             "wither_skeleton",
             EntityType.Builder.<IMWitherSkeletonEntity>of(
                             IMWitherSkeletonEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(0.7F, 2.4F)
-                    .clientTrackingRange(8));
+                    .fireImmune().sized(0.7F, 2.4F).eyeHeight(2.1F)
+                    .ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMWitchEntity> WITCH = register("witch",
             EntityType.Builder.<IMWitchEntity>of(
                             IMWitchEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.95F).clientTrackingRange(8));
+                    .sized(0.6F, 1.95F).eyeHeight(1.62F)
+                    .ridingOffset(-0.45F).clientTrackingRange(8));
     EntityType<IMGhastEntity> GHAST = register("ghast",
             EntityType.Builder.<IMGhastEntity>of(
                             IMGhastEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(4.0F, 4.0F)
-                    .clientTrackingRange(10));
+                    .fireImmune().sized(4.0F, 4.0F).eyeHeight(2.6F)
+                    .passengerAttachments(4.0625F).clientTrackingRange(10));
     EntityType<EntityIMZombie> ZOMBIE = register("zombie", EntityType.Builder.<EntityIMZombie>of(EntityIMZombie::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.8F) .clientTrackingRange(8));
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<EntityIMZombie> TAR_ZOMBIE = register("tar_zombie", EntityType.Builder.<EntityIMZombie>of((type, level) -> {
+                EntityIMZombie zombie = new EntityIMZombie(type, level);
+                // Set flavour first so tier 2 does not equip the plain variant's armor.
+                zombie.setFlavour(2);
+                zombie.setTier(2);
+                return zombie;
+            }, MobCategory.MONSTER)
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<EntityIMZombie> ZOMBIE_BRUTE = register("zombie_brute", EntityType.Builder.<EntityIMZombie>of((type, level) -> {
+                EntityIMZombie zombie = new EntityIMZombie(type, level);
+                zombie.setTier(3);
+                return zombie;
+            }, MobCategory.MONSTER)
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMFatZombieEntity> FAT_ZOMBIE = register("fat_zombie",
             EntityType.Builder.<IMFatZombieEntity>of(
                             IMFatZombieEntity::new, MobCategory.MONSTER)
-                    .sized(1.25F, 1.5F)
+                    .sized(1.25F, 1.5F).eyeHeight(1.3F)
                     .clientTrackingRange(10));
     EntityType<EntityIMSpeedyZombie> SPEEDY_ZOMBIE = register(
             "speedy_zombie",
             EntityType.Builder.<EntityIMSpeedyZombie>of(
                             EntityIMSpeedyZombie::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.8F)
+                    .sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .passengerAttachments(1.865F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
     EntityType<MysteryZombieEntity> MYSTERY_ZOMBIE = register(
             "mystery_zombie",
             EntityType.Builder.<MysteryZombieEntity>of(
                             MysteryZombieEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.8F)
+                    .sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .passengerAttachments(1.865F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
     EntityType<IMHuskEntity> HUSK = register(
             "husk",
             EntityType.Builder.<IMHuskEntity>of(
                             IMHuskEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.95F)
-
+                    .sized(0.6F, 1.95F).eyeHeight(1.74F)
+                    .passengerAttachments(2.0125F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
     EntityType<IMDrownedEntity> DROWNED = register(
             "drowned",
             EntityType.Builder.<IMDrownedEntity>of(
                             IMDrownedEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.95F)
-
+                    .sized(0.6F, 1.95F).eyeHeight(1.74F)
+                    .passengerAttachments(2.0125F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
     EntityType<IMGuardianEntity> GUARDIAN = register(
             "guardian",
             EntityType.Builder.<IMGuardianEntity>of(
                             IMGuardianEntity::new, MobCategory.MONSTER)
-                    .sized(0.85F, 0.85F)
+                    .sized(0.85F, 0.85F).eyeHeight(0.425F)
                     .clientTrackingRange(8));
     EntityType<IMElderGuardianEntity> ELDER_GUARDIAN = register(
             "elder_guardian",
             EntityType.Builder.<IMElderGuardianEntity>of(
                             IMElderGuardianEntity::new, MobCategory.MONSTER)
-                    .sized(1.9975F, 1.9975F)
+                    .sized(1.9975F, 1.9975F).eyeHeight(0.99875F)
                     .clientTrackingRange(10));
     EntityType<IMZombieVillagerEntity> ZOMBIE_VILLAGER = register(
             "zombie_villager",
             EntityType.Builder.<IMZombieVillagerEntity>of(
                             IMZombieVillagerEntity::new, MobCategory.MONSTER)
-                    .sized(0.6F, 1.8F)
-
+                    .sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .passengerAttachments(1.865F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
     EntityType<EntityIMZombiePigman> ZOMBIE_PIGMAN = register("zombie_pigman", EntityType.Builder.<EntityIMZombiePigman>of(EntityIMZombiePigman::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.8F) .clientTrackingRange(8));
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).passengerAttachments(1.865F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMZoglinEntity> ZOGLIN = register("zoglin",
             EntityType.Builder.<IMZoglinEntity>of(IMZoglinEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(1.3964844F, 1.4F).clientTrackingRange(8));
+                    .fireImmune().sized(1.3964844F, 1.4F)
+                    .passengerAttachments(1.49375F).clientTrackingRange(8));
     EntityType<IMWitherEntity> WITHER = register("wither",
             EntityType.Builder.<IMWitherEntity>of(
                             IMWitherEntity::new, MobCategory.MONSTER)
@@ -113,7 +143,7 @@ public interface InvEntities {
     EntityType<IMWardenEntity> WARDEN = register("warden",
             EntityType.Builder.<IMWardenEntity>of(
                             IMWardenEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(0.9F, 2.9F)
+                    .fireImmune().sized(0.9F, 2.9F).eyeHeight(2.55F)
                     .clientTrackingRange(16));
     EntityType<IMWitherSkullEntity> WITHER_SKULL = register(
             "wither_skull",
@@ -131,69 +161,85 @@ public interface InvEntities {
             "zombified_piglin",
             EntityType.Builder.<IMZombifiedPiglinEntity>of(
                             IMZombifiedPiglinEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(0.6F, 1.95F)
-
+                    .fireImmune().sized(0.6F, 1.95F).eyeHeight(1.79F)
+                    .passengerAttachments(2.0125F).ridingOffset(-0.7F)
                     .clientTrackingRange(8));
     EntityType<PigmanEngineerEntity> PIGMAN_ENGINEER = register("pigman_engineer", EntityType.Builder.<PigmanEngineerEntity>of(PigmanEngineerEntity::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.95F).clientTrackingRange(8));
+            .sized(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<ZombieBuilderEntity> ZOMBIE_BUILDER = register("zombie_builder", EntityType.Builder.<ZombieBuilderEntity>of(ZombieBuilderEntity::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.95F).clientTrackingRange(8));
+            .sized(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<ZombieMinerEntity> ZOMBIE_MINER = register("zombie_miner", EntityType.Builder.<ZombieMinerEntity>of(ZombieMinerEntity::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.95F).clientTrackingRange(8));
+            .sized(0.6F, 1.95F).eyeHeight(1.74F).passengerAttachments(2.0125F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMCreeperEntity> CREEPER = register("creeper", EntityType.Builder.<IMCreeperEntity>of(IMCreeperEntity::new, MobCategory.MONSTER)
             .sized(0.6F, 1.7F).clientTrackingRange(8));
 
     EntityType<NexusSpiderEntity> SPIDER = register("spider", EntityType.Builder.<NexusSpiderEntity>of(NexusSpiderEntity::new, MobCategory.MONSTER)
-            .sized(1.4F, 0.9F) .clientTrackingRange(8));
+            .sized(1.4F, 0.9F).eyeHeight(0.65F).passengerAttachments(0.765F).clientTrackingRange(8));
     EntityType<JumpingSpiderEntity> JUMPING_SPIDER = register("jumping_spider", EntityType.Builder.<JumpingSpiderEntity>of(JumpingSpiderEntity::new, MobCategory.MONSTER)
-            .sized(1.4F, 0.9F) .clientTrackingRange(8));
+            .sized(1.4F, 0.9F).eyeHeight(0.65F).passengerAttachments(0.765F).clientTrackingRange(8));
     EntityType<IMCaveSpiderEntity> CAVE_SPIDER = register("cave_spider", EntityType.Builder.<IMCaveSpiderEntity>of(IMCaveSpiderEntity::new, MobCategory.MONSTER)
-            .sized(0.7F, 0.5F).clientTrackingRange(8));
+            .sized(0.7F, 0.5F).eyeHeight(0.45F).clientTrackingRange(8));
     EntityType<QueenSpiderEntity> QUEEN_SPIDER = register("queen_spider", EntityType.Builder.<QueenSpiderEntity>of(QueenSpiderEntity::new, MobCategory.MONSTER)
-            .sized(2.8F, 1.8F) .clientTrackingRange(8));
+            .sized(2.8F, 1.8F).eyeHeight(0.65F).passengerAttachments(0.765F).clientTrackingRange(8));
 
     EntityType<ThrowerEntity> THROWER = register("thrower", EntityType.Builder.<ThrowerEntity>of(ThrowerEntity::new, MobCategory.MONSTER)
-            .sized(1.8F, 1.95F).clientTrackingRange(8));
+            .sized(1.8F, 1.95F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
+    EntityType<ThrowerEntity> BIG_THROWER = register("big_thrower", EntityType.Builder.<ThrowerEntity>of((type, level) -> {
+                ThrowerEntity thrower = new ThrowerEntity(type, level);
+                thrower.setTier(2);
+                return thrower;
+            }, MobCategory.MONSTER)
+            .sized(1.8F, 1.95F).eyeHeight(1.74F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<BurrowerEntity> BURROWER = register("burrower", EntityType.Builder.<BurrowerEntity>of(BurrowerEntity::new, MobCategory.MONSTER)
-            .sized(0.5F, 0.5F).clientTrackingRange(10));
+            .sized(0.5F, 0.5F).eyeHeight(0.25F).clientTrackingRange(10));
     EntityType<BurrowerTailEntity> BURROWER_TAIL = register("burrower_tail",
             EntityType.Builder.<BurrowerTailEntity>of(BurrowerTailEntity::new, MobCategory.MISC)
                     .sized(0.7F, 0.7F).clientTrackingRange(10).updateInterval(2).noSummon().noSave());
     EntityType<ImpEnitty> IMP = register("imp", EntityType.Builder.<ImpEnitty>of(ImpEnitty::new, MobCategory.MONSTER)
-            .sized(0.6F, 1.8F).clientTrackingRange(8));
+            .sized(0.6F, 1.8F).eyeHeight(1.53F).ridingOffset(-0.7F).clientTrackingRange(8));
     EntityType<IMBlazeEntity> BLAZE = register("blaze",
             EntityType.Builder.<IMBlazeEntity>of(IMBlazeEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(0.6F, 1.8F).clientTrackingRange(8));
+                    .fireImmune().sized(0.6F, 1.8F).eyeHeight(1.53F)
+                    .clientTrackingRange(8));
+    EntityType<IMBreezeEntity> BREEZE = register("breeze",
+            EntityType.Builder.<IMBreezeEntity>of(
+                            IMBreezeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.77F).eyeHeight(1.3452F)
+                    .clientTrackingRange(10));
     EntityType<IMSilverfishEntity> SILVERFISH = register("silverfish",
             EntityType.Builder.<IMSilverfishEntity>of(
                             IMSilverfishEntity::new, MobCategory.MONSTER)
-                    .sized(0.4F, 0.3F).clientTrackingRange(8));
+                    .sized(0.4F, 0.3F).eyeHeight(0.13F)
+                    .clientTrackingRange(8));
     EntityType<IMEndermiteEntity> ENDERMITE = register("endermite",
             EntityType.Builder.<IMEndermiteEntity>of(
                             IMEndermiteEntity::new, MobCategory.MONSTER)
-                    .sized(0.4F, 0.3F).clientTrackingRange(8));
+                    .sized(0.4F, 0.3F).eyeHeight(0.13F)
+                    .clientTrackingRange(8));
     EntityType<IMSlimeEntity> SLIME = register("slime",
             EntityType.Builder.<IMSlimeEntity>of(
                             IMSlimeEntity::new, MobCategory.MONSTER)
-                    .sized(0.52F, 0.52F).clientTrackingRange(10));
+                    .sized(0.52F, 0.52F).eyeHeight(0.325F)
+                    .spawnDimensionsScale(4.0F).clientTrackingRange(10));
     EntityType<IMMagmaCubeEntity> MAGMA_CUBE = register("magma_cube",
             EntityType.Builder.<IMMagmaCubeEntity>of(
                             IMMagmaCubeEntity::new, MobCategory.MONSTER)
-                    .fireImmune().sized(0.52F, 0.52F)
-                    .clientTrackingRange(10));
+                    .fireImmune().sized(0.52F, 0.52F).eyeHeight(0.325F)
+                    .spawnDimensionsScale(4.0F).clientTrackingRange(10));
     EntityType<IMEndermanEntity> ENDERMAN = register("enderman", EntityType.Builder.<IMEndermanEntity>of(IMEndermanEntity::new, MobCategory.MONSTER)
-            .sized(0.6F, 2.9F).clientTrackingRange(8));
+            .sized(0.6F, 2.9F).eyeHeight(2.55F).clientTrackingRange(8));
     EntityType<IMPhantomEntity> PHANTOM = register(
             "phantom",
             EntityType.Builder.<IMPhantomEntity>of(
                             IMPhantomEntity::new, MobCategory.MONSTER)
-                    .sized(0.9F, 0.5F)
+                    .sized(0.9F, 0.5F).eyeHeight(0.175F)
+                    .passengerAttachments(0.3375F)
                     .clientTrackingRange(8));
     EntityType<IMWolfEntity> WOLF = register("wolf", EntityType.Builder.<IMWolfEntity>of(IMWolfEntity::new, MobCategory.CREATURE)
-            .sized(0.6F, 0.85F) .clientTrackingRange(10));
+            .sized(0.6F, 0.85F).eyeHeight(0.68F).passengerAttachments(new Vec3(0.0, 0.81875, -0.0625)).clientTrackingRange(10));
 
     EntityType<SpiderEggEntity> SPIDER_EGG = register("spider_egg", EntityType.Builder.<SpiderEggEntity>of(SpiderEggEntity::new, MobCategory.MISC)
-            .sized(0.5F, 0.8F).clientTrackingRange(10));
+            .sized(0.5F, 0.8F).eyeHeight(0.5F).clientTrackingRange(10));
 
     EntityType<TrapEntity> TRAP = register("trap", EntityType.Builder.<TrapEntity>of(TrapEntity::new, MobCategory.MISC)
             .sized(0.5F, 0.28F).fireImmune().clientTrackingRange(10).noSummon());
@@ -216,15 +262,12 @@ public interface InvEntities {
                     .sized(0.25F, 0.25F).clientTrackingRange(4)
                     .updateInterval(10));
     EntityType<EntityIMPrimedTNT> TNT = register("tnt", EntityType.Builder.<EntityIMPrimedTNT>of(EntityIMPrimedTNT::new, MobCategory.MISC)
-            .fireImmune().sized(0.98F, 0.98F).clientTrackingRange(10).updateInterval(10));
+            .fireImmune().sized(0.98F, 0.98F).eyeHeight(0.15F).clientTrackingRange(10).updateInterval(10));
 
     private static <T extends Entity> EntityType<T> register(String name, EntityType.Builder<T> builder) {
         var id = InvasionMod.id(name);
-        // The 1.20.1 builder passes this name to the vanilla data-fixer lookup.
-        // A null name only appeared to work with ModernFix because it bypasses
-        // that lookup during startup.
-        return InvasionMod.INSTANCE.register(
-                Registries.ENTITY_TYPE, id, builder.build(id.toString()));
+        var key = ResourceKey.create(Registries.ENTITY_TYPE, id);
+        return Registry.register(BuiltInRegistries.ENTITY_TYPE, id, builder.build(key));
     }
 
     private static <T extends Entity> EntityType.Builder<T> betaFeature(EntityType.Builder<T> builder) {
@@ -234,12 +277,18 @@ public interface InvEntities {
     static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(
+                BOGGED, IMBoggedEntity.createAttributes().build());
+        event.put(
+                PARCHED, IMParchedEntity.createAttributes().build());
+        event.put(
                 STRAY, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(
                 WITHER_SKELETON, IMSkeletonEntity.createIMSkeletonAttributes().build());
         event.put(WITCH, Witch.createAttributes().build());
         event.put(GHAST, Ghast.createAttributes().build());
         event.put(ZOMBIE, EntityIMZombie.createTierT1V0Attributes().build());
+        event.put(TAR_ZOMBIE, EntityIMZombie.createTierT2V2ttributes().build());
+        event.put(ZOMBIE_BRUTE, EntityIMZombie.createTierT3V0Attributes().build());
         event.put(FAT_ZOMBIE, IMFatZombieEntity.createAttributes().build());
         event.put(
                 SPEEDY_ZOMBIE,
@@ -272,9 +321,13 @@ public interface InvEntities {
         event.put(CAVE_SPIDER, IMCaveSpiderEntity.createAttributes().build());
         event.put(QUEEN_SPIDER, QueenSpiderEntity.createAttributes().build());
         event.put(THROWER, ThrowerEntity.createT1V0Attributes().build());
+        event.put(BIG_THROWER, ThrowerEntity.createT2V0Attributes().build());
         event.put(BURROWER, BurrowerEntity.createAttributes().build());
         event.put(IMP, ImpEnitty.createAttributes().build());
-        event.put(BLAZE, Blaze.createAttributes().build());
+        event.put(BLAZE, net.minecraft.world.entity.monster.Blaze.createAttributes().build());
+        event.put(BREEZE,
+                net.minecraft.world.entity.monster.breeze.Breeze
+                        .createAttributes().build());
         event.put(SILVERFISH, Silverfish.createAttributes().build());
         event.put(ENDERMITE, Endermite.createAttributes().build());
         event.put(SLIME, net.minecraft.world.entity.monster.Monster
