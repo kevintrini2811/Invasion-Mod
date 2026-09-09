@@ -60,6 +60,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.item.ItemStack;
@@ -195,7 +196,9 @@ public final class ConfiguredModMobs {
                         mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
                         mob.canStair(), mob.canBridge(), mob.canTower(),
                         mob.id().equals(InvasionMod.id("pigman_engineer")),
-                        mob.id().equals(InvasionMod.id("enderman"))), null)));
+                        mob.id().equals(InvasionMod.id("enderman")),
+                        mob.id().equals(InvasionMod.id("pigman_engineer"))
+                                ? Blocks.OAK_PLANKS : Blocks.COBBLESTONE), null)));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -275,6 +278,8 @@ public final class ConfiguredModMobs {
             abilities.addProperty("towering", entry.abilities().towering());
             abilities.addProperty("engineer_tower", entry.abilities().engineerTower());
             abilities.addProperty("enderman_block_theft", entry.abilities().endermanBlockTheft());
+            abilities.addProperty("building_block", BuiltInRegistries.BLOCK
+                    .getKey(entry.abilities().buildingBlock()).toString());
             value.add("abilities", abilities);
             com.google.gson.JsonArray themes = new com.google.gson.JsonArray();
             entry.themes().forEach(themes::add);
@@ -315,7 +320,9 @@ public final class ConfiguredModMobs {
         Abilities abilities = new Abilities(
                 false, false, false, false, false, false,
                 id.equals(InvasionMod.id("pigman_engineer")),
-                id.equals(InvasionMod.id("enderman")));
+                id.equals(InvasionMod.id("enderman")),
+                id.equals(InvasionMod.id("pigman_engineer"))
+                        ? Blocks.OAK_PLANKS : Blocks.COBBLESTONE);
         return new Entry(Mode.INACTIVE, false, 5, DEFAULT_THEMES, abilities, null);
     }
 
@@ -339,7 +346,20 @@ public final class ConfiguredModMobs {
                 ability(abilities, "bridging", value, null, defaults.bridging()),
                 ability(abilities, "towering", value, null, defaults.towering()),
                 ability(abilities, "engineer_tower", value, null, defaults.engineerTower()),
-                ability(abilities, "enderman_block_theft", value, null, defaults.endermanBlockTheft()));
+                ability(abilities, "enderman_block_theft", value, null, defaults.endermanBlockTheft()),
+                buildingBlock(abilities, defaults.buildingBlock()));
+    }
+
+    private static Block buildingBlock(JsonObject abilities, Block fallback) {
+        if (!abilities.has("building_block")) return fallback;
+        Identifier id = Identifier.tryParse(abilities.get("building_block").getAsString());
+        if (id == null) return fallback;
+        return BuiltInRegistries.BLOCK.getOptional(id)
+                .filter(block -> block != Blocks.AIR
+                        && !new ItemStack(block.asItem()).isEmpty()
+                        && block.defaultBlockState().isCollisionShapeFullBlock(
+                                EmptyBlockGetter.INSTANCE, BlockPos.ZERO))
+                .orElse(fallback);
     }
 
     private static boolean ability(JsonObject abilities, String key,
@@ -423,7 +443,7 @@ public final class ConfiguredModMobs {
     }
 
     private static void restoreStolenBlock(Mob mob) {
-        String id = mob.getPersistentData().getStringOr(STOLEN_BLOCK, "");
+        String id = configuredStolenBlock(mob);
         if (id.isEmpty()) return;
         Identifier identifier = Identifier.tryParse(id);
         if (identifier == null) return;
@@ -509,10 +529,25 @@ public final class ConfiguredModMobs {
         return entry == null ? fallback : entry.abilities().endermanBlockTheft();
     }
 
+    public static synchronized Block buildingBlock(EntityType<?> type, Block fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().buildingBlock();
+    }
+
     private static String configuredNexusOwner(Mob mob) {
         String prefix = NEXUS_OWNER + ":";
         return mob.entityTags().stream().filter(tag -> tag.startsWith(prefix))
                 .map(tag -> tag.substring(prefix.length())).findFirst().orElse("");
+    }
+
+    private static String configuredStolenBlock(Mob mob) {
+        String prefix = STOLEN_BLOCK + ":";
+        return mob.entityTags().stream().filter(tag -> tag.startsWith(prefix))
+                .map(tag -> tag.substring(prefix.length())).findFirst().orElse("");
+    }
+
+    private static void setConfiguredStolenBlock(Mob mob, String blockId) {
+        mob.addTag(STOLEN_BLOCK + ":" + blockId);
     }
 
     /** Recognizes configured invasion allies without changing their Nexus binding. */
@@ -582,7 +617,7 @@ public final class ConfiguredModMobs {
             BlockPos forward = current.relative(direction);
 
             if (allowsEndermanBlockTheft(mob.getType(), false)
-                    && mob.getPersistentData().getStringOr(STOLEN_BLOCK, "").isEmpty()) {
+                    && configuredStolenBlock(mob).isEmpty()) {
                 target = miningTarget(forward, current, objective);
                 if (target != null
                         && !new ItemStack(mob.level().getBlockState(target)
@@ -606,14 +641,14 @@ public final class ConfiguredModMobs {
                     && horizontalDistance <= 4
                     && canReplace(current) && hasRoomAt(current.above())) {
                 target = current;
-                replacement = Blocks.COBBLESTONE.defaultBlockState();
+                replacement = buildingBlock(mob.getType(), Blocks.COBBLESTONE).defaultBlockState();
                 return true;
             }
             if (allowsBridging(mob.getType(), false)) {
                 BlockPos bridge = forward.below();
                 if (canReplace(bridge) && hasRoomAt(forward)) {
                     target = bridge;
-                    replacement = Blocks.COBBLESTONE.defaultBlockState();
+                    replacement = buildingBlock(mob.getType(), Blocks.COBBLESTONE).defaultBlockState();
                     return true;
                 }
             }
@@ -655,9 +690,8 @@ public final class ConfiguredModMobs {
                         if (level.setBlock(target, Blocks.AIR.defaultBlockState(), flags)) {
                             mob.setItemSlot(EquipmentSlot.MAINHAND,
                                     new ItemStack(stolenState.getBlock().asItem()));
-                            mob.getPersistentData().putString(STOLEN_BLOCK,
-                                    BuiltInRegistries.BLOCK.getKey(
-                                            stolenState.getBlock()).toString());
+                            setConfiguredStolenBlock(mob, BuiltInRegistries.BLOCK
+                                    .getKey(stolenState.getBlock()).toString());
                         }
                     } else {
                         level.destroyBlock(target,
@@ -704,7 +738,7 @@ public final class ConfiguredModMobs {
                 }
             }
 
-            BlockState planks = Blocks.OAK_PLANKS.defaultBlockState();
+            BlockState planks = buildingBlock(mob.getType(), Blocks.OAK_PLANKS).defaultBlockState();
             BlockState ladder = Blocks.LADDER.defaultBlockState()
                     .setValue(LadderBlock.FACING, direction.getOpposite());
             for (int height = 0; height < 3; height++) {
@@ -1168,11 +1202,13 @@ public final class ConfiguredModMobs {
             Abilities abilities, Identifier replacement) {}
     private record Abilities(boolean weapons, boolean armor, boolean mining,
             boolean stairing, boolean bridging, boolean towering,
-            boolean engineerTower, boolean endermanBlockTheft) {
+            boolean engineerTower, boolean endermanBlockTheft, Block buildingBlock) {
         private static final Abilities NONE = new Abilities(
-                false, false, false, false, false, false, false, false);
+                false, false, false, false, false, false, false, false,
+                Blocks.COBBLESTONE);
         private static final Abilities EQUIPMENT = new Abilities(
-                true, true, false, false, false, false, false, false);
+                true, true, false, false, false, false, false, false,
+                Blocks.COBBLESTONE);
     }
     public record WaveMob(EntityType<? extends Mob> type, int cost) {}
 }

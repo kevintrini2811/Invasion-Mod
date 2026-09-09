@@ -37,6 +37,8 @@
   "invmod.config.ability.towering": "Towering",
   "invmod.config.ability.engineer_tower": "Engineer Tower",
   "invmod.config.ability.enderman_block_theft": "Enderman Block Theft",
+  "invmod.config.ability.building_block": "Building Block: %s",
+  "invmod.config.ability.building_block.title": "Select Building Block",
   "invmod.config.cost": "Cost",
   "invmod.config.search": "Search mobs...",
   "invmod.config.search.no_results": "No matching mobs found.",
