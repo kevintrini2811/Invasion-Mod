@@ -9,6 +9,7 @@
   "invmod.config.regenerate.confirm": "Reset all mob settings? This cannot be undone.",
   "invmod.config.themes": "Themes",
   "invmod.config.active": "Active",
+  "invmod.config.boss": "Boss",
   "invmod.config.armor": "Armor",
   "invmod.config.weapons": "Weapons",
   "invmod.config.abilities": "Abilities",
