@@ -25,6 +25,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.ChatFormatting;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 
 /** Widget-based editor exposed through NeoForge's Mods configuration button. */
 public final class InvasionConfigScreen extends Screen {
@@ -193,10 +195,19 @@ public final class InvasionConfigScreen extends Screen {
             int y = MOB_ROWS_TOP + index % mobPageSize * MOB_ROW_HEIGHT;
             labels.add(new Label(id, left, y));
             int controlsY = y + 13;
-            boolean active = mob.has("active") && mob.get("active").getAsBoolean();
-            addRenderableWidget(coloredBooleanBuilder(active).create(
-                    left, controlsY, 82, 20, Component.translatable("invmod.config.active"),
-                    (button, selected) -> mob.addProperty("active", selected)));
+            MobMode mode = mobMode(mob);
+            addRenderableWidget(Button.builder(modeLabel(mode), button -> {
+                MobMode next = mode.next();
+                if (next == MobMode.ATTACK) mob.addProperty("active", "attack");
+                else mob.addProperty("active", next == MobMode.ACTIVE);
+                rebuild();
+            }).bounds(left, controlsY, 82, 20).build());
+            if (mode == MobMode.ATTACK) {
+                addRenderableWidget(Button.builder(Component.translatable("invmod.config.replace"),
+                        button -> minecraft.setScreenAndShow(new MobReplacementScreen(this, id, mob)))
+                        .bounds(left + 86, controlsY, 106, 20).build());
+                continue;
+            }
             boolean boss = mob.has("boss") && mob.get("boss").getAsBoolean();
             addRenderableWidget(coloredBooleanBuilder(boss).create(
                     left + 86, controlsY, 82, 20, Component.translatable("invmod.config.boss"),
@@ -264,6 +275,35 @@ public final class InvasionConfigScreen extends Screen {
                 CommonComponents.OPTION_OFF.copy().withStyle(ChatFormatting.RED), initial);
     }
 
+    private static MobMode mobMode(JsonObject mob) {
+        if (!mob.has("active")) return MobMode.INACTIVE;
+        if (mob.get("active").isJsonPrimitive()
+                && mob.getAsJsonPrimitive("active").isString()) {
+            return "attack".equalsIgnoreCase(mob.get("active").getAsString())
+                    ? MobMode.ATTACK : MobMode.INACTIVE;
+        }
+        return mob.get("active").getAsBoolean() ? MobMode.ACTIVE : MobMode.INACTIVE;
+    }
+
+    private static Component modeLabel(MobMode mode) {
+        ChatFormatting color = switch (mode) {
+            case INACTIVE -> ChatFormatting.RED;
+            case ACTIVE -> ChatFormatting.GREEN;
+            case ATTACK -> ChatFormatting.GOLD;
+        };
+        return Component.translatable("invmod.config.active").append(": ")
+                .append(Component.translatable("invmod.config.active." + mode.name().toLowerCase(Locale.ROOT))
+                        .withStyle(color));
+    }
+
+    private enum MobMode {
+        INACTIVE, ACTIVE, ATTACK;
+
+        private MobMode next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
+    }
+
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
         super.extractRenderState(graphics, mouseX, mouseY, delta);
@@ -317,6 +357,81 @@ public final class InvasionConfigScreen extends Screen {
             graphics.centeredText(font, title, width / 2, 15, 0xFFFFFFFF);
         }
         @Override public void onClose() { done(); }
+    }
+
+    private static final class MobReplacementScreen extends Screen {
+        private static final int PAGE_SIZE = 10;
+        private final InvasionConfigScreen parent;
+        private final JsonObject mob;
+        private String search = "";
+        private int page;
+
+        MobReplacementScreen(InvasionConfigScreen parent, String id, JsonObject mob) {
+            super(Component.literal(id));
+            this.parent = parent;
+            this.mob = mob;
+        }
+
+        @Override protected void init() {
+            clearWidgets();
+            int left = Math.max(10, width / 2 - 200);
+            int contentWidth = Math.min(400, width - 20);
+            EditBox searchBox = new EditBox(font, left, 32, contentWidth, 20,
+                    Component.translatable("invmod.config.search"));
+            searchBox.setHint(Component.translatable("invmod.config.search"));
+            searchBox.setMaxLength(256);
+            searchBox.setValue(search);
+            searchBox.setResponder(value -> {
+                search = value;
+                page = 0;
+                init();
+                setFocused(children().getFirst());
+            });
+            addRenderableWidget(searchBox);
+
+            List<String> ids = entityIds();
+            int pages = Math.max(1, (ids.size() + PAGE_SIZE - 1) / PAGE_SIZE);
+            page = Math.clamp(page, 0, pages - 1);
+            for (int index = page * PAGE_SIZE;
+                    index < Math.min(ids.size(), (page + 1) * PAGE_SIZE); index++) {
+                String id = ids.get(index);
+                int y = 58 + index % PAGE_SIZE * 22;
+                addRenderableWidget(Button.builder(Component.literal(id), button -> select(id))
+                        .bounds(left, y, contentWidth, 20).build());
+            }
+            Button previous = addRenderableWidget(Button.builder(Component.literal("<"), button -> {
+                page--;
+                init();
+            }).bounds(left, height - 28, 28, 20).build());
+            previous.active = page > 0;
+            Button next = addRenderableWidget(Button.builder(Component.literal(">"), button -> {
+                page++;
+                init();
+            }).bounds(left + contentWidth - 28, height - 28, 28, 20).build());
+            next.active = page + 1 < pages;
+            addRenderableWidget(Button.builder(Component.translatable("gui.back"), button -> onClose())
+                    .bounds(width / 2 - 50, height - 28, 100, 20).build());
+        }
+
+        private List<String> entityIds() {
+            String query = search.strip().toLowerCase(Locale.ROOT);
+            return BuiltInRegistries.ENTITY_TYPE.keySet().stream()
+                    .filter(key -> BuiltInRegistries.ENTITY_TYPE.getValue(key).canSummon())
+                    .map(Identifier::toString)
+                    .filter(id -> query.isEmpty() || id.toLowerCase(Locale.ROOT).contains(query))
+                    .sorted().toList();
+        }
+
+        private void select(String id) {
+            mob.addProperty("replace", id);
+            minecraft.setScreenAndShow(parent);
+        }
+
+        @Override public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y, float delta) {
+            super.extractRenderState(graphics, x, y, delta);
+            graphics.centeredText(font, title, width / 2, 12, 0xFFFFFFFF);
+        }
+        @Override public void onClose() { minecraft.setScreenAndShow(parent); }
     }
 
     private static final class MobAbilitiesScreen extends Screen {
