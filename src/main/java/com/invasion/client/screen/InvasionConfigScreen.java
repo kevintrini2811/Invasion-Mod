@@ -34,8 +34,20 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.EmptyBlockGetter;
 
+abstract class DirtBackgroundScreen extends Screen {
+    protected DirtBackgroundScreen(Component title) {
+        super(title);
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        renderDirtBackground(graphics);
+        super.render(graphics, mouseX, mouseY, delta);
+    }
+}
+
 /** Widget-based editor exposed through NeoForge's Mods configuration button. */
-public final class InvasionConfigScreen extends Screen {
+public final class InvasionConfigScreen extends DirtBackgroundScreen {
     private static final Path CFG = FMLPaths.CONFIGDIR.get().resolve("invasion_config.cfg");
     private static final Path MOBS = FMLPaths.CONFIGDIR.get().resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -331,7 +343,7 @@ public final class InvasionConfigScreen extends Screen {
     @Override public void onClose() { minecraft.setScreen(parent); }
     private record Label(String text, int x, int y) {}
 
-    private static final class MobThemesScreen extends Screen {
+    private static final class MobThemesScreen extends DirtBackgroundScreen {
         private static final List<String> THEMES = List.of("SWARM", "ARMORED", "RANGED", "UNDERGROUND",
                 "SPIDER", "FLYING", "NETHER", "SIEGE", "FAST", "MIXED", "RANDOM", "RANDOMHELL");
         private final InvasionConfigScreen parent;
@@ -375,7 +387,7 @@ public final class InvasionConfigScreen extends Screen {
         @Override public void onClose() { done(); }
     }
 
-    private static final class MobReplacementScreen extends Screen {
+    private static final class MobReplacementScreen extends DirtBackgroundScreen {
         private static final int PAGE_SIZE = 10;
         private final InvasionConfigScreen parent;
         private final JsonObject mob;
@@ -459,7 +471,7 @@ public final class InvasionConfigScreen extends Screen {
         @Override public void onClose() { minecraft.setScreen(parent); }
     }
 
-    private static final class MobAbilitiesScreen extends Screen {
+    private static final class MobAbilitiesScreen extends DirtBackgroundScreen {
         private static final List<String> ABILITIES = List.of(
                 "weapons", "armor", "mining", "stairing", "bridging", "towering",
                 "engineer_tower", "enderman_block_theft");
@@ -533,7 +545,7 @@ public final class InvasionConfigScreen extends Screen {
         return new ItemStack(block.asItem());
     }
 
-    private static final class BlockSelectionScreen extends Screen {
+    private static final class BlockSelectionScreen extends DirtBackgroundScreen {
         private final MobAbilitiesScreen parent;
         private final JsonObject abilities;
         private final List<BlockPreview> previews = new ArrayList<>();
