@@ -158,8 +158,10 @@ public final class InvasionConfigScreen extends Screen {
         mobSearchBox.setResponder(text -> {
             mobSearch = text;
             page = 0;
-            rebuild();
-            setFocused(mobSearchBox);
+            minecraft.execute(() -> {
+                rebuild();
+                setFocused(mobSearchBox);
+            });
         });
         addRenderableWidget(mobSearchBox);
     }
@@ -389,8 +391,10 @@ public final class InvasionConfigScreen extends Screen {
             searchBox.setResponder(value -> {
                 search = value;
                 page = 0;
-                init();
-                setFocused(children().getFirst());
+                minecraft.execute(() -> {
+                    init();
+                    setFocused(children().getFirst());
+                });
             });
             addRenderableWidget(searchBox);
 
@@ -539,8 +543,10 @@ public final class InvasionConfigScreen extends Screen {
             searchBox.setResponder(value -> {
                 search = value;
                 page = 0;
-                init();
-                setFocused(children().getFirst());
+                minecraft.execute(() -> {
+                    init();
+                    setFocused(children().getFirst());
+                });
             });
             addRenderableWidget(searchBox);
 
