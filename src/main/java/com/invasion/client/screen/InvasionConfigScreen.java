@@ -436,7 +436,8 @@ public final class InvasionConfigScreen extends Screen {
 
     private static final class MobAbilitiesScreen extends Screen {
         private static final List<String> ABILITIES = List.of(
-                "weapons", "armor", "mining", "stairing", "bridging", "towering");
+                "weapons", "armor", "mining", "stairing", "bridging", "towering",
+                "engineer_tower", "enderman_block_theft");
         private final InvasionConfigScreen parent;
         private final JsonObject mob;
         private final JsonObject abilities;
@@ -470,7 +471,7 @@ public final class InvasionConfigScreen extends Screen {
                         (button, value) -> abilities.addProperty(ability, value)));
             }
             addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> done())
-                    .bounds(width / 2 - 50, 122, 100, 20).build());
+                    .bounds(width / 2 - 50, 42 + (ABILITIES.size() + 1) / 2 * 24, 100, 20).build());
         }
 
         private void done() {
