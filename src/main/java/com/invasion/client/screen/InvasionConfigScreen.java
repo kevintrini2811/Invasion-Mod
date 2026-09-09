@@ -25,7 +25,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.neoforged.fml.loading.FMLPaths;
 
 /** Widget-based editor exposed through NeoForge's Mods configuration button. */
@@ -460,6 +465,7 @@ public final class InvasionConfigScreen extends Screen {
         }
 
         @Override protected void init() {
+            clearWidgets();
             for (int index = 0; index < ABILITIES.size(); index++) {
                 String ability = ABILITIES.get(index);
                 boolean enabled = abilities.has(ability)
@@ -470,8 +476,14 @@ public final class InvasionConfigScreen extends Screen {
                         Component.translatable("invmod.config.ability." + ability),
                         (button, value) -> abilities.addProperty(ability, value)));
             }
+            String blockId = abilities.has("building_block")
+                    ? abilities.get("building_block").getAsString() : "minecraft:cobblestone";
+            addRenderableWidget(Button.builder(Component.literal("    ").append(
+                            Component.translatable("invmod.config.ability.building_block", blockId)),
+                    button -> minecraft.setScreenAndShow(new BlockSelectionScreen(this, abilities)))
+                    .bounds(width / 2 - 204, 138, 408, 20).build());
             addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> done())
-                    .bounds(width / 2 - 50, 42 + (ABILITIES.size() + 1) / 2 * 24, 100, 20).build());
+                    .bounds(width / 2 - 50, 162, 100, 20).build());
         }
 
         private void done() {
@@ -487,7 +499,107 @@ public final class InvasionConfigScreen extends Screen {
         @Override public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y, float delta) {
             super.extractRenderState(graphics, x, y, delta);
             graphics.centeredText(font, title, width / 2, 15, 0xFFFFFFFF);
+            graphics.item(blockStack(abilities), width / 2 - 200, 140);
         }
         @Override public void onClose() { done(); }
+    }
+
+    private static ItemStack blockStack(JsonObject abilities) {
+        String value = abilities.has("building_block")
+                ? abilities.get("building_block").getAsString() : "minecraft:cobblestone";
+        Identifier id = Identifier.tryParse(value);
+        Block block = id == null ? Blocks.COBBLESTONE
+                : BuiltInRegistries.BLOCK.getOptional(id).orElse(Blocks.COBBLESTONE);
+        return new ItemStack(block.asItem());
+    }
+
+    private static final class BlockSelectionScreen extends Screen {
+        private final MobAbilitiesScreen parent;
+        private final JsonObject abilities;
+        private final List<BlockPreview> previews = new ArrayList<>();
+        private String search = "";
+        private int page;
+
+        BlockSelectionScreen(MobAbilitiesScreen parent, JsonObject abilities) {
+            super(Component.translatable("invmod.config.ability.building_block.title"));
+            this.parent = parent;
+            this.abilities = abilities;
+        }
+
+        @Override protected void init() {
+            clearWidgets();
+            previews.clear();
+            int left = Math.max(10, width / 2 - 200);
+            int contentWidth = Math.min(400, width - 20);
+            EditBox searchBox = new EditBox(font, left, 32, contentWidth, 20,
+                    Component.translatable("invmod.config.search"));
+            searchBox.setHint(Component.translatable("invmod.config.search"));
+            searchBox.setMaxLength(256);
+            searchBox.setValue(search);
+            searchBox.setResponder(value -> {
+                search = value;
+                page = 0;
+                init();
+                setFocused(children().getFirst());
+            });
+            addRenderableWidget(searchBox);
+
+            List<BlockChoice> blocks = blocks();
+            int pageSize = Math.max(1, (height - 90) / 22);
+            int pages = Math.max(1, (blocks.size() + pageSize - 1) / pageSize);
+            page = Math.clamp(page, 0, pages - 1);
+            for (int index = page * pageSize;
+                    index < Math.min(blocks.size(), (page + 1) * pageSize); index++) {
+                BlockChoice choice = blocks.get(index);
+                int y = 58 + index % pageSize * 22;
+                addRenderableWidget(Button.builder(Component.literal("    " + choice.id()),
+                        button -> select(choice.id())).bounds(left, y, contentWidth, 20).build());
+                previews.add(new BlockPreview(choice.stack(), left + 2, y + 2));
+            }
+            Button previous = addRenderableWidget(Button.builder(Component.literal("<"), button -> {
+                page--;
+                init();
+            }).bounds(left, height - 28, 28, 20).build());
+            previous.active = page > 0;
+            Button next = addRenderableWidget(Button.builder(Component.literal(">"), button -> {
+                page++;
+                init();
+            }).bounds(left + contentWidth - 28, height - 28, 28, 20).build());
+            next.active = page + 1 < pages;
+            addRenderableWidget(Button.builder(Component.translatable("gui.back"), button -> onClose())
+                    .bounds(width / 2 - 50, height - 28, 100, 20).build());
+        }
+
+        private List<BlockChoice> blocks() {
+            String query = search.strip().toLowerCase(Locale.ROOT);
+            return BuiltInRegistries.BLOCK.keySet().stream()
+                    .map(id -> new BlockChoice(id.toString(),
+                            new ItemStack(BuiltInRegistries.BLOCK.getValue(id).asItem())))
+                    .filter(choice -> !choice.stack().isEmpty())
+                    .filter(choice -> BuiltInRegistries.BLOCK.getValue(
+                            Identifier.parse(choice.id())).defaultBlockState()
+                            .isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, BlockPos.ZERO))
+                    .filter(choice -> query.isEmpty()
+                            || choice.id().toLowerCase(Locale.ROOT).contains(query)
+                            || choice.stack().getHoverName().getString()
+                                    .toLowerCase(Locale.ROOT).contains(query))
+                    .sorted(java.util.Comparator.comparing(BlockChoice::id)).toList();
+        }
+
+        private void select(String id) {
+            abilities.addProperty("building_block", id);
+            minecraft.setScreenAndShow(parent);
+        }
+
+        @Override public void extractRenderState(GuiGraphicsExtractor graphics, int x, int y, float delta) {
+            super.extractRenderState(graphics, x, y, delta);
+            graphics.centeredText(font, title, width / 2, 12, 0xFFFFFFFF);
+            previews.forEach(preview -> graphics.item(preview.stack(), preview.x(), preview.y()));
+        }
+
+        @Override public void onClose() { minecraft.setScreenAndShow(parent); }
+
+        private record BlockChoice(String id, ItemStack stack) {}
+        private record BlockPreview(ItemStack stack, int x, int y) {}
     }
 }
