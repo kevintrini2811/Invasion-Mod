@@ -11,14 +11,13 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.ValueInput;
-import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.nbt.CompoundTag;
 
 public final class IMHuskEntity extends EntityIMZombie {
     private static final EntityDataAccessor<Boolean> CONVERTING =
@@ -33,9 +32,9 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(CONVERTING, false);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(CONVERTING, false);
     }
 
     public boolean isUnderWaterConverting() {
@@ -63,8 +62,7 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     private void convertToIMZombie(ServerLevel world) {
-        EntityIMZombie zombie = ZombieVariants.resolve(InvEntities.ZOMBIE, getTier(), getFlavour()).create(
-                world, EntitySpawnReason.CONVERSION);
+        EntityIMZombie zombie = ZombieVariants.resolve(InvEntities.ZOMBIE, getTier(), getFlavour()).create(world);
         if (zombie == null) {
             return;
         }
@@ -73,7 +71,7 @@ public final class IMHuskEntity extends EntityIMZombie {
         zombie.setTier(getTier());
         Entity vehicle = getVehicle();
         stopRiding();
-        zombie.snapTo(
+        zombie.moveTo(
                 getX(), getY(), getZ(), getYRot(), getXRot());
         zombie.setDeltaMovement(getDeltaMovement());
         zombie.setBaby(isBaby());
@@ -103,11 +101,11 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    public boolean doHurtTarget(ServerLevel world, Entity target) {
-        boolean hit = super.doHurtTarget(world, target);
+    public boolean doHurtTarget(Entity target) {
+        boolean hit = super.doHurtTarget(target);
         if (hit && getMainHandItem().isEmpty()
                 && target instanceof LivingEntity living) {
-            int duration = 140 * (int) world
+            int duration = 140 * (int) level()
                     .getCurrentDifficultyAt(blockPosition())
                     .getEffectiveDifficulty();
             living.addEffect(
@@ -139,7 +137,7 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    public void addAdditionalSaveData(ValueOutput output) {
+    public void addAdditionalSaveData(CompoundTag output) {
         super.addAdditionalSaveData(output);
         output.putInt("InWaterTime", inWaterTime);
         if (isUnderWaterConverting()) {
@@ -148,11 +146,11 @@ public final class IMHuskEntity extends EntityIMZombie {
     }
 
     @Override
-    public void readAdditionalSaveData(ValueInput input) {
+    public void readAdditionalSaveData(CompoundTag input) {
         super.readAdditionalSaveData(input);
-        inWaterTime = input.getIntOr("InWaterTime", 0);
-        conversionTime = input.getIntOr(
-                "ZombieConversionTime", -1);
+        inWaterTime = input.getInt("InWaterTime");
+        conversionTime = input.contains("ZombieConversionTime")
+                ? input.getInt("ZombieConversionTime") : -1;
         entityData.set(CONVERTING, conversionTime >= 0);
     }
 }
