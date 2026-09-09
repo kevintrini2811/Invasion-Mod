@@ -3,11 +3,11 @@ package com.invasion.entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 
@@ -35,11 +35,12 @@ public final class EntityIMSpeedyZombie extends EntityIMZombie {
     }
 
     @Override
-    public boolean hurt(DamageSource source, float damage) {
+    public boolean hurtServer(
+            ServerLevel world, DamageSource source, float damage) {
         if (source.is(DamageTypeTags.IS_FIRE) && isInSoulFire()) {
             return false;
         }
-        return super.hurt(source, damage);
+        return super.hurtServer(world, source, damage);
     }
 
     @Override
@@ -55,7 +56,8 @@ public final class EntityIMSpeedyZombie extends EntityIMZombie {
                 || source instanceof EntityIMSpeedyZombie) {
             return;
         }
-        EntityIMSpeedyZombie speedy = InvEntities.SPEEDY_ZOMBIE.create(world);
+        EntityIMSpeedyZombie speedy = ZombieVariants.resolve(InvEntities.SPEEDY_ZOMBIE, source.getTier(), source.getFlavour()).create(
+                world, EntitySpawnReason.CONVERSION);
         if (speedy == null) {
             return;
         }
@@ -65,7 +67,7 @@ public final class EntityIMSpeedyZombie extends EntityIMZombie {
         speedy.setBaby(source.isBaby());
         speedy.setNexus(source.getNexus());
         speedy.setCountsTowardMobCap(source.countsTowardMobCap());
-        speedy.moveTo(source.getX(), source.getY(), source.getZ(),
+        speedy.snapTo(source.getX(), source.getY(), source.getZ(),
                 source.getYRot(), source.getXRot());
         speedy.setDeltaMovement(source.getDeltaMovement());
         speedy.setCustomName(source.getCustomName());
@@ -74,8 +76,7 @@ public final class EntityIMSpeedyZombie extends EntityIMZombie {
         speedy.setCanPickUpLoot(source.canPickUpLoot());
         speedy.setTarget(source.getTarget());
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            ItemStack stack = source.getItemBySlot(slot);
-            speedy.setItemSlot(slot, stack.copy());
+            speedy.setItemSlot(slot, source.getItemBySlot(slot).copy());
         }
         speedy.setHealth(Math.min(speedy.getMaxHealth(),
                 source.getHealth() / source.getMaxHealth()

@@ -39,6 +39,16 @@ public final class InvRenderers {
                 context -> new InvasionZombieRenderer<>(context, false));
         event.registerEntityRenderer(InvEntities.ZOMBIE_BRUTE,
                 context -> new InvasionZombieRenderer<>(context, false));
+        event.registerEntityRenderer(InvEntities.SPEEDY_ZOMBIE_BRUTE,
+                SpeedyZombieRenderer::new);
+        event.registerEntityRenderer(InvEntities.HUSK_BRUTE,
+                InvHuskRenderer::new);
+        event.registerEntityRenderer(InvEntities.DROWNED_BRUTE,
+                InvDrownedRenderer::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER_BRUTE,
+                IMZombieVillagerRenderer::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN_BRUTE,
+                context -> new InvasionZombieRenderer<>(context, true));
         event.registerEntityRenderer(InvEntities.FAT_ZOMBIE,
                 FatZombieRenderer::new);
         event.registerEntityRenderer(
