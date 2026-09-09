@@ -123,6 +123,8 @@
     "entity.invmod.guardian": "IM Wächter",
     "entity.invmod.elder_guardian": "IM Großer Wächter",
     "entity.invmod.zombie_villager": "IM Zombie-Dorfbewohner",
+    "entity.invmod.tar_zombie": "IM Teer-Zombie",
+    "entity.invmod.zombie_brute": "IM Zombie-Grobian",
     "entity.invmod.zombie.brute": "IM Zombie Brute",
     "entity.invmod.zombie.tar": "IM Tar Zombie",
     "entity.invmod.zombie.pigman": "IM Pigman Zombie",

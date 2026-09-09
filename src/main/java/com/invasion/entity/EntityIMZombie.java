@@ -557,6 +557,9 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
     @Override
     protected Component getTypeName() {
+        if (getType() == InvEntities.TAR_ZOMBIE || getType() == InvEntities.ZOMBIE_BRUTE) {
+            return Component.translatable(getType().getDescriptionId());
+        }
         if (isTar()) {
             return Component.translatable(getType().getDescriptionId() + ".tar");
         }
