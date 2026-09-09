@@ -68,15 +68,15 @@ public final class ConfiguredModMobs {
             "MIXED", "RANDOM", "RANDOMHELL");
     private static final Map<String, Entry> MOD_DEFAULTS = Map.of(
             "mutantmonsters:endersoul_clone",
-            new Entry(true, 3, DEFAULT_THEMES, Abilities.NONE),
+            new Entry(true, false, 3, DEFAULT_THEMES, Abilities.NONE),
             "variantsandventures:gelid",
-            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
+            new Entry(true, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:murk",
-            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
+            new Entry(true, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:thicket",
-            new Entry(true, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
+            new Entry(true, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT),
             "variantsandventures:verdant",
-            new Entry(true, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT));
+            new Entry(true, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT));
     private static final Path FILE = FabricLoader.getInstance().getConfigDir()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -156,9 +156,10 @@ public final class ConfiguredModMobs {
                     if (isSpecializedOriginal(id) || isUnavailableSpecializedImMob(id)) continue;
                     JsonObject value = jsonEntry.getValue().getAsJsonObject();
                     boolean active = value.has("active") && value.get("active").getAsBoolean();
+                    boolean boss = value.has("boss") && value.get("boss").getAsBoolean();
                     int cost = value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5;
                     Entry defaults = defaultEntry(id);
-                    result.put(id, new Entry(active, cost, readThemes(value),
+                    result.put(id, new Entry(active, boss, cost, readThemes(value),
                             readAbilities(value, defaults.abilities())));
                 }
             } catch (Exception exception) {
@@ -176,7 +177,7 @@ public final class ConfiguredModMobs {
                 .forEach(registryEntry -> result.putIfAbsent(
                         registryEntry.getKey().identifier(), defaultEntry(registryEntry.getKey().identifier())));
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
-                mob.id(), new Entry(true, mob.cost(), mob.themes(), new Abilities(
+                mob.id(), new Entry(true, false, mob.cost(), mob.themes(), new Abilities(
                         mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
                         mob.canStair(), mob.canBridge(), mob.canTower()))));
         ENTRIES.clear();
@@ -194,6 +195,20 @@ public final class ConfiguredModMobs {
             EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
             if (type != null && isExternalMonster(id, type)) {
                 result.add(new WaveMob((EntityType<? extends Mob>) type, entry.cost()));
+            }
+        });
+        return List.copyOf(result);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static synchronized List<EntityType<? extends Mob>> activeBossTypes() {
+        if (!loaded) refresh();
+        List<EntityType<? extends Mob>> result = new ArrayList<>();
+        ENTRIES.forEach((id, entry) -> {
+            if (!entry.active() || !entry.boss()) return;
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(id);
+            if (type != null && type.getCategory() == MobCategory.MONSTER) {
+                result.add((EntityType<? extends Mob>) type);
             }
         });
         return List.copyOf(result);
@@ -232,6 +247,7 @@ public final class ConfiguredModMobs {
         ENTRIES.forEach((id, entry) -> {
             JsonObject value = new JsonObject();
             value.addProperty("active", entry.active());
+            value.addProperty("boss", entry.boss());
             value.addProperty("cost", entry.cost());
             JsonObject abilities = new JsonObject();
             abilities.addProperty("weapons", entry.abilities().weapons());
@@ -273,7 +289,7 @@ public final class ConfiguredModMobs {
 
     private static Entry defaultEntry(Identifier id) {
         return MOD_DEFAULTS.getOrDefault(id.toString(),
-                new Entry(false, 5, DEFAULT_THEMES, Abilities.NONE));
+                new Entry(false, false, 5, DEFAULT_THEMES, Abilities.NONE));
     }
 
     private static Abilities readAbilities(JsonObject value, Abilities defaults) {
@@ -784,7 +800,7 @@ public final class ConfiguredModMobs {
         }
     }
 
-    private record Entry(boolean active, int cost, List<String> themes, Abilities abilities) {}
+    private record Entry(boolean active, boolean boss, int cost, List<String> themes, Abilities abilities) {}
     private record Abilities(boolean weapons, boolean armor, boolean mining,
             boolean stairing, boolean bridging, boolean towering) {
         private static final Abilities NONE = new Abilities(false, false, false, false, false, false);

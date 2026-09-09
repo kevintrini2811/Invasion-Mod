@@ -431,6 +431,7 @@ public final class BudgetWavePlan {
             bosses.addAll(MutantMonstersCompatibility.freeBossTypes());
             EntityType<? extends Mob> wildfire = FriendsAndFoesCompatibility.imWildfireType();
             if (wildfire != null) bosses.add(wildfire);
+            bosses.addAll(ConfiguredModMobs.activeBossTypes());
             EntityType<? extends Mob> boss = bosses.get(random.nextInt(bosses.size()));
             purchases.add(new Purchase(boss, 1, 0, rollRules(theme, wave, random)));
         }
@@ -456,7 +457,8 @@ public final class BudgetWavePlan {
     private static boolean isBoss(EntityType<? extends Mob> type) {
         return type == InvEntities.WITHER || type == InvEntities.WARDEN
                 || MutantMonstersCompatibility.freeBossTypes().contains(type)
-                || type == FriendsAndFoesCompatibility.imWildfireType();
+                || type == FriendsAndFoesCompatibility.imWildfireType()
+                || ConfiguredModMobs.activeBossTypes().contains(type);
     }
 
 	private static List<Team> teams(Theme theme) {
