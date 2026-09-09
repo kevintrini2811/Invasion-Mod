@@ -3726,5 +3726,27 @@
       "RANDOM",
       "RANDOMHELL"
     ]
+  },
+  "hunters_return:hunter": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
   }
 }
