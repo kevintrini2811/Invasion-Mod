@@ -6,8 +6,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
+import com.invasion.block.BlockMetadata;
+import com.invasion.block.InvBlocks;
 import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.IMCivilianTargetHandler;
+import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.mixin.PhantomAccessor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
@@ -53,6 +56,9 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -345,6 +351,7 @@ public final class ConfiguredModMobs {
         mob.goalSelector.addGoal(0, new SpecialMovementNexusGoal(mob));
         mob.goalSelector.addGoal(1, new AttackNexusGoal(mob));
         mob.goalSelector.addGoal(2, new RangedAttackNexusGoal(mob));
+        mob.goalSelector.addGoal(2, new ConfiguredTerrainGoal(mob));
         mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
         mob.goalSelector.addGoal(4, new GoToNexusGoal(mob));
     }
@@ -487,6 +494,166 @@ public final class ConfiguredModMobs {
             mob.getPersistentData().putString(NEXUS_OWNER, nexus.getUuid().toString());
         }
         return nexus;
+    }
+
+    /** Gives configured ground mobs the terrain abilities exposed by the config. */
+    private static final class ConfiguredTerrainGoal extends Goal {
+        private static final int ACTION_TICKS = 20;
+        private final Mob mob;
+        private BlockPos target;
+        private BlockState replacement;
+        private int actionTicks;
+
+        private ConfiguredTerrainGoal(Mob mob) {
+            this.mob = mob;
+            setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
+        }
+
+        @Override
+        public boolean canUse() {
+            target = null;
+            replacement = null;
+            NexusAccess nexus = activeNexus(mob);
+            if (nexus == null || mob.getTarget() != null && mob.getTarget().isAlive()
+                    || usesSpecialMovement() || !mob.getNavigation().isDone()
+                    || mob.tickCount % 10 != 0
+                    || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
+                return false;
+            }
+
+            BlockPos current = mob.blockPosition();
+            BlockPos nexusPos = nexus.getOrigin();
+            Direction direction = horizontalDirection(current, nexusPos);
+            BlockPos forward = current.relative(direction);
+
+            if (allowsMining(mob.getType(), false)) {
+                target = miningTarget(forward, current, nexusPos);
+                if (target != null) return true;
+            }
+            if (allowsBridging(mob.getType(), false)) {
+                BlockPos bridge = forward.below();
+                if (canReplace(bridge) && hasRoomAt(forward)) {
+                    target = bridge;
+                    replacement = Blocks.COBBLESTONE.defaultBlockState();
+                    return true;
+                }
+            }
+            if (allowsTowering(mob.getType(), false)
+                    && nexusPos.getY() - current.getY() >= 2
+                    && canReplace(current) && hasRoomAt(current.above())) {
+                target = current;
+                replacement = Blocks.COBBLESTONE.defaultBlockState();
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return target != null && actionTicks < ACTION_TICKS
+                    && activeNexus(mob) != null
+                    && (mob.getTarget() == null || !mob.getTarget().isAlive());
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void start() {
+            actionTicks = 0;
+            mob.getNavigation().stop();
+        }
+
+        @Override
+        public void tick() {
+            mob.getNavigation().stop();
+            mob.getLookControl().setLookAt(target.getX() + 0.5D,
+                    target.getY() + 0.5D, target.getZ() + 0.5D);
+            mob.swing(InteractionHand.MAIN_HAND);
+            if (++actionTicks < ACTION_TICKS) return;
+
+            ServerLevel level = (ServerLevel) mob.level();
+            if (replacement == null) {
+                if (canMine(target)) {
+                    level.destroyBlock(target,
+                            InvasionMod.getConfig().destructedBlocksDrop, mob);
+                }
+            } else if (canReplace(target)) {
+                int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS;
+                level.setBlock(target, replacement, flags);
+                level.playSound(null, target, replacement.getSoundType().getPlaceSound(),
+                        net.minecraft.sounds.SoundSource.BLOCKS);
+                if (target.equals(mob.blockPosition())) {
+                    mob.setPos(mob.getX(), mob.getY() + 1.0D, mob.getZ());
+                    mob.fallDistance = 0;
+                }
+            }
+        }
+
+        @Override
+        public void stop() {
+            target = null;
+            replacement = null;
+            mob.getNavigation().stop();
+        }
+
+        private boolean usesSpecialMovement() {
+            return mob.getMoveControl() instanceof NexusJumpControl
+                    || mob.getMoveControl() instanceof FlyingMoveControl
+                    || mob.getNavigation() instanceof FlyingPathNavigation
+                    || mob instanceof Ghast || mob instanceof Phantom
+                    || mob instanceof Vex || mob instanceof Blaze || mob.isNoGravity();
+        }
+
+        private BlockPos miningTarget(BlockPos forward, BlockPos current, BlockPos nexus) {
+            int height = Math.max(1, Mth.ceil(mob.getBbHeight()));
+            if (allowsStairing(mob.getType(), false)) {
+                int deltaY = nexus.getY() - current.getY();
+                if (deltaY >= 2) {
+                    for (int y = height; y >= 1; y--) {
+                        BlockPos candidate = forward.above(y);
+                        if (canMine(candidate)) return candidate;
+                    }
+                } else if (deltaY <= -2 && canMine(current.below())) {
+                    return current.below();
+                }
+            }
+            for (int y = 0; y < height; y++) {
+                BlockPos candidate = forward.above(y);
+                if (canMine(candidate)) return candidate;
+            }
+            return null;
+        }
+
+        private boolean canMine(BlockPos pos) {
+            BlockState state = mob.level().getBlockState(pos);
+            return !state.isAir() && !state.is(InvBlocks.NEXUS_CORE)
+                    && !BlockMetadata.isIndestructible(state)
+                    && !PathingUtil.hasAdjacentLadder(mob.level(), pos)
+                    && mob.getEyePosition().distanceToSqr(PosUtils.center(pos)) <= 9.0D;
+        }
+
+        private boolean canReplace(BlockPos pos) {
+            return PathingUtil.isAirOrReplaceable(mob.level().getBlockState(pos));
+        }
+
+        private boolean hasRoomAt(BlockPos feet) {
+            double dx = feet.getX() + 0.5D - mob.getX();
+            double dy = feet.getY() - mob.getY();
+            double dz = feet.getZ() + 0.5D - mob.getZ();
+            return mob.level().noCollision(mob, mob.getBoundingBox().move(dx, dy, dz));
+        }
+
+        private static Direction horizontalDirection(BlockPos from, BlockPos to) {
+            int dx = to.getX() - from.getX();
+            int dz = to.getZ() - from.getZ();
+            if (Math.abs(dx) >= Math.abs(dz) && dx != 0) {
+                return dx > 0 ? Direction.EAST : Direction.WEST;
+            }
+            return dz > 0 ? Direction.SOUTH : Direction.NORTH;
+        }
     }
 
     /** Owns the target through the selector so native target goals cannot clear it each tick. */
