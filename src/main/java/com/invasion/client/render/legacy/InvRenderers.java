@@ -48,6 +48,13 @@ public final class InvRenderers {
     }
 
     public static void register(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(InvEntities.TAR_ZOMBIE, AbstractIMZombieEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_BRUTE, AbstractIMZombieEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.SPEEDY_ZOMBIE_BRUTE, SpeedyZombieEntityRenderer::new);
+        event.registerEntityRenderer(InvEntities.HUSK_BRUTE, VariantMobRenderers.Husk::new);
+        event.registerEntityRenderer(InvEntities.DROWNED_BRUTE, VariantMobRenderers.Drowned::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_VILLAGER_BRUTE, VariantMobRenderers.ZombieVillager::new);
+        event.registerEntityRenderer(InvEntities.ZOMBIE_PIGMAN_BRUTE, ZombiePigmanEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.ZOMBIE, AbstractIMZombieEntityRenderer::new);
         event.registerEntityRenderer(InvEntities.FAT_ZOMBIE, FatZombieRenderer::new);
         event.registerEntityRenderer(
