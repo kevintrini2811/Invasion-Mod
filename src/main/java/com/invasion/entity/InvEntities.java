@@ -313,6 +313,7 @@ public interface InvEntities {
         event.put(CAVE_SPIDER, IMCaveSpiderEntity.createAttributes().build());
         event.put(QUEEN_SPIDER, QueenSpiderEntity.createAttributes().build());
         event.put(THROWER, ThrowerEntity.createT1V0Attributes().build());
+        event.put(BIG_THROWER, ThrowerEntity.createT2V0Attributes().build());
         event.put(BURROWER, BurrowerEntity.createAttributes().build());
         event.put(IMP, ImpEnitty.createAttributes().build());
         event.put(BLAZE, net.minecraft.world.entity.monster.Blaze.createAttributes().build());

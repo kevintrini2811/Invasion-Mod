@@ -164,6 +164,7 @@
     "entity.invmod.zombie_builder": "IM Zombie-Baumeister",
     "entity.invmod.zombie_miner": "IM Zombie-Bergarbeiter",
     "entity.invmod.thrower": "IM Werfer",
+    "entity.invmod.big_thrower": "IM Großer Werfer",
     "entity.invmod.thrower.big": "IM Big Thrower",
     "entity.invmod.burrower": "IM Gräber",
     "entity.invmod.wolf": "IM Wolf",
