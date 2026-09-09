@@ -25,8 +25,11 @@ import com.invasion.nexus.wave.BudgetWavePlan.Theme;
 import com.invasion.nexus.wave.BudgetWavePlan;
 import com.invasion.util.math.PosUtils;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -80,17 +83,7 @@ public final class ConfiguredModMobs {
             "NETHER", "SIEGE", "FAST", "MIXED", "RANDOM", "RANDOMHELL");
     private static final List<String> DEFAULT_THEMES = List.of(
             "MIXED", "RANDOM", "RANDOMHELL");
-    private static final Map<String, Entry> MOD_DEFAULTS = Map.of(
-            "mutantmonsters:endersoul_clone",
-            new Entry(Mode.ACTIVE, false, 3, DEFAULT_THEMES, Abilities.NONE, null),
-            "variantsandventures:gelid",
-            new Entry(Mode.ACTIVE, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null),
-            "variantsandventures:murk",
-            new Entry(Mode.ACTIVE, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null),
-            "variantsandventures:thicket",
-            new Entry(Mode.ACTIVE, false, 3, List.of("SWARM", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null),
-            "variantsandventures:verdant",
-            new Entry(Mode.ACTIVE, false, 3, List.of("RANGED", "MIXED", "RANDOM", "RANDOMHELL"), Abilities.EQUIPMENT, null));
+    private static final Map<String, Entry> MOD_DEFAULTS = loadDefaults();
     private static final Path FILE = FMLPaths.CONFIGDIR.get()
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
@@ -190,14 +183,17 @@ public final class ConfiguredModMobs {
                 .sorted(Comparator.comparing(entry -> entry.getKey().identifier().toString()))
                 .forEach(registryEntry -> result.putIfAbsent(
                         registryEntry.getKey().identifier(), defaultEntry(registryEntry.getKey().identifier())));
-        BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
-                mob.id(), new Entry(Mode.ACTIVE, false, mob.cost(), mob.themes(), new Abilities(
+        BudgetWavePlan.configMobDefaults().forEach(mob -> {
+            Entry generatedDefault = new Entry(Mode.ACTIVE, false, mob.cost(), mob.themes(), new Abilities(
                         mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
                         mob.canStair(), mob.canBridge(), mob.canTower(),
                         mob.id().equals(InvasionMod.id("pigman_engineer")),
                         mob.id().equals(InvasionMod.id("enderman")),
                         mob.id().equals(InvasionMod.id("pigman_engineer"))
-                                ? Blocks.OAK_PLANKS : Blocks.COBBLESTONE), null)));
+                                ? Blocks.OAK_PLANKS : Blocks.COBBLESTONE), null);
+            result.putIfAbsent(mob.id(), MOD_DEFAULTS.getOrDefault(
+                    mob.id().toString(), generatedDefault));
+        });
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -323,6 +319,33 @@ public final class ConfiguredModMobs {
                 id.equals(InvasionMod.id("pigman_engineer"))
                         ? Blocks.OAK_PLANKS : Blocks.COBBLESTONE);
         return new Entry(Mode.INACTIVE, false, 5, DEFAULT_THEMES, abilities, null);
+    }
+
+    private static Map<String, Entry> loadDefaults() {
+        Map<String, Entry> defaults = new LinkedHashMap<>();
+        try (InputStream stream = ConfiguredModMobs.class.getResourceAsStream(
+                "/invasion_mod_mobs_defaults.json")) {
+            if (stream == null) {
+                throw new IllegalStateException("Missing invasion_mod_mobs_defaults.json");
+            }
+            JsonObject root = JsonParser.parseReader(new InputStreamReader(
+                    stream, StandardCharsets.UTF_8)).getAsJsonObject();
+            for (Map.Entry<String, JsonElement> jsonEntry : root.entrySet()) {
+                Identifier id = Identifier.tryParse(jsonEntry.getKey());
+                if (id == null || !jsonEntry.getValue().isJsonObject()) continue;
+                JsonObject value = jsonEntry.getValue().getAsJsonObject();
+                Identifier replacement = value.has("replace")
+                        ? Identifier.tryParse(value.get("replace").getAsString()) : null;
+                defaults.put(jsonEntry.getKey(), new Entry(
+                        readMode(value),
+                        value.has("boss") && value.get("boss").getAsBoolean(),
+                        value.has("cost") ? Math.max(1, value.get("cost").getAsInt()) : 5,
+                        readThemes(value), readAbilities(value, Abilities.NONE), replacement));
+            }
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not load mod mob defaults", exception);
+        }
+        return Map.copyOf(defaults);
     }
 
     private static Mode readMode(JsonObject value) {
