@@ -188,7 +188,9 @@ public final class ConfiguredModMobs {
         BudgetWavePlan.configMobDefaults().forEach(mob -> result.putIfAbsent(
                 mob.id(), new Entry(Mode.ACTIVE, false, mob.cost(), mob.themes(), new Abilities(
                         mob.canUseWeapons(), mob.canWearArmor(), mob.canMine(),
-                        mob.canStair(), mob.canBridge(), mob.canTower()), null)));
+                        mob.canStair(), mob.canBridge(), mob.canTower(),
+                        mob.id().equals(InvasionMod.id("pigman_engineer")),
+                        mob.id().equals(InvasionMod.id("enderman"))), null)));
         ENTRIES.clear();
         ENTRIES.putAll(result);
         loaded = true;
@@ -266,6 +268,8 @@ public final class ConfiguredModMobs {
             abilities.addProperty("stairing", entry.abilities().stairing());
             abilities.addProperty("bridging", entry.abilities().bridging());
             abilities.addProperty("towering", entry.abilities().towering());
+            abilities.addProperty("engineer_tower", entry.abilities().engineerTower());
+            abilities.addProperty("enderman_block_theft", entry.abilities().endermanBlockTheft());
             value.add("abilities", abilities);
             com.google.gson.JsonArray themes = new com.google.gson.JsonArray();
             entry.themes().forEach(themes::add);
@@ -301,8 +305,13 @@ public final class ConfiguredModMobs {
     }
 
     private static Entry defaultEntry(Identifier id) {
-        return MOD_DEFAULTS.getOrDefault(id.toString(),
-                new Entry(Mode.INACTIVE, false, 5, DEFAULT_THEMES, Abilities.NONE, null));
+        Entry configuredDefault = MOD_DEFAULTS.get(id.toString());
+        if (configuredDefault != null) return configuredDefault;
+        Abilities abilities = new Abilities(
+                false, false, false, false, false, false,
+                id.equals(InvasionMod.id("pigman_engineer")),
+                id.equals(InvasionMod.id("enderman")));
+        return new Entry(Mode.INACTIVE, false, 5, DEFAULT_THEMES, abilities, null);
     }
 
     private static Mode readMode(JsonObject value) {
@@ -323,7 +332,9 @@ public final class ConfiguredModMobs {
                 ability(abilities, "mining", value, null, defaults.mining()),
                 ability(abilities, "stairing", value, null, defaults.stairing()),
                 ability(abilities, "bridging", value, null, defaults.bridging()),
-                ability(abilities, "towering", value, null, defaults.towering()));
+                ability(abilities, "towering", value, null, defaults.towering()),
+                ability(abilities, "engineer_tower", value, null, defaults.engineerTower()),
+                ability(abilities, "enderman_block_theft", value, null, defaults.endermanBlockTheft()));
     }
 
     private static boolean ability(JsonObject abilities, String key,
@@ -468,6 +479,16 @@ public final class ConfiguredModMobs {
     public static synchronized boolean allowsTowering(EntityType<?> type, boolean fallback) {
         Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
         return entry == null ? fallback : entry.abilities().towering();
+    }
+
+    public static synchronized boolean allowsEngineerTower(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().engineerTower();
+    }
+
+    public static synchronized boolean allowsEndermanBlockTheft(EntityType<?> type, boolean fallback) {
+        Entry entry = ENTRIES.get(BuiltInRegistries.ENTITY_TYPE.getKey(type));
+        return entry == null ? fallback : entry.abilities().endermanBlockTheft();
     }
 
     /** Recognizes configured invasion allies without changing their Nexus binding. */
@@ -1042,9 +1063,12 @@ public final class ConfiguredModMobs {
     private record Entry(Mode mode, boolean boss, int cost, List<String> themes,
             Abilities abilities, Identifier replacement) {}
     private record Abilities(boolean weapons, boolean armor, boolean mining,
-            boolean stairing, boolean bridging, boolean towering) {
-        private static final Abilities NONE = new Abilities(false, false, false, false, false, false);
-        private static final Abilities EQUIPMENT = new Abilities(true, true, false, false, false, false);
+            boolean stairing, boolean bridging, boolean towering,
+            boolean engineerTower, boolean endermanBlockTheft) {
+        private static final Abilities NONE = new Abilities(
+                false, false, false, false, false, false, false, false);
+        private static final Abilities EQUIPMENT = new Abilities(
+                true, true, false, false, false, false, false, false);
     }
     public record WaveMob(EntityType<? extends Mob> type, int cost) {}
 }

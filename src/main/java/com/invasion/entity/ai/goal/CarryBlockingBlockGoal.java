@@ -33,7 +33,9 @@ public final class CarryBlockingBlockGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        if (mob.isCarryingBlock() || mob.tickCount % 5 != 0
+        if (!com.invasion.compat.ConfiguredModMobs.allowsEndermanBlockTheft(
+                        mob.getType(), true)
+                || mob.isCarryingBlock() || mob.tickCount % 5 != 0
                 || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
             return false;
         }
