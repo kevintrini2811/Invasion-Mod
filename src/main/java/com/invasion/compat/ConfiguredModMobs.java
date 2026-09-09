@@ -30,7 +30,9 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,6 +58,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.pathfinder.PathType;
@@ -91,6 +94,7 @@ public final class ConfiguredModMobs {
     private static final Map<Identifier, Entry> ENTRIES = new LinkedHashMap<>();
     private static boolean loaded;
     private static final String NEXUS_OWNER = "invmodConfiguredNexus";
+    private static final String STOLEN_BLOCK = "invmodStolenBlock";
 
     private ConfiguredModMobs() {
     }
@@ -412,8 +416,20 @@ public final class ConfiguredModMobs {
                 && activeNexus(mob) != null) {
             mob.clearFire();
         }
+        restoreStolenBlock(mob);
         if (mob.tickCount % 15 == 0) {
             pickUpAllowedEquipment(mob, level);
+        }
+    }
+
+    private static void restoreStolenBlock(Mob mob) {
+        String id = mob.getPersistentData().getStringOr(STOLEN_BLOCK, "");
+        if (id.isEmpty()) return;
+        Identifier identifier = Identifier.tryParse(id);
+        if (identifier == null) return;
+        Block block = BuiltInRegistries.BLOCK.getValue(identifier);
+        if (block != null && block != Blocks.AIR) {
+            mob.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(block.asItem()));
         }
     }
 
@@ -532,6 +548,7 @@ public final class ConfiguredModMobs {
         private BlockPos target;
         private BlockState replacement;
         private boolean stealBlock;
+        private final Deque<BlockChange> towerPlan = new ArrayDeque<>();
         private int actionTicks;
         private double lastX = Double.NaN;
         private double lastY;
@@ -556,6 +573,7 @@ public final class ConfiguredModMobs {
                     || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
                 return false;
             }
+            if (!towerPlan.isEmpty()) return nextTowerBlock();
 
             BlockPos current = mob.blockPosition();
             BlockPos objective = mob.getTarget() != null && mob.getTarget().isAlive()
@@ -563,9 +581,12 @@ public final class ConfiguredModMobs {
             Direction direction = horizontalDirection(current, objective);
             BlockPos forward = current.relative(direction);
 
-            if (allowsEndermanBlockTheft(mob.getType(), false)) {
+            if (allowsEndermanBlockTheft(mob.getType(), false)
+                    && mob.getPersistentData().getStringOr(STOLEN_BLOCK, "").isEmpty()) {
                 target = miningTarget(forward, current, objective);
-                if (target != null) {
+                if (target != null
+                        && !new ItemStack(mob.level().getBlockState(target)
+                                .getBlock().asItem()).isEmpty()) {
                     stealBlock = true;
                     return true;
                 }
@@ -578,13 +599,14 @@ public final class ConfiguredModMobs {
             int horizontalDistance = Math.abs(objective.getX() - current.getX())
                     + Math.abs(objective.getZ() - current.getZ());
             boolean engineerTower = allowsEngineerTower(mob.getType(), false);
-            if ((allowsTowering(mob.getType(), false) || engineerTower) && deltaY >= 2
+            if (engineerTower && stalledTicks >= 20 && startEngineerTower(current, direction)) {
+                return nextTowerBlock();
+            }
+            if (allowsTowering(mob.getType(), false) && deltaY >= 2
                     && horizontalDistance <= 4
                     && canReplace(current) && hasRoomAt(current.above())) {
                 target = current;
-                replacement = engineerTower
-                        ? Blocks.OAK_PLANKS.defaultBlockState()
-                        : Blocks.COBBLESTONE.defaultBlockState();
+                replacement = Blocks.COBBLESTONE.defaultBlockState();
                 return true;
             }
             if (allowsBridging(mob.getType(), false)) {
@@ -627,9 +649,16 @@ public final class ConfiguredModMobs {
             if (replacement == null) {
                 if (canMine(target)) {
                     if (stealBlock) {
+                        BlockState stolenState = level.getBlockState(target);
                         int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS
                                 | Block.UPDATE_SUPPRESS_DROPS;
-                        level.setBlock(target, Blocks.AIR.defaultBlockState(), flags);
+                        if (level.setBlock(target, Blocks.AIR.defaultBlockState(), flags)) {
+                            mob.setItemSlot(EquipmentSlot.MAINHAND,
+                                    new ItemStack(stolenState.getBlock().asItem()));
+                            mob.getPersistentData().putString(STOLEN_BLOCK,
+                                    BuiltInRegistries.BLOCK.getKey(
+                                            stolenState.getBlock()).toString());
+                        }
                     } else {
                         level.destroyBlock(target,
                                 InvasionMod.getConfig().destructedBlocksDrop, mob);
@@ -655,6 +684,52 @@ public final class ConfiguredModMobs {
             replacement = null;
             stealBlock = false;
             mob.getNavigation().stop();
+        }
+
+        private boolean startEngineerTower(BlockPos ladderBase, Direction direction) {
+            BlockPos towerBase = ladderBase.relative(direction);
+            BlockPos platformCenter = towerBase.above(3);
+            BlockPos ladderOpening = ladderBase.above(3);
+            for (int height = 0; height < 3; height++) {
+                if (!canReplace(towerBase.above(height))
+                        || !canReplace(ladderBase.above(height))) return false;
+            }
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos deck = platformCenter.offset(x, 0, z);
+                    if (!deck.equals(ladderOpening) && !canReplace(deck)) return false;
+                    for (int clearance = 1; clearance <= 2; clearance++) {
+                        if (!mob.level().getBlockState(deck.above(clearance)).isAir()) return false;
+                    }
+                }
+            }
+
+            BlockState planks = Blocks.OAK_PLANKS.defaultBlockState();
+            BlockState ladder = Blocks.LADDER.defaultBlockState()
+                    .setValue(LadderBlock.FACING, direction.getOpposite());
+            for (int height = 0; height < 3; height++) {
+                towerPlan.addLast(new BlockChange(towerBase.above(height), planks));
+                towerPlan.addLast(new BlockChange(ladderBase.above(height), ladder));
+            }
+            towerPlan.addLast(new BlockChange(platformCenter, planks));
+            towerPlan.addLast(new BlockChange(ladderOpening, ladder));
+            for (int x = -1; x <= 1; x++) {
+                for (int z = -1; z <= 1; z++) {
+                    BlockPos deck = platformCenter.offset(x, 0, z);
+                    if (!deck.equals(platformCenter) && !deck.equals(ladderOpening)) {
+                        towerPlan.addLast(new BlockChange(deck, planks));
+                    }
+                }
+            }
+            return true;
+        }
+
+        private boolean nextTowerBlock() {
+            BlockChange change = towerPlan.pollFirst();
+            if (change == null) return false;
+            target = change.pos();
+            replacement = change.state();
+            return true;
         }
 
         private boolean usesSpecialMovement() {
@@ -733,6 +808,8 @@ public final class ConfiguredModMobs {
             }
             return dz > 0 ? Direction.SOUTH : Direction.NORTH;
         }
+
+        private record BlockChange(BlockPos pos, BlockState state) {}
     }
 
     /** Owns the target through the selector so native target goals cannot clear it each tick. */
