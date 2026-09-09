@@ -54,6 +54,7 @@ public final class InvasionConfigScreen extends Screen {
     private int mobPageSize = 5;
     private String mobSearch = "";
     private EditBox mobSearchBox;
+    private boolean mobSearchDirty;
     private Component status = Component.empty();
 
     public InvasionConfigScreen(Screen parent) {
@@ -159,12 +160,19 @@ public final class InvasionConfigScreen extends Screen {
         mobSearchBox.setResponder(text -> {
             mobSearch = text;
             page = 0;
-            minecraft.execute(() -> {
-                rebuild();
-                setFocused(mobSearchBox);
-            });
+            mobSearchDirty = true;
         });
         addRenderableWidget(mobSearchBox);
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (mobSearchDirty) {
+            mobSearchDirty = false;
+            rebuild();
+            setFocused(mobSearchBox);
+        }
     }
 
     private void addCfgRows(int left, int width) {
@@ -373,6 +381,7 @@ public final class InvasionConfigScreen extends Screen {
         private final JsonObject mob;
         private String search = "";
         private int page;
+        private boolean searchDirty;
 
         MobReplacementScreen(InvasionConfigScreen parent, String id, JsonObject mob) {
             super(Component.literal(id));
@@ -392,10 +401,7 @@ public final class InvasionConfigScreen extends Screen {
             searchBox.setResponder(value -> {
                 search = value;
                 page = 0;
-                minecraft.execute(() -> {
-                    init();
-                    setFocused(children().get(0));
-                });
+                searchDirty = true;
             });
             addRenderableWidget(searchBox);
 
@@ -421,6 +427,15 @@ public final class InvasionConfigScreen extends Screen {
             next.active = page + 1 < pages;
             addRenderableWidget(Button.builder(Component.translatable("gui.back"), button -> onClose())
                     .bounds(width / 2 - 50, height - 28, 100, 20).build());
+        }
+
+        @Override public void tick() {
+            super.tick();
+            if (searchDirty) {
+                searchDirty = false;
+                init();
+                setFocused(children().get(0));
+            }
         }
 
         private List<String> entityIds() {
@@ -524,6 +539,7 @@ public final class InvasionConfigScreen extends Screen {
         private final List<BlockPreview> previews = new ArrayList<>();
         private String search = "";
         private int page;
+        private boolean searchDirty;
 
         BlockSelectionScreen(MobAbilitiesScreen parent, JsonObject abilities) {
             super(Component.translatable("invmod.config.ability.building_block.title"));
@@ -544,10 +560,7 @@ public final class InvasionConfigScreen extends Screen {
             searchBox.setResponder(value -> {
                 search = value;
                 page = 0;
-                minecraft.execute(() -> {
-                    init();
-                    setFocused(children().get(0));
-                });
+                searchDirty = true;
             });
             addRenderableWidget(searchBox);
 
@@ -575,6 +588,15 @@ public final class InvasionConfigScreen extends Screen {
             next.active = page + 1 < pages;
             addRenderableWidget(Button.builder(Component.translatable("gui.back"), button -> onClose())
                     .bounds(width / 2 - 50, height - 28, 100, 20).build());
+        }
+
+        @Override public void tick() {
+            super.tick();
+            if (searchDirty) {
+                searchDirty = false;
+                init();
+                setFocused(children().get(0));
+            }
         }
 
         private List<BlockChoice> blocks() {
