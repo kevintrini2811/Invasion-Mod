@@ -382,7 +382,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     public boolean tryStartTowerBuild() {
-        if (!com.invasion.compat.ConfiguredModMobs.allowsTowering(getType(), true)
+        if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
                 || buildingTower || towerBuildCooldown > 0 || !hasNexus()
                 || !isStandingOnSolidGround()) {
             return false;
