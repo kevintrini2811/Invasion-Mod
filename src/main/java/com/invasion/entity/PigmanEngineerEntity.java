@@ -663,7 +663,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     /** The solid block used for bridges, tower supports and platforms. */
     protected BlockState getBuildingBlock() {
-        return Blocks.OAK_PLANKS.defaultBlockState();
+        return com.invasion.compat.ConfiguredModMobs
+                .buildingBlock(getType(), Blocks.OAK_PLANKS).defaultBlockState();
     }
 
     private void stopHorizontalMovementForTower() {

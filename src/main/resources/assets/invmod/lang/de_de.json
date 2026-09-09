@@ -26,6 +26,8 @@
   "invmod.config.ability.towering": "Turmbau",
   "invmod.config.ability.engineer_tower": "Ingenieur-Turm",
   "invmod.config.ability.enderman_block_theft": "Enderman-Blockdiebstahl",
+  "invmod.config.ability.building_block": "Baublock: %s",
+  "invmod.config.ability.building_block.title": "Baublock auswählen",
   "invmod.config.cost": "Kosten",
   "invmod.config.search": "Mobs suchen...",
   "invmod.config.search.no_results": "Keine passenden Mobs gefunden.",
