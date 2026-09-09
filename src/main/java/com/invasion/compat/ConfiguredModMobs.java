@@ -511,6 +511,10 @@ public final class ConfiguredModMobs {
         private BlockPos target;
         private BlockState replacement;
         private int actionTicks;
+        private double lastX = Double.NaN;
+        private double lastY;
+        private double lastZ;
+        private int stalledTicks;
 
         private ConfiguredTerrainGoal(Mob mob) {
             this.mob = mob;
@@ -522,21 +526,33 @@ public final class ConfiguredModMobs {
             target = null;
             replacement = null;
             NexusAccess nexus = activeNexus(mob);
-            if (nexus == null || mob.getTarget() != null && mob.getTarget().isAlive()
-                    || usesSpecialMovement() || !mob.getNavigation().isDone()
-                    || mob.tickCount % 10 != 0
+            updateStalledTicks();
+            if (nexus == null || usesSpecialMovement()
+                    || !mob.getNavigation().isDone() && stalledTicks < 20
+                    || mob.tickCount % 5 != 0
                     || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
                 return false;
             }
 
             BlockPos current = mob.blockPosition();
-            BlockPos nexusPos = nexus.getOrigin();
-            Direction direction = horizontalDirection(current, nexusPos);
+            BlockPos objective = mob.getTarget() != null && mob.getTarget().isAlive()
+                    ? mob.getTarget().blockPosition() : nexus.getOrigin();
+            Direction direction = horizontalDirection(current, objective);
             BlockPos forward = current.relative(direction);
 
             if (allowsMining(mob.getType(), false)) {
-                target = miningTarget(forward, current, nexusPos);
+                target = miningTarget(forward, current, objective);
                 if (target != null) return true;
+            }
+            int deltaY = objective.getY() - current.getY();
+            int horizontalDistance = Math.abs(objective.getX() - current.getX())
+                    + Math.abs(objective.getZ() - current.getZ());
+            if (allowsTowering(mob.getType(), false) && deltaY >= 2
+                    && horizontalDistance <= 4
+                    && canReplace(current) && hasRoomAt(current.above())) {
+                target = current;
+                replacement = Blocks.COBBLESTONE.defaultBlockState();
+                return true;
             }
             if (allowsBridging(mob.getType(), false)) {
                 BlockPos bridge = forward.below();
@@ -546,21 +562,13 @@ public final class ConfiguredModMobs {
                     return true;
                 }
             }
-            if (allowsTowering(mob.getType(), false)
-                    && nexusPos.getY() - current.getY() >= 2
-                    && canReplace(current) && hasRoomAt(current.above())) {
-                target = current;
-                replacement = Blocks.COBBLESTONE.defaultBlockState();
-                return true;
-            }
             return false;
         }
 
         @Override
         public boolean canContinueToUse() {
             return target != null && actionTicks < ACTION_TICKS
-                    && activeNexus(mob) != null
-                    && (mob.getTarget() == null || !mob.getTarget().isAlive());
+                    && activeNexus(mob) != null;
         }
 
         @Override
@@ -587,6 +595,7 @@ public final class ConfiguredModMobs {
                 if (canMine(target)) {
                     level.destroyBlock(target,
                             InvasionMod.getConfig().destructedBlocksDrop, mob);
+                    stalledTicks = 0;
                 }
             } else if (canReplace(target)) {
                 int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS;
@@ -597,6 +606,7 @@ public final class ConfiguredModMobs {
                     mob.setPos(mob.getX(), mob.getY() + 1.0D, mob.getZ());
                     mob.fallDistance = 0;
                 }
+                stalledTicks = 0;
             }
         }
 
@@ -637,10 +647,31 @@ public final class ConfiguredModMobs {
 
         private boolean canMine(BlockPos pos) {
             BlockState state = mob.level().getBlockState(pos);
+            double reach = Math.max(3.0D, mob.getBbHeight() + mob.getBbWidth());
             return !state.isAir() && !state.is(InvBlocks.NEXUS_CORE)
                     && !BlockMetadata.isIndestructible(state)
                     && !PathingUtil.hasAdjacentLadder(mob.level(), pos)
-                    && mob.getEyePosition().distanceToSqr(PosUtils.center(pos)) <= 9.0D;
+                    && mob.getEyePosition().distanceToSqr(PosUtils.center(pos)) <= reach * reach;
+        }
+
+        private void updateStalledTicks() {
+            if (Double.isNaN(lastX)) {
+                lastX = mob.getX();
+                lastY = mob.getY();
+                lastZ = mob.getZ();
+                return;
+            }
+            double dx = mob.getX() - lastX;
+            double dy = mob.getY() - lastY;
+            double dz = mob.getZ() - lastZ;
+            if (dx * dx + dy * dy + dz * dz < 0.0025D) {
+                stalledTicks++;
+            } else {
+                stalledTicks = 0;
+                lastX = mob.getX();
+                lastY = mob.getY();
+                lastZ = mob.getZ();
+            }
         }
 
         private boolean canReplace(BlockPos pos) {
