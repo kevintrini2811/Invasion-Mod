@@ -44,7 +44,7 @@ public interface EntityPatterns {
     EntityPattern SKELETON_T1_ANY = register("skeleton_t1_any", new EntityPattern.Builder(InvEntities.SKELETON).addTier(1, 1));
 
     EntityPattern THROWER_T1 = register("thrower_t1_any", new EntityPattern.Builder(InvEntities.THROWER).addTier(1, 1));
-    EntityPattern THROWER_T2 = register("thrower_t2_any", new EntityPattern.Builder(InvEntities.THROWER).addTier(2, 1));
+    EntityPattern THROWER_T2 = register("thrower_t2_any", new EntityPattern.Builder(InvEntities.BIG_THROWER).addTier(2, 1));
 
     EntityPattern BURROWER = register("burrower", new EntityPattern.Builder(InvEntities.BURROWER).addTier(1, 1));
 
