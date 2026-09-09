@@ -195,11 +195,15 @@ public final class InvasionConfigScreen extends Screen {
             int controlsY = y + 13;
             boolean active = mob.has("active") && mob.get("active").getAsBoolean();
             addRenderableWidget(coloredBooleanBuilder(active).create(
-                    left, controlsY, 100, 20, Component.translatable("invmod.config.active"),
+                    left, controlsY, 82, 20, Component.translatable("invmod.config.active"),
                     (button, selected) -> mob.addProperty("active", selected)));
+            boolean boss = mob.has("boss") && mob.get("boss").getAsBoolean();
+            addRenderableWidget(coloredBooleanBuilder(boss).create(
+                    left + 86, controlsY, 82, 20, Component.translatable("invmod.config.boss"),
+                    (button, selected) -> mob.addProperty("boss", selected)));
             labels.add(new Label(Component.translatable("invmod.config.cost").getString(),
-                    left + 108, controlsY + 6));
-            EditBox cost = new EditBox(font, left + 150, controlsY, 48, 20,
+                    left + 174, controlsY + 6));
+            EditBox cost = new EditBox(font, left + 216, controlsY, 42, 20,
                     Component.translatable("invmod.config.cost"));
             cost.setMaxLength(8);
             cost.setValue(mob.has("cost") ? mob.get("cost").getAsString() : "5");
@@ -212,10 +216,10 @@ public final class InvasionConfigScreen extends Screen {
             addRenderableWidget(cost);
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.abilities"),
                     button -> minecraft.setScreenAndShow(new MobAbilitiesScreen(this, id, mob)))
-                    .bounds(left + 202, controlsY, 135, 20).build());
+                    .bounds(left + 262, controlsY, 106, 20).build());
             addRenderableWidget(Button.builder(Component.translatable("invmod.config.themes"),
                     button -> minecraft.setScreenAndShow(new MobThemesScreen(this, id, mob)))
-                    .bounds(left + 341, controlsY, Math.max(100, width - 341), 20).build());
+                    .bounds(left + 372, controlsY, Math.max(100, width - 372), 20).build());
         }
     }
 
