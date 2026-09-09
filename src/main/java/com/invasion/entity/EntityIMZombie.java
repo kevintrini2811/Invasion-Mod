@@ -22,6 +22,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.server.level.ServerLevel;
@@ -37,9 +38,9 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.animal.IronGolem;
+import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -49,7 +50,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Items;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.server.level.ServerLevel;
@@ -92,11 +94,11 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean causedByPlayer) {
         super.dropCustomDeathLoot(level, source, causedByPlayer);
         if (getTier() == 1 && getFlavour() == 1 && getRandom().nextFloat() < 0.2F) {
-            spawnAtLocation(Items.WOODEN_SWORD);
+            spawnAtLocation(level, Items.WOODEN_SWORD);
         } else if (getTier() == 2 && getFlavour() == 0 && getRandom().nextFloat() < 0.25F) {
-            spawnAtLocation(Items.IRON_CHESTPLATE);
+            spawnAtLocation(level, Items.IRON_CHESTPLATE);
         } else if (getTier() == 2 && getFlavour() == 1 && getRandom().nextFloat() < 0.25F) {
-            spawnAtLocation(Items.IRON_SWORD);
+            spawnAtLocation(level, Items.IRON_SWORD);
         }
     }
 
@@ -200,6 +202,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
                 return;
             }
         }
+
         if (offspring instanceof TieredIMMobEntity tieredOffspring) {
             tieredOffspring.setTier(getTier());
             tieredOffspring.setFlavour(getFlavour());
@@ -215,7 +218,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag output) {
+    public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
         output.putBoolean("IsBaby", isBaby());
         output.putInt("InWaterTime", inWaterTime);
@@ -225,12 +228,13 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag input) {
+    public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
-        setBaby(input.getBoolean("IsBaby") || input.getBoolean("isBaby"));
-        inWaterTime = input.getInt("InWaterTime");
-        drownedConversionTime = input.contains("DrownedConversionTime")
-                ? input.getInt("DrownedConversionTime") : -1;
+        setBaby(input.getBooleanOr("IsBaby", false)
+                || input.getBooleanOr("isBaby", false));
+        inWaterTime = input.getIntOr("InWaterTime", 0);
+        drownedConversionTime = input.getIntOr(
+                "DrownedConversionTime", -1);
     }
 
     @Override
@@ -302,7 +306,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     private void convertToDrowned(ServerLevel world) {
-        IMDrownedEntity drowned = InvEntities.DROWNED.create(world);
+        IMDrownedEntity drowned = ZombieVariants.resolve(InvEntities.DROWNED, getTier(), getFlavour()).create(
+                world, EntitySpawnReason.CONVERSION);
         if (drowned == null) {
             return;
         }
@@ -312,7 +317,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         drowned.setBaby(isBaby());
         drowned.setNexus(getNexus());
         drowned.setCountsTowardMobCap(countsTowardMobCap());
-        drowned.moveTo(getX(), getY(), getZ(), getYRot(), getXRot());
+        drowned.snapTo(getX(), getY(), getZ(), getYRot(), getXRot());
         drowned.setDeltaMovement(getDeltaMovement());
         drowned.setCustomName(getCustomName());
         drowned.setCustomNameVisible(isCustomNameVisible());
@@ -324,6 +329,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         }
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             drowned.setItemSlot(slot, getItemBySlot(slot).copy());
+            drowned.setDropChance(slot, getDropChances().byEquipment(slot));
         }
         drowned.setHealth(drowned.getMaxHealth());
 
@@ -346,8 +352,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         }
     }
     @Override
-    public void customServerAiStep() {
-        super.customServerAiStep();
+    public void customServerAiStep(ServerLevel serverLevel) {
+        super.customServerAiStep(serverLevel);
 
         terrainModifier.onUpdate();
 
@@ -438,7 +444,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         double dx = (nexusPos.getX() + 0.5D) - this.getX();
         double dz = (nexusPos.getZ() + 0.5D) - this.getZ();
 
-        Direction dir = Direction.getNearest((float) dx, 0.0F, (float) dz);
+        Direction dir = Direction.getApproximateNearest(dx, 0.0D, dz);
         if (!dir.getAxis().isHorizontal()) {
             dir = this.getDirection();
         }
