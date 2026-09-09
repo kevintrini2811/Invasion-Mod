@@ -2874,5 +2874,857 @@
       "RANDOM",
       "RANDOMHELL"
     ]
+  },
+  "illagerinvasion:alchemist": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:archivist": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:basher": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:firecaller": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:inquisitor": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:invoker": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:marauder": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:necromancer": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:provoker": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:sorcerer": {
+    "active": "attack",
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "illagerinvasion:surrendered": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ],
+    "replace": "minecraft:zombie_villager"
+  },
+  "burnt_additions:fire_devil": {
+    "active": true,
+    "boss": false,
+    "cost": 10,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "burnt_additions:molotov_tar": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "burnt_additions:tar_splash": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:baby_foliaath": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:bluff": {
+    "active": true,
+    "boss": false,
+    "cost": 8,
+    "abilities": {
+      "weapons": false,
+      "armor": true,
+      "mining": true,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:elokosa_follower_howler": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:elokosa_howler": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:ferrous_wroughtnaut": {
+    "active": false,
+    "boss": false,
+    "cost": 200,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:foliaath": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:frostmaw": {
+    "active": true,
+    "boss": true,
+    "cost": 200,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:grottol": {
+    "active": true,
+    "boss": false,
+    "cost": 10,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "UNDERGROUND",
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:naga": {
+    "active": true,
+    "boss": false,
+    "cost": 10,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "RANGED",
+      "FLYING",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthana": {
+    "active": true,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthana_crane": {
+    "active": true,
+    "boss": false,
+    "cost": 8,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthana_crane_player": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthana_follower_player": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthana_follower_raptor": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthana_raptor": {
+    "active": true,
+    "boss": false,
+    "cost": 8,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "SWARM",
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "mowziesmobs:umvuthi": {
+    "active": false,
+    "boss": false,
+    "cost": 1,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_beast": {
+    "active": true,
+    "boss": false,
+    "cost": 4,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_ghoul": {
+    "active": true,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "FAST",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_horse": {
+    "active": true,
+    "boss": false,
+    "cost": 4,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_knight": {
+    "active": true,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_lich": {
+    "active": true,
+    "boss": false,
+    "cost": 40,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "SWARM",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_scuttler": {
+    "active": true,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": true,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "SPIDER",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:dread_thrall": {
+    "active": true,
+    "boss": false,
+    "cost": 4,
+    "abilities": {
+      "weapons": true,
+      "armor": true,
+      "mining": true,
+      "stairing": true,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "ARMORED",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:ghost": {
+    "active": true,
+    "boss": false,
+    "cost": 8,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "FLYING",
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
+  },
+  "iceandfire:troll": {
+    "active": false,
+    "boss": false,
+    "cost": 5,
+    "abilities": {
+      "weapons": false,
+      "armor": false,
+      "mining": false,
+      "stairing": false,
+      "bridging": false,
+      "towering": false,
+      "engineer_tower": false,
+      "enderman_block_theft": false,
+      "building_block": "minecraft:cobblestone"
+    },
+    "themes": [
+      "MIXED",
+      "RANDOM",
+      "RANDOMHELL"
+    ]
   }
 }
