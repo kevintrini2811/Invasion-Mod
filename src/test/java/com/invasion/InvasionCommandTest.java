@@ -13,13 +13,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class InvasionCommandTest {
     private static final List<String> RESTRICTED_COMMANDS = List.of(
-            "help", "pause", "continue", "destroy", "debug", "status", "set", "start", "stop", "radius");
+            "help", "pause", "continue", "destroy", "debug", "status", "set", "start", "stop");
 
     @BeforeAll
     static void bootstrapMinecraft() {
@@ -27,14 +26,10 @@ class InvasionCommandTest {
         Bootstrap.bootStrap();
     }
 
-    @AfterEach
-    void disableDebugMode() {
-        InvasionMod.getConfig().debugMode = false;
-    }
 
     @Test
     void administrativeCommandsRequireGameMasterPermission() {
-        CommandNode<CommandSourceStack> root = commandRoot(false);
+        CommandNode<CommandSourceStack> root = commandRoot();
         CommandSourceStack player = Commands.createCompilationContext(LevelBasedPermissionSet.ALL);
         CommandSourceStack gameMaster = Commands.createCompilationContext(LevelBasedPermissionSet.GAMEMASTER);
 
@@ -49,17 +44,13 @@ class InvasionCommandTest {
     }
 
     @Test
-    void debugCommandsExistOnlyInDebugModeAndRequireGameMasterPermission() {
-        assertNull(commandRoot(false).getChild("test"));
-
-        CommandNode<CommandSourceStack> test = commandRoot(true).getChild("test");
-        assertNotNull(test);
-        assertFalse(test.canUse(Commands.createCompilationContext(LevelBasedPermissionSet.ALL)));
-        assertTrue(test.canUse(Commands.createCompilationContext(LevelBasedPermissionSet.GAMEMASTER)));
+    void removedCommandsAreNotRegistered() {
+        CommandNode<CommandSourceStack> root = commandRoot();
+        assertNull(root.getChild("test"));
+        assertNull(root.getChild("radius"));
     }
 
-    private CommandNode<CommandSourceStack> commandRoot(boolean debugMode) {
-        InvasionMod.getConfig().debugMode = debugMode;
+    private CommandNode<CommandSourceStack> commandRoot() {
         CommandDispatcher<CommandSourceStack> dispatcher = new CommandDispatcher<>();
         return InvasionCommand.create(dispatcher, null).build();
     }
