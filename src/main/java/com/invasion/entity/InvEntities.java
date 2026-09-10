@@ -4,8 +4,6 @@ import java.lang.reflect.Field;
 
 import com.invasion.InvasionConfig;
 import com.invasion.InvasionMod;
-import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
-import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -13,7 +11,6 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Silverfish;
@@ -400,15 +397,6 @@ public interface InvEntities {
         IMGhastEntity.bootstrap();
 
         InvasionConfig config = InvasionMod.getConfig();
-
-        if (config.nightSpawnsEnabled) {
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.ZOMBIE, EntityTypes.SKELETON, EntityTypes.SPIDER), SPAWN_PROXY.getCategory(), SPAWN_PROXY, config.nightMobSpawnChance, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.ZOMBIE), ZOMBIE.getCategory(), ZOMBIE, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SPIDER), SPIDER.getCategory(), SPIDER, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SPIDER), SPIDER.getCategory(), JUMPING_SPIDER, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SPIDER), SPIDER.getCategory(), QUEEN_SPIDER, 1, 1, 1);
-            BiomeModifications.addSpawn(BiomeSelectors.spawnsOneOf(EntityTypes.SKELETON), SKELETON.getCategory(), SKELETON, 1, 1, 1);
-        }
 
         if (config.maxNightMobs != 70) {
             try {
