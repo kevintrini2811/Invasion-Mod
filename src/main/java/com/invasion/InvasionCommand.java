@@ -38,32 +38,37 @@ import com.mojang.brigadier.tree.CommandNode;
 public class InvasionCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registries) {
         return addTestCommands(Commands.literal("invasion")
-                .then(Commands.literal("help").executes(context -> help(dispatcher, context.getSource())))
-                .then(Commands.literal("pause").executes(context -> pause(context.getSource())))
-                .then(Commands.literal("continue").executes(context -> continueInvasion(context.getSource())))
-                .then(Commands.literal("destroy").executes(context -> destroy(context.getSource())))
-                .then(Commands.literal("debug").executes(context -> debug(context.getSource())))
-                .then(Commands.literal("status").executes(context -> status(context.getSource())))
-                .then(Commands.literal("set")
+                .then(restrictedLiteral("help").executes(context -> help(dispatcher, context.getSource())))
+                .then(restrictedLiteral("pause").executes(context -> pause(context.getSource())))
+                .then(restrictedLiteral("continue").executes(context -> continueInvasion(context.getSource())))
+                .then(restrictedLiteral("destroy").executes(context -> destroy(context.getSource())))
+                .then(restrictedLiteral("debug").executes(context -> debug(context.getSource())))
+                .then(restrictedLiteral("status").executes(context -> status(context.getSource())))
+                .then(restrictedLiteral("set")
                         .then(Commands.argument("wave", IntegerArgumentType.integer(1))
                                 .executes(context -> setWave(context.getSource(),
                                         IntegerArgumentType.getInteger(context, "wave")))))
-                .then(Commands.literal("start")
+                .then(restrictedLiteral("start")
                         .executes(context -> start(context.getSource(), 1))
                         .then(Commands.argument("wave", IntegerArgumentType.integer(1))
                                 .executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
-                .then(Commands.literal("stop").executes(context -> stop(context.getSource())))
-                .then(Commands.literal("radius")
+                .then(restrictedLiteral("stop").executes(context -> stop(context.getSource())))
+                .then(restrictedLiteral("radius")
                         .then(Commands.literal("get").executes(context -> getRadius(context.getSource())))
                         .then(Commands.literal("set").then(Commands.argument("radius", IntegerArgumentType.integer(32, 128)).executes(context -> setRadius(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
                 .then(Commands.literal("bolt").executes(context -> bolt(context.getSource()))));
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> restrictedLiteral(String name) {
+        return Commands.literal(name).requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> addTestCommands(LiteralArgumentBuilder<CommandSourceStack> builder) {
         if (!InvasionMod.getConfig().debugMode) {
             return builder;
         }
-        return builder.then(Commands.literal("test").requires(source -> InvasionMod.getConfig().debugMode)
+        return builder.then(Commands.literal("test").requires(source -> InvasionMod.getConfig().debugMode
+                        && Commands.LEVEL_GAMEMASTERS.check(source.permissions()))
                 .then(Commands.literal("status").executes(context -> printDebugStatus(context.getSource())))
                 .then(Commands.literal("spawner").executes(context -> testSpawner(context.getSource(), Ints.between(1, 11)))
                         .then(Commands.argument("waves", RangeArgument.intRange()).executes(context -> testSpawner(context.getSource(), RangeArgument.Ints.getRange(context, "waves")))))
