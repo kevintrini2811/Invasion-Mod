@@ -29,7 +29,8 @@ public class ThrowerKillEntityGoal<T extends LivingEntity> extends KillEntityGoa
             int distance = Math.round(theEntity.distanceTo(target));
             int missDistance = Math.round((float) Math.ceil(distance / 10));
 
-            for (int i = 1; i <= theEntity.getRandom().nextInt(maxBoulderAmount); i++) {
+            int boulderAmount = theEntity.getRandom().nextInt(maxBoulderAmount) + 1;
+            for (int i = 1; i <= boulderAmount; i++) {
                 double x = (target.getX() - missDistance) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
                 double y = (target.getY() - missDistance + 1) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
                 double z = (target.getZ() - missDistance) + theEntity.getRandom().nextInt((missDistance + 1) * 2);
