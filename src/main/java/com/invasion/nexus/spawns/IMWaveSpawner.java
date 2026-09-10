@@ -113,8 +113,11 @@ public class IMWaveSpawner implements Spawner {
 
 	public boolean setRadius(int radius) {
 	    radius = Math.max(8, radius);
+	    if (spawnRadius == radius) {
+	        return false;
+	    }
 	    spawnRadius = radius;
-	    return spawnRadius != radius;
+	    return true;
 	}
 
 	public int getRadius() {
