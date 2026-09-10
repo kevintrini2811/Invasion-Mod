@@ -1090,7 +1090,9 @@ public class Nexus implements ControllableNexusAccess {
 		placedBlocksThisWave = compound.getInt("placedBlocksThisWave");
 		meleeKillsThisWave = compound.getInt("meleeKillsThisWave");
 		rangedKillsThisWave = compound.getInt("rangedKillsThisWave");
-		if (compound.contains("budgetPlan")) budgetPlan = BudgetWavePlan.load(compound.getCompound("budgetPlan"), lookup);
+		if (compound.contains("budgetPlan")) {
+			budgetPlan = BudgetWavePlan.load(compound.getCompound("budgetPlan"), lookup).orElse(null);
+		}
 
         nexusItemStacks.readNbt(compound.getCompound("inventory"), lookup);
         boundPlayers.readNbt(compound.getCompound("boundPlayers"), lookup);
