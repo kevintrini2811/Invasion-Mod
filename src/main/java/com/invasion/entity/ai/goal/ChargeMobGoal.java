@@ -52,7 +52,9 @@ public class ChargeMobGoal<T extends LivingEntity> extends MoveToEntityGoal<T> {
 
         chargePos = findChargePoint(mob, target, 6);
 
-        return mob.getRandom().nextInt(1) == 0;
+        // The cooldown is the charge frequency control. Once it expires and all
+        // eligibility checks pass, start the charge deterministically.
+        return true;
     }
 
     @Override
