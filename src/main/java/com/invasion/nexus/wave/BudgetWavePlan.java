@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
@@ -552,10 +553,11 @@ public final class BudgetWavePlan {
         ListTag list = new ListTag(); phases.forEach(p -> list.add(p.save())); tag.put("phases", list); return tag;
     }
 
-    public static BudgetWavePlan load(CompoundTag tag, HolderLookup.Provider lookup) {
+    public static Optional<BudgetWavePlan> load(CompoundTag tag, HolderLookup.Provider lookup) {
         List<Phase> phases = new ArrayList<>();
         tag.getListOrEmpty("phases").forEach(value -> phases.add(Phase.load((CompoundTag)value)));
-        return new BudgetWavePlan(tag.getIntOr("wave", 1), List.copyOf(phases),
-                Math.clamp(tag.getIntOr("phase", 0), 0, Math.max(0, phases.size() - 1)));
+        if (phases.isEmpty()) return Optional.empty();
+        return Optional.of(new BudgetWavePlan(tag.getIntOr("wave", 1), List.copyOf(phases),
+                Math.clamp(tag.getIntOr("phase", 0), 0, phases.size() - 1)));
     }
 }
