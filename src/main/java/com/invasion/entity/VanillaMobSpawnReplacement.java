@@ -270,7 +270,7 @@ public final class VanillaMobSpawnReplacement {
                 && typeId.getPath().equals(path);
     }
 
-    private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
+    static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
             void convert(
             Mob source, EntityType<T> targetType,
             com.invasion.nexus.NexusAccess nexus) {
