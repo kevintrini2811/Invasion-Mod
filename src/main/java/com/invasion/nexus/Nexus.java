@@ -25,7 +25,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.AABB;
-import com.invasion.InvasionConfig;
 import com.invasion.InvSounds;
 import com.invasion.InvasionMod;
 import com.invasion.block.NexusBlock;
@@ -71,12 +70,6 @@ public class Nexus implements ControllableNexusAccess {
 
     private int mobsToKillInWave;
 
-    private int nextAttackTime;
-
-    private int daysToAttack;
-
-    private long lastWorldTime;
-
     private int zapTimer;
 
     private int tickCount;
@@ -110,8 +103,6 @@ public class Nexus implements ControllableNexusAccess {
     private final Combatants mobList;
     private final AttackerAI attackerAI = new AttackerAI(this);
     private NexusHudPayload lastHudPayload = NexusHudPayload.hidden();
-
-    private final InvasionConfig config = InvasionMod.getConfig();
 
     private AABB boundingBoxToRadius;
 
@@ -376,8 +367,6 @@ public class Nexus implements ControllableNexusAccess {
     public void stop(boolean killEnemies) {
         if (mode == Mode.WAITING) {
             setMode(Mode.CONTINUOUS);
-            int days = getWorld().getRandom().nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
-            nextAttackTime = (int) ((getWorld().getGameTime() / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
         } else {
             setMode(Mode.STOPPED);
 			storage.clearActiveNexus(this);
@@ -437,8 +426,6 @@ public class Nexus implements ControllableNexusAccess {
     public List<Component> getStatus() {
         return List.of(
                 Component.literal("Current Time: " + getWorld().getGameTime()),
-                Component.literal("Time to next: " + nextAttackTime),
-                Component.literal("Days to attack: " + daysToAttack),
                 Component.literal("Mobs left: " + mobsLeftInWave),
                 Component.literal("Mode: " + mode)
         );
@@ -667,9 +654,8 @@ public class Nexus implements ControllableNexusAccess {
         setMode(Mode.CONTINUOUS);
         regenerateHealth();
         lastPowerLevel = powerLevel;
-        lastWorldTime = getWorld().getGameTime();
-        nextAttackTime = (int) ((lastWorldTime / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME);
-        if (lastWorldTime % TICKS_PER_DAY > SUNSET_TIME && lastWorldTime % TICKS_PER_DAY < NIGHT_TIME) {
+        long timeOfDay = Math.floorMod(getWorld().getGameTime(), TICKS_PER_DAY);
+        if (timeOfDay > SUNSET_TIME && timeOfDay < NIGHT_TIME) {
             boundPlayers.sendWarning("invmod.message.nexus.nightlooming");
         } else {
             boundPlayers.sendWarning("invmod.message.nexus.activatedandstable");
@@ -732,40 +718,7 @@ public class Nexus implements ControllableNexusAccess {
 		startStableNightWaveIfNeeded();
 		if (!continuousAttack) return;
 
-        if (!continuousAttack) {
-            long currentTime = getWorld().getGameTime();
-            int timeOfDay = (int) (this.lastWorldTime % TICKS_PER_DAY);
-            if (timeOfDay < SUNSET_TIME && currentTime % TICKS_PER_DAY >= SUNSET_TIME && currentTime + SUNSET_TIME > nextAttackTime) {
-                boundPlayers.sendWarning("invmod.message.nexus.nightlooming");
-            }
-            if (lastWorldTime > currentTime) {
-                nextAttackTime = ((int) (nextAttackTime - (lastWorldTime - currentTime)));
-            }
-            lastWorldTime = currentTime;
-
-            if (lastWorldTime >= nextAttackTime) {
-                try {
-                    float difficulty = 1 + powerLevel / 4500;
-                    float tierLevel = 1 + powerLevel / 4500;
-                    Wave wave = waveBuilder.generateWave(difficulty, tierLevel, WAVE_DURATION);
-                    continuousAttackCount++;
-                    mobsLeftInWave = (lastMobsLeftInWave = mobsToKillInWave = (int) (wave.getTotalMobAmount() * 0.8F));
-                    beginWave(wave);
-                    continuousAttack = true;
-                    int days = getWorld().getRandom().nextIntBetweenInclusive(config.minContinuousModeDays, config.maxContinuousModeDays);
-                    nextAttackTime = (int) ((currentTime / TICKS_PER_DAY * TICKS_PER_DAY) + HALF_DAY_TIME + days * TICKS_PER_DAY);
-                    regenerateHealth();
-                    zapTimer = 0;
-                    waveDelayTimer = -1L;
-                    boundPlayers.sendWarning("invmod.message.nexus.destabilizing");
-                    boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
-                } catch (WaveSpawnerException e) {
-                    InvasionMod.LOGGER.error("Exception whilst updating spawner", e);
-                    stop(false);
-                }
-            }
-
-        } else if (hp <= 0) {
+        if (hp <= 0) {
             continuousAttack = false;
             continuousNexusHurt();
         } else if (phaseCanEnd()) {
@@ -1120,8 +1073,6 @@ public class Nexus implements ControllableNexusAccess {
         nexusKills = compound.getIntOr("nexusKills", 0);
         powerLevel = compound.getIntOr("powerLevel", 0);
         lastPowerLevel = compound.getIntOr("lastPowerLevel", 0);
-        nextAttackTime = compound.getIntOr("nextAttackTime", 0);
-        daysToAttack = compound.getIntOr("daysToAttack", 0);
         continuousAttack = compound.getBooleanOr("continuousAttack", false);
         continuousAttackCount = compound.getIntOr("continuousAttackCount", 0);
         activated = compound.getBooleanOr("activated", false);
@@ -1159,8 +1110,6 @@ public class Nexus implements ControllableNexusAccess {
         compound.putInt("nexusKills", nexusKills);
         compound.putInt("powerLevel", powerLevel);
         compound.putInt("lastPowerLevel", lastPowerLevel);
-        compound.putInt("nextAttackTime", nextAttackTime);
-        compound.putInt("daysToAttack", daysToAttack);
         compound.putBoolean("continuousAttack", continuousAttack);
         compound.putInt("continuousAttackCount", continuousAttackCount);
         compound.putBoolean("activated", isActive());
