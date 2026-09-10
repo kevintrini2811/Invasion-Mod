@@ -156,6 +156,31 @@ class NexusLifecycleTest {
     }
 
     @Test
+    void participantsRecoverValidEntriesFromMixedPersistedEntries() {
+        UUID playerId = UUID.randomUUID();
+        ServerPlayer player = mock(ServerPlayer.class);
+        when(player.getUUID()).thenReturn(playerId);
+        when(player.isCreative()).thenReturn(false);
+        when(player.getDisplayName()).thenReturn(Component.literal("Player"));
+        when(world.getEntitiesOfClass(eq(Player.class), any(AABB.class), any())).thenReturn(List.of(player));
+
+        Participants participants = nexus.getParticipants();
+        participants.bindPlayers(new AABB(ORIGIN));
+        CompoundTag valid = (CompoundTag) participants.writeNbt(new CompoundTag(), null)
+                .getListOrEmpty("entries").getFirst();
+        ListTag entries = new ListTag();
+        entries.add(new CompoundTag());
+        entries.add(valid);
+        CompoundTag saved = new CompoundTag();
+        saved.put("entries", entries);
+
+        Participants restored = new Participants(nexus);
+        restored.readNbt(saved, null);
+
+        assertTrue(restored.reconnect(player));
+    }
+
+    @Test
     void worldStorageAllowsOnlyOneActiveNexusAndReleasesItOnDestroy() throws Exception {
         Constructor<WorldNexusStorage> constructor = WorldNexusStorage.class
                 .getDeclaredConstructor(ServerLevel.class);

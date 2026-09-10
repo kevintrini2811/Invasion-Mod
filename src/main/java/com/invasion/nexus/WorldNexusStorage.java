@@ -101,22 +101,24 @@ public class WorldNexusStorage extends SavedData {
         this(world);
         resumed = true;
         Optional<UUID> savedActiveNexus = nbt.read("activeNexus", net.minecraft.core.UUIDUtil.CODEC);
-        nbt.getListOrEmpty("nexuses").forEach(i -> {
-            CompoundTag compound = (CompoundTag)i;
-            if (!compound.contains("phaseToken")) {
-                compound.read("pos", BlockPos.CODEC).ifPresent(pos ->
-                        legacyNexuses.add(new LegacyNexus(
-                                pos,
-                                Math.max(1, compound.getIntOr("currentWave", 1)),
-                                compound.getBooleanOr("activated", false)
-                                        && Mode.forId(compound.getIntOr("mode", 0)).isActive())));
-            } else {
-                try {
+        nbt.getListOrEmpty("nexuses").forEach(tag -> {
+            try {
+                if (!(tag instanceof CompoundTag compound)) {
+                    throw new IllegalArgumentException("Persisted Nexus entry is not a compound tag");
+                }
+                if (!compound.contains("phaseToken")) {
+                    compound.read("pos", BlockPos.CODEC).ifPresent(pos ->
+                            legacyNexuses.add(new LegacyNexus(
+                                    pos,
+                                    Math.max(1, compound.getIntOr("currentWave", 1)),
+                                    compound.getBooleanOr("activated", false)
+                                            && Mode.forId(compound.getIntOr("mode", 0)).isActive())));
+                } else {
                     Nexus nexus = new Nexus(world, this, compound, lookup);
                     instances.put(nexus.getUuid(), nexus);
-                } catch (RuntimeException exception) {
-                    InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus entry", exception);
                 }
+            } catch (RuntimeException exception) {
+                InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus entry", exception);
             }
         });
         activeNexus = savedActiveNexus.filter(instances::containsKey);

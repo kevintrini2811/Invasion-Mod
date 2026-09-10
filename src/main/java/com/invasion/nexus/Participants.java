@@ -149,9 +149,16 @@ public class Participants {
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         entries.clear();
-        compound.getListOrEmpty("entries").forEach(el -> {
-            Entry entry = new Entry((CompoundTag)el);
-            entries.put(entry.id, entry);
+        compound.getListOrEmpty("entries").forEach(tag -> {
+            try {
+                if (!(tag instanceof CompoundTag entryTag)) {
+                    throw new IllegalArgumentException("Persisted participant entry is not a compound tag");
+                }
+                Entry entry = new Entry(entryTag);
+                entries.put(entry.id, entry);
+            } catch (RuntimeException exception) {
+                InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus participant", exception);
+            }
         });
     }
 
