@@ -289,7 +289,7 @@ public final class VanillaMobSpawnReplacement {
         convert(source, (EntityType) targetType, nexus);
     }
 
-    private static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
+    static <T extends Mob & Combatant<?> & EntityConstruct.BuildableMob>
             void convert(
             Mob source, EntityType<T> targetType,
             com.invasion.nexus.NexusAccess nexus) {
