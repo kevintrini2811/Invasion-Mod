@@ -11,7 +11,6 @@ import net.minecraft.util.Util;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Block;
-import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.EntityIMZombie;
 import com.invasion.entity.EntityIMZombiePigman;
@@ -28,9 +27,6 @@ import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.QueenSpiderEntity;
 import com.invasion.entity.ThrowerEntity;
 import com.invasion.nexus.Combatant;
-import com.invasion.nexus.wave.EntityPattern;
-import com.invasion.nexus.wave.EntityPatterns;
-import com.invasion.nexus.wave.pool.Select;
 
 public class InvasionConfig extends Config {
     private static final Map<String, Integer> DEFAULT_MOB_HEALTHS = Util.make(new HashMap<>(), m -> {
@@ -57,40 +53,27 @@ public class InvasionConfig extends Config {
         m.put("IMWitch-T1", 26);
         m.put("IMEnderman-T1", 40);
     });
-    private static final boolean DEFAULT_NIGHT_SPAWNS_ENABLED = false;
     private static final int DEFAULT_MIN_CONT_MODE_DAYS = 2;
     private static final int DEFAULT_MAX_CONT_MODE_DAYS = 3;
     private static final int DEFAULT_NIGHT_MOB_SIGHT_RANGE = 20;
-    private static final int DEFAULT_NIGHT_MOB_SENSE_RANGE = 8;
-    private static final int DEFAULT_NIGHT_MOB_SPAWN_CHANCE = 30;
-    private static final int DEFAULT_NIGHT_MOB_MAX_GROUP_SIZE = 3;
+    private static final int DEFAULT_NIGHT_MOB_SENSE_RANGE = 12;
     private static final int DEFAULT_NIGHT_MOB_LIMIT_OVERRIDE = 70;
-    private static final float DEFAULT_NIGHT_MOB_STATS_SCALING = 1.0F;
-    private static final boolean DEFAULT_NIGHT_MOBS_BURN = false;
 
     private final Map<Identifier, Float> strengthOverrides = new HashMap<>();
 
     public boolean enableLog;
     public boolean debugMode;
     public boolean destructedBlocksDrop = true;
-    public boolean updateNotifications;
 
     public int minContinuousModeDays = DEFAULT_MIN_CONT_MODE_DAYS;
     public int maxContinuousModeDays = DEFAULT_MAX_CONT_MODE_DAYS;
 
-    public boolean nightSpawnsEnabled = DEFAULT_NIGHT_SPAWNS_ENABLED;
     public int nightMobSightRange = DEFAULT_NIGHT_MOB_SIGHT_RANGE;
     public int nightMobSenseRange = DEFAULT_NIGHT_MOB_SENSE_RANGE;
-    public int nightMobSpawnChance = DEFAULT_NIGHT_MOB_SPAWN_CHANCE;
-    public int nightMobMaxGroupSize = DEFAULT_NIGHT_MOB_MAX_GROUP_SIZE;
     public int maxNightMobs = DEFAULT_NIGHT_MOB_LIMIT_OVERRIDE;
-    public boolean nightMobsBurnInDay = DEFAULT_NIGHT_MOBS_BURN;
 
     private final Map<String, Integer> mobHealthNightspawn = new HashMap<>();
     private final Map<String, Integer> mobHealthInvasion = new HashMap<>();
-
-    @Nullable
-    private Select<EntityPattern> spawnPool;
 
     public Optional<Float> getBlockStrength(Block block) {
         return Optional.ofNullable(strengthOverrides.get(BuiltInRegistries.BLOCK.getKey(block)));
@@ -148,13 +131,6 @@ public class InvasionConfig extends Config {
         return getHealth(healthKey, !mob.hasNexus()) * healthMultiplier;
     }
 
-    public synchronized Select<EntityPattern> getSpawnPool() {
-        if (spawnPool == null) {
-            spawnPool = loadSpawnPool();
-        }
-        return spawnPool;
-    }
-
     @Override
     public void loadConfig(File file) {
         super.loadConfig(file);
@@ -189,32 +165,15 @@ public class InvasionConfig extends Config {
 
         enableLog = getPropertyValueBoolean("enable-log-file", false);
         destructedBlocksDrop = getPropertyValueBoolean("destructed-blocks-drop", true);
-        updateNotifications = getPropertyValueBoolean("update-messages-enabled", false);
         debugMode = getPropertyValueBoolean("debug", false);
 
-        minContinuousModeDays = getPropertyValueInt("min-days-to-attack", 2);
-        maxContinuousModeDays = getPropertyValueInt("max-days-to-attack", 3);
+        minContinuousModeDays = getPropertyValueInt("min-days-to-attack", DEFAULT_MIN_CONT_MODE_DAYS);
+        maxContinuousModeDays = getPropertyValueInt("max-days-to-attack", DEFAULT_MAX_CONT_MODE_DAYS);
 
-        nightSpawnsEnabled = getPropertyValueBoolean("night-spawns-enabled", false);
-        nightMobSightRange = getPropertyValueInt("night-mob-sight-range", 20);
-        nightMobSenseRange = getPropertyValueInt("night-mob-sense-range", 12);
-        nightMobSpawnChance = getPropertyValueInt("night-mob-spawn-chance", 30);
-        nightMobMaxGroupSize = getPropertyValueInt("night-mob-max-group-size", 3);
-        maxNightMobs = getPropertyValueInt("mob-limit-override", 70);
-        nightMobsBurnInDay = getPropertyValueBoolean("night-mobs-burn-in-day", false);
-        spawnPool = loadSpawnPool();
+        nightMobSightRange = getPropertyValueInt("night-mob-sight-range", DEFAULT_NIGHT_MOB_SIGHT_RANGE);
+        nightMobSenseRange = getPropertyValueInt("night-mob-sense-range", DEFAULT_NIGHT_MOB_SENSE_RANGE);
+        maxNightMobs = getPropertyValueInt("mob-limit-override", DEFAULT_NIGHT_MOB_LIMIT_OVERRIDE);
         saveConfig(file);
-    }
-
-    private Select<EntityPattern> loadSpawnPool() {
-        return Select.<EntityPattern>random().apply(builder -> {
-            EntityPatterns.REGISTRY.forEach((id, pattern) -> {
-                float weight = pattern.getNightMobSpawnWeight();
-                if (weight > 0) {
-                    builder.entry(pattern.pattern(), weight);
-                }
-            });
-        }).build();
     }
 
     private void saveConfig(File saveFile) {
@@ -222,12 +181,9 @@ public class InvasionConfig extends Config {
             writeLine(writer, "# Invasion Mod config");
             writeLine(writer, "# Delete this file to restore defaults");
             writer.newLine();
-            writeLine(writer, "# General settings and IDs");
-            writeProperty(writer, "update-messages-enabled", "Update-messages-enabled is currently unused");
+            writeLine(writer, "# General settings");
             writeProperty(writer, "destructed-blocks-drop");
             writeProperty(writer, "enable-log-file");
-            writeProperty(writer, "craft-items-enabled");
-            writeProperty(writer, "guiID-Nexus");
             if (debugMode) {
                 writeProperty(writer, "debug");
             }
@@ -257,7 +213,7 @@ public class InvasionConfig extends Config {
                 writeLine(writer, "# block231-strength=10.5");
             } else {
                 for (var entry : strengthOverrides.entrySet()) {
-                    writer.write(entry.getKey() + "-strength=" + entry.getValue());
+                    writer.write("block-" + entry.getKey() + "-strength=" + entry.getValue());
                     writer.newLine();
                 }
             }
@@ -265,23 +221,8 @@ public class InvasionConfig extends Config {
 
             writeLine(writer, "# Nighttime mob spawning behaviour (does not affect the nexus)");
             writeProperty(writer, "mob-limit-override", "mob-limit-override: The maximum number of randomly spawned mobs that may exist in the world. This applies to ALL of minecraft (default: 70)");
-            writeProperty(writer, "night-spawns-enabled", "night-spawns-enabled: Currently does not remove any default mobs, only adds new spawns");
-            writeProperty(writer, "night-mob-spawn-chance", "night-mob-spawn-chance: Higher number means mobs are more common");
-            writeProperty(writer, "night-mob-max-group-size", "night-mob-group-size: The maximum number of mobs that may spawn together");
             writeProperty(writer, "night-mob-sight-range", "night-mob-sight-range: How far mobs can see a player from");
             writeProperty(writer, "night-mob-sense-range", "night-mob-sense-range: How far mobs can smell a player (trough walls)");
-            writer.newLine();
-
-            writeLine(writer, "# Nightime mob spawning tables (also does not affect the nexus)");
-            writeLine(writer, "# A spawnpool contains mobs that can possibly spawn, and the probability weight of them spawning.");
-            writeLine(writer, "# Explanation: zombie_t2_any_basic has all T2, zombie_t2_plain excludes tar zombies");
-            EntityPatterns.REGISTRY.forEach((id, pattern) -> {
-                try {
-                    writeValue(writer, "nm-spawnpool1-slot" + pattern.id() + "-weight", pattern.getNightMobSpawnWeight());
-                } catch (IOException e) {
-                    InvasionMod.LOGGER.error("Could not save config", e);
-                }
-            });
             writer.flush();
         } catch (IOException e) {
             InvasionMod.LOGGER.error("Could not save config", e);
