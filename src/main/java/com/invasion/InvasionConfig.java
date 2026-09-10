@@ -53,8 +53,6 @@ public class InvasionConfig extends Config {
         m.put("IMWitch-T1", 26);
         m.put("IMEnderman-T1", 40);
     });
-    private static final int DEFAULT_MIN_CONT_MODE_DAYS = 2;
-    private static final int DEFAULT_MAX_CONT_MODE_DAYS = 3;
     private static final int DEFAULT_NIGHT_MOB_SIGHT_RANGE = 20;
     private static final int DEFAULT_NIGHT_MOB_SENSE_RANGE = 12;
     private static final int DEFAULT_NIGHT_MOB_LIMIT_OVERRIDE = 70;
@@ -64,9 +62,6 @@ public class InvasionConfig extends Config {
     public boolean enableLog;
     public boolean debugMode;
     public boolean destructedBlocksDrop = true;
-
-    public int minContinuousModeDays = DEFAULT_MIN_CONT_MODE_DAYS;
-    public int maxContinuousModeDays = DEFAULT_MAX_CONT_MODE_DAYS;
 
     public int nightMobSightRange = DEFAULT_NIGHT_MOB_SIGHT_RANGE;
     public int nightMobSenseRange = DEFAULT_NIGHT_MOB_SENSE_RANGE;
@@ -167,9 +162,6 @@ public class InvasionConfig extends Config {
         destructedBlocksDrop = getPropertyValueBoolean("destructed-blocks-drop", true);
         debugMode = getPropertyValueBoolean("debug", false);
 
-        minContinuousModeDays = getPropertyValueInt("min-days-to-attack", DEFAULT_MIN_CONT_MODE_DAYS);
-        maxContinuousModeDays = getPropertyValueInt("max-days-to-attack", DEFAULT_MAX_CONT_MODE_DAYS);
-
         nightMobSightRange = getPropertyValueInt("night-mob-sight-range", DEFAULT_NIGHT_MOB_SIGHT_RANGE);
         nightMobSenseRange = getPropertyValueInt("night-mob-sense-range", DEFAULT_NIGHT_MOB_SENSE_RANGE);
         maxNightMobs = getPropertyValueInt("mob-limit-override", DEFAULT_NIGHT_MOB_LIMIT_OVERRIDE);
@@ -190,9 +182,6 @@ public class InvasionConfig extends Config {
                 writeProperty(writer, "debug");
             }
 
-            writeLine(writer, "# Nexus Continuous Mode");
-            writeProperty(writer, "min-days-to-attack");
-            writeProperty(writer, "max-days-to-attack");
             writeLine(writer, "# Mob health during invasion");
 
             for (var pairs : mobHealthInvasion.entrySet()) {
