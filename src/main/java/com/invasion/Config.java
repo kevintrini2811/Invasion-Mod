@@ -74,7 +74,11 @@ public class Config {
     public int getPropertyValueInt(String keyName, int defaultValue) {
         String property = properties.getProperty(keyName, null);
         if (property != null) {
-            return Integer.parseInt(property);
+            try {
+                return Integer.parseInt(property);
+            } catch (NumberFormatException e) {
+                InvasionMod.LOGGER.warn("Invalid integer value '{}' for config key '{}'; using default {}", property, keyName, defaultValue);
+            }
         }
 
         properties.setProperty(keyName, Integer.toString(defaultValue));
@@ -84,7 +88,14 @@ public class Config {
     public float getPropertyValueFloat(String keyName, float defaultValue) {
         @Nullable String property = properties.getProperty(keyName, null);
         if (property != null) {
-            return Float.parseFloat(property);
+            try {
+                float value = Float.parseFloat(property);
+                if (Float.isFinite(value)) {
+                    return value;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+            InvasionMod.LOGGER.warn("Invalid float value '{}' for config key '{}'; using default {}", property, keyName, defaultValue);
         }
 
         properties.setProperty(keyName, Float.toString(defaultValue));
