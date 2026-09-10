@@ -114,6 +114,14 @@ Invasion Mod exists because many maintainers kept an old and unusually ambitious
 
 Thanks also to every tester, translator, issue reporter, and contributor whose feedback made the invasion systems more stable.
 
-## License and support
+## Downloads and support
 
-Source code is available under the MIT License. Report reproducible problems through the [GitHub issue tracker](https://github.com/kevintrini2811/Invasion-Mod/issues), including Minecraft version, loader, mod version, logs, and reproduction steps.
+- [Modrinth](https://modrinth.com/mod/invasion-mod-unofficial)
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/invasion-mod-unofficial/comments)
+- [GitHub issue tracker](https://github.com/kevintrini2811/Invasion-Mod/issues)
+
+Report reproducible problems with the Minecraft version, loader, mod version, logs, and reproduction steps.
+
+## License
+
+Source code is available under the GNU General Public License v3.0 (GPL-3.0).
