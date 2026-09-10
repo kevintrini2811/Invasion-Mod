@@ -7,11 +7,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;
 import net.minecraft.ChatFormatting;
-import net.minecraft.advancements.critereon.MinMaxBounds.Ints;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.RangeArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -28,16 +26,14 @@ import com.invasion.nexus.Combatant;
 import com.invasion.nexus.ControllableNexusAccess;
 import com.invasion.nexus.Mode;
 import com.invasion.nexus.WorldNexusStorage;
-import com.invasion.nexus.test.Tester;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 
 public class InvasionCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> create(CommandDispatcher<CommandSourceStack> dispatcher, CommandBuildContext registries) {
-        return addTestCommands(Commands.literal("invasion")
+        return Commands.literal("invasion")
                 .then(restrictedLiteral("help").executes(context -> help(dispatcher, context.getSource())))
                 .then(restrictedLiteral("pause").executes(context -> pause(context.getSource())))
                 .then(restrictedLiteral("continue").executes(context -> continueInvasion(context.getSource())))
@@ -53,37 +49,11 @@ public class InvasionCommand {
                         .then(Commands.argument("wave", IntegerArgumentType.integer(1))
                                 .executes(context -> start(context.getSource(), IntegerArgumentType.getInteger(context, "wave")))))
                 .then(restrictedLiteral("stop").executes(context -> stop(context.getSource())))
-                .then(restrictedLiteral("radius")
-                        .then(Commands.literal("get").executes(context -> getRadius(context.getSource())))
-                        .then(Commands.literal("set").then(Commands.argument("radius", IntegerArgumentType.integer(32, 128)).executes(context -> setRadius(context.getSource(), IntegerArgumentType.getInteger(context, "radius"))))))
-                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource()))));
+                .then(Commands.literal("bolt").executes(context -> bolt(context.getSource())));
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> restrictedLiteral(String name) {
         return Commands.literal(name).requires(source -> source.hasPermission(Commands.LEVEL_GAMEMASTERS));
-    }
-
-    private static LiteralArgumentBuilder<CommandSourceStack> addTestCommands(LiteralArgumentBuilder<CommandSourceStack> builder) {
-        if (!InvasionMod.getConfig().debugMode) {
-            return builder;
-        }
-        return builder.then(Commands.literal("test").requires(source -> InvasionMod.getConfig().debugMode
-                        && source.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                .then(Commands.literal("status").executes(context -> printDebugStatus(context.getSource())))
-                .then(Commands.literal("spawner").executes(context -> testSpawner(context.getSource(), Ints.between(1, 11)))
-                        .then(Commands.argument("waves", RangeArgument.intRange()).executes(context -> testSpawner(context.getSource(), RangeArgument.Ints.getRange(context, "waves")))))
-                .then(Commands.literal("spawnPoints").executes(context -> testSpawnpoints(context.getSource())))
-                .then(Commands.literal("waveBuilder").executes(context -> testWaveBuilder(context.getSource(), 1, 1, 160))
-                        .then(Commands.argument("difficuly", FloatArgumentType.floatArg(0)).executes(context -> testWaveBuilder(context.getSource(),
-                                        FloatArgumentType.getFloat(context, "difficuly"), 1, 160))
-                                .then(Commands.argument("tier", FloatArgumentType.floatArg(1)).executes(context -> testWaveBuilder(context.getSource(),
-                                            FloatArgumentType.getFloat(context, "difficuly"),
-                                            FloatArgumentType.getFloat(context, "tier"), 160))
-                                        .then(Commands.argument("duration", IntegerArgumentType.integer(1, 1000)).executes(context -> testWaveBuilder(context.getSource(),
-                                                FloatArgumentType.getFloat(context, "difficuly"),
-                                                FloatArgumentType.getFloat(context, "tier"),
-                                                IntegerArgumentType.getInteger(context, "duration")))))))
-        );
     }
 
     private static void handleWithNexus(CommandSourceStack source, Consumer<ControllableNexusAccess> nexusConsumer) {
@@ -163,52 +133,6 @@ public class InvasionCommand {
                 "invmod.message.command.nexuses_destroyed", destroyedCount)
                 .withStyle(ChatFormatting.RED), true);
         return destroyed;
-    }
-
-    private static int getRadius(CommandSourceStack source) {
-        handleWithNexus(source, nexus -> {
-            source.sendSuccess(() -> Component.literal("The nexus spawn radius is " + nexus.getSpawnRadius()).withStyle(ChatFormatting.GREEN), false);
-        });
-        return 0;
-    }
-
-    private static int setRadius(CommandSourceStack source, int radius) {
-        handleWithNexus(source, nexus -> {
-            if (nexus.setSpawnRadius(radius)) {
-                source.sendSuccess(() -> Component.literal("Set nexus range to " + radius).withStyle(ChatFormatting.GREEN), false);
-            } else {
-                source.sendSuccess(() -> Component.literal("Can't change range while Nexus is active.").withStyle(ChatFormatting.RED), false);
-            }
-        });
-        return 0;
-    }
-
-    private static int testSpawner(CommandSourceStack source, Ints waves) {
-        new Tester(message -> {
-            source.sendSuccess(() -> Component.literal(message), false);
-        }).doWaveSpawnerTest(java.util.Objects.requireNonNull(waves.getMin()), java.util.Objects.requireNonNull(waves.getMax()));
-        return 0;
-    }
-
-    private static int testSpawnpoints(CommandSourceStack source) {
-        new Tester(message -> {
-            source.sendSuccess(() -> Component.literal(message), false);
-        }).doSpawnPointSelectionTest();
-        return 0;
-    }
-
-    private static int testWaveBuilder(CommandSourceStack source, float difficulty, float tier, int duration) {
-        new Tester(message -> {
-            source.sendSuccess(() -> Component.literal(message), false);
-        }).doWaveBuilderTest(difficulty, tier, duration);
-        return 0;
-    }
-
-    private static int printDebugStatus(CommandSourceStack source) {
-        handleWithNexus(source, nexus -> {
-            nexus.getStatus().forEach(line -> source.sendSuccess(() -> line, false));
-        });
-        return 0;
     }
 
     private static int debug(CommandSourceStack source) {
