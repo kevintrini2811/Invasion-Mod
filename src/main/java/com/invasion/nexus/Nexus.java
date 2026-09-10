@@ -579,10 +579,6 @@ public class Nexus implements ControllableNexusAccess {
 
     @Override
     public boolean start(int startWave) {
-        if (!storage.setActiveNexus(this)) {
-            InvasionMod.log("Another nexus is already active in this world");
-			return false;
-        }
         if (mode == Mode.CONTINUOUS && continuousAttack) {
             boundPlayers.sendWarning("invmod.message.nexus.alreadyactivated");
             return false;
@@ -595,6 +591,11 @@ public class Nexus implements ControllableNexusAccess {
 
         if (!waveSpawner.isReady()) {
             InvasionMod.log("Wave spawner is not in ready state");
+            return false;
+        }
+
+        if (!storage.setActiveNexus(this)) {
+            InvasionMod.log("Another nexus is already active in this world");
             return false;
         }
 
