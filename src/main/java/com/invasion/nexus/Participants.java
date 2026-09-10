@@ -149,9 +149,13 @@ public class Participants {
 
     public void readNbt(CompoundTag compound, HolderLookup.Provider lookup) {
         entries.clear();
-        compound.getList("entries", net.minecraft.nbt.Tag.TAG_COMPOUND).forEach(el -> {
-            Entry entry = new Entry((CompoundTag)el);
-            entries.put(entry.id, entry);
+        compound.getList("entries", net.minecraft.nbt.Tag.TAG_COMPOUND).forEach(tag -> {
+            try {
+                Entry entry = new Entry((CompoundTag) tag);
+                entries.put(entry.id, entry);
+            } catch (RuntimeException exception) {
+                InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus participant", exception);
+            }
         });
     }
 

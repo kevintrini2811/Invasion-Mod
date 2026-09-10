@@ -53,20 +53,20 @@ public class WorldNexusStorage extends SavedData {
         Optional<UUID> savedActiveNexus = nbt.hasUUID("activeNexus")
                 ? Optional.of(nbt.getUUID("activeNexus")) : Optional.empty();
         nbt.getList("nexuses", Tag.TAG_COMPOUND).forEach(i -> {
-            CompoundTag compound = (CompoundTag)i;
-            if (!compound.contains("phaseToken")) {
-                legacyNexuses.add(new LegacyNexus(
-                        BlockPos.of(compound.getLong("pos")),
-                        Math.max(1, compound.getInt("currentWave")),
-                        compound.getBoolean("activated")
-                                && Mode.forId(compound.getInt("mode")).isActive()));
-            } else {
-                try {
+            try {
+                CompoundTag compound = (CompoundTag) i;
+                if (!compound.contains("phaseToken")) {
+                    legacyNexuses.add(new LegacyNexus(
+                            BlockPos.of(compound.getLong("pos")),
+                            Math.max(1, compound.getInt("currentWave")),
+                            compound.getBoolean("activated")
+                                    && Mode.forId(compound.getInt("mode")).isActive()));
+                } else {
                     Nexus nexus = new Nexus(world, this, compound, world.registryAccess());
                     instances.put(nexus.getUuid(), nexus);
-                } catch (RuntimeException exception) {
-                    InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus entry", exception);
                 }
+            } catch (RuntimeException exception) {
+                InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus entry", exception);
             }
         });
         activeNexus = savedActiveNexus.filter(instances::containsKey);
