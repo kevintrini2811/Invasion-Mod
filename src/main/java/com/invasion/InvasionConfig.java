@@ -183,12 +183,18 @@ public class InvasionConfig extends Config {
             }
 
             writeLine(writer, "# Mob health during invasion");
+            writeLine(writer, "# Optional overrides for Nexus-bound IM mobs");
+            writeLine(writer, "# Format: <legacy-mob-name>-invasionSpawn-health=<health>");
+            writeLine(writer, "# Example: IMZombie-T1-invasionSpawn-health=20");
 
             for (var pairs : mobHealthInvasion.entrySet()) {
                 writeProperty(writer, pairs.getKey().toString());
             }
             writer.newLine();
-            writeLine(writer, "# Mob health during invasion (at night)");
+            writeLine(writer, "# Mob health outside a Nexus invasion");
+            writeLine(writer, "# Optional overrides for unbound IM mobs; nightSpawn is the legacy category name");
+            writeLine(writer, "# Format: <legacy-mob-name>-nightSpawn-health=<health>");
+            writeLine(writer, "# Example: IMZombie-T1-nightSpawn-health=20");
             for (var pairs : mobHealthNightspawn.entrySet()) {
                 writeProperty(writer, pairs.getKey().toString());
             }
