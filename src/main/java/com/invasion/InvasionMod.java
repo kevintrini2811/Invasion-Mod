@@ -198,8 +198,8 @@ public class InvasionMod {
 
     private void playerJoined(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player
-				&& SERVER != null) {
-			SERVER.getAllLevels().forEach(world -> WorldNexusStorage.of(world).onPlayerJoined(player));
+                    && player.level() instanceof ServerLevel world) {
+            WorldNexusStorage.of(world).onPlayerJoined(player);
         }
     }
 
@@ -207,7 +207,7 @@ public class InvasionMod {
         if (event.getEntity() instanceof ServerPlayer player
                 && player.level() instanceof ServerLevel world) {
             PacketDistributor.sendToPlayer(player, NexusHudPayload.hidden());
-			if (SERVER != null) SERVER.getAllLevels().forEach(level -> WorldNexusStorage.of(level).onPlayerJoined(player));
+            WorldNexusStorage.of(world).onPlayerJoined(player);
         }
     }
 
