@@ -158,7 +158,7 @@ public final class BudgetWavePlan {
             o(InvEntities.WITCH,1,5), o(InvEntities.THROWER,1,5), o(InvEntities.BIG_THROWER,2,10), o(InvEntities.IMP,1,5),
             o(InvEntities.BLAZE,1,8), o(InvEntities.BREEZE,1,6), o(InvEntities.PHANTOM,1,5), o(InvEntities.ZOGLIN,1,15),
             o(InvEntities.CREEPER,1,5), o(InvEntities.CREEPER,2,10), o(InvEntities.SLIME,1,4), o(InvEntities.MAGMA_CUBE,1,6),
-            o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,20),
+            o(InvEntities.WITHER,1,110), o(InvEntities.WARDEN,1,100), o(InvEntities.GHAST,1,30),
             o(InvEntities.BURROWER,1,8), o(InvEntities.ENDERMAN,1,5)));
         options.addAll(List.of(
                 baby(InvEntities.ZOMBIE,1,3), baby(InvEntities.ZOMBIE,2,5), baby(InvEntities.ZOMBIE_BRUTE,3,9),

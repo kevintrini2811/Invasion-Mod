@@ -158,6 +158,7 @@ public class InvasionConfig extends Config {
     @Override
     public void loadConfig(File file) {
         super.loadConfig(file);
+        strengthOverrides.clear();
         mobHealthNightspawn.clear();
         mobHealthInvasion.clear();
         keySet().forEach(key -> {
