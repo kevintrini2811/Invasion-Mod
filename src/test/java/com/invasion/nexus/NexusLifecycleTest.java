@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.SharedConstants;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerLevel;
@@ -175,5 +176,43 @@ class NexusLifecycleTest {
         assertTrue(realStorage.getNexus().isEmpty());
         assertTrue(realStorage.setActiveNexus(second));
         assertSame(second, realStorage.getNexus().orElseThrow());
+    }
+
+    @Test
+    void worldStorageRecoversValidNexusesFromMixedPersistedEntries() throws Exception {
+        UUID validId = nexus.getUuid();
+        CompoundTag valid = nexus.writeNbt(new CompoundTag(), RegistryAccess.EMPTY);
+        CompoundTag invalid = valid.copy();
+        invalid.remove("uuid");
+
+        ListTag entries = new ListTag();
+        entries.add(invalid);
+        entries.add(valid);
+        CompoundTag saved = new CompoundTag();
+        saved.put("nexuses", entries);
+        saved.putUUID("activeNexus", validId);
+
+        WorldNexusStorage restored = loadStorage(saved);
+
+        assertEquals(validId, restored.getNexus(validId).getUuid());
+        assertEquals(validId, restored.getNexus().orElseThrow().getUuid());
+    }
+
+    @Test
+    void worldStorageDropsPersistedActiveIdentityWithoutMatchingNexus() throws Exception {
+        CompoundTag saved = new CompoundTag();
+        saved.put("nexuses", new ListTag());
+        saved.putUUID("activeNexus", UUID.randomUUID());
+
+        WorldNexusStorage restored = loadStorage(saved);
+
+        assertTrue(restored.getNexus().isEmpty());
+    }
+
+    private WorldNexusStorage loadStorage(CompoundTag saved) throws Exception {
+        Constructor<WorldNexusStorage> constructor = WorldNexusStorage.class
+                .getDeclaredConstructor(ServerLevel.class, CompoundTag.class);
+        constructor.setAccessible(true);
+        return constructor.newInstance(world, saved);
     }
 }
