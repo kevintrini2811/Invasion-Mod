@@ -118,6 +118,8 @@ Thanks also to every tester, translator, issue reporter, and contributor whose f
 
 - [Modrinth](https://modrinth.com/mod/invasion-mod-unofficial)
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/invasion-mod-unofficial/comments)
+- [Wiki](https://invmod.ketr.de/)
+- [Discord](https://discord.gg/DNPwanDmJR)
 - [GitHub issue tracker](https://github.com/kevintrini2811/Invasion-Mod/issues)
 
 Report reproducible problems with the Minecraft version, loader, mod version, logs, and reproduction steps.
