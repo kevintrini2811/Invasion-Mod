@@ -66,8 +66,12 @@ public class WorldNexusStorage extends SavedData {
                         compound.getBoolean("activated")
                                 && Mode.forId(compound.getInt("mode")).isActive()));
             } else {
-                Nexus nexus = new Nexus(world, this, compound, lookup);
-                instances.put(nexus.getUuid(), nexus);
+                try {
+                    Nexus nexus = new Nexus(world, this, compound, lookup);
+                    instances.put(nexus.getUuid(), nexus);
+                } catch (RuntimeException exception) {
+                    InvasionMod.LOGGER.warn("Skipping invalid persisted Nexus entry", exception);
+                }
             }
         });
         activeNexus = savedActiveNexus.filter(instances::containsKey);
