@@ -58,6 +58,11 @@ neoForge {
             sourceSet sourceSets.main
         }
     }
+
+    unitTest {
+        enable()
+        testedMod = mods.invmod
+    }
 }
 
 dependencies {
@@ -65,6 +70,13 @@ dependencies {
     compileOnly "maven.modrinth:mutant-monsters:26.2.1"
     compileOnly "maven.modrinth:BOCJKD49:neoforge-4.0.27+mc26.2"
     compileOnly "maven.modrinth:G1hIVOrD:5.0.3"
+    testImplementation platform('org.junit:junit-bom:6.0.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 processResources {
