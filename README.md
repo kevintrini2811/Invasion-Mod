@@ -1,99 +1,119 @@
-🧱 Invasion Mod (Minecraft 1.21.1 Fork by cedric2018)
-So you think your base is tough, do you?
+# Invasion Mod
 
-Welcome!
-Have you ever built strong fortifications, reinforced your base, crafted powerful armor, and secured all your chests — only to realize that no real threat ever shows up?
-This mod fixes that.
+**So you think your base is tough, do you?**
 
-If you think regular mobs are too weak and you want to truly test your defenses, this is the mod for you.
-The Invasion Mod lets you initiate attacks anywhere, with difficulty increasing over time. The invaders are designed to deal with walls, traps, and defensive setups — so you’ll need strategy, not just strength.
+Invasion Mod turns a defended Minecraft base into the objective of a sustained siege. Build and activate a Nexus, prepare the surrounding terrain, and survive increasingly dangerous attack phases. Invaders do more than walk at the player: they pursue the Nexus, mine obstacles, build bridges and ladder towers, use equipment, and adapt their roles to the battlefield.
 
-It also adds a few useful recipes and items to support survival and defense gameplay.
+This repository continues the community ports of the original Invasion Mod. It restores legacy mechanics, adds new mobs and integrations, and focuses on reliable large invasions across several Minecraft loaders and versions.
 
-⚔️ Features
+## Supported versions
 
-Start invasions manually via the Nexus
+| Minecraft | Loader | Branch |
+| --- | --- | --- |
+| 26.2 | NeoForge | `26.2-neo` |
+| 26.2 | Fabric and Quilt | `26.2` |
+| 1.21.1 | NeoForge | `1.21.1-neo` |
+| 1.20.1 | NeoForge and Forge | `1.20.1-neo` |
 
-Increasing difficulty and smarter enemies
+Use a build made for your exact Minecraft version and loader. Optional integrations remain optional and are loaded only when their corresponding mods are present.
 
-Revamped mob AI with new abilities and roles
+## Core gameplay
 
-Enemies can build, destroy, and adapt to defenses
+- Start, pause, continue, stop, inspect, or change an invasion through the Nexus and `/invasion` commands.
+- Fight persistent, budget-driven phases with themed groups, scaling equipment, bosses, support mobs, and a compact Nexus HUD.
+- Defend against invaders that mine walls, climb or place ladders, build bridges and towers, cross fluids, and recover from blocked paths.
+- Use the restored Nexus, catalysts, traps, Strange Bone, engineer hammer, infused sword, searing weapons, spawn eggs, recipes, sounds, drops, and progression systems.
+- Keep invasion progress through reconnects and world reloads. Legacy Nexus data and blocks migrate to the current format.
+- Configure mob health, damage, equipment, wave participation, block strength and mining behavior, Nexus behavior, and other invasion rules.
 
-Custom sounds, messages, and translations
+## Expanded invasion roster
 
-Useful items and recipes for defenders
+The original zombie, zombie brute, pigman engineer, spider, skeleton, imp, thrower, creeper, enderman, burrower, wolf, and trap mechanics have been restored and expanded.
 
-🧩 Improvements in this Fork (by cedric2018)
+New and extended invasion variants include:
 
-This fork is based on Sollace’s 1.21 port and continues improving it for Minecraft 1.21.1 (Fabric).
-The goal is to enhance stability, performance, and AI behavior during invasions.
+- baby zombies and baby skeleton variants;
+- Tar, Speedy, Miner, Builder, mystery, and growing Fat Zombies;
+- Husks, Drowned, zombie villagers, zombified piglins, Bogged, Strays, Wither Skeletons, and aquatic Guardians;
+- Phantoms, Blazes, Silverfish, Endermites, Slimes, Magma Cubes, Breezes, Witches, Ghasts, Zoglins, Wardens, Elder Guardians, and a scaling Wither boss;
+- biome-aware and fluid-aware wave selection, civilian infection and conversion, replacement of matching vanilla spawns, mounted-mob support, and specialized Nexus attacks.
 
-✅ Major Fixes & Enhancements
+Mobs retain distinct abilities: engineers construct routes, burrowers excavate three-dimensional tunnels, ranged mobs attack the Nexus, support casters aid allies, aquatic mobs dive and surface intelligently, and special units teleport, infect, absorb items or experience, charge, ignite blocks, or merge into stronger encounters.
 
-Improved mob pathfinding and building logic
-→ Mobs can now build smarter, dig down, and find better paths to the Nexus.
+## Configuration and mod support
 
-Fixed multiple AI and behavior bugs
+In-game option screens replace raw text editing for the main invasion settings. Searchable mob and block selectors make larger modpacks manageable.
 
-Reduced server lag during large-scale invasions
+Any registered hostile mob can be added to invasion themes through the mod-mob configuration. Configurable behavior includes:
 
-Fixed crashes and entity sync issues
+- wave cost, weight, health, damage, equipment, and ranged attacks;
+- ground, jumping, flying, swimming, and slime-style Nexus movement;
+- ladder climbing, block mining, bridge building, block placement, and fluid traversal;
+- daylight protection, civilian targeting and conversion, friendly-fire rules, attack modes, free bosses, and special abilities.
 
-Improved Nexus logic, wave scaling, and progression
+Tested defaults are supplied for supported third-party mobs. Dedicated optional integrations add deeper behavior for:
 
-Added missing sounds and improved Nexus damage feedback
+- **JEI** — Nexus flux generation recipe information;
+- **Infernal Mobs** — wave-scaled modifiers without duplicate normal invasion rolls;
+- **Mutant Monsters** — dedicated invasion entities, themed waves, boss handling, and Nexus attack animations;
+- **Friends & Foes** — Wildfire waves, barrages, movement, conversion, and resurrection behavior;
+- **Tiny Skeletons** — baby skeleton models, equipment, projectiles, and special abilities;
+- **Hunter's Return** and other configured mob mods — ready-to-use defaults through the generic mod-mob system.
 
-Improved chat messages, with proper colors and translations
+## Performance and reliability improvements
 
-Added German translation (more languages planned)
+Large invasions now avoid several sources of repeated world scanning and allocation:
 
-Multiple QoL improvements and code cleanup
+- Nexus-bound mobs use tracked registries instead of full level scans.
+- Civilian, item, Silverfish block, Witch target, and density searches are cached, indexed, sampled, or staggered across ticks.
+- Wither Skeleton groups cache shared state; mining and pathfinding avoid unnecessary streams and position-list allocations.
+- Persistent Nexus and bounty data are marked dirty only when state changes.
+- Spawn simulation retries blocked positions without busy looping, while stopped or failed invasions discard pending work and stagger cleanup.
+- Recovery logic repairs stalled navigation, mining, bridges, ladder towers, mounts, and flying or aquatic movement without continuously rebuilding paths.
 
-🏛️ Project History
+Thread-safe target tracking and loader-specific synchronization also prevent async equipment, entity join, civilian conversion, and replacement crashes.
 
-The original Invasion Mod was first released for Minecraft Beta 1.8.1 by Lieu on minecraftforum.net and maintained until 1.6.2.
-Later, UnstoppableN updated it to 1.7.10 and published the v1.1.2 source on GitHub — the last official release.
+## Major fixes and enhancements since cedric2018's fork
 
-Community forks and updates appeared over the years, including:
+- Restored complete wave coverage, drops, recipes, sounds, spawn eggs, special weapons, traps, wolf behavior, and legacy Nexus GUI behavior.
+- Rebuilt engineer bridges and ladder towers, Burrower movement and rendering, mob mining, fluid navigation, and Nexus pursuit.
+- Replaced fixed waves with persistent budget phases, themed pools, catalyst skips, reliable spawn retries, accurate kill tracking, and clearer HUD progress.
+- Fixed Nexus state loss, reconnect progress, invalid spawn points, duplicate replacements, jockey crashes, recursive conversions, friendly fire, and cleanup spikes.
+- Fixed equipment pickup and drops, ranged attacks, baby models, armor rendering, projectile rendering, entity names, tier health, and numerous mob-specific AI stalls.
+- Added configuration validation, safe defaults, live block-override reloads, command permission checks, config search, and regression tests for commands and configuration.
+- Ported the maintained feature set across NeoForge, Fabric, Quilt, and legacy Forge-compatible branches, including version-specific rendering implementations.
 
-1.10.2 by XenoDarth and crazysnailboy
+## Commands
 
-1.12.2 by DerToaster98 and durinfab (unstable)
+`/invasion help` lists commands available in the installed build. Administrative invasion controls require game-master permission. Common controls include `start`, `stop`, `pause`, `continue`, `status`, `set`, `radius`, `destroy`, and debug tools when debug mode is enabled.
 
-1.15.2 by DolphinTechCodes
+## Building from source
 
-1.21.1 by Sollace (base of this fork)
+This is a single Gradle mod project. Select the branch for the target Minecraft version, install its required Java version, then run:
 
-This fork by cedric2018 builds upon those efforts, fixing bugs and improving AI to make the mod fully playable and stable on Minecraft 1.21.1 (Fabric).
+```bash
+./gradlew build
+```
 
-🧠 Development / Support / Maintenance
+The distributable JAR is created in `build/libs`. Development tasks such as `runClient` and `runServer` depend on the selected loader branch.
 
-This project is not actively maintained, but I (cedric2018) may continue to push small updates and improvements.
-Bug reports and pull requests are welcome — especially:
+## Credits and project history
 
-Crash reports
+Invasion Mod exists because many maintainers kept an old and unusually ambitious idea alive:
 
-Language contributions
+- **Lieu** — original Invasion Mod for Minecraft Beta 1.8.1 through 1.6.2.
+- **Elsee** — original project contributions.
+- **UnstoppableN** — 1.7.10 update and published source for version 1.1.2.
+- **XenoDarth** and **crazysnailboy** — 1.10.2 community port.
+- **DerToaster98** and **durinfab** — 1.12.2 community work.
+- **DolphinTechCodes** — 1.15.2 port.
+- **Doenerstyle** — later porting and maintenance work.
+- **Sollace** — modern Fabric port that formed the base of the 1.21 line.
+- **cedric2018** — 1.21.1 fixes, AI, pathfinding, spawning, localization, and performance work used as the starting point for this fork.
+- **Kevin Trini** — current maintenance, restored mechanics, new content, performance work, compatibility, configuration, and multi-version ports.
 
-AI/pathfinding improvements
+Thanks also to every tester, translator, issue reporter, and contributor whose feedback made the invasion systems more stable.
 
-🌍 Localization
+## License and support
 
-Currently available in:
-
-English
-
-German
-
-New translations are always welcome!
-
-💾 Credits
-
-Original mod: Lieu
-
-1.6–1.7.10 updates: UnstoppableN
-
-1.21 port: Sollace
-
-1.21.1 improvements and fixes: cedric2018
+Source code is available under the MIT License. Report reproducible problems through the [GitHub issue tracker](https://github.com/kevintrini2811/Invasion-Mod/issues), including Minecraft version, loader, mod version, logs, and reproduction steps.
