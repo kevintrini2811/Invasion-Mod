@@ -302,7 +302,6 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
         Entity vehicle = source.getVehicle();
-        source.stopRiding();
 
         converted.snapTo(
                 source.getX(), source.getY(), source.getZ(),
@@ -385,19 +384,19 @@ public final class VanillaMobSpawnReplacement {
             imMob.setCountsTowardMobCap(true);
         }
 
-        // Remove the original before adding its replacement. convertTo adds the
-        // new entity first, which lets both entities coexist in the tracker for
-        // part of a tick and can appear as duplicate spawns on the client.
+        // Keep the original until the replacement has joined successfully.
+        // addFreshEntity can fail when another mod cancels its join event.
+        if (!world.addFreshEntity(converted)) {
+            return;
+        }
         // Optional mobs can already implement Combatant through a compatibility
         // mixin. Clear that temporary binding so their conversion discard is
         // not interpreted as a vanished wave mob that must be respawned.
         if (source instanceof Combatant<?> sourceCombatant) {
             sourceCombatant.setNexus(null);
         }
+        source.stopRiding();
         source.discard();
-        if (!world.addFreshEntity(converted)) {
-            return;
-        }
         // Bind only after the replacement has joined the level. This makes
         // setNexus update the loaded/bound registry against the final entity
         // lifecycle state instead of relying on a pre-spawn registration.
