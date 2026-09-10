@@ -295,13 +295,7 @@ public class WorldNexusStorage extends SavedData {
     }
 
     public synchronized boolean canActivate(Nexus nexus) {
-		if (activeNexus.map(instances::get).orElse(nexus) != nexus) return false;
-		if (world.getServer() != null) {
-			for (ServerLevel level : world.getServer().getAllLevels()) {
-				if (level != world && WorldNexusStorage.of(level).getNexus().isPresent()) return false;
-			}
-		}
-		return true;
+        return activeNexus.map(instances::get).orElse(nexus) == nexus;
     }
 
     public synchronized boolean setActiveNexus(Nexus nexus) {
