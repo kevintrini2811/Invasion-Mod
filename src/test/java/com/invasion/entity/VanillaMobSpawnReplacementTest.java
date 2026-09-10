@@ -65,15 +65,15 @@ class VanillaMobSpawnReplacementTest {
         verify(converted).setCountsTowardMobCap(true);
 
         InOrder lifecycle = inOrder(source, world, converted);
+        lifecycle.verify(world).addFreshEntity(converted);
         lifecycle.verify(source).stopRiding();
         lifecycle.verify(source).discard();
-        lifecycle.verify(world).addFreshEntity(converted);
         lifecycle.verify(converted).setNexus(nexus);
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void failedSpawnLeavesReplacementUnboundAndDismounted() {
+    void failedSpawnPreservesSourceAndLeavesReplacementUnbound() {
         ServerLevel world = mock(ServerLevel.class);
         Zombie source = mock(Zombie.class);
         Entity vehicle = mock(Entity.class);
@@ -94,8 +94,8 @@ class VanillaMobSpawnReplacementTest {
 
         VanillaMobSpawnReplacement.convert(source, targetType, nexus);
 
-        verify(source).stopRiding();
-        verify(source).discard();
+        verify(source, never()).stopRiding();
+        verify(source, never()).discard();
         verify(converted, never()).setNexus(any());
         verify(converted, never()).startRiding(any());
     }
