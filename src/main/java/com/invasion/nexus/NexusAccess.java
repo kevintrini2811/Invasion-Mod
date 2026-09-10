@@ -13,7 +13,6 @@ public interface NexusAccess {
     long BIND_EXPIRE_TIME = 300000L;
     long TICKS_PER_DAY = 24000L;
     long SUNSET_TIME = 12000L;
-    long HALF_DAY_TIME = 14000L;
     long NIGHT_TIME = 16000L;
 
     int WAVE_DURATION = 240;
