@@ -26,6 +26,49 @@ class BurrowerNavigationTest {
     private static final double EPSILON = 1.0E-6D;
 
     @Test
+    void nearbySidewaysTargetDoesNotTrapHeadInAnOrbit() {
+        MovementFixture fixture = new MovementFixture(new Vec3(1.5, 64, 0.2));
+        fixture.navigation.startMovingAlong(straightPath(), 1);
+        for (int tick = 0; tick < 240 && !fixture.navigation.isIdle(); tick++) {
+            fixture.step();
+        }
+        assertTrue(fixture.navigation.isIdle(), "A target inside the normal turning radius must be reached");
+        assertTrue(fixture.position.distanceTo(new Vec3(1.5, 64, 0.5)) <= 0.1);
+    }
+
+    @Test
+    void climbClearsLedgeBeforeTurningHorizontalWithoutRestartingPath() {
+        MovementFixture fixture = new MovementFixture(new Vec3(0.5, 64, 0.5));
+        fixture.ledgeHeight = 66;
+        fixture.navigation.startMovingAlong(new Path(List.of(
+                new Node(0, 64, 0), new Node(0, 65, 0), new Node(0, 66, 0),
+                new Node(1, 66, 0), new Node(2, 66, 0)), new BlockPos(2, 66, 0), true), 1);
+        for (int tick = 0; tick < 300 && !fixture.navigation.isIdle(); tick++) {
+            int previousIndex = fixture.navigation.path.getNextNodeIndex();
+            fixture.step();
+            if (previousIndex == 1 && fixture.navigation.path.getNextNodeIndex() == 2) {
+                assertTrue(fixture.position.y >= 65.9, "Do not round the corner below the ledge");
+            }
+        }
+        assertTrue(fixture.navigation.isIdle(), "The same path must finish across the ledge: "
+                + fixture.position + " node " + fixture.navigation.path.getNextNodeIndex());
+        assertTrue(fixture.position.distanceTo(new Vec3(2.5, 66, 0.5)) <= 0.1);
+    }
+
+    @Test
+    void risingDiagonalEdgeClimbsOntoSolidLedge() {
+        MovementFixture fixture = new MovementFixture(new Vec3(0.5, 65, 0.5));
+        fixture.ledgeHeight = 66;
+        fixture.navigation.startMovingAlong(new Path(List.of(
+                new Node(0, 65, 0), new Node(1, 66, 0), new Node(2, 66, 0)),
+                new BlockPos(2, 66, 0), true), 1);
+        for (int tick = 0; tick < 200 && !fixture.navigation.isIdle(); tick++) {
+            fixture.step();
+        }
+        assertTrue(fixture.navigation.isIdle(), "The rising edge must clear the wall without a new path");
+    }
+
+    @Test
     void activeNavigationDoesNotReceiveASecondVanillaTravelStep() {
         BurrowerEntity entity = mock(BurrowerEntity.class);
         when(entity.level()).thenReturn(mock(ServerLevel.class));
@@ -138,16 +181,28 @@ class BurrowerNavigationTest {
         private Vec3 requestedMovement;
         private PosRotate3D firstSegment;
         private double allowedMovement = 1;
+        private double ledgeHeight = Double.NEGATIVE_INFINITY;
         private final BurrowerNavigation navigation;
 
         private MovementFixture(Vec3 initialPosition) {
             position = initialPosition;
             BurrowerEntity entity = mock(BurrowerEntity.class);
             when(entity.position()).thenAnswer(invocation -> position);
+            when(entity.getX()).thenAnswer(invocation -> position.x);
+            when(entity.getY()).thenAnswer(invocation -> position.y);
+            when(entity.getZ()).thenAnswer(invocation -> position.z);
             when(entity.getYRot()).thenReturn(-90F);
             doAnswer(invocation -> {
                 requestedMovement = invocation.getArgument(1);
+                Vec3 before = position;
                 position = position.add(requestedMovement.scale(allowedMovement));
+                if (before.x > 0.65 && before.y >= ledgeHeight && position.y < ledgeHeight) {
+                    position = new Vec3(position.x, ledgeHeight, position.z);
+                }
+                // A 0.7-block-wide head cannot enter the wall until its feet clear the top.
+                if (position.y < ledgeHeight) {
+                    position = new Vec3(Math.min(position.x, 0.65), position.y, position.z);
+                }
                 return null;
             }).when(entity).move(eq(MoverType.SELF), any(Vec3.class));
             doAnswer(invocation -> {
