@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import org.jetbrains.annotations.Nullable;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.NexusAccess;
+import com.invasion.entity.FlyingWallPath;
 import com.faboslav.friendsandfoes.common.entity.WildfireShieldDebrisEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -19,11 +20,12 @@ public final class WildfireNexusGoal extends Goal {
     private final Monster mob;
     private final Combatant<?> combatant;
     private int cooldown;
-    @Nullable private Vec3 crossing;
+    private final FlyingWallPath wallPath;
 
     public WildfireNexusGoal(Monster mob, Combatant<?> combatant) {
         this.mob = mob;
         this.combatant = combatant;
+        this.wallPath = new FlyingWallPath(mob);
         setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
     }
 
@@ -36,7 +38,7 @@ public final class WildfireNexusGoal extends Goal {
     }
     @Override public boolean canContinueToUse() { return canUse(); }
     @Override public boolean requiresUpdateEveryTick() { return true; }
-    @Override public void stop() { crossing = null; }
+    @Override public void stop() { wallPath.reset(); }
 
     @Override public void tick() {
         NexusAccess nexus = combatant.getNexus();
@@ -77,30 +79,7 @@ public final class WildfireNexusGoal extends Goal {
     }
 
     private Vec3 flightTarget(Vec3 target, BlockPos nexusPos) {
-        if (crossing != null) {
-            if (mob.distanceToSqr(crossing.x, mob.getY(), crossing.z) > 2.25D
-                    || mob.getY() < crossing.y - 1.5D) return crossing;
-            crossing = null;
-        }
-        BlockHitResult hit = clip(new Vec3(target.x, mob.getEyeY(), target.z));
-        if (hit.getType() != HitResult.Type.BLOCK
-                || hit.getBlockPos().equals(nexusPos)) return target.add(0, 2, 0);
-        BlockPos wall = hit.getBlockPos();
-        for (int y = Math.max(wall.getY() + 1, mob.blockPosition().getY());
-                y < mob.level().getMaxY() - 1; y++) {
-            BlockPos lower = new BlockPos(wall.getX(), y, wall.getZ());
-            if (mob.level().getBlockState(lower).getCollisionShape(
-                            mob.level(), lower).isEmpty()
-                    && mob.level().getBlockState(lower.above()).getCollisionShape(
-                            mob.level(), lower.above()).isEmpty()) {
-                Vec3 across = target.subtract(Vec3.atCenterOf(wall))
-                        .multiply(1, 0, 1);
-                if (across.lengthSqr() > 0) across = across.normalize().scale(4);
-                return crossing = new Vec3(wall.getX() + .5 + across.x,
-                        y + 1, wall.getZ() + .5 + across.z);
-            }
-        }
-        return target.add(0, 2, 0);
+        return wallPath.findTarget(target, nexusPos);
     }
 
     @Nullable private Vec3 shotTarget(Vec3 target, BlockPos nexusPos) {
