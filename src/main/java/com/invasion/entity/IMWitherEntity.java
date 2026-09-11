@@ -2,6 +2,7 @@ package com.invasion.entity;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.IHasNexus;
@@ -12,6 +13,7 @@ import com.invasion.util.math.PosUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
@@ -131,7 +133,10 @@ public final class IMWitherEntity extends WitherBoss
 
     @Override
     public boolean canAttack(net.minecraft.world.entity.LivingEntity target) {
-        return !(target instanceof Combatant<?>) && super.canAttack(target);
+        return !(target instanceof Combatant<?>)
+                && (!(target instanceof Mob mob)
+                        || !ConfiguredModMobs.isInvasionAlly(mob))
+                && super.canAttack(target);
     }
 
     public void setMergedHealth(double health) {
