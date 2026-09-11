@@ -34,14 +34,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.EnumSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import com.invasion.nexus.Combatant;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -73,6 +77,7 @@ import com.invasion.entity.SkeletonArrowEntity;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
@@ -87,6 +92,8 @@ public final class ConfiguredModMobs {
             .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Identifier, Entry> ENTRIES = new LinkedHashMap<>();
+    private static final Map<ServerLevel, Set<Mob>> TRACKED_MOBS =
+            new WeakHashMap<>();
     private static boolean loaded;
     private static final String NEXUS_OWNER = "invmodConfiguredNexus";
     private static final String STOLEN_BLOCK = "invmodStolenBlock";
@@ -96,6 +103,7 @@ public final class ConfiguredModMobs {
 
     public static void bootstrap() {
         NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityJoin);
+        NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityLeave);
         NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onLivingDeath);
         NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onEntityTick);
         NeoForge.EVENT_BUS.addListener(ConfiguredModMobs::onLevelTick);
@@ -105,8 +113,7 @@ public final class ConfiguredModMobs {
     public static void cleanupNexusMobs(ServerLevel level, NexusAccess nexus) {
         String owner = nexus.getUuid().toString();
         List<Mob> removals = new ArrayList<>();
-        for (var entity : level.getAllEntities()) {
-            if (!(entity instanceof Mob mob) || mob instanceof Combatant<?>) continue;
+        for (Mob mob : trackedMobs(level)) {
             String binding = mob.getPersistentData().getStringOr(NEXUS_OWNER, "");
             if (owner.equals(binding) || binding.isEmpty() && isActive(mob.getType())) {
                 removals.add(mob);
@@ -119,8 +126,11 @@ public final class ConfiguredModMobs {
     private static void onLevelTick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
         List<Mob> removals = new ArrayList<>();
-        for (var entity : level.getAllEntities()) {
-            if (!(entity instanceof Mob mob) || mob instanceof Combatant<?>) continue;
+        for (Mob mob : trackedMobs(level)) {
+            if (!mob.isAlive() || mob.isRemoved()) {
+                untrack(level, mob);
+                continue;
+            }
             String binding = mob.getPersistentData().getStringOr(NEXUS_OWNER, "");
             if (!binding.isEmpty()) {
                 NexusAccess owner = null;
@@ -396,15 +406,20 @@ public final class ConfiguredModMobs {
     }
 
     private static void onEntityJoin(EntityJoinLevelEvent event) {
-        if (!(event.getLevel() instanceof ServerLevel)
+        if (!(event.getLevel() instanceof ServerLevel level)
                 || !(event.getEntity() instanceof Mob mob)) return;
         Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
         Entry entry;
         synchronized (ConfiguredModMobs.class) {
             entry = ENTRIES.get(id);
         }
-        if (entry == null || entry.mode() != Mode.ACTIVE
-                || !isExternalMonster(id, mob.getType())) return;
+        boolean active = entry != null && entry.mode() == Mode.ACTIVE
+                && isExternalMonster(id, mob.getType());
+        if (active || mob.getPersistentData().contains(NEXUS_OWNER)) {
+            TRACKED_MOBS.computeIfAbsent(level, ignored ->
+                    Collections.newSetFromMap(new IdentityHashMap<>())).add(mob);
+        }
+        if (!active) return;
         if (mob.fireImmune()) {
             mob.setPathfindingMalus(PathType.LAVA, 0.0F);
         }
@@ -416,6 +431,26 @@ public final class ConfiguredModMobs {
         mob.goalSelector.addGoal(2, new ConfiguredTerrainGoal(mob));
         mob.goalSelector.addGoal(3, new ClimbNexusLadderGoal(mob));
         mob.goalSelector.addGoal(4, new GoToNexusGoal(mob));
+    }
+
+    private static void onEntityLeave(EntityLeaveLevelEvent event) {
+        if (event.getLevel() instanceof ServerLevel level
+                && event.getEntity() instanceof Mob mob) {
+            untrack(level, mob);
+        }
+    }
+
+    private static List<Mob> trackedMobs(ServerLevel level) {
+        Set<Mob> mobs = TRACKED_MOBS.get(level);
+        return mobs == null ? List.of() : List.copyOf(mobs);
+    }
+
+    private static void untrack(ServerLevel level, Mob mob) {
+        Set<Mob> mobs = TRACKED_MOBS.get(level);
+        if (mobs != null) {
+            mobs.remove(mob);
+            if (mobs.isEmpty()) TRACKED_MOBS.remove(level);
+        }
     }
 
     private static void onLivingDeath(LivingDeathEvent event) {
