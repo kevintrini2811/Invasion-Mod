@@ -10,6 +10,7 @@ import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.IMCivilianTargetHandler;
+import com.invasion.entity.ItemSearchScheduler;
 import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.mixin.PhantomAccessor;
 import net.minecraft.util.Mth;
@@ -497,7 +498,7 @@ public final class ConfiguredModMobs {
             mob.clearFire();
         }
         restoreStolenBlock(mob);
-        if (mob.tickCount % 15 == 0) {
+        if (ItemSearchScheduler.shouldSearch(mob)) {
             pickUpAllowedEquipment(mob, level);
         }
     }
