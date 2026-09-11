@@ -233,16 +233,17 @@ public class InvasionMod {
 	}
 
 	private void blockPlaced(BlockEvent.EntityPlaceEvent event) {
-		if (event.getEntity() instanceof ServerPlayer && SERVER != null) {
-			SERVER.getAllLevels().forEach(level -> WorldNexusStorage.of(level).recordPlayerBlockPlacement());
+		if (event.getEntity() instanceof ServerPlayer
+				&& event.getLevel() instanceof ServerLevel level) {
+			WorldNexusStorage.of(level).recordPlayerBlockPlacement();
 		}
 	}
 
 	private void livingDeath(LivingDeathEvent event) {
-		if (!(event.getEntity() instanceof net.minecraft.world.entity.Mob)
-				|| !(event.getSource().getEntity() instanceof ServerPlayer)
-				|| SERVER == null) return;
+		if (!(event.getEntity() instanceof net.minecraft.world.entity.Mob mob)
+				|| !(mob.level() instanceof ServerLevel level)
+				|| !(event.getSource().getEntity() instanceof ServerPlayer)) return;
 		boolean ranged = event.getSource().getDirectEntity() instanceof net.minecraft.world.entity.projectile.Projectile;
-		SERVER.getAllLevels().forEach(level -> WorldNexusStorage.of(level).recordPlayerMobKill(ranged));
+		WorldNexusStorage.of(level).recordPlayerMobKill(ranged);
 	}
 }
