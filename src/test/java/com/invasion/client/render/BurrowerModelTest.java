@@ -11,6 +11,42 @@ import org.junit.jupiter.api.Test;
 
 class BurrowerModelTest {
     @Test
+    void verticalQuarterCirclesFollowTangentsInEveryHorizontalDirection() {
+        ModelPart root = BurrowerModel.createBodyLayer().bakeRoot();
+        BurrowerModel model = new BurrowerModel(root);
+        for (int bearing = 0; bearing < 8; bearing++) {
+            double yaw = bearing * Math.PI / 4;
+            for (int sign : new int[] {-1, 1}) {
+                for (boolean descending : new boolean[] {false, true}) {
+                    BurrowerRenderState state = new BurrowerRenderState();
+                    state.hasTrackedSegments = true;
+                    for (int i = 0; i < state.segments.length; i++) {
+                        int step = descending ? state.segments.length - 1 - i : i;
+                        double pitch = sign * step * Math.PI / 32;
+                        state.segments[i] = new PosRotate3D(
+                                new Vec3(Math.cos(yaw) * Math.sin(pitch),
+                                        64 - Math.cos(pitch), Math.sin(yaw) * Math.sin(pitch)),
+                                new Vector3f(0, (float) -yaw, (float) pitch));
+                    }
+                    model.setupAnim(state);
+                    for (int i = 0; i < state.segments.length; i++) {
+                        ModelPart part = root.getChild("segment_" + i);
+                        Vector3f normal = new Vector3f(1, 0, 0).rotate(
+                                new Quaternionf().rotationZYX(part.zRot, part.yRot, part.xRot));
+                        normal.mul(-1, -1, 1);
+                        double pitch = state.segments[i].rotation().z();
+                        double alignment = normal.x * Math.cos(yaw) * Math.cos(pitch)
+                                + normal.y * Math.sin(pitch)
+                                + normal.z * Math.sin(yaw) * Math.cos(pitch);
+                        assertEquals(1, Math.abs(alignment), 1.0E-6,
+                                "Vertical fan must follow the tangent at bearing " + bearing);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void segmentPlateNormalsFollowTangentsAroundBothQuarterCircles() {
         ModelPart root = BurrowerModel.createBodyLayer().bakeRoot();
         BurrowerModel model = new BurrowerModel(root);
