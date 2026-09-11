@@ -81,6 +81,7 @@ import com.invasion.item.InvasionSpawnEggItem;
 public class EntityIMZombie extends AbstractIMZombieEntity {
     private static final float TERRAIN_REACH = 3.0F;
     private static final double TERRAIN_REACH_SQR = TERRAIN_REACH * TERRAIN_REACH;
+    private static final int TERRAIN_JOB_RETRY_DELAY = 20;
     private static final EntityDataAccessor<Boolean> BABY =
             SynchedEntityData.defineId(
                     EntityIMZombie.class, EntityDataSerializers.BOOLEAN);
@@ -119,6 +120,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // This also prevents an entire cobblestone ramp from being placed remotely.
     private final TerrainModifier terrainModifier = new TerrainModifier(this, TERRAIN_REACH);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
+    private int nextTerrainJobTick;
     private static AttributeSupplier.Builder createBaseAttributes() {
         return Zombie.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.19F)
@@ -358,7 +360,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         terrainModifier.onUpdate();
 
         if (!level().isClientSide()) {
-            if (!terrainModifier.isBusy()) {
+            if (!terrainModifier.isBusy() && tickCount >= nextTerrainJobTick) {
                 // erst schräg nach oben versuchen
                 if (!tryDigUpToNexus()) {
                     // sonst ggf. nach unten
@@ -475,11 +477,14 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         final Direction rampDir = dir;
         final int rampSteps = steps;
 
-        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
+        boolean submitted = terrainModifier.submitJob(mobPos, this::onTerrainJobFinished, pos ->
                 terrainBuilder.askBuildRampUp(pos, rampDir, rampSteps)
                         .filter(entry -> getEyePosition().distanceToSqr(PosUtils.center(entry.pos()))
                                 <= TERRAIN_REACH_SQR)
         );
+        if (!submitted) {
+            delayTerrainJobRetry();
+        }
 
         return true;
     }
@@ -539,9 +544,20 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         final int shaftDepth = depth;
 
         // Job an TerrainModifier übergeben
-        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
+        boolean submitted = terrainModifier.submitJob(mobPos, this::onTerrainJobFinished, pos ->
                 terrainBuilder.askDigShaftDown(pos, shaftDepth)
         );
+        if (!submitted) {
+            delayTerrainJobRetry();
+        }
+    }
+
+    private void onTerrainJobFinished(Notifiable.Status status) {
+        delayTerrainJobRetry();
+    }
+
+    private void delayTerrainJobRetry() {
+        nextTerrainJobTick = tickCount + TERRAIN_JOB_RETRY_DELAY;
     }
 
 
