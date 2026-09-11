@@ -1,8 +1,6 @@
 package com.invasion.entity;
 
 import java.util.Arrays;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 
@@ -42,6 +40,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class BurrowerEntity extends IMMobEntity implements Miner {
     public static final int NUMBER_OF_SEGMENTS = 16;
+    private static final int CLIENT_HISTORY_CAPACITY = 256;
+    private static final double SEGMENT_SPACING = 0.20D;
 
     private static final EntityDataAccessor<Vector3f> HEAD_ROTATION =
             SynchedEntityData.defineId(BurrowerEntity.class, EntityDataSerializers.VECTOR3);
@@ -50,7 +50,10 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
 
     private final PosRotate3D[] segments3D = new PosRotate3D[NUMBER_OF_SEGMENTS];
     private final PosRotate3D[] segments3DLastTick = new PosRotate3D[NUMBER_OF_SEGMENTS];
-    private final Deque<Vec3> clientMovementHistory = new ArrayDeque<>();
+    private final Vec3[] clientMovementHistory = new Vec3[CLIENT_HISTORY_CAPACITY];
+    private final Vec3[] sampledPoints = new Vec3[NUMBER_OF_SEGMENTS + 1];
+    private int clientHistoryWriteIndex;
+    private int clientHistorySize;
     private BurrowerTailEntity tailHitbox;
 
     protected final Vector3f rot = new Vector3f();
@@ -179,19 +182,15 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
     }
 
     private void updateClientSegments() {
-        clientMovementHistory.addLast(position());
-        while (clientMovementHistory.size() > 256) {
-            clientMovementHistory.removeFirst();
-        }
-        Vec3[] history = clientMovementHistory.toArray(Vec3[]::new);
-        Vec3[] sampledPoints = new Vec3[NUMBER_OF_SEGMENTS + 1];
-        for (int i = 0; i < sampledPoints.length; i++) {
-            sampledPoints[i] = sampleClientHistory(history, (i + 1) * 0.20D);
-        }
+        Vec3 currentPosition = position();
+        clientMovementHistory[clientHistoryWriteIndex] = currentPosition;
+        clientHistoryWriteIndex = (clientHistoryWriteIndex + 1) % CLIENT_HISTORY_CAPACITY;
+        clientHistorySize = Math.min(clientHistorySize + 1, CLIENT_HISTORY_CAPACITY);
+        sampleClientHistory();
 
         for (int i = 0; i < NUMBER_OF_SEGMENTS; i++) {
             segments3DLastTick[i] = segments3D[i];
-            Vec3 pointAhead = i == 0 ? position() : sampledPoints[i - 1];
+            Vec3 pointAhead = i == 0 ? currentPosition : sampledPoints[i - 1];
             Vec3 direction = pointAhead.subtract(sampledPoints[i + 1]);
             double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
             float oldYaw = segments3D[i].rotation().y();
@@ -214,20 +213,39 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         return start + amount * delta;
     }
 
-    private Vec3 sampleClientHistory(Vec3[] history, double targetDistance) {
+    private void sampleClientHistory() {
+        int newerIndex = clientHistoryWriteIndex == 0
+                ? CLIENT_HISTORY_CAPACITY - 1 : clientHistoryWriteIndex - 1;
+        Vec3 newer = clientMovementHistory[newerIndex];
+        int sampleIndex = 0;
         double distance = 0.0D;
-        for (int i = history.length - 1; i > 0; i--) {
-            double step = history[i].distanceTo(history[i - 1]);
+        for (int offset = 1; offset < clientHistorySize
+                && sampleIndex < sampledPoints.length; offset++) {
+            int olderIndex = newerIndex == 0
+                    ? CLIENT_HISTORY_CAPACITY - 1 : newerIndex - 1;
+            Vec3 older = clientMovementHistory[olderIndex];
+            double step = newer.distanceTo(older);
             if (step < 1.0E-6D) {
+                newerIndex = olderIndex;
+                newer = older;
                 continue;
             }
-            if (distance + step >= targetDistance) {
-                return history[i].lerp(history[i - 1],
+            double endDistance = distance + step;
+            while (sampleIndex < sampledPoints.length) {
+                double targetDistance = (sampleIndex + 1) * SEGMENT_SPACING;
+                if (targetDistance > endDistance) {
+                    break;
+                }
+                sampledPoints[sampleIndex++] = newer.lerp(older,
                         (targetDistance - distance) / step);
             }
-            distance += step;
+            distance = endDistance;
+            newerIndex = olderIndex;
+            newer = older;
         }
-        return history.length == 0 ? position() : history[0];
+        while (sampleIndex < sampledPoints.length) {
+            sampledPoints[sampleIndex++] = newer;
+        }
     }
 
     private void updateTailHitbox(Vec3 position) {
