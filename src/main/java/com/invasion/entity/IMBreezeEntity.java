@@ -154,6 +154,7 @@ public final class IMBreezeEntity extends Breeze
     }
 
     private void convertToBlaze(ServerLevel level) {
+        NexusAccess activeNexus = getNexus();
         IMBlazeEntity blaze = InvEntities.BLAZE.create(level);
         if (blaze == null) {
             return;
@@ -164,7 +165,7 @@ public final class IMBreezeEntity extends Breeze
         blaze.setCustomNameVisible(isCustomNameVisible());
         blaze.setNoAi(isNoAi());
         blaze.setCanPickUpLoot(canPickUpLoot());
-        blaze.setNexus(getNexus());
+        blaze.getPersistentData().merge(getPersistentData().copy());
         if (isPersistenceRequired()) {
             blaze.setPersistenceRequired();
         }
@@ -177,8 +178,12 @@ public final class IMBreezeEntity extends Breeze
         if (!level.addFreshEntity(blaze)) {
             return;
         }
+        // Conversion replaces this wave slot. Unbind the Breeze before discard
+        // so its removal does not enqueue another copy for respawning.
+        setNexus(null);
         stopRiding();
         discard();
+        blaze.setNexus(activeNexus);
         if (vehicle != null && !vehicle.isRemoved()) {
             blaze.startRiding(vehicle);
         }
