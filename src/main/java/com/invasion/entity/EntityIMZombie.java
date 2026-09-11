@@ -81,7 +81,8 @@ import com.invasion.item.InvasionSpawnEggItem;
 public class EntityIMZombie extends AbstractIMZombieEntity {
     private static final float TERRAIN_REACH = 3.0F;
     private static final double TERRAIN_REACH_SQR = TERRAIN_REACH * TERRAIN_REACH;
-    private static final int TERRAIN_JOB_RETRY_DELAY = 20;
+    private static final int TERRAIN_JOB_RETRY_DELAY = 100;
+    private static final int TERRAIN_JOB_RETRY_JITTER = 40;
     private static final EntityDataAccessor<Boolean> BABY =
             SynchedEntityData.defineId(
                     EntityIMZombie.class, EntityDataSerializers.BOOLEAN);
@@ -557,7 +558,8 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     private void delayTerrainJobRetry() {
-        nextTerrainJobTick = tickCount + TERRAIN_JOB_RETRY_DELAY;
+        nextTerrainJobTick = tickCount + TERRAIN_JOB_RETRY_DELAY
+                + getRandom().nextInt(TERRAIN_JOB_RETRY_JITTER);
     }
 
 
