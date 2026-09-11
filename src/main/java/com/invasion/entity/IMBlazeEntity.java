@@ -146,8 +146,7 @@ public final class IMBlazeEntity extends Blaze
     private final class AttackNexusGoal extends Goal {
         private static final double ATTACK_RANGE_SQUARED = 32.0D * 32.0D;
         private int attackCooldown;
-        @Nullable
-        private Vec3 wallCrossingTarget;
+        private final FlyingWallPath wallPath = new FlyingWallPath(IMBlazeEntity.this);
 
         private AttackNexusGoal() {
             setFlags(java.util.EnumSet.of(Flag.MOVE, Flag.LOOK));
@@ -170,7 +169,7 @@ public final class IMBlazeEntity extends Blaze
 
         @Override
         public void stop() {
-            wallCrossingTarget = null;
+            wallPath.reset();
         }
 
         @Override
@@ -222,55 +221,7 @@ public final class IMBlazeEntity extends Blaze
 
         private Vec3 findFlightTarget(
                 Vec3 nexusTarget, net.minecraft.core.BlockPos nexusPos) {
-            if (wallCrossingTarget != null) {
-                double horizontalDistanceSquared =
-                        distanceToSqr(wallCrossingTarget.x, getY(), wallCrossingTarget.z);
-                if (horizontalDistanceSquared > 1.5D * 1.5D
-                        || getY() < wallCrossingTarget.y - 1.5D) {
-                    return wallCrossingTarget;
-                }
-                wallCrossingTarget = null;
-            }
-
-            BlockHitResult hit = findWallHit(nexusTarget);
-            if (hit.getType() != HitResult.Type.BLOCK
-                    || hit.getBlockPos().equals(nexusPos)) {
-                return nexusTarget.add(0.0D, 2.0D, 0.0D);
-            }
-
-            net.minecraft.core.BlockPos wall = hit.getBlockPos();
-            int startY = Math.max(wall.getY() + 1, blockPosition().getY());
-            for (int y = startY; y < level().getMaxY() - 1; y++) {
-                net.minecraft.core.BlockPos lower = new net.minecraft.core.BlockPos(
-                        wall.getX(), y, wall.getZ());
-                net.minecraft.core.BlockPos upper = lower.above();
-                if (level().getBlockState(lower)
-                                .getCollisionShape(level(), lower).isEmpty()
-                        && level().getBlockState(upper)
-                                .getCollisionShape(level(), upper).isEmpty()) {
-                    Vec3 acrossWall = nexusTarget.subtract(Vec3.atCenterOf(wall));
-                    acrossWall = new Vec3(acrossWall.x, 0.0D, acrossWall.z);
-                    if (acrossWall.lengthSqr() > 0.0D) {
-                        // Keep flying beyond the edge instead of immediately
-                        // descending as soon as the top becomes visible.
-                        acrossWall = acrossWall.normalize().scale(4.0D);
-                    }
-                    wallCrossingTarget = new Vec3(
-                            wall.getX() + 0.5D + acrossWall.x,
-                            y + 1.0D,
-                            wall.getZ() + 0.5D + acrossWall.z);
-                    return wallCrossingTarget;
-                }
-            }
-            return nexusTarget.add(0.0D, 2.0D, 0.0D);
-        }
-
-        private BlockHitResult findWallHit(Vec3 nexusTarget) {
-            Vec3 horizontalTarget = new Vec3(
-                    nexusTarget.x, getEyeY(), nexusTarget.z);
-            return level().clip(new ClipContext(
-                    getEyePosition(), horizontalTarget, ClipContext.Block.COLLIDER,
-                    ClipContext.Fluid.NONE, IMBlazeEntity.this));
+            return wallPath.findTarget(nexusTarget, nexusPos);
         }
 
         @Nullable
