@@ -34,7 +34,6 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     static final float MAX_TURN_RADIANS = Mth.DEG_TO_RAD * 5.0F;
     private static final double FINAL_NODE_DISTANCE = 0.10D;
     private Vec3 movementDirection = Vec3.ZERO;
-    private Vec3 movementPosition;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
 
@@ -132,9 +131,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     @Override
     protected PosRotate3D entityPositionAtParam(int time) {
-        Vec3 desiredDirection = Vec3.atCenterOf(nextNode.asBlockPos())
-                .subtract(Vec3.atCenterOf(activeNode.asBlockPos()));
-        double stepDistance = desiredDirection.lengthSqr() < 1.0E-6D
+        Vec3 desiredDirection = Vec3.atBottomCenterOf(nextNode.asBlockPos())
+                .subtract(theEntity.position());
+        double stepDistance = nextNode == activeNode
                 ? 0
                 : timePerTick;
         movementDirection = steerDirection(
@@ -142,7 +141,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 desiredDirection,
                 MAX_TURN_RADIANS
         );
-        movementPosition = movementPosition.add(movementDirection.scale(stepDistance));
+        // Never accumulate a virtual position through collisions or path replacements.
+        // The only requested displacement is forward along the bounded heading.
+        Vec3 movementPosition = theEntity.position().add(movementDirection.scale(stepDistance));
         double horizontal = Math.sqrt(
                 movementDirection.x * movementDirection.x
                         + movementDirection.z * movementDirection.z
@@ -158,7 +159,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     @Override
     protected boolean isReadyForNextNode(int ticks) {
         double distance = theEntity.position().distanceTo(
-                Vec3.atCenterOf(nextNode.asBlockPos())
+                Vec3.atBottomCenterOf(nextNode.asBlockPos())
         );
         if (path.getNextNodeIndex() + 1 >= path.getNodeCount() - 1) {
             return distance <= FINAL_NODE_DISTANCE;
@@ -187,7 +188,8 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     @Override
     protected void doMovementTo(int time) {
         PosRotate3D movePos = entityPositionAtParam(time);
-        theEntity.move(MoverType.SELF, movePos.position().subtract(theEntity.position()));
+        Vec3 previousPosition = theEntity.position();
+        theEntity.move(MoverType.SELF, movePos.position().subtract(previousPosition));
         ((BurrowerEntity) theEntity).setHeadRotation(movePos);
 
         if (!waitingForNotify
@@ -205,8 +207,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
             nodeChanged = false;
         }
 
-        if (theEntity.distanceToSqr(movePos.position()) < minMoveToleranceSq) {
-            updateSegments(movePos);
+        // Feed the existing follow logic the path actually travelled, including clipping.
+        if (theEntity.position().distanceToSqr(previousPosition) > 1.0E-10D) {
+            updateSegments(new PosRotate3D(theEntity.position(), movePos.rotation()));
             timeParam = time;
             ticksStuck--;
         } else {
@@ -319,12 +322,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         activeNode = path.getNode(0);
         nextNode = path.getNode(1);
         if (movementDirection.lengthSqr() < 1.0E-6D) {
-            movementPosition = Vec3.atCenterOf(activeNode.asBlockPos());
-            movementDirection = Vec3.atCenterOf(nextNode.asBlockPos())
-                    .subtract(movementPosition)
-                    .normalize();
-        } else {
-            movementPosition = theEntity.position();
+            // Spawned entities already have a heading; a new path must not snap it.
+            double yaw = theEntity.getYRot() * Mth.DEG_TO_RAD;
+            movementDirection = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
         }
         timeParam = 0;
         nodeActionFinished = ActionablePathNode.getAction(activeNode) == PathAction.NONE;
@@ -347,7 +347,10 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 .normalize();
         double angle = Math.acos(Mth.clamp(incoming.dot(outgoing), -1.0D, 1.0D));
         double turnRadius = timePerTick / MAX_TURN_RADIANS;
-        return Math.max(FINAL_NODE_DISTANCE, turnRadius * Math.tan(angle * 0.5D));
+        // Short edges and reversals must not consume distant waypoints immediately.
+        double edgeLength = activeNode.distanceTo(nextNode);
+        return Math.max(FINAL_NODE_DISTANCE,
+                Math.min(edgeLength * 0.5D, turnRadius * Math.tan(angle * 0.5D)));
     }
 
     static Vec3 steerDirection(Vec3 current, Vec3 desired, float maxTurnRadians) {
