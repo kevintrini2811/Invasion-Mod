@@ -24,6 +24,7 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 /** Enforces the lifetime shared by every hostile Nexus-bound IM mob. */
 public final class NexusBoundMobLifecycle {
     private static final int MAX_DEATHS_PER_TICK = 10;
+    private static final int LIFECYCLE_CHECK_INTERVAL = 20;
     private static final int MAX_STATIONARY_TICKS = 20 * 10;
     private static final Map<ServerLevel, CleanupQueue> CLEANUP_QUEUES =
             new WeakHashMap<>();
@@ -39,22 +40,23 @@ public final class NexusBoundMobLifecycle {
 
     /** Queues the loaded hostile mobs belonging to a failed Nexus. */
     public static void schedule(ServerLevel level, NexusAccess nexus) {
-        for (Combatant<?> combatant : BoundIMMobRegistry.bound(level)) {
+        BoundIMMobRegistry.forEachBound(level, combatant -> {
             if (combatant.getNexus() == nexus) {
                 enqueue(level, combatant, nexus);
             }
-        }
+        });
     }
 
     private static void tick(LevelTickEvent.Post event) {
         if (!(event.getLevel() instanceof ServerLevel level)) {
             return;
         }
-        for (Combatant<?> combatant : BoundIMMobRegistry.bound(level)) {
+        BoundIMMobRegistry.forEachBoundMaintenanceSlice(
+                level, level.getGameTime(), combatant -> {
             LivingEntity living = combatant.asEntity();
             if (living instanceof IMWolfEntity
                     || !combatant.getNexusHandle().hasBinding()) {
-                continue;
+                return;
             }
             NexusAccess nexus = combatant.getNexus();
             if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
@@ -62,7 +64,7 @@ public final class NexusBoundMobLifecycle {
             } else {
                 tickStationaryPathRecovery(combatant, living, nexus);
             }
-        }
+        });
         drain(level);
     }
 
@@ -105,7 +107,8 @@ public final class NexusBoundMobLifecycle {
             state.ticks = 0;
             return;
         }
-        if (++state.ticks < MAX_STATIONARY_TICKS) {
+        state.ticks += LIFECYCLE_CHECK_INTERVAL;
+        if (state.ticks < MAX_STATIONARY_TICKS) {
             return;
         }
 

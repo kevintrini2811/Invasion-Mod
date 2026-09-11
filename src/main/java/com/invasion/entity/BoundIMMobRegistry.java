@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.Consumer;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +25,7 @@ import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
 
 /** Index of loaded IM combatants, avoiding repeated full-level entity scans. */
 public final class BoundIMMobRegistry {
+    private static final int MAINTENANCE_BUCKET_COUNT = 20;
     private static final Map<ServerLevel, LevelEntries> LEVELS =
             new WeakHashMap<>();
 
@@ -46,8 +48,10 @@ public final class BoundIMMobRegistry {
         entries.loaded.add(combatant);
         if (nexus == null) {
             entries.bound.remove(combatant);
+            entries.maintenanceBucket(combatant).remove(combatant);
         } else {
             entries.bound.add(combatant);
+            entries.maintenanceBucket(combatant).add(combatant);
         }
     }
 
@@ -74,14 +78,27 @@ public final class BoundIMMobRegistry {
         return result;
     }
 
-    public static synchronized List<Combatant<?>> bound(ServerLevel level) {
+    public static synchronized void forEachBound(
+            ServerLevel level, Consumer<Combatant<?>> action) {
         LevelEntries entries = LEVELS.get(level);
-        return entries == null ? List.of() : List.copyOf(entries.bound);
+        if (entries != null) {
+            entries.bound.forEach(action);
+        }
+    }
+
+    /** Visits one stable slice so every bound mob is checked once per second. */
+    public static synchronized void forEachBoundMaintenanceSlice(
+            ServerLevel level, long gameTime, Consumer<Combatant<?>> action) {
+        LevelEntries entries = LEVELS.get(level);
+        if (entries != null) {
+            int bucket = Math.floorMod(gameTime, MAINTENANCE_BUCKET_COUNT);
+            entries.maintenanceBuckets.get(bucket).forEach(action);
+        }
     }
 
     public static List<Combatant<?>> activeBound(ServerLevel level) {
         List<Combatant<?>> result = new ArrayList<>();
-        for (Combatant<?> combatant : bound(level)) {
+        forEachBound(level, combatant -> {
             Entity entity = combatant.asEntity();
             NexusAccess nexus = combatant.getNexus();
             if (entity.isAlive() && !entity.isRemoved()
@@ -89,7 +106,7 @@ public final class BoundIMMobRegistry {
                     && nexus.isActive()) {
                 result.add(combatant);
             }
-        }
+        });
         return result;
     }
 
@@ -121,6 +138,7 @@ public final class BoundIMMobRegistry {
         if (entries != null) {
             entries.loaded.remove(combatant);
             entries.bound.remove(combatant);
+            entries.maintenanceBucket(combatant).remove(combatant);
             if (entries.loaded.isEmpty()) {
                 LEVELS.remove(level);
             }
@@ -132,5 +150,22 @@ public final class BoundIMMobRegistry {
                 new IdentityHashMap<>());
         private final Set<Combatant<?>> bound = Collections.newSetFromMap(
                 new IdentityHashMap<>());
+        private final List<Set<Combatant<?>>> maintenanceBuckets =
+                createMaintenanceBuckets();
+
+        private Set<Combatant<?>> maintenanceBucket(Combatant<?> combatant) {
+            int bucket = Math.floorMod(System.identityHashCode(combatant),
+                    MAINTENANCE_BUCKET_COUNT);
+            return maintenanceBuckets.get(bucket);
+        }
+
+        private static List<Set<Combatant<?>>> createMaintenanceBuckets() {
+            List<Set<Combatant<?>>> buckets = new ArrayList<>(
+                    MAINTENANCE_BUCKET_COUNT);
+            for (int i = 0; i < MAINTENANCE_BUCKET_COUNT; i++) {
+                buckets.add(Collections.newSetFromMap(new IdentityHashMap<>()));
+            }
+            return buckets;
+        }
     }
 }
