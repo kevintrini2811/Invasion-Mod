@@ -2582,9 +2582,9 @@
       "stairing": false,
       "bridging": true,
       "towering": true,
-      "engineer_tower": false,
+      "engineer_tower": true,
       "enderman_block_theft": false,
-      "building_block": "minecraft:cobblestone"
+      "building_block": "minecraft:bricks"
     },
     "themes": [
       "SWARM",
@@ -2607,9 +2607,9 @@
       "stairing": false,
       "bridging": true,
       "towering": true,
-      "engineer_tower": false,
+      "engineer_tower": true,
       "enderman_block_theft": false,
-      "building_block": "minecraft:cobblestone"
+      "building_block": "minecraft:bricks"
     },
     "themes": [
       "UNDERGROUND",
