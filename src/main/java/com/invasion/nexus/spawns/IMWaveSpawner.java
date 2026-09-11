@@ -764,13 +764,14 @@ public class IMWaveSpawner implements Spawner {
 
 	private void generateSpawnPoints() {
 		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld());
-		zombie.setNexus(nexus);
+		// Probes need Nexus-aware spawn rules, but must not enter the loaded-entity registry.
+		zombie.getNexusHandle().set(nexus);
 		IMDrownedEntity drowned = InvEntities.DROWNED.create(
 				nexus.getWorld());
-		drowned.setNexus(nexus);
+		drowned.getNexusHandle().set(nexus);
 		EntityIMZombiePigman zombiePigman = InvEntities.ZOMBIE_PIGMAN.create(
 				nexus.getWorld());
-		zombiePigman.setNexus(nexus);
+		zombiePigman.getNexusHandle().set(nexus);
 		List<SpawnPoint> spawnPoints = new ArrayList<>();
 		BlockPos origin = nexus.getOrigin();
 		BlockPos.MutableBlockPos mutable = origin.mutable();
