@@ -28,17 +28,12 @@ public final class BurrowerRenderer
         super.extractRenderState(entity, state, tickDelta);
         state.hasTrackedSegments = false;
         state.segments[0] = new PosRotate3D(
-                entity.position(),
+                entity.getPosition(tickDelta),
                 PosRotate3D.lerp(tickDelta, entity.getPrevRotation(), entity.getRotation(), new Vector3f()));
         for (int i = 0; i < BurrowerEntity.NUMBER_OF_SEGMENTS; i++) {
             state.segments[i + 1] = entity.getSegments3DLastTick()[i]
                     .lerp(tickDelta, entity.getSegments3D()[i]);
             state.hasTrackedSegments |= state.segments[i + 1].position().lengthSqr() > 1.0E-6D;
-        }
-        if (state.hasTrackedSegments) {
-            state.segments[0] = new PosRotate3D(
-                    entity.position(),
-                    state.segments[1].rotation());
         }
     }
 

@@ -180,6 +180,17 @@ public class BurrowerEntity extends IMMobEntity implements Miner {
         }
     }
 
+    @Override
+    public void travel(Vec3 input) {
+        if (!level().isClientSide() && !getNavigation().isDone()) {
+            // BurrowerNavigation already moves the head this tick, including climbs.
+            // A second vanilla travel step would add drift and gravity to that heading.
+            setDeltaMovement(Vec3.ZERO);
+            return;
+        }
+        super.travel(input);
+    }
+
     private void updateClientSegments() {
         Vec3 currentPosition = position();
         clientMovementHistory[clientHistoryWriteIndex] = currentPosition;
