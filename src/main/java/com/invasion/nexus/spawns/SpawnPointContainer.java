@@ -3,6 +3,8 @@ package com.invasion.nexus.spawns;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -16,26 +18,21 @@ import com.invasion.util.math.PolarAngle;
 
 public class SpawnPointContainer {
     private final Map<SpawnType, List<SpawnPoint>> spawnPoints = new EnumMap<>(SpawnType.class);
+    private final Map<SpawnType, Map<Column, Integer>> spawnPointColumns = new EnumMap<>(SpawnType.class);
     private boolean sorted;
     private Random random = new Random();
 
     public void addSpawnPointXZ(SpawnPoint spawnPoint) {
-        boolean foundMatch = false;
         List<SpawnPoint> spawnList = spawnPoints.computeIfAbsent(spawnPoint.type(), i -> new ArrayList<>());
-
-        for (int i = 0; i < spawnList.size(); i++) {
-            SpawnPoint oldPoint = spawnList.get(i);
-            if (oldPoint.columnEquals(spawnPoint)) {
-                if (oldPoint.pos().getY() > spawnPoint.pos().getY()) {
-                    spawnList.set(i, spawnPoint);
-                }
-                foundMatch = true;
-                break;
-            }
-        }
-
-        if (!foundMatch) {
+        Map<Column, Integer> columns = spawnPointColumns.computeIfAbsent(
+                spawnPoint.type(), i -> new HashMap<>());
+        Column column = new Column(spawnPoint.pos().getX(), spawnPoint.pos().getZ());
+        Integer oldIndex = columns.get(column);
+        if (oldIndex == null) {
+            columns.put(column, spawnList.size());
             spawnList.add(spawnPoint);
+        } else if (spawnList.get(oldIndex).pos().getY() > spawnPoint.pos().getY()) {
+            spawnList.set(oldIndex, spawnPoint);
         }
         this.sorted = false;
     }
@@ -54,10 +51,7 @@ public class SpawnPointContainer {
             return null;
         }
 
-        if (!this.sorted) {
-            Collections.sort(spawnList);
-            this.sorted = true;
-        }
+        ensureSorted(spawnType, spawnList);
 
         int start = Collections.binarySearch(spawnList, PolarAngle.of(minAngle));
         if (start < 0) {
@@ -82,23 +76,67 @@ public class SpawnPointContainer {
 
     public List<SpawnPoint> getRandomSpawnPoints(
             SpawnType spawnType, Ints angle, int limit) {
-        List<SpawnPoint> candidates = new ArrayList<>(
-                spawnPoints.getOrDefault(spawnType, List.of()));
-        if (candidates.isEmpty() || limit <= 0) {
+        List<SpawnPoint> spawnList = spawnPoints.getOrDefault(spawnType, List.of());
+        if (spawnList.isEmpty() || limit <= 0) {
             return List.of();
         }
 
         int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
         int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
+        int start = 0;
+        int end = spawnList.size();
+        boolean wraps = false;
         if (maxAngle - minAngle < 360) {
-            candidates.removeIf(point -> minAngle <= maxAngle
-                    ? point.getAngle() < minAngle || point.getAngle() >= maxAngle
-                    : point.getAngle() < minAngle && point.getAngle() >= maxAngle);
+            ensureSorted(spawnType, spawnList);
+            start = insertionPoint(spawnList, minAngle);
+            end = insertionPoint(spawnList, maxAngle);
+            wraps = start > end;
+        }
+
+        int candidateCount = wraps ? spawnList.size() - start + end : end - start;
+        int sampleSize = Math.min(limit, candidateCount);
+        if (sampleSize == 0) {
+            return List.of();
+        }
+
+        HashSet<Integer> offsets = new HashSet<>(sampleSize);
+        for (int j = candidateCount - sampleSize; j < candidateCount; j++) {
+            int offset = random.nextInt(j + 1);
+            if (!offsets.add(offset)) {
+                offsets.add(j);
+            }
+        }
+        List<SpawnPoint> candidates = new ArrayList<>(sampleSize);
+        for (int offset : offsets) {
+            int index = start + offset;
+            if (index >= spawnList.size()) {
+                index -= spawnList.size();
+            }
+            candidates.add(spawnList.get(index));
         }
         Collections.shuffle(candidates, random);
-        return candidates.size() <= limit
-                ? candidates
-                : new ArrayList<>(candidates.subList(0, limit));
+        return candidates;
+    }
+
+    private void ensureSorted(SpawnType spawnType, List<SpawnPoint> spawnList) {
+        if (!sorted) {
+            Collections.sort(spawnList);
+            Map<Column, Integer> columns = spawnPointColumns.get(spawnType);
+            columns.clear();
+            for (int i = 0; i < spawnList.size(); i++) {
+                SpawnPoint point = spawnList.get(i);
+                columns.put(new Column(point.pos().getX(), point.pos().getZ()), i);
+            }
+            sorted = true;
+        }
+    }
+
+    private static int insertionPoint(List<SpawnPoint> spawnList, int angle) {
+        int index = Collections.binarySearch(spawnList, PolarAngle.of(angle));
+        return index < 0 ? -index - 1 : index;
+    }
+
+    private record Column(int x, int z) {
     }
 
     public int getNumberOfSpawnPoints(SpawnType type) {
@@ -113,10 +151,7 @@ public class SpawnPointContainer {
             return spawnList.size();
         }
 
-        if (!sorted) {
-            Collections.sort(spawnList);
-            sorted = true;
-        }
+        ensureSorted(spawnType, spawnList);
 
         int start = Collections.binarySearch(spawnList, PolarAngle.of(minAngle));
         if (start < 0) {
