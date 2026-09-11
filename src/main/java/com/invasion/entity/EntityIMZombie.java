@@ -121,6 +121,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // This also prevents an entire cobblestone ramp from being placed remotely.
     private final TerrainModifier terrainModifier = new TerrainModifier(this, TERRAIN_REACH);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
+    private BlockPos lastTerrainJobPos;
     private int nextTerrainJobTick;
     private static AttributeSupplier.Builder createBaseAttributes() {
         return Zombie.createAttributes()
@@ -361,7 +362,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         terrainModifier.onUpdate();
 
         if (!level().isClientSide()) {
-            if (!terrainModifier.isBusy() && tickCount >= nextTerrainJobTick) {
+            if (!terrainModifier.isBusy() && isTerrainJobRetryReady()) {
                 // erst schräg nach oben versuchen
                 if (!tryDigUpToNexus()) {
                     // sonst ggf. nach unten
@@ -478,14 +479,12 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         final Direction rampDir = dir;
         final int rampSteps = steps;
 
-        boolean submitted = terrainModifier.submitJob(mobPos, this::onTerrainJobFinished, pos ->
+        rememberTerrainJobAttempt(mobPos);
+        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
                 terrainBuilder.askBuildRampUp(pos, rampDir, rampSteps)
                         .filter(entry -> getEyePosition().distanceToSqr(PosUtils.center(entry.pos()))
                                 <= TERRAIN_REACH_SQR)
         );
-        if (!submitted) {
-            delayTerrainJobRetry();
-        }
 
         return true;
     }
@@ -545,19 +544,20 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         final int shaftDepth = depth;
 
         // Job an TerrainModifier übergeben
-        boolean submitted = terrainModifier.submitJob(mobPos, this::onTerrainJobFinished, pos ->
+        rememberTerrainJobAttempt(mobPos);
+        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
                 terrainBuilder.askDigShaftDown(pos, shaftDepth)
         );
-        if (!submitted) {
-            delayTerrainJobRetry();
-        }
     }
 
-    private void onTerrainJobFinished(Notifiable.Status status) {
-        delayTerrainJobRetry();
+    private boolean isTerrainJobRetryReady() {
+        return lastTerrainJobPos == null
+                || !lastTerrainJobPos.equals(blockPosition())
+                || tickCount >= nextTerrainJobTick;
     }
 
-    private void delayTerrainJobRetry() {
+    private void rememberTerrainJobAttempt(BlockPos pos) {
+        lastTerrainJobPos = pos;
         nextTerrainJobTick = tickCount + TERRAIN_JOB_RETRY_DELAY
                 + getRandom().nextInt(TERRAIN_JOB_RETRY_JITTER);
     }
