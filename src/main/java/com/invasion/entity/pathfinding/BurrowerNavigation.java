@@ -25,14 +25,15 @@ import net.minecraft.world.phys.Vec3;
 @Deprecated
 public class BurrowerNavigation extends AbstractParametricNavigator {
     protected Node nextNode;
-    protected Node prevNode;
-
     private final int segmentCount;
     private final float[] stableSegmentYaw;
     private float stableBodyYaw;
     private final Deque<PosRotate3D> movementHistory = new ArrayDeque<>();
     private static final double SEGMENT_SPACING = 0.20D;
     private static final int MAX_HISTORY_SIZE = 512;
+    static final float MAX_TURN_RADIANS = Mth.DEG_TO_RAD * 5.0F;
+    private static final double FINAL_NODE_DISTANCE = 0.10D;
+    private Vec3 movementDirection = Vec3.ZERO;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
 
@@ -122,17 +123,38 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     @Override
     protected PosRotate3D entityPositionAtParam(int time) {
-        float progress = Mth.clamp(time * timePerTick, 0, 1);
-        int activeIndex = path.getNextNodeIndex();
-        Node followingNode = activeIndex + 2 < path.getNodeCount()
-                ? path.getNode(activeIndex + 2)
-                : nextNode;
-        return interpolatePathEdge(progress, prevNode, activeNode, nextNode, followingNode);
+        Vec3 desiredDirection = Vec3.atCenterOf(nextNode.asBlockPos())
+                .subtract(Vec3.atCenterOf(activeNode.asBlockPos()));
+        double stepDistance = desiredDirection.lengthSqr() < 1.0E-6D
+                ? 0
+                : timePerTick;
+        movementDirection = steerDirection(
+                movementDirection,
+                desiredDirection,
+                MAX_TURN_RADIANS
+        );
+        Vec3 position = theEntity.position().add(movementDirection.scale(stepDistance));
+        double horizontal = Math.sqrt(
+                movementDirection.x * movementDirection.x
+                        + movementDirection.z * movementDirection.z
+        );
+        Vector3f rotation = new Vector3f(
+                0,
+                (float) -Math.atan2(movementDirection.z, movementDirection.x),
+                (float) Math.atan2(movementDirection.y, horizontal)
+        );
+        return new PosRotate3D(position, rotation);
     }
 
     @Override
     protected boolean isReadyForNextNode(int ticks) {
-        return ticks * timePerTick >= 1;
+        double distance = theEntity.position().distanceTo(
+                Vec3.atCenterOf(nextNode.asBlockPos())
+        );
+        if (path.getNextNodeIndex() + 1 >= path.getNodeCount() - 1) {
+            return distance <= FINAL_NODE_DISTANCE;
+        }
+        return distance <= turnStartDistance();
     }
 
     @Override
@@ -142,7 +164,6 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
             if (nextIndex < path.getNodeCount()) {
                 timeParam = 0;
                 path.setNextNodeIndex(nextIndex);
-                prevNode = activeNode;
                 activeNode = nextNode;
                 nextNode = nextIndex + 1 < path.getNodeCount()
                         ? path.getNode(nextIndex + 1)
@@ -287,8 +308,12 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         path = newPath;
         path.setNextNodeIndex(0);
         activeNode = path.getNode(0);
-        prevNode = activeNode;
         nextNode = path.getNode(1);
+        if (movementDirection.lengthSqr() < 1.0E-6D) {
+            movementDirection = Vec3.atCenterOf(nextNode.asBlockPos())
+                    .subtract(theEntity.position())
+                    .normalize();
+        }
         timeParam = 0;
         nodeActionFinished = ActionablePathNode.getAction(activeNode) == PathAction.NONE;
         ticksStuck = 0;
@@ -300,40 +325,47 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         return true;
     }
 
-    private PosRotate3D interpolatePathEdge(
-            float progress,
-            Node previous,
-            Node start,
-            Node end,
-            Node following
-    ) {
-        Vec3 p0 = Vec3.atCenterOf(start.asBlockPos());
-        Vec3 p1 = Vec3.atCenterOf(end.asBlockPos());
-        Vec3 tangent0 = Vec3.atCenterOf(end.asBlockPos())
-                .subtract(Vec3.atCenterOf(previous.asBlockPos()))
-                .scale(0.5D);
-        Vec3 tangent1 = Vec3.atCenterOf(following.asBlockPos())
-                .subtract(Vec3.atCenterOf(start.asBlockPos()))
-                .scale(0.5D);
+    private double turnStartDistance() {
+        int followingIndex = path.getNextNodeIndex() + 2;
+        Vec3 incoming = Vec3.atCenterOf(nextNode.asBlockPos())
+                .subtract(Vec3.atCenterOf(activeNode.asBlockPos()))
+                .normalize();
+        Vec3 outgoing = Vec3.atCenterOf(path.getNode(followingIndex).asBlockPos())
+                .subtract(Vec3.atCenterOf(nextNode.asBlockPos()))
+                .normalize();
+        double angle = Math.acos(Mth.clamp(incoming.dot(outgoing), -1.0D, 1.0D));
+        double turnRadius = timePerTick / MAX_TURN_RADIANS;
+        return Math.max(FINAL_NODE_DISTANCE, turnRadius * Math.tan(angle * 0.5D));
+    }
 
-        double t = progress;
-        double t2 = t * t;
-        double t3 = t2 * t;
-        Vec3 position = p0.scale(2 * t3 - 3 * t2 + 1)
-                .add(tangent0.scale(t3 - 2 * t2 + t))
-                .add(p1.scale(-2 * t3 + 3 * t2))
-                .add(tangent1.scale(t3 - t2));
+    static Vec3 steerDirection(Vec3 current, Vec3 desired, float maxTurnRadians) {
+        Vec3 target = desired.normalize();
+        if (target.lengthSqr() < 1.0E-6D) {
+            return current.normalize();
+        }
+        Vec3 heading = current.normalize();
+        if (heading.lengthSqr() < 1.0E-6D) {
+            return target;
+        }
 
-        Vec3 direction = p0.scale(6 * t2 - 6 * t)
-                .add(tangent0.scale(3 * t2 - 4 * t + 1))
-                .add(p1.scale(-6 * t2 + 6 * t))
-                .add(tangent1.scale(3 * t2 - 2 * t));
-        double horizontal = Math.sqrt(direction.x * direction.x + direction.z * direction.z);
-        Vector3f rotation = new Vector3f(
-                0,
-                (float) -Math.atan2(direction.z, direction.x),
-                (float) Math.atan2(direction.y, horizontal)
-        );
-        return new PosRotate3D(position, rotation);
+        double dot = Mth.clamp(heading.dot(target), -1.0D, 1.0D);
+        double angle = Math.acos(dot);
+        if (angle <= maxTurnRadians) {
+            return target;
+        }
+
+        Vec3 axis = heading.cross(target);
+        if (axis.lengthSqr() < 1.0E-6D) {
+            axis = heading.cross(Math.abs(heading.y) < 0.9D
+                    ? new Vec3(0, 1, 0)
+                    : new Vec3(1, 0, 0));
+        }
+        axis = axis.normalize();
+        double cosine = Math.cos(maxTurnRadians);
+        double sine = Math.sin(maxTurnRadians);
+        return heading.scale(cosine)
+                .add(axis.cross(heading).scale(sine))
+                .add(axis.scale(axis.dot(heading) * (1.0D - cosine)))
+                .normalize();
     }
 }
