@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
 import net.minecraft.client.gui.screens.MenuScreens;
 import com.invasion.block.InvBlockEntities;
+import com.invasion.block.BlockMetadata;
 
 public class InvasionModClient implements ClientModInitializer, ModMenuApi {
 
@@ -30,6 +31,8 @@ public class InvasionModClient implements ClientModInitializer, ModMenuApi {
                 (payload, context) -> context.client().execute(() -> NexusHud.update(payload)));
         ClientPlayConnectionEvents.DISCONNECT.register(
                 (handler, client) -> NexusHud.update(com.invasion.network.NexusHudPayload.hidden()));
+        ClientPlayConnectionEvents.JOIN.register(
+                (handler, sender, client) -> BlockMetadata.clearCaches());
         NexusHud.bootstrap();
         InvRenderers.bootstrap();
         com.invasion.compat.FriendsAndFoesCompatibility.registerRenderer();

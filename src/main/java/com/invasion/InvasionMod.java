@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.invasion.block.InvBlocks;
+import com.invasion.block.BlockMetadata;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.VanillaMobSpawnReplacement;
 import com.invasion.entity.NexusBoundMobLifecycle;
@@ -92,6 +93,8 @@ public class InvasionMod implements ModInitializer {
             ConfiguredModMobs.refresh();
             AsyncCompatibility.registerSynchronizedEntities();
         });
+        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register(
+                (server, resourceManager, success) -> BlockMetadata.clearCaches());
 
         ServerLifecycleEvents.SERVER_STOPPED.register((MinecraftServer server) -> {
             ChatUtils.clearServer();
