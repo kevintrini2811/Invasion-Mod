@@ -22,6 +22,7 @@ import com.invasion.item.InvItems;
 import com.invasion.item.InfusedSwordChargeHandler;
 import com.invasion.network.NexusHudPayload;
 import com.invasion.nexus.WorldNexusStorage;
+import com.invasion.nexus.NexusChunkLoader;
 import com.invasion.particle.InvParticles;
 import com.invasion.util.ChatUtils;
 import net.minecraft.resources.Identifier;
@@ -75,6 +76,7 @@ public class InvasionMod {
         modBus.addListener(this::registerPayloads);
         modBus.addListener(this::registerAttributes);
         modBus.addListener(this::addCreativeItems);
+        modBus.addListener(NexusChunkLoader::register);
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
         NeoForge.EVENT_BUS.addListener(this::startLevelTick);
         NeoForge.EVENT_BUS.addListener(this::serverStarted);
