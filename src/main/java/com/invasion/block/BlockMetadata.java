@@ -2,7 +2,9 @@ package com.invasion.block;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 import com.invasion.InvTags;
@@ -130,6 +132,11 @@ public class BlockMetadata {
                 || UNDESTRUCTABLE_BLOCKS.contains(state.getBlock());
     }
 
+    public static void clearCaches() {
+        BLOCK_COSTS.clearCache();
+        BLOCK_STRENGTHS.clearCache();
+    }
+
     public static Optional<Float> getCost(BlockState state) {
         return InvasionMod.getConfig().getBlockCost(state.getBlock()).or(() -> BLOCK_COSTS.get(state));
     }
@@ -161,6 +168,7 @@ public class BlockMetadata {
 
     static final class Lookup<T> {
         private final List<Entry<T>> entries = new ArrayList<>();
+        private volatile Map<Block, Optional<T>> cache = new ConcurrentHashMap<>();
 
         public Lookup<T> put(Block block, T value) {
             entries.add(new Entry<>(b -> b == block, value));
@@ -178,12 +186,20 @@ public class BlockMetadata {
         }
 
         public Optional<T> get(Block block) {
+            return cache.computeIfAbsent(block, this::find);
+        }
+
+        private Optional<T> find(Block block) {
             for (Entry<T> i : entries) {
                 if (i.predicate().test(block)) {
                     return Optional.of(i.value());
                 }
             }
             return Optional.empty();
+        }
+
+        private void clearCache() {
+            cache = new ConcurrentHashMap<>();
         }
 
         record Entry<T>(Predicate<Block> predicate, T value) { }

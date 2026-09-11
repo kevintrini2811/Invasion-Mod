@@ -1,5 +1,6 @@
 package com.invasion;
 
+import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
 import com.invasion.client.InvasionModClient;
 import com.invasion.compat.AsyncCompatibility;
@@ -41,6 +42,7 @@ import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -99,6 +101,7 @@ public class InvasionMod {
         MinecraftForge.EVENT_BUS.addListener(this::blockPlaced);
         MinecraftForge.EVENT_BUS.addListener(this::livingDeath);
         MinecraftForge.EVENT_BUS.addListener(this::fuelBurnTime);
+        MinecraftForge.EVENT_BUS.addListener(this::tagsUpdated);
 
         BoundIMMobRegistry.bootstrap();
         IMMobFriendlyFireHandler.bootstrap();
@@ -184,6 +187,12 @@ public class InvasionMod {
 
     private void fuelBurnTime(FurnaceFuelBurnTimeEvent event) {
         InvItems.fuelBurnTime(event);
+    }
+
+    private void tagsUpdated(TagsUpdatedEvent event) {
+        if (event.shouldUpdateStaticData()) {
+            BlockMetadata.clearCaches();
+        }
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
