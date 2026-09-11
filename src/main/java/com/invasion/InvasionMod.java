@@ -120,14 +120,13 @@ public class InvasionMod implements ModInitializer {
             return net.minecraft.world.entity.player.Player.BedSleepingProblem.OTHER_PROBLEM;
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (!(entity instanceof Mob)
-                    || !(damageSource.getEntity() instanceof ServerPlayer)
-                    || SERVER == null) {
+            if (!(entity instanceof Mob mob)
+                    || !(mob.level() instanceof ServerLevel level)
+                    || !(damageSource.getEntity() instanceof ServerPlayer)) {
                 return;
             }
             boolean ranged = damageSource.getDirectEntity() instanceof Projectile;
-            SERVER.getAllLevels().forEach(level ->
-                    WorldNexusStorage.of(level).recordPlayerMobKill(ranged));
+            WorldNexusStorage.of(level).recordPlayerMobKill(ranged);
         });
         InvBlocks.bootstrap();
         InvItems.bootstrap();

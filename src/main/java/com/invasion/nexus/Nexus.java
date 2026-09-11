@@ -342,7 +342,6 @@ public class Nexus implements ControllableNexusAccess {
                 doContinuous(50);
             }
             storage.setActiveNexus(this);
-            storage.setDirty();
         } catch (WaveSpawnerException e) {
             InvasionMod.LOGGER.error("Exception occured whilst updating invasion", e);
             stop(false);

@@ -1,7 +1,7 @@
 package com.invasion.mixin;
 
-import com.invasion.InvasionMod;
 import com.invasion.nexus.WorldNexusStorage;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
@@ -20,10 +20,9 @@ abstract class BlockItemPlacementMixin {
             CallbackInfoReturnable<InteractionResult> callback) {
         if (!callback.getReturnValue().consumesAction()
                 || !(context.getPlayer() instanceof ServerPlayer player)
-                || InvasionMod.SERVER == null) {
+                || !(player.level() instanceof ServerLevel level)) {
             return;
         }
-        InvasionMod.SERVER.getAllLevels().forEach(level ->
-                WorldNexusStorage.of(level).recordPlayerBlockPlacement());
+        WorldNexusStorage.of(level).recordPlayerBlockPlacement();
     }
 }
