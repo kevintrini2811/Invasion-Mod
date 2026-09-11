@@ -56,6 +56,7 @@ public class IMWaveSpawner implements Spawner {
 	private static final int MIN_SPAWN_POINTS_TO_KEEP_BELOW_HEIGHT_CUTOFF = 20;
 	private static final int HEIGHT_CUTOFF = 35;
 	private static final float SPAWN_POINT_CULL_RATE = 0.3F;
+	private static final int SPAWN_POINT_PROBES_PER_TICK = 256;
 
 	private SpawnPointContainer spawnPointContainer = new SpawnPointContainer();
 	private final List<Combatant<?>> respawnQueue = new ArrayList<>();
@@ -77,6 +78,9 @@ public class IMWaveSpawner implements Spawner {
 	private int spawnRadius;
 	private int successfulSpawns;
 	private long elapsed;
+	private long pendingResumeElapsed = -1L;
+	@Nullable
+	private SpawnPointGeneration spawnPointGeneration;
 
 	public IMWaveSpawner(NexusAccess nexus, int radius) {
 		this.nexus = nexus;
@@ -130,7 +134,7 @@ public class IMWaveSpawner implements Spawner {
 
 	public void beginNextWave(Wave wave) throws WaveSpawnerException {
 		if (!active) {
-			generateSpawnPoints();
+			startSpawnPointGeneration();
 		} else if (debugMode) {
 		    InvasionMod.log("Successful spawns of last wave: " + successfulSpawns);
 		}
@@ -148,20 +152,22 @@ public class IMWaveSpawner implements Spawner {
 	}
 
 	public void spawn(int elapsedMillis) throws WaveSpawnerException {
-		elapsed += elapsedMillis;
 		if (!active) {
 			return;
 		}
+		if (!advanceSpawnPointGeneration()) {
+			return;
+		}
+		finishPendingResume();
+		elapsed += elapsedMillis;
 		processRespawns();
 		if (waveComplete) {
 			return;
 		}
 
 		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
-			generateSpawnPoints();
-			if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
-				throw new WaveSpawnerException("Not enough spawn points for type " + SpawnType.HUMANOID);
-			}
+			startSpawnPointGeneration();
+			return;
 		}
 		currentWave.doNextSpawns(elapsedMillis, this);
 		if (currentWave.isComplete()) {
@@ -173,28 +179,16 @@ public class IMWaveSpawner implements Spawner {
 		long savedElapsed = elapsed;
 		stop();
 		beginNextWave(wave);
-		setPermitSpawns(false);
-		int numberOfSpawns = 0;
-		for (long i = 0; i < savedElapsed; i += 100L) {
-			numberOfSpawns += currentWave.doNextSpawns(100, this);
-		}
-		setPermitSpawns(true);
-		elapsed = savedElapsed;
-		return numberOfSpawns;
+		pendingResumeElapsed = savedElapsed;
+		return 0;
 	}
 
 	public int resumeFromState(int waveNumber) throws WaveSpawnerException {
 		long savedElapsed = elapsed;
 		stop();
 		beginNextWave(waveNumber);
-		setPermitSpawns(false);
-		int numberOfSpawns = 0;
-		for (long i = 0; i < savedElapsed; i += 100L) {
-		    numberOfSpawns += currentWave.doNextSpawns(100, this);
-		}
-		setPermitSpawns(true);
-		elapsed = savedElapsed;
-		return numberOfSpawns;
+		pendingResumeElapsed = savedElapsed;
+		return 0;
 	}
 
     public void stop() {
@@ -205,7 +199,9 @@ public class IMWaveSpawner implements Spawner {
         active = false;
         waveComplete = false;
         permitSpawns = true;
-        respawnQueue.clear();
+	    respawnQueue.clear();
+		spawnPointGeneration = null;
+		pendingResumeElapsed = -1L;
         if (currentWave != null) {
             currentWave.discardPendingSpawns();
             currentWave = null;
@@ -293,6 +289,7 @@ public class IMWaveSpawner implements Spawner {
 
 	public void giveSpawnPoints(SpawnPointContainer spawnPointContainer) {
 		this.spawnPointContainer = spawnPointContainer;
+		this.spawnPointGeneration = null;
 	}
 
 	@Override
@@ -779,7 +776,10 @@ public class IMWaveSpawner implements Spawner {
 		}
 	}
 
-	private void generateSpawnPoints() {
+	private void startSpawnPointGeneration() {
+		if (spawnPointGeneration != null) {
+			return;
+		}
 		EntityIMZombie zombie = InvEntities.ZOMBIE.create(nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
 		// Probes need Nexus-aware spawn rules, but must not enter the loaded-entity registry.
 		zombie.getNexusHandle().set(nexus);
@@ -789,28 +789,19 @@ public class IMWaveSpawner implements Spawner {
 		EntityIMZombiePigman zombiePigman = InvEntities.ZOMBIE_PIGMAN.create(
 				nexus.getWorld(), net.minecraft.world.entity.EntitySpawnReason.EVENT);
 		zombiePigman.getNexusHandle().set(nexus);
-		List<SpawnPoint> spawnPoints = new ArrayList<>();
-		BlockPos origin = nexus.getOrigin();
-		BlockPos.MutableBlockPos mutable = origin.mutable();
+		spawnPointGeneration = new SpawnPointGeneration(zombie, drowned, zombiePigman, nexus.getOrigin());
+	}
 
-		for (int vertical = 0;
-		         Math.abs(vertical) < spawnRadius && !nexus.getWorld().isOutsideBuildHeight(origin.getY() + vertical);
-		         vertical = vertical > 0 ? vertical * -1 : vertical * -1 + 1) {
-			for (int i = 0; i <= spawnRadius * 0.7D + 1; i++) {
-				int j = (int) Math.round(spawnRadius * Math.cos(Math.asin(i / spawnRadius)));
-
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( i, vertical, j));
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( i, vertical,-j));
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-i, vertical, j));
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-i, vertical,-j));
-
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( j, vertical, i));
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move( j, vertical,-i));
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-j, vertical, i));
-				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints, mutable.set(origin).move(-j, vertical,-i));
-			}
+	private boolean advanceSpawnPointGeneration() throws WaveSpawnerException {
+		if (spawnPointGeneration == null) {
+			return true;
 		}
-
+		if (!spawnPointGeneration.advance(SPAWN_POINT_PROBES_PER_TICK)) {
+			return false;
+		}
+		List<SpawnPoint> spawnPoints = spawnPointGeneration.spawnPoints;
+		BlockPos origin = spawnPointGeneration.origin;
+		SpawnPointContainer generatedPoints = new SpawnPointContainer();
 		if (spawnPoints.size() > MIN_SPAWN_POINTS_TO_KEEP) {
 			int i;
 			int amountToRemove = (int) ((spawnPoints.size() - MIN_SPAWN_POINTS_TO_KEEP) * SPAWN_POINT_CULL_RATE);
@@ -822,17 +813,96 @@ public class IMWaveSpawner implements Spawner {
 			for (; i >= MIN_SPAWN_POINTS_TO_KEEP_BELOW_HEIGHT_CUTOFF; i--) {
 				SpawnPoint spawnPoint = spawnPoints.get(i);
 				if (spawnPoint.pos().getY() - origin.getY() <= HEIGHT_CUTOFF) {
-					spawnPointContainer.addSpawnPointXZ(spawnPoint);
+					generatedPoints.addSpawnPointXZ(spawnPoint);
 				}
 
 			}
 			for (; i >= 0; i--) {
-				spawnPointContainer.addSpawnPointXZ(spawnPoints.get(i));
+				generatedPoints.addSpawnPointXZ(spawnPoints.get(i));
 			}
+		}
+		spawnPointContainer = generatedPoints;
+		spawnPointGeneration = null;
+		InvasionMod.LOGGER.debug("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
+		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
+			throw new WaveSpawnerException("Not enough spawn points for type " + SpawnType.HUMANOID);
+		}
+		return true;
+	}
 
+	private void finishPendingResume() {
+		if (pendingResumeElapsed < 0 || currentWave == null) {
+			return;
+		}
+		setPermitSpawns(false);
+		try {
+			for (long i = 0; i < pendingResumeElapsed; i += 100L) {
+				currentWave.doNextSpawns(100, this);
+			}
+			elapsed = pendingResumeElapsed;
+			pendingResumeElapsed = -1L;
+		} finally {
+			setPermitSpawns(true);
+		}
+	}
+
+	private final class SpawnPointGeneration {
+		private final EntityIMZombie zombie;
+		private final IMDrownedEntity drowned;
+		private final EntityIMZombiePigman zombiePigman;
+		private final BlockPos origin;
+		private final BlockPos.MutableBlockPos mutable;
+		private final List<SpawnPoint> spawnPoints = new ArrayList<>();
+		private int vertical;
+		private int horizontal;
+		private int symmetry;
+
+		private SpawnPointGeneration(EntityIMZombie zombie, IMDrownedEntity drowned,
+				EntityIMZombiePigman zombiePigman, BlockPos origin) {
+			this.zombie = zombie;
+			this.drowned = drowned;
+			this.zombiePigman = zombiePigman;
+			this.origin = origin;
+			this.mutable = origin.mutable();
 		}
 
-		InvasionMod.LOGGER.debug("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
+		private boolean advance(int probeLimit) {
+			int probes = 0;
+			int maxHorizontal = (int) (spawnRadius * 0.7D + 1);
+			while (probes < probeLimit) {
+				if (Math.abs(vertical) >= spawnRadius
+						|| nexus.getWorld().isOutsideBuildHeight(origin.getY() + vertical)) {
+					return true;
+				}
+				if (horizontal > maxHorizontal) {
+					vertical = vertical > 0 ? vertical * -1 : vertical * -1 + 1;
+					horizontal = 0;
+					continue;
+				}
+				int j = (int) Math.round(spawnRadius * Math.cos(Math.asin((double) horizontal / spawnRadius)));
+				int x;
+				int z;
+				switch (symmetry) {
+					case 0 -> { x = horizontal; z = j; }
+					case 1 -> { x = horizontal; z = -j; }
+					case 2 -> { x = -horizontal; z = j; }
+					case 3 -> { x = -horizontal; z = -j; }
+					case 4 -> { x = j; z = horizontal; }
+					case 5 -> { x = j; z = -horizontal; }
+					case 6 -> { x = -j; z = horizontal; }
+					default -> { x = -j; z = -horizontal; }
+				}
+				addValidSpawn(zombie, drowned, zombiePigman, spawnPoints,
+						mutable.set(origin).move(x, vertical, z));
+				probes++;
+				symmetry++;
+				if (symmetry == 8) {
+					symmetry = 0;
+					horizontal++;
+				}
+			}
+			return false;
+		}
 	}
 
 	private void addValidSpawn(
