@@ -24,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 public final class IMBreezeEntity extends Breeze
         implements Combatant<Breeze>, EntityConstruct.BuildableMob {
     private static final double APPROACH_DISTANCE_SQUARED = 8.0D * 8.0D;
+    private static final int TARGET_SEARCH_INTERVAL = 10;
 
     private final IHasNexus.Handle nexus = new IHasNexus.Handle(this::level);
     private final FlyingWallPath wallPath = new FlyingWallPath(this);
@@ -100,7 +101,7 @@ public final class IMBreezeEntity extends Breeze
 	private void acquirePlayerAllyTarget(ServerLevel level) {
 		LivingEntity current = getTarget();
 		if (current != null && canAttack(current) && !current.isRemoved()) return;
-		if (tickCount % 10 != 0) return;
+        if (Math.floorMod(tickCount + getId(), TARGET_SEARCH_INTERVAL) != 0) return;
 		LivingEntity nearest = null;
 		double nearestDistance = Double.MAX_VALUE;
 		for (LivingEntity candidate : level.getEntitiesOfClass(
