@@ -79,6 +79,7 @@ import com.invasion.item.InvasionSpawnEggItem;
 public class EntityIMZombie extends AbstractIMZombieEntity {
     private static final float TERRAIN_REACH = 3.0F;
     private static final double TERRAIN_REACH_SQR = TERRAIN_REACH * TERRAIN_REACH;
+    private static final int TERRAIN_RETRY_DELAY = 20;
     private static final EntityDataAccessor<Boolean> BABY =
             SynchedEntityData.defineId(
                     EntityIMZombie.class, EntityDataSerializers.BOOLEAN);
@@ -117,6 +118,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     // This also prevents an entire cobblestone ramp from being placed remotely.
     private final TerrainModifier terrainModifier = new TerrainModifier(this, TERRAIN_REACH);
     private final TerrainBuilder terrainBuilder = new TerrainBuilder(this, 1.0F);
+    private int terrainRetryTicks;
     private static AttributeSupplier.Builder createBaseAttributes() {
         return Zombie.createAttributes()
                 .add(Attributes.MOVEMENT_SPEED, 0.19F)
@@ -351,14 +353,18 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
 
         terrainModifier.onUpdate();
 
-        if (!level().isClientSide()) {
-            if (!terrainModifier.isBusy()) {
-                // erst schräg nach oben versuchen
-                if (!tryDigUpToNexus()) {
-                    // sonst ggf. nach unten
-                    tryDigDownToNexus();
-                }
-            }
+        if (terrainModifier.isBusy()) {
+            return;
+        }
+        // Count only idle ticks so completed jobs also back off before replanning.
+        if (terrainRetryTicks > 0) {
+            terrainRetryTicks--;
+            return;
+        }
+        // Empty or rejected jobs have no completion callback, but need the same delay.
+        terrainRetryTicks = TERRAIN_RETRY_DELAY;
+        if (!tryDigUpToNexus()) {
+            tryDigDownToNexus();
         }
     }
 
@@ -469,13 +475,12 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
         final Direction rampDir = dir;
         final int rampSteps = steps;
 
-        terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
+        return terrainModifier.submitJob(mobPos, Notifiable.NONE, pos ->
                 terrainBuilder.askBuildRampUp(pos, rampDir, rampSteps)
                         .filter(entry -> getEyePosition().distanceToSqr(PosUtils.center(entry.pos()))
                                 <= TERRAIN_REACH_SQR)
         );
 
-        return true;
     }
 
 
