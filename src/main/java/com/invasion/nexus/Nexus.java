@@ -350,7 +350,11 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     public void onLoaded() {
-        if (!mode.isActive() || paused) {
+        if (!mode.isActive()) {
+            return;
+        }
+        NexusChunkLoader.force(world, uuid, pos, getSpawnRadius(), true);
+        if (paused) {
             return;
         }
         boundingBoxToRadius = getChunkBox(world);
@@ -365,6 +369,7 @@ public class Nexus implements ControllableNexusAccess {
 
     @Override
     public void stop(boolean killEnemies) {
+        NexusChunkLoader.force(world, uuid, pos, getSpawnRadius(), false);
         if (mode == Mode.WAITING) {
             setMode(Mode.CONTINUOUS);
         } else {
@@ -433,7 +438,12 @@ public class Nexus implements ControllableNexusAccess {
 
     @Override
     public boolean setSpawnRadius(int radius) {
+        int previousRadius = getSpawnRadius();
         if (!waveSpawner.isActive() && waveSpawner.setRadius(radius)) {
+            if (activated) {
+                NexusChunkLoader.force(world, uuid, pos, previousRadius, false);
+                NexusChunkLoader.force(world, uuid, pos, getSpawnRadius(), true);
+            }
             boundingBoxToRadius = getChunkBox(getWorld());
             storage.setDirty();
             return true;
@@ -614,6 +624,7 @@ public class Nexus implements ControllableNexusAccess {
             boundPlayers.sendWarning("invmod.message.nexus.firstwavesoon");
             boundPlayers.playSoundForBoundPlayers(InvSounds.BLOCK_NEXUS_RUMBLE);
             activated = true;
+            NexusChunkLoader.force(world, uuid, pos, getSpawnRadius(), true);
             return true;
         } catch (WaveSpawnerException e) {
             stop(false);
@@ -640,6 +651,7 @@ public class Nexus implements ControllableNexusAccess {
         boundPlayers.bindPlayers(boundingBoxToRadius);
         regenerateHealth();
         activated = true;
+        NexusChunkLoader.force(world, uuid, pos, getSpawnRadius(), true);
         setMode(Mode.DEBUG);
         boundPlayers.sendMessage(boundPlayers.getParticipantsList());
         return true;
@@ -653,6 +665,8 @@ public class Nexus implements ControllableNexusAccess {
         boundingBoxToRadius = getChunkBox(getWorld());
         bindExistingImMobs();
         setMode(Mode.CONTINUOUS);
+        activated = true;
+        NexusChunkLoader.force(world, uuid, pos, getSpawnRadius(), true);
         regenerateHealth();
         lastPowerLevel = powerLevel;
         long timeOfDay = Math.floorMod(getWorld().getGameTime(), TICKS_PER_DAY);
