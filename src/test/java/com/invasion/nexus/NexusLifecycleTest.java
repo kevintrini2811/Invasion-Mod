@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 
 class NexusLifecycleTest {
     private static final BlockPos ORIGIN = new BlockPos(10, 64, -20);
@@ -49,9 +50,11 @@ class NexusLifecycleTest {
     private WorldNexusStorage storage;
     private Nexus nexus;
     private MockedConstruction<IMWaveSpawner> waveSpawners;
+    private MockedStatic<NexusChunkLoader> chunkLoader;
 
     @BeforeEach
     void setUp() {
+        chunkLoader = org.mockito.Mockito.mockStatic(NexusChunkLoader.class);
         waveSpawners = mockConstruction(IMWaveSpawner.class, (spawner, context) -> {
             AtomicInteger radius = new AtomicInteger((Integer) context.arguments().get(1));
             when(spawner.getRadius()).thenAnswer(invocation -> radius.get());
@@ -83,6 +86,7 @@ class NexusLifecycleTest {
     @AfterEach
     void tearDown() {
         waveSpawners.close();
+        chunkLoader.close();
     }
 
     @Test
@@ -111,6 +115,7 @@ class NexusLifecycleTest {
         saved.putInt("mode", Mode.STOPPED.ordinal());
 
         Nexus restored = new Nexus(world, storage, saved, RegistryAccess.EMPTY);
+        int spawnRadius = restored.getSpawnRadius();
         restored.stop(false);
 
         assertFalse(restored.isActive());
@@ -119,6 +124,8 @@ class NexusLifecycleTest {
         assertEquals(0, restored.getCurrentWave());
         assertEquals(Mode.STOPPED, restored.getMode());
         verify(storage).clearActiveNexus(restored);
+        chunkLoader.verify(() -> NexusChunkLoader.force(
+                world, restored.getUuid(), ORIGIN, spawnRadius, false));
     }
 
     @Test

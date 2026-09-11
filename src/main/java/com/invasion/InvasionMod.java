@@ -22,6 +22,7 @@ import com.invasion.item.InfusedSwordChargeHandler;
 import com.invasion.network.NexusHudPayload;
 import com.invasion.network.InvNetwork;
 import com.invasion.nexus.WorldNexusStorage;
+import com.invasion.nexus.NexusChunkLoader;
 import com.invasion.particle.InvParticles;
 import com.invasion.util.ChatUtils;
 import net.minecraft.core.Registry;
@@ -132,6 +133,7 @@ public class InvasionMod {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
+        event.enqueueWork(NexusChunkLoader::register);
         InvNetwork.register();
         CONFIG.loadConfig(FMLPaths.CONFIGDIR.get().resolve("invasion_config.cfg").toFile());
     }
