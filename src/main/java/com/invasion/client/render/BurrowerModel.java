@@ -11,6 +11,8 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 public final class BurrowerModel extends EntityModel<BurrowerRenderState> {
     private static final float BODY_RADIUS = 3.5F;
@@ -54,16 +56,21 @@ public final class BurrowerModel extends EntityModel<BurrowerRenderState> {
         }
 
         Vec3 origin = state.segments[0].position();
+        Quaternionf orientation = new Quaternionf();
+        Vector3f modelAngles = new Vector3f();
         for (int i = 0; i < parts.length; i++) {
             PosRotate3D segment = state.segments[i];
             Vec3 position = segment.position().subtract(origin).multiply(POSITION_TRANSFORM);
             // Navigation positions are at the feet; cubes are centred on their pivots.
             parts[i].setPos((float) position.x, (float) position.y - BODY_RADIUS, (float) position.z);
-            // World X is mirrored in model space. Mirror yaw as well so each plate
-            // stays perpendicular to its own path tangent and fans around corners.
-            parts[i].setRotation(segment.rotation().x(),
-                    -segment.rotation().y(),
-                    segment.rotation().z());
+            // Pitch belongs to the yawed segment's local cross-axis. ModelPart uses
+            // Z-Y-X Euler order, so passing heading and pitch directly makes pitch
+            // rotate around a fixed world axis instead (and become roll at 90° yaw).
+            orientation.rotationY(-segment.rotation().y())
+                    .rotateZ(segment.rotation().z())
+                    .rotateX(segment.rotation().x())
+                    .getEulerAnglesZYX(modelAngles);
+            parts[i].setRotation(modelAngles.x, modelAngles.y, modelAngles.z);
         }
     }
 
