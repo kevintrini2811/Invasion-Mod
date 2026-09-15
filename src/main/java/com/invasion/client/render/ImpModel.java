@@ -77,12 +77,22 @@ public final class ImpModel extends EntityModel<ArmedEntityRenderState>
         float cosB = Mth.cos(state.walkAnimationPos * 0.6662F + Mth.PI);
         rightArm.xRot = cosB * state.walkAnimationSpeed;
         leftArm.xRot = cosA * state.walkAnimationSpeed;
+        rightArm.yRot = 0;
+        leftArm.yRot = 0;
         rightLeg.xRot = cosA * 1.4F * state.walkAnimationSpeed - 0.158F;
         leftLeg.xRot = cosB * 1.4F * state.walkAnimationSpeed - 0.15919F;
         rightShin.xRot = cosA * 1.4F * state.walkAnimationSpeed + 0.82623F;
         leftShin.xRot = cosB * 1.4F * state.walkAnimationSpeed + 0.82461F;
         rightFoot.xRot = cosA * 1.4F * state.walkAnimationSpeed - 0.01403F;
         leftFoot.xRot = cosB * 1.4F * state.walkAnimationSpeed - 0.01214F;
+        if (state.leftArmPose == net.minecraft.client.model.HumanoidModel.ArmPose.BLOCK) {
+            leftArm.xRot = -1.2F;
+            leftArm.yRot = 0.5F;
+        }
+        if (state.rightArmPose == net.minecraft.client.model.HumanoidModel.ArmPose.BLOCK) {
+            rightArm.xRot = -1.2F;
+            rightArm.yRot = -0.5F;
+        }
     }
 
     @Override

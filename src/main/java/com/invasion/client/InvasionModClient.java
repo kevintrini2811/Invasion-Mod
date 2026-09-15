@@ -26,6 +26,7 @@ public final class InvasionModClient {
                 (IConfigScreenFactory) (ignored, parent) -> new InvasionConfigScreen(parent));
         modBus.addListener(InvasionModClient::registerPayloadHandlers);
         modBus.addListener(InvasionModClient::registerRenderers);
+        modBus.addListener(com.invasion.client.render.ShieldPose::register);
         modBus.addListener(InvasionModClient::registerGuiLayers);
         modBus.addListener(InvasionModClient::registerMenuScreens);
         NeoForge.EVENT_BUS.addListener(InvasionModClient::onDisconnect);
