@@ -203,6 +203,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        if (EquipmentUtil.wantsToPickUpShield(this, stack)) {
+            return true;
+        }
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot.isArmor()
                 && isEquippableInSlot(stack, slot)

@@ -110,7 +110,8 @@ public final class IMFatZombieEntity extends EntityIMZombie {
     @Override
     public boolean wantsToPickUp(ServerLevel level,
             net.minecraft.world.item.ItemStack stack) {
-        return EquipmentUtil.isWeapon(stack)
+        return EquipmentUtil.wantsToPickUpShield(this, stack)
+                || EquipmentUtil.isWeapon(stack)
                 && !EquipmentUtil.isWeapon(getMainHandItem());
     }
 
