@@ -66,6 +66,7 @@ public class IMWaveSpawner implements Spawner {
 	private final List<Item> randomRangedWaveWeapons;
 	private final List<Item> randomWaveWeapons;
 	private final List<Item> randomWaveArmor;
+	private final List<Item> randomWaveShields;
 
 	@Nullable
 	private Wave currentWave;
@@ -96,6 +97,7 @@ public class IMWaveSpawner implements Spawner {
 				.toList();
 		randomWaveArmor = findRegisteredItems(
 				EquipmentUtil::isHumanoidArmor);
+		randomWaveShields = findRegisteredItems(EquipmentUtil::isShield);
 	}
 
 	private static List<Item> findRegisteredItems(
@@ -339,6 +341,7 @@ public class IMWaveSpawner implements Spawner {
 
 				equipWitherSkeletonWeapon(mob, spawnConstruct);
                 applyBabyVariant(mob, spawnConstruct);
+                equipRandomWaveShield(mob);
                 markAsInvasionAlly(mob);
                 if (debugMode) {
                     InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave()
@@ -757,6 +760,18 @@ public class IMWaveSpawner implements Spawner {
 			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
 			mob.setItemSlot(slot, armor.getDefaultInstance());
 		}
+	}
+
+	private void equipRandomWaveShield(Mob mob) {
+		if (!EquipmentUtil.isMeleeWeapon(mob.getMainHandItem())
+				|| !mob.getOffhandItem().isEmpty()
+				|| randomWaveShields.isEmpty()
+				|| getRandom().nextInt(100) >= Math.min(nexus.getCurrentWave(), 100)) {
+			return;
+		}
+		Item shield = randomWaveShields.get(
+				getRandom().nextInt(randomWaveShields.size()));
+		mob.setItemSlot(EquipmentSlot.OFFHAND, shield.getDefaultInstance());
 	}
 
 	private void startSpawnPointGeneration() {

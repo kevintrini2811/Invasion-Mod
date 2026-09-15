@@ -59,6 +59,9 @@ public final class IMEndermanEntity extends IMMobEntity {
 
     @Override
     public boolean wantsToPickUp(ItemStack stack) {
+        if (EquipmentUtil.wantsToPickUpShield(this, stack)) {
+            return true;
+        }
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
                 && stack.canEquip(slot, this)

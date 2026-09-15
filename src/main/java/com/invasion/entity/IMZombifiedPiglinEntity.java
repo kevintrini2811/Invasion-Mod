@@ -155,6 +155,9 @@ public final class IMZombifiedPiglinEntity extends ZombifiedPiglin
 
     @Override
     public boolean wantsToPickUp(ItemStack stack) {
+        if (EquipmentUtil.wantsToPickUpShield(this, stack)) {
+            return true;
+        }
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         if (EquipmentUtil.isMeleeWeapon(stack)) {
             return canReplaceCurrentItem(
