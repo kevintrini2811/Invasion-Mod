@@ -533,11 +533,12 @@ public final class ConfiguredModMobs {
         }
     }
 
-    private static boolean isAllowedEquipment(Mob mob, ItemStack stack,
+    static boolean isAllowedEquipment(Mob mob, ItemStack stack,
             boolean armorAllowed, boolean weaponsAllowed) {
         EquipmentSlot slot = mob.getEquipmentSlotForItem(stack);
         return armorAllowed && slot.isArmor()
-                || weaponsAllowed && EquipmentUtil.isWeapon(stack);
+                || weaponsAllowed && (EquipmentUtil.isWeapon(stack)
+                        || EquipmentUtil.wantsToPickUpShield(mob, stack));
     }
 
     public static synchronized boolean isActive(EntityType<?> type) {
