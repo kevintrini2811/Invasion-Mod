@@ -20,6 +20,9 @@ public final class ShieldUseHandler {
     private static final Map<Mob, Defense> DEFENSE = new WeakHashMap<>();
     private static final int ARROW_DEFENSE_TICKS = 15 * 20;
     private static final int ATTACK_PAUSE_TICKS = 5;
+    private static final int ATTACK_WINDUP_TICKS = 20;
+    private static final int BLOCK_COOLDOWN_TICKS = 4 * 20;
+    private static final int BLOCK_LIMIT = 3;
 
     private ShieldUseHandler() {
     }
@@ -42,17 +45,25 @@ public final class ShieldUseHandler {
         boolean visibleTarget = target != null && target.isAlive()
                 && !(target instanceof SpawnProxyEntity) && mob.hasLineOfSight(target);
         long now = mob.level().getGameTime();
+        if (defense != null && defense.attackReadyAt >= 0
+                && now > defense.attackReadyAt + ATTACK_WINDUP_TICKS) {
+            // Abandon an attack that the AI no longer attempts (for example, after fleeing).
+            defense.attackReadyAt = -1;
+        }
         if (visibleTarget && defense != null) {
             // A visible combat target replaces the reaction to the last arrow.
             defense.arrowUntil = 0;
         }
         boolean arrowDefense = defense != null && now < defense.arrowUntil;
-        if (defense != null && now >= defense.attackUntil && !arrowDefense) {
+        if (defense != null && now >= defense.attackUntil && !arrowDefense
+                && defense.attackReadyAt < 0 && now >= defense.blockedUntil
+                && defense.successfulBlocks == 0) {
             DEFENSE.remove(mob);
             defense = null;
         }
         boolean attacking = mob.swinging && mob.swingingArm == InteractionHand.MAIN_HAND
-                || defense != null && now < defense.attackUntil;
+                || defense != null && (now < defense.attackUntil || defense.attackReadyAt >= 0
+                        || now < defense.blockedUntil);
         if (canBlock(mob) && !attacking && (visibleTarget || arrowDefense)) {
             Vec3 lookAt = visibleTarget ? target.getEyePosition() : defense.arrowOrigin;
             mob.lookAt(EntityAnchorArgument.Anchor.EYES, lookAt);
@@ -84,13 +95,47 @@ public final class ShieldUseHandler {
                 && EquipmentUtil.isShield(mob.getOffhandItem());
     }
 
-    public static void onAttack(LivingEntity entity, InteractionHand hand) {
-        if (hand == InteractionHand.MAIN_HAND && entity instanceof Mob mob
-                && isShieldMob(mob) && canBlock(mob)) {
-            DEFENSE.computeIfAbsent(mob, ignored -> new Defense()).attackUntil =
-                    mob.level().getGameTime() + ATTACK_PAUSE_TICKS;
+    public static boolean prepareAttack(Mob mob) {
+        if (!isShieldMob(mob) || !canBlock(mob)) return true;
+        Defense defense = DEFENSE.computeIfAbsent(mob, ignored -> new Defense());
+        long now = mob.level().getGameTime();
+        if (defense.lastAttackAt == now) return true;
+        if (defense.attackReadyAt < 0) {
+            defense.attackReadyAt = now + ATTACK_WINDUP_TICKS;
+        }
+        stopBlocking(mob);
+        return now >= defense.attackReadyAt;
+    }
+
+    public static boolean onAttack(LivingEntity entity, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND || !(entity instanceof Mob mob)
+                || !isShieldMob(mob) || !canBlock(mob)) return true;
+        if (!prepareAttack(mob)) return false;
+        Defense defense = DEFENSE.get(mob);
+        long now = mob.level().getGameTime();
+        defense.lastAttackAt = now;
+        defense.attackReadyAt = -1;
+        defense.attackUntil = now + ATTACK_PAUSE_TICKS;
+        return true;
+    }
+
+    public static void onSuccessfulBlock(LivingEntity entity, float blockedDamage) {
+        if (blockedDamage <= 0 || !(entity instanceof Mob mob) || !isShieldMob(mob)
+                || !canBlock(mob)) return;
+        Defense defense = DEFENSE.computeIfAbsent(mob, ignored -> new Defense());
+        if (++defense.successfulBlocks == BLOCK_LIMIT) {
+            defense.successfulBlocks = 0;
+            defense.blockedUntil = mob.level().getGameTime() + BLOCK_COOLDOWN_TICKS;
             stopBlocking(mob);
         }
+    }
+
+    public static boolean isBlockingSuppressed(LivingEntity entity) {
+        if (!(entity instanceof Mob mob) || !isShieldMob(mob)) return false;
+        Defense defense = DEFENSE.get(mob);
+        long now = mob.level().getGameTime();
+        return defense != null && (now < defense.blockedUntil
+                || defense.attackReadyAt >= 0 || now < defense.attackUntil);
     }
 
     static void onIncomingDamage(LivingIncomingDamageEvent event) {
@@ -107,13 +152,17 @@ public final class ShieldUseHandler {
             }
         } else if (event.getSource().getDirectEntity() instanceof Mob attacker) {
             // Also cover custom melee attacks that do not swing an arm.
-            onAttack(attacker, InteractionHand.MAIN_HAND);
+            if (!onAttack(attacker, InteractionHand.MAIN_HAND)) event.setCanceled(true);
         }
     }
 
     private static final class Defense {
         private long arrowUntil;
         private long attackUntil;
+        private long attackReadyAt = -1;
+        private long lastAttackAt = -1;
+        private long blockedUntil;
+        private int successfulBlocks;
         private Vec3 arrowOrigin;
     }
 }

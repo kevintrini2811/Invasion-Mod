@@ -1,6 +1,8 @@
 package com.invasion.entity;
 
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -117,16 +119,120 @@ class ShieldUseHandlerTest {
     }
 
     @Test
-    void attackLowersShieldImmediatelyThenResumesBlocking() {
+    void attackWaitsOneSecondWithoutShieldThenResumesBlocking() {
         visibleTarget();
         usingShield();
-        ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND);
+        assertFalse(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
         verify(mob).stopUsingItem();
         when(mob.isUsingItem()).thenReturn(false);
-        when(level.getGameTime()).thenReturn(104L);
+        when(level.getGameTime()).thenReturn(119L);
+        assertFalse(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
         ShieldUseHandler.update(mob);
         verify(mob, never()).startUsingItem(any());
-        when(level.getGameTime()).thenReturn(105L);
+        when(level.getGameTime()).thenReturn(120L);
+        assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+        // The swing and damage callbacks belong to the same attack.
+        assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+        when(level.getGameTime()).thenReturn(125L);
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+    }
+
+    @Test
+    void repeatedGoalChecksDoNotRestartWindup() {
+        assertFalse(ShieldUseHandler.prepareAttack(mob));
+        for (long tick = 101; tick < 120; tick++) {
+            when(level.getGameTime()).thenReturn(tick);
+            assertFalse(ShieldUseHandler.prepareAttack(mob));
+            assertTrue(ShieldUseHandler.isBlockingSuppressed(mob));
+        }
+        when(level.getGameTime()).thenReturn(120L);
+        assertTrue(ShieldUseHandler.prepareAttack(mob));
+        assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+    }
+
+    @Test
+    void customMeleeDamageCannotBypassWindup() {
+        LivingIncomingDamageEvent event = mock(LivingIncomingDamageEvent.class);
+        DamageSource source = mock(DamageSource.class);
+        when(event.getSource()).thenReturn(source);
+        when(source.getDirectEntity()).thenReturn(mob);
+        ShieldUseHandler.onIncomingDamage(event);
+        verify(event).setCanceled(true);
+        clearInvocations(event);
+        when(level.getGameTime()).thenReturn(119L);
+        ShieldUseHandler.onIncomingDamage(event);
+        verify(event).setCanceled(true);
+        clearInvocations(event);
+        when(level.getGameTime()).thenReturn(120L);
+        ShieldUseHandler.onIncomingDamage(event);
+        verify(event, never()).setCanceled(true);
+    }
+
+    @Test
+    void threeSuccessfulBlocksDisableBlockingForFourSeconds() {
+        visibleTarget();
+        usingShield();
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        ShieldUseHandler.update(mob);
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        ShieldUseHandler.update(mob);
+        assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+        verify(mob, never()).stopUsingItem();
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        verify(mob).stopUsingItem();
+        assertTrue(ShieldUseHandler.isBlockingSuppressed(mob));
+        when(mob.isUsingItem()).thenReturn(false);
+        when(level.getGameTime()).thenReturn(179L);
+        ShieldUseHandler.update(mob);
+        verify(mob, never()).startUsingItem(any());
+        when(level.getGameTime()).thenReturn(180L);
+        assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        assertTrue(ShieldUseHandler.isBlockingSuppressed(mob));
+    }
+
+    @Test
+    void failedBlocksDoNotCount() {
+        ShieldUseHandler.onSuccessfulBlock(mob, 0);
+        ShieldUseHandler.onSuccessfulBlock(mob, 0);
+        ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+    }
+
+    @Test
+    void arrowReactionDoesNotOverrideBlockCooldown() {
+        for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        arrowHit();
+        ShieldUseHandler.update(mob);
+        verify(mob, never()).startUsingItem(any());
+        when(level.getGameTime()).thenReturn(180L);
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+    }
+
+    @Test
+    void attackDoesNotEndFourSecondBlockCooldown() {
+        for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        assertFalse(ShieldUseHandler.prepareAttack(mob));
+        when(level.getGameTime()).thenReturn(120L);
+        assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+        when(level.getGameTime()).thenReturn(125L);
+        assertTrue(ShieldUseHandler.isBlockingSuppressed(mob));
+        when(level.getGameTime()).thenReturn(180L);
+        assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+    }
+
+    @Test
+    void abandonedAttackDoesNotLeaveShieldPermanentlyLowered() {
+        visibleTarget();
+        assertFalse(ShieldUseHandler.prepareAttack(mob));
+        when(level.getGameTime()).thenReturn(141L);
         ShieldUseHandler.update(mob);
         verify(mob).startUsingItem(InteractionHand.OFF_HAND);
     }
