@@ -13,6 +13,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 public final class BurrowerModel extends EntityModel<BurrowerRenderState> {
     private static final float BODY_RADIUS = 3.5F;
@@ -66,9 +67,13 @@ public final class BurrowerModel extends EntityModel<BurrowerRenderState> {
             // Pitch belongs to the yawed segment's local cross-axis. ModelPart uses
             // Z-Y-X Euler order, so passing heading and pitch directly makes pitch
             // rotate around a fixed world axis instead (and become roll at 90° yaw).
-            orientation.rotationY(-segment.rotation().y())
-                    .rotateZ(segment.rotation().z())
-                    .rotateX(segment.rotation().x())
+            // The head plate closes the first body segment. Independent steering
+            // angles can spin at vertical headings or turn against a collision;
+            // use the body's interpolated pose so both plates always stay parallel.
+            Vector3fc rotation = i == 0 ? state.segments[1].rotation() : segment.rotation();
+            orientation.rotationY(-rotation.y())
+                    .rotateZ(rotation.z())
+                    .rotateX(rotation.x())
                     .getEulerAnglesZYX(modelAngles);
             parts[i].setRotation(modelAngles.x, modelAngles.y, modelAngles.z);
         }
