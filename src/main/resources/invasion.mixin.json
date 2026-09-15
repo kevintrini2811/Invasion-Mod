@@ -5,7 +5,8 @@
     "compatibilityLevel": "JAVA_21",
     "mixins": [
       "EntityMixin",
-      "ShieldSwingMixin",
+      "ShieldCombatMixin",
+      "ShieldMeleeAttackMixin",
       "PathNodeMixin",
       "PhantomAccessor",
       "EndSlimeMoveControlAccessor",
