@@ -1,6 +1,7 @@
 package com.invasion.entity;
 
 import com.invasion.nexus.Combatant;
+import com.invasion.compat.ConfiguredModMobs;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -32,7 +33,7 @@ public final class ShieldUseHandler {
         NeoForge.EVENT_BUS.addListener(ShieldUseHandler::onIncomingDamage);
     }
 
-    private static void tick(EntityTickEvent.Post event) {
+    static void tick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof Mob mob) || !isShieldMob(mob)) {
             return;
         }
@@ -86,7 +87,8 @@ public final class ShieldUseHandler {
 
     private static boolean isShieldMob(Mob mob) {
         return !mob.level().isClientSide()
-                && (mob instanceof Combatant<?> || mob.getPersistentData().contains("invmodWaveNumber"));
+                && (mob instanceof Combatant<?> || mob.getPersistentData().contains("invmodWaveNumber")
+                        || ConfiguredModMobs.isActive(mob.getType()));
     }
 
     private static boolean canBlock(Mob mob) {
