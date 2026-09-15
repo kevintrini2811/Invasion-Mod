@@ -9,6 +9,7 @@
       "NaturalMobSpawnMixin",
       "MobAccessor",
       "NonCombatTargetMixin",
+      "ShieldSwingMixin",
       "PathNodeMixin",
       "PhantomAccessor",
       "CubeMobMoveControlAccessor",
@@ -17,6 +18,8 @@
       "WildfireNexusMixin"
     ],
     "client": [
+      "LivingEntityRendererShieldPoseMixin",
+      "ZombieShieldPoseMixin",
       "AgeableMobRendererAccessor"
     ]
 }
