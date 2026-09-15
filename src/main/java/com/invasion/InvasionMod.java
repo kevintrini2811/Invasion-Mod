@@ -12,6 +12,7 @@ import com.invasion.entity.InvEntities;
 import com.invasion.entity.BoundIMMobRegistry;
 import com.invasion.entity.VanillaMobSpawnReplacement;
 import com.invasion.entity.NexusBoundMobLifecycle;
+import com.invasion.entity.ShieldUseHandler;
 import com.invasion.entity.VillagerResurrectionHandler;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
@@ -93,6 +94,7 @@ public class InvasionMod {
 
         BoundIMMobRegistry.bootstrap();
         IMMobFriendlyFireHandler.bootstrap();
+        ShieldUseHandler.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
         NexusBoundMobLifecycle.bootstrap();
         VillagerResurrectionHandler.bootstrap();
