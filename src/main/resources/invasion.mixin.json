@@ -5,6 +5,7 @@
     "compatibilityLevel": "JAVA_21",
     "mixins": [
       "EntityMixin",
+      "ShieldSwingMixin",
       "PathNodeMixin",
       "PhantomAccessor",
       "EndSlimeMoveControlAccessor",
@@ -12,5 +13,8 @@
       "SlimeMoveControlAccessor",
       "WildfireNexusMixin"
     ],
-    "client": []
+    "client": [
+      "ZombieShieldPoseMixin",
+      "AgeableMobRendererAccessor"
+    ]
 }
