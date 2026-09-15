@@ -113,7 +113,8 @@ public class ImpEnitty extends IMMobEntity
 
     @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
-        return isUsableWeapon(stack)
+        return EquipmentUtil.wantsToPickUpShield(this, stack)
+                || isUsableWeapon(stack)
                 && !isUsableWeapon(getMainHandItem());
     }
 

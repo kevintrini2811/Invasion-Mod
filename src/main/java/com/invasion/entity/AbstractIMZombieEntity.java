@@ -65,6 +65,9 @@ public abstract class AbstractIMZombieEntity extends TieredIMMobEntity
 
     @Override
     public boolean wantsToPickUp(ServerLevel world, ItemStack stack) {
+        if (EquipmentUtil.wantsToPickUpShield(this, stack)) {
+            return true;
+        }
         ItemStack heldItem = getItemBySlot(EquipmentSlot.MAINHAND);
         if (isUsableWeapon(stack)) {
             return !isUsableWeapon(heldItem);
