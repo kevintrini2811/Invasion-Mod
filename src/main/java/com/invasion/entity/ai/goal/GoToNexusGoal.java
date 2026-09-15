@@ -11,9 +11,10 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import com.invasion.entity.NexusEntity;
-import com.invasion.entity.NexusBoundMobLifecycle;
+import com.invasion.entity.BurrowerEntity;
 import com.invasion.entity.HasAiGoals;
+import com.invasion.entity.NexusBoundMobLifecycle;
+import com.invasion.entity.NexusEntity;
 import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.ZombieBuilderEntity;
 import com.invasion.entity.pathfinding.Navigation;
@@ -108,7 +109,11 @@ public class GoToNexusGoal extends Goal {
         // An engineer at the end of a short bridge path must wait for another
         // buildable path. Directly steering it at the nexus walks it off the
         // final plank without giving the bridge action a chance to run.
-        if (pathFailedCount > 1 && !(mob instanceof PigmanEngineerEntity)) {
+        // Fabric can return short-lived path failures while a newly spawned
+        // Burrower's surrounding chunks finish becoming pathfinding-ready.
+        // Let it keep moving during the first retry delay instead of pausing.
+        int fallbackThreshold = mob instanceof BurrowerEntity ? 0 : 1;
+        if (pathFailedCount > fallbackThreshold && !(mob instanceof PigmanEngineerEntity)) {
             @Nullable
             NexusAccess nexus = nexusEntity.getNexus();
             if (nexus != null) {
