@@ -6,6 +6,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ArmorItem;
+import net.minecraft.world.item.ShieldItem;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 
@@ -31,6 +32,17 @@ public final class EquipmentUtil {
 
     public static boolean isWeapon(ItemStack stack) {
         return isMeleeWeapon(stack) || isRangedWeapon(stack);
+    }
+
+    public static boolean isShield(ItemStack stack) {
+        return stack.is(Tags.Items.TOOLS_SHIELD)
+                || stack.getItem() instanceof ShieldItem;
+    }
+
+    public static boolean wantsToPickUpShield(Mob mob, ItemStack stack) {
+        return isShield(stack)
+                && isMeleeWeapon(mob.getMainHandItem())
+                && mob.getOffhandItem().isEmpty();
     }
 
     public static boolean isHumanoidArmor(ItemStack stack) {

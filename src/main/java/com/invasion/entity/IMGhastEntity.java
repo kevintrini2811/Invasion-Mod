@@ -39,6 +39,9 @@ public final class IMGhastEntity extends Ghast
 
     @Override
     public boolean wantsToPickUp(ItemStack stack) {
+        if (EquipmentUtil.wantsToPickUpShield(this, stack)) {
+            return true;
+        }
         EquipmentSlot slot = getEquipmentSlotForItem(stack);
         return slot == EquipmentSlot.HEAD
                 && canReplaceCurrentItem(stack, getItemBySlot(slot));
