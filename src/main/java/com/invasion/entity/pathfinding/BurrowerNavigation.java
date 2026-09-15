@@ -33,9 +33,16 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     private static final int MAX_HISTORY_SIZE = 512;
     static final float MAX_TURN_RADIANS = Mth.DEG_TO_RAD * 5.0F;
     private static final double FINAL_NODE_DISTANCE = 0.10D;
+    private static final double STEP_SPEED = 0.015D;
+    private static final double EDGE_CLEARANCE = 0.02D;
     private Vec3 movementDirection = Vec3.ZERO;
+    private StepPhase stepPhase = StepPhase.APPROACH;
     protected float timePerTick = 0.05F;
     protected boolean nodeChanged;
+
+    private enum StepPhase {
+        APPROACH, CLIMB, CROSS
+    }
 
     public BurrowerNavigation(BurrowerEntity entity, PathSource pathSource, int segments, int offset) {
         super(entity, pathSource);
@@ -131,17 +138,12 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
     @Override
     protected PosRotate3D entityPositionAtParam(int time) {
-        Vec3 steeringTarget = Vec3.atBottomCenterOf(nextNode.asBlockPos());
-        if (nextNode.y > activeNode.y && theEntity.getY() < nextNode.y
-                && (nextNode.x != activeNode.x || nextNode.z != activeNode.z)) {
-            // A rising edge can lead onto a solid ledge. Gain the required foot
-            // clearance first; aiming at its top diagonally can stall against its face.
-            steeringTarget = new Vec3(theEntity.getX(), nextNode.y, theEntity.getZ());
-        }
+        boolean climbingStep = isClimbingStep();
+        Vec3 steeringTarget = climbingStep ? stepTarget() : Vec3.atBottomCenterOf(nextNode.asBlockPos());
         Vec3 desiredDirection = steeringTarget.subtract(theEntity.position());
         double stepDistance = nextNode == activeNode
                 ? 0
-                : timePerTick;
+                : climbingStep ? Math.min(timePerTick, STEP_SPEED) : timePerTick;
         movementDirection = steerDirection(
                 movementDirection,
                 desiredDirection,
@@ -172,11 +174,43 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         return new PosRotate3D(movementPosition, rotation);
     }
 
+    private Vec3 stepTarget() {
+        Vec3 top = Vec3.atBottomCenterOf(nextNode.asBlockPos());
+        Vec3 approach = new Vec3(nextNode.x - activeNode.x, 0, nextNode.z - activeNode.z).normalize();
+        // Keep the head's collision box outside the riser, then follow its top.
+        double offset = (0.5D + theEntity.getBbWidth() * 0.5D + EDGE_CLEARANCE)
+                / Math.max(Math.abs(approach.x), Math.abs(approach.z));
+        Vec3 face = top.subtract(approach.scale(offset));
+        Vec3 target = stepPhase == StepPhase.APPROACH
+                ? new Vec3(face.x, Math.max(activeNode.y, theEntity.getY()), face.z)
+                : new Vec3(face.x, nextNode.y + EDGE_CLEARANCE, face.z);
+        // Replanning halfway up a riser must not send the head back to its foot.
+        if (stepPhase == StepPhase.APPROACH
+                && (theEntity.position().distanceTo(target) <= FINAL_NODE_DISTANCE
+                    || theEntity.getY() > activeNode.y + FINAL_NODE_DISTANCE)) {
+            stepPhase = StepPhase.CLIMB;
+            target = new Vec3(face.x, nextNode.y + EDGE_CLEARANCE, face.z);
+        }
+        if (theEntity.getY() >= nextNode.y) {
+            stepPhase = StepPhase.CROSS;
+        }
+        return stepPhase == StepPhase.CROSS ? top : target;
+    }
+
+    private boolean isClimbingStep() {
+        return nextNode.y > activeNode.y
+                && (nextNode.x != activeNode.x || nextNode.z != activeNode.z);
+    }
+
     @Override
     protected boolean isReadyForNextNode(int ticks) {
         double distance = theEntity.position().distanceTo(
                 Vec3.atBottomCenterOf(nextNode.asBlockPos())
         );
+        if (isClimbingStep()) {
+            // Each riser and tread owns its complete transition, even at a turn.
+            return theEntity.getY() >= nextNode.y && distance <= FINAL_NODE_DISTANCE;
+        }
         if (path.getNextNodeIndex() + 1 >= path.getNodeCount() - 1) {
             return distance <= FINAL_NODE_DISTANCE;
         }
@@ -191,6 +225,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 timeParam = 0;
                 path.setNextNodeIndex(nextIndex);
                 activeNode = nextNode;
+                stepPhase = StepPhase.APPROACH;
                 nextNode = nextIndex + 1 < path.getNodeCount()
                         ? path.getNode(nextIndex + 1)
                         : activeNode;
@@ -337,6 +372,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         path.setNextNodeIndex(0);
         activeNode = path.getNode(0);
         nextNode = path.getNode(1);
+        stepPhase = StepPhase.APPROACH;
         if (movementDirection.lengthSqr() < 1.0E-6D) {
             // Spawned entities already have a heading; a new path must not snap it.
             double yaw = theEntity.getYRot() * Mth.DEG_TO_RAD;
