@@ -240,8 +240,21 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
     protected void doMovementTo(int time) {
         PosRotate3D movePos = entityPositionAtParam(time);
         Vec3 previousPosition = theEntity.position();
-        theEntity.move(MoverType.SELF, movePos.position().subtract(previousPosition));
+        Vec3 requestedMovement = movePos.position().subtract(previousPosition);
+        theEntity.move(MoverType.SELF, requestedMovement);
         ((BurrowerEntity) theEntity).setHeadRotation(movePos);
+
+        double requestedDistanceSqr = requestedMovement.lengthSqr();
+        Vec3 actualMovement = theEntity.position().subtract(previousPosition);
+        double movedDistanceSqr = actualMovement.lengthSqr();
+        if (!waitingForNotify
+                && requestedDistanceSqr > 1.0E-10D
+                && movedDistanceSqr + 1.0E-10D < requestedDistanceSqr
+                && ((BurrowerEntity) theEntity).tryClearPosition(
+                        collisionTarget(previousPosition, requestedMovement, actualMovement), this)) {
+            setDoingTaskAndHold();
+            return;
+        }
 
         if (!waitingForNotify
                 && path.getNextNodeIndex() >= path.getNodeCount() - 1
@@ -266,6 +279,31 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
         } else {
             ticksStuck++;
         }
+    }
+
+    BlockPos collisionTarget(Vec3 from, Vec3 requested, Vec3 actual) {
+        Vec3 intended = from.add(requested);
+        double lostX = Math.abs(requested.x) - Math.abs(actual.x);
+        double lostY = Math.abs(requested.y) - Math.abs(actual.y);
+        double lostZ = Math.abs(requested.z) - Math.abs(actual.z);
+        double epsilon = 1.0E-4D;
+
+        if (lostY > lostX && lostY > lostZ) {
+            double edgeY = requested.y > 0
+                    ? intended.y + theEntity.getBbHeight() + epsilon
+                    : intended.y - epsilon;
+            return BlockPos.containing(intended.x, edgeY, intended.z);
+        }
+        if (lostX >= lostZ) {
+            double edgeX = intended.x + Math.copySign(
+                    theEntity.getBbWidth() * 0.5D + epsilon, requested.x);
+            return BlockPos.containing(edgeX,
+                    intended.y + theEntity.getBbHeight() * 0.5D, intended.z);
+        }
+        double edgeZ = intended.z + Math.copySign(
+                theEntity.getBbWidth() * 0.5D + epsilon, requested.z);
+        return BlockPos.containing(intended.x,
+                intended.y + theEntity.getBbHeight() * 0.5D, edgeZ);
     }
 
     private BlockPos getNextBlockTowardTarget(BlockPos from, BlockPos target) {

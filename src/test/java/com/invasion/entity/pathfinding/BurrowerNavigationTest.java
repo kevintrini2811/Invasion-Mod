@@ -1,11 +1,13 @@
 package com.invasion.entity.pathfinding;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,6 +34,15 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 class BurrowerNavigationTest {
     private static final double EPSILON = 1.0E-6D;
+
+    @Test
+    void burrowerRemovesOnlyRequestedBlock() {
+        BurrowerEntity entity = mock(BurrowerEntity.class);
+        doCallRealMethod().when(entity).getBlockRemovalOrder(any(BlockPos.class));
+        BlockPos target = new BlockPos(1, 64, 0);
+
+        assertArrayEquals(new BlockPos[] { target }, entity.getBlockRemovalOrder(target));
+    }
 
     @Test
     void replacingPathDuringRiserClimbDoesNotSendHeadBackDown() {
@@ -225,6 +236,26 @@ class BurrowerNavigationTest {
     }
 
     @Test
+    void blockedMovementRequestsDiggingAtCollidingBlock() {
+        MovementFixture fixture = new MovementFixture(new Vec3(0.2, 64, 0.7));
+        fixture.navigation.startMovingAlong(straightPath(), 1);
+        fixture.allowedMovement = 0;
+
+        fixture.step();
+
+        verify(fixture.entity, atLeastOnce()).tryClearPosition(
+                new BlockPos(0, 64, 0), fixture.navigation);
+    }
+
+    @Test
+    void sidewaysCollisionTargetsBlockAtHeadEdge() {
+        MovementFixture fixture = new MovementFixture(new Vec3(0.74, 64, 0.5));
+
+        assertEquals(new BlockPos(1, 64, 0), fixture.navigation.collisionTarget(
+                fixture.position, new Vec3(0.05, 0, 0), Vec3.ZERO));
+    }
+
+    @Test
     void segmentsSampleClippedMovementInsteadOfUnreachedPosition() {
         MovementFixture fixture = new MovementFixture(new Vec3(0.5, 64, 0.5));
         fixture.navigation.startMovingAlong(straightPath(), 1);
@@ -260,17 +291,19 @@ class BurrowerNavigationTest {
         private double allowedMovement = 1;
         private double ledgeHeight = Double.NEGATIVE_INFINITY;
         private final List<VoxelShape> stairShapes = new ArrayList<>();
+        private final BurrowerEntity entity;
         private final BurrowerNavigation navigation;
 
         private MovementFixture(Vec3 initialPosition) {
             position = initialPosition;
-            BurrowerEntity entity = mock(BurrowerEntity.class);
+            entity = mock(BurrowerEntity.class);
             when(entity.position()).thenAnswer(invocation -> position);
             when(entity.getX()).thenAnswer(invocation -> position.x);
             when(entity.getY()).thenAnswer(invocation -> position.y);
             when(entity.getZ()).thenAnswer(invocation -> position.z);
             when(entity.getYRot()).thenReturn(-90F);
             when(entity.getBbWidth()).thenReturn(0.5F);
+            when(entity.getBbHeight()).thenReturn(0.5F);
             doAnswer(invocation -> {
                 requestedMovement = invocation.getArgument(1);
                 Vec3 before = position;
