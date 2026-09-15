@@ -11,6 +11,7 @@ import com.invasion.block.InvBlocks;
 import com.invasion.entity.EquipmentUtil;
 import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.entity.ItemSearchScheduler;
+import com.invasion.entity.NexusBoundMobLifecycle;
 import com.invasion.entity.pathfinding.PathingUtil;
 import com.invasion.mixin.PhantomAccessor;
 import net.minecraft.util.Mth;
@@ -133,19 +134,23 @@ public final class ConfiguredModMobs {
                 continue;
             }
             String binding = mob.getPersistentData().getString(NEXUS_OWNER);
+            NexusAccess nexus = null;
             if (!binding.isEmpty()) {
-                NexusAccess owner = null;
                 try {
-                    owner = WorldNexusStorage.of(level).getNexus(UUID.fromString(binding));
+                    nexus = WorldNexusStorage.of(level).getNexus(UUID.fromString(binding));
                 } catch (IllegalArgumentException ignored) {
                     // Invalid saved bindings must not leave invasion mobs orphaned.
                 }
-                if (owner == null || owner.isDiscarded() || !owner.isActive()) {
+                if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
                     removals.add(mob);
                     continue;
                 }
             } else if (isActive(mob.getType())) {
-                activeNexus(mob);
+                nexus = activeNexus(mob);
+            }
+            if (nexus != null && Math.floorMod(System.identityHashCode(mob), 20)
+                    == Math.floorMod(level.getGameTime(), 20)) {
+                NexusBoundMobLifecycle.tickStationaryPathRecovery(mob, nexus);
             }
         }
         removals.forEach(Mob::discard);
