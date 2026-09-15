@@ -14,8 +14,11 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
+import org.joml.Vector3fc;
 
 public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
+    static final float BODY_RADIUS = 3.5F;
     private static final double POSITION_SCALE = 16.0D / 2.2D;
     private static final Vec3 POSITION_TRANSFORM =
             new Vec3(-POSITION_SCALE, -POSITION_SCALE, POSITION_SCALE);
@@ -50,6 +53,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     @Override
     public void prepareMobModel(BurrowerEntity entity, float limbAngle, float limbDistance, float tickDelta) {
         segments = new PosRotate3D[17];
+        Vec3 renderOrigin = entity.getPosition(tickDelta);
 
         segments[0] = new PosRotate3D(
             Vec3.ZERO,
@@ -59,7 +63,7 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
         for (int i = 0; i < 16; i++) {
             PosRotate3D segment = entity.getSegments3DLastTick()[i].lerp(tickDelta, entity.getSegments3D()[i]);
             segments[i + 1] = new PosRotate3D(
-                    segment.position().subtract(entity.position())
+                    segment.position().subtract(renderOrigin)
                             .multiply(POSITION_TRANSFORM),
                     segment.rotation());
         }
@@ -84,11 +88,21 @@ public class BurrowerEntityModel extends EntityModel<BurrowerEntity> {
     public void renderToBuffer(PoseStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
         for (int i = 0; i < segments.length; i++) {
             ModelPart segment = getPart(i);
-            segment.setPos((float) segments[i].position().x,
-                    (float) segments[i].position().y,
-                    (float) segments[i].position().z);
-            segment.setRotation(segments[i].rotation().x(), segments[i].rotation().y(), segments[i].rotation().z());
+            applyPose(segment, segments[i]);
             segment.render(matrices, vertices, light, overlay, color);
         }
+    }
+
+    static void applyPose(ModelPart part, PosRotate3D segment) {
+        part.setPos((float) segment.position().x,
+                (float) segment.position().y - BODY_RADIUS,
+                (float) segment.position().z);
+        Vector3fc rotation = segment.rotation();
+        Vector3f modelAngles = new Quaternionf()
+                .rotationY(-rotation.y())
+                .rotateZ(rotation.z())
+                .rotateX(rotation.x())
+                .getEulerAnglesZYX(new Vector3f());
+        part.setRotation(modelAngles.x, modelAngles.y, modelAngles.z);
     }
 }
