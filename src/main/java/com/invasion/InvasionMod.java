@@ -5,6 +5,7 @@ import com.invasion.compat.MutantMonstersCompatibility;
 import com.invasion.compat.FriendsAndFoesCompatibility;
 import com.invasion.compat.ConfiguredModMobs;
 import com.invasion.entity.BoundIMMobRegistry;
+import com.invasion.entity.ShieldUseHandler;
 import com.invasion.entity.InfectionDeathHandler;
 import com.invasion.entity.IMCivilianTargetHandler;
 import com.invasion.entity.IMMobFriendlyFireHandler;
@@ -136,6 +137,7 @@ public class InvasionMod implements ModInitializer {
         FriendsAndFoesCompatibility.registerEntity();
         FriendsAndFoesCompatibility.registerItem();
         IMMobFriendlyFireHandler.bootstrap();
+        ShieldUseHandler.bootstrap();
         InvMobEffects.bootstrap();
         VanillaMobSpawnReplacement.bootstrap();
         VillagerResurrectionHandler.bootstrap();
