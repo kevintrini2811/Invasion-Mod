@@ -5,6 +5,7 @@ import org.joml.Vector3f;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+import com.invasion.block.BlockMetadata;
 import com.invasion.entity.BurrowerEntity;
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
 import com.invasion.entity.pathfinding.path.PathAction;
@@ -15,7 +16,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -97,6 +97,8 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
             @Override
             public float getPathNodePenalty(Node prevNode, Node node, BlockGetter worldMap) {
+                BlockState block = worldMap.getBlockState(node.asBlockPos());
+
                 float penalty = 0.0F;
                 int enclosedLevelSide = 0;
 
@@ -109,10 +111,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 }
 
                 for (Direction offset : Direction.Plane.HORIZONTAL) {
-                    BlockState adjacent = entity.level().getBlockState(
-                            mutable.set(node.x, node.y, node.z).move(offset));
-                    if (!adjacent.is(Blocks.DIRT_PATH)
-                            && !adjacent.isPathfindable(PathComputationType.LAND)) {
+                    if (!entity.level().getBlockState(mutable.set(node.x, node.y, node.z).move(offset)).isPathfindable(PathComputationType.LAND)) {
                         enclosedLevelSide++;
                     }
                 }
@@ -122,7 +121,9 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 }
                 penalty += enclosedLevelSide * 0.5F;
 
-                return prevNode.distanceTo(node) * penalty;
+                float factor = !block.isAir() && (!block.isPathfindable(PathComputationType.LAND) || BlockMetadata.getCost(block).isPresent()) ? 1.3F : 1;
+
+                return prevNode.distanceTo(node) * factor * penalty;
             }
         };
     }
