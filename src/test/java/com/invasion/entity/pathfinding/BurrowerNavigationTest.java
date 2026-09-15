@@ -12,18 +12,94 @@ import static org.mockito.Mockito.when;
 
 import com.invasion.entity.BurrowerEntity;
 import com.invasion.util.math.PosRotate3D;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 class BurrowerNavigationTest {
     private static final double EPSILON = 1.0E-6D;
+
+    @Test
+    void replacingPathDuringRiserClimbDoesNotSendHeadBackDown() {
+        MovementFixture fixture = new MovementFixture(new Vec3(0.5, 64, 0.5));
+        fixture.stairShapes.add(Shapes.create(new AABB(-2, 63, -2, 4, 64, 3)));
+        fixture.stairShapes.add(Shapes.create(new AABB(1, 64, 0, 3, 65, 1)));
+        fixture.navigation.startMovingAlong(ledgePath(), 1);
+        for (int tick = 0; tick < 300 && fixture.position.y < 64.5; tick++) {
+            fixture.step();
+        }
+        assertTrue(fixture.position.y >= 64.5, "Reach the middle of the riser");
+        double previousHeight = fixture.position.y;
+        for (int tick = 0; tick < 300 && !fixture.navigation.isIdle(); tick++) {
+            if (tick % 10 == 0 && fixture.position.y < 65) {
+                fixture.navigation.startMovingAlong(ledgePath(), 1);
+            }
+            fixture.step();
+            assertTrue(fixture.position.y >= Math.min(previousHeight, 65) - EPSILON,
+                    "A replacement path must keep climbing: " + fixture.position);
+            previousHeight = fixture.position.y;
+        }
+        assertTrue(fixture.navigation.isIdle(), "Finish after replacing the path on the riser");
+    }
+
+    private static Path ledgePath() {
+        return new Path(List.of(new Node(0, 64, 0), new Node(1, 65, 0), new Node(2, 65, 0)),
+                new BlockPos(2, 65, 0), true);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Direction.class, names = {"NORTH", "SOUTH", "WEST", "EAST"})
+    void staircaseFollowsEachRiserAndTreadWithRealVoxelCollisions(Direction direction) {
+        MovementFixture fixture = new MovementFixture(new Vec3(0.5, 64, 0.5));
+        List<Node> nodes = new ArrayList<>();
+        fixture.stairShapes.add(Shapes.create(new AABB(-6, 63, -6, 6, 64, 6)));
+        for (int step = 0; step <= 4; step++) {
+            int x = step * direction.getStepX();
+            int z = step * direction.getStepZ();
+            nodes.add(new Node(x, 64 + step, z));
+            if (step > 0) {
+                fixture.stairShapes.add(Shapes.create(new AABB(x, 64, z, x + 1, 64 + step, z + 1)));
+            }
+        }
+        fixture.navigation.startMovingAlong(new Path(nodes, nodes.getLast().asBlockPos(), true), 1);
+        boolean[] climbed = new boolean[4];
+        boolean[] crossed = new boolean[4];
+        Vec3 heading = new Vec3(1, 0, 0);
+        for (int tick = 0; tick < 1200 && !fixture.navigation.isIdle(); tick++) {
+            int step = fixture.navigation.path.getNextNodeIndex();
+            Vec3 before = fixture.position;
+            fixture.step();
+            Vec3 movement = fixture.position.subtract(before);
+            double forward = movement.x * direction.getStepX() + movement.z * direction.getStepZ();
+            climbed[step] |= movement.y > 0.008 && Math.abs(forward) < 0.007;
+            crossed[step] |= forward > 0.008 && Math.abs(movement.y) < 0.007;
+            assertTrue(fixture.position.y <= 65 + step + 0.3, "Stay close to the current step");
+            if (fixture.requestedMovement.lengthSqr() > 1.0E-10D) {
+                Vec3 nextHeading = fixture.requestedMovement.normalize();
+                assertTrue(Math.acos(Math.clamp(heading.dot(nextHeading), -1, 1))
+                        <= BurrowerNavigation.MAX_TURN_RADIANS + EPSILON, "Keep turns gradual on stairs");
+                heading = nextHeading;
+            }
+        }
+        assertTrue(fixture.navigation.isIdle(), "Staircase must finish: " + fixture.position);
+        for (int step = 0; step < 4; step++) {
+            assertTrue(climbed[step], "Follow riser " + step);
+            assertTrue(crossed[step], "Follow tread " + step);
+        }
+    }
 
     @Test
     void nearbySidewaysTargetDoesNotTrapHeadInAnOrbit() {
@@ -182,6 +258,7 @@ class BurrowerNavigationTest {
         private PosRotate3D firstSegment;
         private double allowedMovement = 1;
         private double ledgeHeight = Double.NEGATIVE_INFINITY;
+        private final List<VoxelShape> stairShapes = new ArrayList<>();
         private final BurrowerNavigation navigation;
 
         private MovementFixture(Vec3 initialPosition) {
@@ -192,16 +269,27 @@ class BurrowerNavigationTest {
             when(entity.getY()).thenAnswer(invocation -> position.y);
             when(entity.getZ()).thenAnswer(invocation -> position.z);
             when(entity.getYRot()).thenReturn(-90F);
+            when(entity.getBbWidth()).thenReturn(0.5F);
             doAnswer(invocation -> {
                 requestedMovement = invocation.getArgument(1);
                 Vec3 before = position;
                 position = position.add(requestedMovement.scale(allowedMovement));
-                if (before.x > 0.65 && before.y >= ledgeHeight && position.y < ledgeHeight) {
+                if (!stairShapes.isEmpty()) {
+                    AABB box = new AABB(before.x - 0.25, before.y, before.z - 0.25,
+                            before.x + 0.25, before.y + 0.5, before.z + 0.25);
+                    double y = Shapes.collide(Direction.Axis.Y, box, stairShapes, requestedMovement.y);
+                    box = box.move(0, y, 0);
+                    double x = Shapes.collide(Direction.Axis.X, box, stairShapes, requestedMovement.x);
+                    box = box.move(x, 0, 0);
+                    double z = Shapes.collide(Direction.Axis.Z, box, stairShapes, requestedMovement.z);
+                    position = before.add(x, y, z);
+                }
+                if (before.x > 0.75 && before.y >= ledgeHeight && position.y < ledgeHeight) {
                     position = new Vec3(position.x, ledgeHeight, position.z);
                 }
-                // A 0.7-block-wide head cannot enter the wall until its feet clear the top.
+                // Match the registered 0.5-block-wide head's clearance at the wall.
                 if (position.y < ledgeHeight) {
-                    position = new Vec3(Math.min(position.x, 0.65), position.y, position.z);
+                    position = new Vec3(Math.min(position.x, 0.75), position.y, position.z);
                 }
                 return null;
             }).when(entity).move(eq(MoverType.SELF), any(Vec3.class));
