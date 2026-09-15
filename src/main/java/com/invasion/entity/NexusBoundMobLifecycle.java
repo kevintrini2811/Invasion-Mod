@@ -57,49 +57,48 @@ public final class NexusBoundMobLifecycle {
             NexusAccess nexus = combatant.getNexus();
             if (nexus == null || nexus.isDiscarded() || !nexus.isActive()) {
                 enqueue(level, combatant, nexus);
-            } else {
-                tickStationaryPathRecovery(combatant, living, nexus);
+            } else if (living instanceof Mob mob) {
+                tickStationaryPathRecovery(mob, nexus);
             }
         });
         drain(level);
     }
 
-    private static void tickStationaryPathRecovery(
-            Combatant<?> combatant, LivingEntity living, NexusAccess nexus) {
-        if (!(living instanceof Mob mob)
-                || living instanceof StationaryPathRecoveryExcluded
+    /** Checks one mob once per second and sends stationary mobs along a detour. */
+    public static void tickStationaryPathRecovery(Mob mob, NexusAccess nexus) {
+        if (mob instanceof StationaryPathRecoveryExcluded
                 || mob.getTarget() != null) {
-            STATIONARY_STATES.remove(living);
+            STATIONARY_STATES.remove(mob);
             return;
         }
 
         StationaryState state = STATIONARY_STATES.computeIfAbsent(
-                living, ignored -> new StationaryState(living.blockPosition()));
+                mob, ignored -> new StationaryState(mob.blockPosition()));
         if (mob instanceof PathfinderMob pathfinderMob
                 && MineBlockGoal.consumeRecoveryRequest(pathfinderMob)) {
-            state.anchor = living.blockPosition();
+            state.anchor = mob.blockPosition();
             state.ticks = 0;
             state.recoveryTarget = findAlternativePath(mob, nexus);
             return;
         }
         if ((mob instanceof PathfinderMob pathfinderMob
                         && MineBlockGoal.isMining(pathfinderMob))
-                || isWaitingForTerrainTask(living)) {
-            STATIONARY_STATES.remove(living);
+                || isWaitingForTerrainTask(mob)) {
+            STATIONARY_STATES.remove(mob);
             return;
         }
 
         if (state.recoveryTarget != null
                 && (mob.getNavigation().isDone()
-                        || living.blockPosition().closerThan(
+                        || mob.blockPosition().closerThan(
                                 state.recoveryTarget, 2.0D))) {
             state.recoveryTarget = null;
-            state.anchor = living.blockPosition();
+            state.anchor = mob.blockPosition();
             state.ticks = 0;
             return;
         }
-        if (!living.blockPosition().equals(state.anchor)) {
-            state.anchor = living.blockPosition();
+        if (!mob.blockPosition().equals(state.anchor)) {
+            state.anchor = mob.blockPosition();
             state.ticks = 0;
             return;
         }
@@ -108,7 +107,7 @@ public final class NexusBoundMobLifecycle {
             return;
         }
 
-        state.anchor = living.blockPosition();
+        state.anchor = mob.blockPosition();
         state.ticks = 0;
         state.recoveryTarget = findAlternativePath(mob, nexus);
     }
