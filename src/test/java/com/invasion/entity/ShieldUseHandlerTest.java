@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.invasion.compat.ConfiguredModMobs;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
@@ -16,6 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,6 +69,61 @@ class ShieldUseHandlerTest {
         when(source.getDirectEntity()).thenReturn(mock(AbstractArrow.class));
         when(source.getSourcePosition()).thenReturn(new Vec3(8, 64, 0));
         ShieldUseHandler.onIncomingDamage(event);
+    }
+
+    @Test
+    void activeConfiguredMobWithoutWaveUsesShieldAndCombatTimers() {
+        when(mob.getPersistentData()).thenReturn(new CompoundTag());
+        try (var configured = mockStatic(ConfiguredModMobs.class)) {
+            configured.when(() -> ConfiguredModMobs.isActive(mob.getType())).thenReturn(true);
+            visibleTarget();
+            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+            usingShield();
+            assertFalse(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+            verify(mob).stopUsingItem();
+            when(level.getGameTime()).thenReturn(119L);
+            assertFalse(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+            when(level.getGameTime()).thenReturn(120L);
+            assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+            when(level.getGameTime()).thenReturn(125L);
+            for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
+            assertTrue(ShieldUseHandler.isBlockingSuppressed(mob));
+            when(level.getGameTime()).thenReturn(204L);
+            assertTrue(ShieldUseHandler.isBlockingSuppressed(mob));
+            when(level.getGameTime()).thenReturn(205L);
+            assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+        }
+    }
+
+    @Test
+    void activeConfiguredMobWithoutWaveReactsToArrows() {
+        when(mob.getPersistentData()).thenReturn(new CompoundTag());
+        try (var configured = mockStatic(ConfiguredModMobs.class)) {
+            configured.when(() -> ConfiguredModMobs.isActive(mob.getType())).thenReturn(true);
+            arrowHit();
+            when(level.getGameTime()).thenReturn(399L);
+            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+            usingShield();
+            when(level.getGameTime()).thenReturn(400L);
+            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            verify(mob).stopUsingItem();
+        }
+    }
+
+    @Test
+    void inactiveExternalMobDoesNotReceiveShieldAi() {
+        when(mob.getPersistentData()).thenReturn(new CompoundTag());
+        try (var configured = mockStatic(ConfiguredModMobs.class)) {
+            configured.when(() -> ConfiguredModMobs.isActive(mob.getType())).thenReturn(false);
+            visibleTarget();
+            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            verify(mob, never()).startUsingItem(any());
+            assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+            for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
+            assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+        }
     }
 
     @Test
