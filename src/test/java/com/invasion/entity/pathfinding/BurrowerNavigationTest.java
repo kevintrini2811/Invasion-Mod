@@ -17,6 +17,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.pathfinder.Node;
@@ -74,7 +75,7 @@ class BurrowerNavigationTest {
                 fixture.stairShapes.add(Shapes.create(new AABB(x, 64, z, x + 1, 64 + step, z + 1)));
             }
         }
-        fixture.navigation.startMovingAlong(new Path(nodes, nodes.getLast().asBlockPos(), true), 1);
+        fixture.navigation.startMovingAlong(new Path(nodes, nodes.get(nodes.size() - 1).asBlockPos(), true), 1);
         boolean[] climbed = new boolean[4];
         boolean[] crossed = new boolean[4];
         Vec3 heading = new Vec3(1, 0, 0);
@@ -89,7 +90,7 @@ class BurrowerNavigationTest {
             assertTrue(fixture.position.y <= 65 + step + 0.3, "Stay close to the current step");
             if (fixture.requestedMovement.lengthSqr() > 1.0E-10D) {
                 Vec3 nextHeading = fixture.requestedMovement.normalize();
-                assertTrue(Math.acos(Math.clamp(heading.dot(nextHeading), -1, 1))
+                assertTrue(Math.acos(Mth.clamp(heading.dot(nextHeading), -1, 1))
                         <= BurrowerNavigation.MAX_TURN_RADIANS + EPSILON, "Keep turns gradual on stairs");
                 heading = nextHeading;
             }
@@ -168,7 +169,7 @@ class BurrowerNavigationTest {
                 continue;
             }
             Vec3 nextHeading = fixture.requestedMovement.normalize();
-            assertTrue(Math.acos(Math.clamp(heading.dot(nextHeading), -1, 1))
+            assertTrue(Math.acos(Mth.clamp(heading.dot(nextHeading), -1, 1))
                     <= BurrowerNavigation.MAX_TURN_RADIANS + EPSILON);
             heading = nextHeading;
         }
@@ -196,7 +197,7 @@ class BurrowerNavigationTest {
             assertEquals(0.05, displacement.length(), EPSILON);
             assertEquals(64, fixture.position.y, EPSILON);
             Vec3 heading = displacement.normalize();
-            double angle = Math.acos(Math.clamp(previousDirection.dot(heading), -1, 1));
+            double angle = Math.acos(Mth.clamp(previousDirection.dot(heading), -1, 1));
             assertTrue(angle <= BurrowerNavigation.MAX_TURN_RADIANS + EPSILON);
             if (heading.z > 0.01 && turningTicks++ == 0) {
                 assertTrue(heading.x > 0.99, "The first turn step must still point mostly forward");
