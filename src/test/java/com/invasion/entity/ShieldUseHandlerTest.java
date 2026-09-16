@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.invasion.compat.ConfiguredModMobs;
+import java.util.List;
+import java.util.Optional;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
@@ -13,10 +16,15 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.BlocksAttacks;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
+import net.neoforged.neoforge.common.damagesource.DamageContainer;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import org.junit.jupiter.api.BeforeEach;
@@ -62,12 +70,17 @@ class ShieldUseHandlerTest {
     }
 
     private void arrowHit() {
+        projectileHit(mock(AbstractArrow.class), null);
+    }
+
+    private void projectileHit(Projectile projectile, LivingEntity shooter) {
         LivingIncomingDamageEvent event = mock(LivingIncomingDamageEvent.class);
         DamageSource source = mock(DamageSource.class);
         when(event.getEntity()).thenReturn(mob);
         when(event.getSource()).thenReturn(source);
         when(source.is(DamageTypeTags.IS_PROJECTILE)).thenReturn(true);
-        when(source.getDirectEntity()).thenReturn(mock(AbstractArrow.class));
+        when(source.getDirectEntity()).thenReturn(projectile);
+        when(source.getEntity()).thenReturn(shooter);
         when(source.getSourcePosition()).thenReturn(new Vec3(8, 64, 0));
         ShieldUseHandler.onIncomingDamage(event);
     }
@@ -235,6 +248,95 @@ class ShieldUseHandlerTest {
         when(level.getGameTime()).thenReturn(400L);
         ShieldUseHandler.update(mob);
         verify(mob).stopUsingItem();
+    }
+
+    @Test
+    void mobArrowReactionSurvivesExpiredRetaliationMemory() {
+        Mob shooter = recentAttacker();
+        projectileHit(mock(AbstractArrow.class), shooter);
+        ShieldUseHandler.update(mob);
+        usingShield();
+        when(mob.getLastHurtByMob()).thenReturn(null);
+        when(level.getGameTime()).thenReturn(201L);
+        ShieldUseHandler.update(mob);
+        when(level.getGameTime()).thenReturn(399L);
+        ShieldUseHandler.update(mob);
+        verify(mob, never()).stopUsingItem();
+        verify(mob, times(3)).lookAt(EntityAnchorArgument.Anchor.EYES, shooter.getEyePosition());
+        when(level.getGameTime()).thenReturn(400L);
+        ShieldUseHandler.update(mob);
+        verify(mob).stopUsingItem();
+    }
+
+    @Test
+    void mobTridentTriggersShieldReaction() {
+        Mob shooter = recentAttacker();
+        projectileHit(mock(ThrownTrident.class), shooter);
+        when(mob.getLastHurtByMob()).thenReturn(null);
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+        verify(mob).lookAt(EntityAnchorArgument.Anchor.EYES, shooter.getEyePosition());
+    }
+
+    @Test
+    void otherMobProjectilesTriggerShieldReaction() {
+        Mob shooter = recentAttacker();
+        projectileHit(mock(Projectile.class), shooter);
+        when(mob.getLastHurtByMob()).thenReturn(null);
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+        verify(mob).lookAt(EntityAnchorArgument.Anchor.EYES, shooter.getEyePosition());
+    }
+
+    private LivingIncomingDamageEvent snowballHit(float damage, Vec3 position) {
+        DamageSource source = mock(DamageSource.class);
+        when(source.is(DamageTypeTags.IS_PROJECTILE)).thenReturn(true);
+        when(source.getDirectEntity()).thenReturn(mock(Snowball.class));
+        when(source.getSourcePosition()).thenReturn(position);
+        when(mob.position()).thenReturn(Vec3.ZERO);
+        when(mob.getItemBlockingWith()).thenReturn(shield);
+        when(shield.get(DataComponents.BLOCKS_ATTACKS)).thenReturn(new BlocksAttacks(
+                0.25F, 1, List.of(new BlocksAttacks.DamageReduction(90, Optional.empty(), 0, 1)),
+                BlocksAttacks.ItemDamageFunction.DEFAULT, Optional.empty(), Optional.empty(), Optional.empty()));
+        return new LivingIncomingDamageEvent(mob, new DamageContainer(source, damage));
+    }
+
+    @Test
+    void raisedShieldPreventsHarmlessSnowballHurtAnimationFromFront() {
+        LivingIncomingDamageEvent event = snowballHit(0, new Vec3(0, 0, 3));
+        ShieldUseHandler.onIncomingDamage(event);
+        assertTrue(event.isCanceled());
+        assertFalse(ShieldUseHandler.isBlockingSuppressed(mob));
+    }
+
+    @Test
+    void harmlessSnowballFromBehindStillHits() {
+        LivingIncomingDamageEvent event = snowballHit(0, new Vec3(0, 0, -3));
+        ShieldUseHandler.onIncomingDamage(event);
+        assertFalse(event.isCanceled());
+    }
+
+    @Test
+    void harmlessSnowballStillHitsBeforeShieldIsReady() {
+        LivingIncomingDamageEvent event = snowballHit(0, new Vec3(0, 0, 3));
+        when(mob.getItemBlockingWith()).thenReturn(null);
+        ShieldUseHandler.onIncomingDamage(event);
+        assertFalse(event.isCanceled());
+    }
+
+    @Test
+    void harmlessSnowballStillHitsDuringBlockCooldown() {
+        LivingIncomingDamageEvent event = snowballHit(0, new Vec3(0, 0, 3));
+        for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        ShieldUseHandler.onIncomingDamage(event);
+        assertFalse(event.isCanceled());
+    }
+
+    @Test
+    void damagingSnowballsKeepVanillaDamageAndBlocking() {
+        LivingIncomingDamageEvent event = snowballHit(3, new Vec3(0, 0, 3));
+        ShieldUseHandler.onIncomingDamage(event);
+        assertFalse(event.isCanceled());
     }
 
     @Test

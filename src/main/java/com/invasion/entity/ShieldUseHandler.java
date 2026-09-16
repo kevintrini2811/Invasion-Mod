@@ -5,21 +5,23 @@ import com.invasion.compat.ConfiguredModMobs;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
-import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.common.CommonHooks;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /** Makes shield-equipped invasion mobs actively block during combat. */
 public final class ShieldUseHandler {
     private static final Map<Mob, Defense> DEFENSE = new WeakHashMap<>();
-    private static final int ARROW_DEFENSE_TICKS = 15 * 20;
+    private static final int PROJECTILE_DEFENSE_TICKS = 15 * 20;
     private static final int ATTACK_PAUSE_TICKS = 5;
     private static final int ATTACK_WINDUP_TICKS = 20;
     private static final int BLOCK_COOLDOWN_TICKS = 4 * 20;
@@ -43,7 +45,8 @@ public final class ShieldUseHandler {
     static void update(Mob mob) {
         Defense defense = DEFENSE.get(mob);
         LivingEntity target = mob.getTarget();
-        if (!isVisibleThreat(mob, target)) {
+        boolean visibleCombatTarget = isVisibleThreat(mob, target);
+        if (!visibleCombatTarget) {
             // Some invasion goals keep the Nexus as their target instead of retaliating.
             // Vanilla clears this attacker memory after death or five seconds without a hit.
             target = mob.getLastHurtByMob();
@@ -55,12 +58,12 @@ public final class ShieldUseHandler {
             // Abandon an attack that the AI no longer attempts (for example, after fleeing).
             defense.attackReadyAt = -1;
         }
-        if (visibleTarget && defense != null) {
-            // A visible threat replaces the reaction to the last arrow.
-            defense.arrowUntil = 0;
+        if (visibleCombatTarget && defense != null) {
+            // Retaliation memory must not erase the longer projectile reaction.
+            defense.projectileUntil = 0;
         }
-        boolean arrowDefense = defense != null && now < defense.arrowUntil;
-        if (defense != null && now >= defense.attackUntil && !arrowDefense
+        boolean projectileDefense = defense != null && now < defense.projectileUntil;
+        if (defense != null && now >= defense.attackUntil && !projectileDefense
                 && defense.attackReadyAt < 0 && now >= defense.blockedUntil
                 && defense.successfulBlocks == 0) {
             DEFENSE.remove(mob);
@@ -69,8 +72,8 @@ public final class ShieldUseHandler {
         boolean attacking = mob.swinging && mob.swingingArm == InteractionHand.MAIN_HAND
                 || defense != null && (now < defense.attackUntil || defense.attackReadyAt >= 0
                         || now < defense.blockedUntil);
-        if (canBlock(mob) && !attacking && (visibleTarget || arrowDefense)) {
-            Vec3 lookAt = visibleTarget ? target.getEyePosition() : defense.arrowOrigin;
+        if (canBlock(mob) && !attacking && (visibleTarget || projectileDefense)) {
+            Vec3 lookAt = visibleTarget ? target.getEyePosition() : defense.projectileOrigin;
             mob.lookAt(EntityAnchorArgument.Anchor.EYES, lookAt);
             mob.setYBodyRot(mob.getYRot());
             if (!mob.isUsingItem()) {
@@ -151,15 +154,14 @@ public final class ShieldUseHandler {
 
     static void onIncomingDamage(LivingIncomingDamageEvent event) {
         if (event.getSource().is(DamageTypeTags.IS_PROJECTILE)) {
-            if (event.getSource().getDirectEntity() instanceof AbstractArrow
-                    && !(event.getSource().getDirectEntity() instanceof ThrownTrident)
-                    && event.getEntity() instanceof Mob mob && isShieldMob(mob) && canBlock(mob)) {
+            if (event.getEntity() instanceof Mob mob && isShieldMob(mob) && canBlock(mob)) {
                 Defense defense = DEFENSE.computeIfAbsent(mob, ignored -> new Defense());
-                defense.arrowUntil = mob.level().getGameTime() + ARROW_DEFENSE_TICKS;
+                defense.projectileUntil = mob.level().getGameTime() + PROJECTILE_DEFENSE_TICKS;
                 var attacker = event.getSource().getEntity();
-                defense.arrowOrigin = attacker != null ? attacker.getEyePosition()
+                defense.projectileOrigin = attacker != null ? attacker.getEyePosition()
                         : event.getSource().getSourcePosition();
-                if (defense.arrowOrigin == null) defense.arrowOrigin = mob.getEyePosition();
+                if (defense.projectileOrigin == null) defense.projectileOrigin = mob.getEyePosition();
+                blockHarmlessProjectile(event, mob);
             }
         } else if (event.getSource().getDirectEntity() instanceof Mob attacker) {
             // Also cover custom melee attacks that do not swing an arm.
@@ -167,13 +169,33 @@ public final class ShieldUseHandler {
         }
     }
 
+    private static void blockHarmlessProjectile(LivingIncomingDamageEvent event, Mob mob) {
+        // Vanilla skips applyItemBlocking at zero damage but still sends a hurt animation.
+        if (event.getAmount() != 0 || isBlockingSuppressed(mob)) return;
+        var shield = mob.getItemBlockingWith();
+        if (shield == null) return;
+        var blocking = shield.get(DataComponents.BLOCKS_ATTACKS);
+        var source = event.getSource();
+        if (blocking == null || blocking.bypassedBy().map(types -> types.contains(source.typeHolder())).orElse(false)
+                || source.getDirectEntity() instanceof AbstractArrow arrow && arrow.getPierceLevel() > 0) return;
+        Vec3 origin = source.getSourcePosition();
+        if (origin == null) return;
+        Vec3 direction = origin.subtract(mob.position()).multiply(1, 0, 1).normalize();
+        double angle = Math.acos(direction.dot(Vec3.directionFromRotation(0, mob.getYHeadRot())));
+        // Probe the component's direction/type rules without applying damage or consuming a block.
+        if (blocking.resolveBlockedDamage(source, 1, angle) <= 0) return;
+        if (!CommonHooks.onDamageBlock(mob, event.getContainer(), 0, true).getBlocked()) return;
+        blocking.onBlocked((ServerLevel) mob.level(), mob);
+        event.setCanceled(true);
+    }
+
     private static final class Defense {
-        private long arrowUntil;
+        private long projectileUntil;
         private long attackUntil;
         private long attackReadyAt = -1;
         private long lastAttackAt = -1;
         private long blockedUntil;
         private int successfulBlocks;
-        private Vec3 arrowOrigin;
+        private Vec3 projectileOrigin;
     }
 }
