@@ -3,6 +3,7 @@ package com.invasion.client.render.entity;
 import java.util.List;
 import java.util.stream.Stream;
 import net.minecraft.client.model.AnimationUtils;
+import com.invasion.client.render.legacy.ShieldPose;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.model.geom.ModelPart;
@@ -135,7 +136,9 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
         @Override
         public void setupAnim(AbstractIMZombieEntity hostileEntity, float f, float g, float h, float i, float j) {
             super.setupAnim(hostileEntity, f, g, h, i, j);
-            AnimationUtils.animateZombieArms(leftArm, rightArm, isAttacking(hostileEntity), attackTime, h);
+            if (!ShieldPose.isBlocking(hostileEntity)) {
+                AnimationUtils.animateZombieArms(leftArm, rightArm, isAttacking(hostileEntity), attackTime, h);
+            }
         }
 
         public boolean isAttacking(AbstractIMZombieEntity entity) {
@@ -151,7 +154,9 @@ public class AbstractIMZombieEntityRenderer extends HumanoidMobRenderer<Abstract
         @Override
         public void setupAnim(AbstractIMZombieEntity hostileEntity, float f, float g, float h, float i, float j) {
             super.setupAnim(hostileEntity, f, g, h, i, j);
-            AnimationUtils.animateZombieArms(leftArm, rightArm, isAttacking(hostileEntity), attackTime, h);
+            if (!ShieldPose.isBlocking(hostileEntity)) {
+                AnimationUtils.animateZombieArms(leftArm, rightArm, isAttacking(hostileEntity), attackTime, h);
+            }
         }
 
         public boolean isAttacking(AbstractIMZombieEntity entity) {
