@@ -342,6 +342,7 @@ public class IMWaveSpawner implements Spawner {
 				equipWitherSkeletonWeapon(mob, spawnConstruct);
                 applyBabyVariant(mob, spawnConstruct);
                 equipRandomWaveShield(mob);
+                WaveEquipmentEnchantments.enchantEquipment(mob, nexus.getCurrentWave(), getRandom());
                 markAsInvasionAlly(mob);
                 if (debugMode) {
                     InvasionMod.LOGGER.debug("[Spawn] Time: " + currentWave.getTimeInWave()
