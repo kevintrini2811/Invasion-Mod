@@ -19,7 +19,7 @@
       "WildfireNexusMixin"
     ],
     "client": [
-      "LivingEntityRendererShieldPoseMixin",
+      "EntityRendererShieldPoseMixin",
       "ZombieShieldPoseMixin",
       "AgeableMobRendererAccessor"
     ]
