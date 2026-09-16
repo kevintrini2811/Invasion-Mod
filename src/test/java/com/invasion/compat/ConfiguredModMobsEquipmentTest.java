@@ -9,7 +9,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ShieldItem;
-import net.neoforged.neoforge.common.Tags;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +26,7 @@ class ConfiguredModMobsEquipmentTest {
         when(mob.getEquipmentSlotForItem(shield)).thenReturn(EquipmentSlot.OFFHAND);
         when(mob.getMainHandItem()).thenReturn(weapon);
         when(mob.getOffhandItem()).thenReturn(ItemStack.EMPTY);
-        when(weapon.is(Tags.Items.MELEE_WEAPON_TOOLS)).thenReturn(true);
+        when(weapon.is(ConventionalItemTags.MELEE_WEAPON_TOOLS)).thenReturn(true);
     }
 
     @Test
@@ -37,28 +37,28 @@ class ConfiguredModMobsEquipmentTest {
 
     @Test
     void meleeMobAcceptsTaggedModShield() {
-        when(shield.is(Tags.Items.TOOLS_SHIELD)).thenReturn(true);
+        when(shield.is(ConventionalItemTags.SHIELD_TOOLS)).thenReturn(true);
         assertTrue(ConfiguredModMobs.isAllowedEquipment(mob, shield, false, true));
     }
 
     @Test
     void shieldRequiresWeaponsPermission() {
-        when(shield.is(Tags.Items.TOOLS_SHIELD)).thenReturn(true);
+        when(shield.is(ConventionalItemTags.SHIELD_TOOLS)).thenReturn(true);
         assertFalse(ConfiguredModMobs.isAllowedEquipment(mob, shield, true, false));
     }
 
     @Test
     void shieldDoesNotReplaceOccupiedOffhand() {
-        when(shield.is(Tags.Items.TOOLS_SHIELD)).thenReturn(true);
+        when(shield.is(ConventionalItemTags.SHIELD_TOOLS)).thenReturn(true);
         when(mob.getOffhandItem()).thenReturn(mock(ItemStack.class));
         assertFalse(ConfiguredModMobs.isAllowedEquipment(mob, shield, false, true));
     }
 
     @Test
     void rangedMobDoesNotPickUpShield() {
-        when(shield.is(Tags.Items.TOOLS_SHIELD)).thenReturn(true);
-        when(weapon.is(Tags.Items.MELEE_WEAPON_TOOLS)).thenReturn(false);
-        when(weapon.is(Tags.Items.RANGED_WEAPON_TOOLS)).thenReturn(true);
+        when(shield.is(ConventionalItemTags.SHIELD_TOOLS)).thenReturn(true);
+        when(weapon.is(ConventionalItemTags.MELEE_WEAPON_TOOLS)).thenReturn(false);
+        when(weapon.is(ConventionalItemTags.RANGED_WEAPON_TOOLS)).thenReturn(true);
         assertFalse(ConfiguredModMobs.isAllowedEquipment(mob, shield, false, true));
     }
 }

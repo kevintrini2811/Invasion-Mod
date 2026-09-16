@@ -36,7 +36,7 @@ public final class EquipmentUtil {
     }
 
     public static boolean isShield(ItemStack stack) {
-        return stack.is(Tags.Items.TOOLS_SHIELD)
+        return stack.is(ConventionalItemTags.SHIELD_TOOLS)
                 || stack.getItem() instanceof ShieldItem;
     }
 

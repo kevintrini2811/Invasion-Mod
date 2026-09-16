@@ -13,6 +13,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class ShieldCombatMixin {
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void invasion$tickShieldDefense(CallbackInfo ci) {
+        if ((Object)this instanceof net.minecraft.world.entity.Mob mob) ShieldUseHandler.update(mob);
+    }
+
+    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
+    private void invasion$prepareShieldDefense(ServerLevel level, DamageSource source, float damage,
+            CallbackInfoReturnable<Boolean> cir) {
+        if (!ShieldUseHandler.onIncomingDamage((LivingEntity)(Object)this, source)) {
+            cir.setReturnValue(false);
+        }
+    }
+
     @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;Z)V", at = @At("HEAD"), cancellable = true)
     private void invasion$lowerShield(InteractionHand hand, boolean sendToSelf, CallbackInfo ci) {
         if (!ShieldUseHandler.onAttack((LivingEntity)(Object)this, hand)) ci.cancel();
