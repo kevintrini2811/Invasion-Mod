@@ -75,6 +75,8 @@ legacyForge {
 }
 
 dependencies {
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.4'
+    jarJar 'io.github.llamalad7:mixinextras-forge:0.5.4'
     compileOnly "mezz.jei:jei-${project.minecraft_version}-forge-api:${project.jei_version}"
     compileOnly "maven.modrinth:mutant-monsters:v8.0.8-1.20.1-Forge"
     compileOnly "maven.modrinth:puzzles-lib:v8.1.33-1.20.1-Forge"

@@ -1,6 +1,8 @@
 package com.invasion.mixin;
 
 import com.invasion.entity.ShieldUseHandler;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.damagesource.DamageSource;
@@ -41,5 +43,20 @@ public abstract class ShieldCombatMixin {
     private void invasion$countSuccessfulBlock(DamageSource source,
             CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) ShieldUseHandler.onSuccessfulBlock((LivingEntity)(Object)this, 1.0F);
+    }
+
+    // Older hurt implementations still apply damage knockback after a full shield block.
+    // Capture the result of this hit, including the block that lowers the shield for cooldown.
+    @WrapWithCondition(method = "m_6469_", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/LivingEntity;m_147240_(DDD)V"), require = 1, remap = false)
+    private boolean invasion$skipBlockedDamageKnockback(LivingEntity defender,
+            double strength, double x, double z, @Local(ordinal = 0) boolean fullyBlocked) {
+        return !fullyBlocked || !ShieldUseHandler.isShieldMob(defender);
+    }
+
+    @WrapWithCondition(method = "m_6731_", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/world/entity/LivingEntity;m_147240_(DDD)V"), require = 1, remap = false)
+    private boolean invasion$skipShieldRecoil(LivingEntity defender, double strength, double x, double z) {
+        return !ShieldUseHandler.isShieldMob(defender);
     }
 }
