@@ -14,5 +14,8 @@
       "SlimeMoveControlAccessor",
       "WildfireNexusMixin"
     ],
-    "client": []
+    "client": [
+      "HumanoidShieldPoseMixin",
+      "UndeadShieldPoseMixin"
+    ]
 }

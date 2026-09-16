@@ -4,6 +4,7 @@ import com.invasion.InvasionMod;
 import com.invasion.entity.AbstractIMZombieEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.AnimationUtils;
+import com.invasion.client.render.legacy.ShieldPose;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
@@ -84,9 +85,11 @@ public final class MysteryZombieEntityRenderer
                 float headPitch) {
             super.setupAnim(entity, limbSwing, limbSwingAmount,
                     age, headYaw, headPitch);
-            AnimationUtils.animateZombieArms(
-                    leftArm, rightArm, entity.isAggressive(),
-                    attackTime, age);
+            if (!ShieldPose.isBlocking(entity)) {
+                AnimationUtils.animateZombieArms(
+                        leftArm, rightArm, entity.isAggressive(),
+                        attackTime, age);
+            }
         }
     }
 
