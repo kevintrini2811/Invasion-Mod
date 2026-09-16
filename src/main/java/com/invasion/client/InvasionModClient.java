@@ -34,7 +34,6 @@ public final class InvasionModClient {
                 (IConfigScreenFactory) (ignored, parent) -> new InvasionConfigScreen(parent));
         modBus.addListener(InvasionModClient::clientSetup);
         modBus.addListener(InvasionModClient::registerRenderers);
-        modBus.addListener(com.invasion.client.render.ShieldPose::register);
         modBus.addListener(InvasionModClient::registerGuiLayers);
         modBus.addListener(InvasionModClient::registerMenuScreens);
         modBus.addListener(InvasionModClient::registerItemColors);

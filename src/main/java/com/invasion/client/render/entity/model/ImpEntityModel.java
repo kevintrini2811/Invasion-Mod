@@ -10,6 +10,9 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.item.ShieldItem;
 
 public class ImpEntityModel extends HierarchicalModel<ImpEnitty>
         implements net.minecraft.client.model.ArmedModel {
@@ -83,6 +86,13 @@ public class ImpEntityModel extends HierarchicalModel<ImpEnitty>
 
         rightArm.setRotation((cosB * limbDistance) + armPitch, 0, armRoll);
         leftArm.setRotation((cosA * limbDistance) - armPitch, 0, -armRoll);
+
+        if (entity.isUsingItem() && entity.getUsedItemHand() == InteractionHand.OFF_HAND
+                && entity.getUseItem().getItem() instanceof ShieldItem) {
+            ModelPart shieldArm = entity.getMainArm() == HumanoidArm.RIGHT ? leftArm : rightArm;
+            shieldArm.xRot = -1.2F;
+            shieldArm.yRot = entity.getMainArm() == HumanoidArm.RIGHT ? 0.5F : -0.5F;
+        }
 
         rightLeg.xRot = cosA * 1.4F * limbDistance - 0.158F;
         leftLeg.xRot = cosB * 1.4F * limbDistance - 0.15919F;
