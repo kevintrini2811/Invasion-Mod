@@ -85,7 +85,8 @@ public final class ShieldUseHandler {
         }
     }
 
-    private static boolean isShieldMob(Mob mob) {
+    public static boolean isShieldMob(LivingEntity entity) {
+        if (!(entity instanceof Mob mob)) return false;
         return !mob.level().isClientSide()
                 && (mob instanceof Combatant<?> || mob.getPersistentData().contains("invmodWaveNumber")
                         || ConfiguredModMobs.isActive(mob.getType()));
