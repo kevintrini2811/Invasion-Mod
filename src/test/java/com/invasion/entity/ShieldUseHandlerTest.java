@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.invasion.compat.ConfiguredModMobs;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.DamageTypeTags;
@@ -150,6 +151,78 @@ class ShieldUseHandlerTest {
         when(mob.hasLineOfSight(proxy)).thenReturn(true);
         ShieldUseHandler.update(mob);
         verify(mob, never()).startUsingItem(any());
+    }
+
+    private Mob recentAttacker() {
+        Mob attacker = mock(Mob.class);
+        when(attacker.isAlive()).thenReturn(true);
+        when(attacker.getEyePosition()).thenReturn(new Vec3(2, 64, 0));
+        when(mob.getLastHurtByMob()).thenReturn(attacker);
+        when(mob.hasLineOfSight(attacker)).thenReturn(true);
+        return attacker;
+    }
+
+    @Test
+    void recentMobAttackerRaisesShieldWithoutCombatTarget() {
+        Mob attacker = recentAttacker();
+        ShieldUseHandler.update(mob);
+        verify(mob).lookAt(EntityAnchorArgument.Anchor.EYES, attacker.getEyePosition());
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+        verify(mob, never()).setTarget(any());
+    }
+
+    @Test
+    void recentMobAttackerRaisesShieldWhileTargetingNexus() {
+        when(mob.getTarget()).thenReturn(mock(SpawnProxyEntity.class));
+        recentAttacker();
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
+    }
+
+    @Test
+    void visibleCombatTargetStillTakesPriorityOverRecentAttacker() {
+        LivingEntity target = visibleTarget();
+        recentAttacker();
+        ShieldUseHandler.update(mob);
+        verify(mob).lookAt(EntityAnchorArgument.Anchor.EYES, target.getEyePosition());
+    }
+
+    @Test
+    void deadOrHiddenAttackerDoesNotRaiseShield() {
+        Mob attacker = recentAttacker();
+        when(attacker.isAlive()).thenReturn(false);
+        ShieldUseHandler.update(mob);
+        when(attacker.isAlive()).thenReturn(true);
+        when(mob.hasLineOfSight(attacker)).thenReturn(false);
+        ShieldUseHandler.update(mob);
+        verify(mob, never()).startUsingItem(any());
+    }
+
+    @Test
+    void expiredAttackerMemoryLowersShield() {
+        recentAttacker();
+        ShieldUseHandler.update(mob);
+        usingShield();
+        when(mob.getLastHurtByMob()).thenReturn(null);
+        ShieldUseHandler.update(mob);
+        verify(mob).stopUsingItem();
+    }
+
+    @Test
+    void recentMobAttackerDoesNotBypassAttackWindupOrBlockCooldown() {
+        recentAttacker();
+        assertFalse(ShieldUseHandler.prepareAttack(mob));
+        ShieldUseHandler.update(mob);
+        verify(mob, never()).startUsingItem(any());
+        when(level.getGameTime()).thenReturn(120L);
+        assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
+        when(level.getGameTime()).thenReturn(125L);
+        for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
+        ShieldUseHandler.update(mob);
+        verify(mob, never()).startUsingItem(any());
+        when(level.getGameTime()).thenReturn(205L);
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
     }
 
     @Test

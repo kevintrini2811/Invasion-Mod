@@ -43,8 +43,12 @@ public final class ShieldUseHandler {
     static void update(Mob mob) {
         Defense defense = DEFENSE.get(mob);
         LivingEntity target = mob.getTarget();
-        boolean visibleTarget = target != null && target.isAlive()
-                && !(target instanceof SpawnProxyEntity) && mob.hasLineOfSight(target);
+        if (!isVisibleThreat(mob, target)) {
+            // Some invasion goals keep the Nexus as their target instead of retaliating.
+            // Vanilla clears this attacker memory after death or five seconds without a hit.
+            target = mob.getLastHurtByMob();
+        }
+        boolean visibleTarget = isVisibleThreat(mob, target);
         long now = mob.level().getGameTime();
         if (defense != null && defense.attackReadyAt >= 0
                 && now > defense.attackReadyAt + ATTACK_WINDUP_TICKS) {
@@ -52,7 +56,7 @@ public final class ShieldUseHandler {
             defense.attackReadyAt = -1;
         }
         if (visibleTarget && defense != null) {
-            // A visible combat target replaces the reaction to the last arrow.
+            // A visible threat replaces the reaction to the last arrow.
             defense.arrowUntil = 0;
         }
         boolean arrowDefense = defense != null && now < defense.arrowUntil;
@@ -75,6 +79,11 @@ public final class ShieldUseHandler {
         } else {
             stopBlocking(mob);
         }
+    }
+
+    private static boolean isVisibleThreat(Mob mob, LivingEntity entity) {
+        return entity != null && entity.isAlive()
+                && !(entity instanceof SpawnProxyEntity) && mob.hasLineOfSight(entity);
     }
 
     private static void stopBlocking(Mob mob) {
