@@ -7,21 +7,30 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.invasion.compat.ConfiguredModMobs;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.SharedConstants;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ShieldItem;
+import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class ShieldUseHandlerTest {
+    @BeforeAll
+    static void bootstrap() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
+
     private Mob mob;
     private ServerLevel level;
     private ItemStack shield;
@@ -32,6 +41,8 @@ class ShieldUseHandlerTest {
         level = mock(ServerLevel.class);
         ItemStack weapon = mock(ItemStack.class);
         shield = mock(ItemStack.class);
+        SwordItem sword = mock(SwordItem.class);
+        ShieldItem shieldItem = mock(ShieldItem.class);
         CompoundTag data = new CompoundTag();
         data.putInt("invmodWaveNumber", 10);
         when(mob.getPersistentData()).thenReturn(data);
@@ -39,8 +50,8 @@ class ShieldUseHandlerTest {
         when(mob.isAlive()).thenReturn(true);
         when(mob.getMainHandItem()).thenReturn(weapon);
         when(mob.getOffhandItem()).thenReturn(shield);
-        when(weapon.is(Tags.Items.MELEE_WEAPON_TOOLS)).thenReturn(true);
-        when(shield.is(Tags.Items.TOOLS_SHIELD)).thenReturn(true);
+        when(weapon.getItem()).thenReturn(sword);
+        when(shield.getItem()).thenReturn(shieldItem);
         when(level.getGameTime()).thenReturn(100L);
     }
 
@@ -61,23 +72,22 @@ class ShieldUseHandlerTest {
     }
 
     private void arrowHit() {
-        LivingIncomingDamageEvent event = mock(LivingIncomingDamageEvent.class);
         DamageSource source = mock(DamageSource.class);
-        when(event.getEntity()).thenReturn(mob);
-        when(event.getSource()).thenReturn(source);
         when(source.is(DamageTypeTags.IS_PROJECTILE)).thenReturn(true);
         when(source.getDirectEntity()).thenReturn(mock(AbstractArrow.class));
         when(source.getSourcePosition()).thenReturn(new Vec3(8, 64, 0));
-        ShieldUseHandler.onIncomingDamage(event);
+        ShieldUseHandler.onIncomingDamage(mob, source);
     }
 
     @Test
     void activeConfiguredMobWithoutWaveUsesShieldAndCombatTimers() {
         when(mob.getPersistentData()).thenReturn(new CompoundTag());
+        EntityType<?> type = mock(EntityType.class);
+        doReturn(type).when(mob).getType();
         try (var configured = mockStatic(ConfiguredModMobs.class)) {
-            configured.when(() -> ConfiguredModMobs.isActive(mob.getType())).thenReturn(true);
+            configured.when(() -> ConfiguredModMobs.isActive(type)).thenReturn(true);
             visibleTarget();
-            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            ShieldUseHandler.update(mob);
             verify(mob).startUsingItem(InteractionHand.OFF_HAND);
             usingShield();
             assertFalse(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
@@ -99,15 +109,17 @@ class ShieldUseHandlerTest {
     @Test
     void activeConfiguredMobWithoutWaveReactsToArrows() {
         when(mob.getPersistentData()).thenReturn(new CompoundTag());
+        EntityType<?> type = mock(EntityType.class);
+        doReturn(type).when(mob).getType();
         try (var configured = mockStatic(ConfiguredModMobs.class)) {
-            configured.when(() -> ConfiguredModMobs.isActive(mob.getType())).thenReturn(true);
+            configured.when(() -> ConfiguredModMobs.isActive(type)).thenReturn(true);
             arrowHit();
             when(level.getGameTime()).thenReturn(399L);
-            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            ShieldUseHandler.update(mob);
             verify(mob).startUsingItem(InteractionHand.OFF_HAND);
             usingShield();
             when(level.getGameTime()).thenReturn(400L);
-            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            ShieldUseHandler.update(mob);
             verify(mob).stopUsingItem();
         }
     }
@@ -115,10 +127,12 @@ class ShieldUseHandlerTest {
     @Test
     void inactiveExternalMobDoesNotReceiveShieldAi() {
         when(mob.getPersistentData()).thenReturn(new CompoundTag());
+        EntityType<?> type = mock(EntityType.class);
+        doReturn(type).when(mob).getType();
         try (var configured = mockStatic(ConfiguredModMobs.class)) {
-            configured.when(() -> ConfiguredModMobs.isActive(mob.getType())).thenReturn(false);
+            configured.when(() -> ConfiguredModMobs.isActive(type)).thenReturn(false);
             visibleTarget();
-            ShieldUseHandler.tick(new EntityTickEvent.Post(mob));
+            ShieldUseHandler.update(mob);
             verify(mob, never()).startUsingItem(any());
             assertTrue(ShieldUseHandler.onAttack(mob, InteractionHand.MAIN_HAND));
             for (int i = 0; i < 3; i++) ShieldUseHandler.onSuccessfulBlock(mob, 3);
@@ -210,20 +224,13 @@ class ShieldUseHandlerTest {
 
     @Test
     void customMeleeDamageCannotBypassWindup() {
-        LivingIncomingDamageEvent event = mock(LivingIncomingDamageEvent.class);
         DamageSource source = mock(DamageSource.class);
-        when(event.getSource()).thenReturn(source);
         when(source.getDirectEntity()).thenReturn(mob);
-        ShieldUseHandler.onIncomingDamage(event);
-        verify(event).setCanceled(true);
-        clearInvocations(event);
+        assertFalse(ShieldUseHandler.onIncomingDamage(mock(LivingEntity.class), source));
         when(level.getGameTime()).thenReturn(119L);
-        ShieldUseHandler.onIncomingDamage(event);
-        verify(event).setCanceled(true);
-        clearInvocations(event);
+        assertFalse(ShieldUseHandler.onIncomingDamage(mock(LivingEntity.class), source));
         when(level.getGameTime()).thenReturn(120L);
-        ShieldUseHandler.onIncomingDamage(event);
-        verify(event, never()).setCanceled(true);
+        assertTrue(ShieldUseHandler.onIncomingDamage(mock(LivingEntity.class), source));
     }
 
     @Test

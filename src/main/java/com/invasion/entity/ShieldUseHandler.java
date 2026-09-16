@@ -6,15 +6,13 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
-import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.ThrownTrident;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 /** Makes shield-equipped invasion mobs actively block during combat. */
 public final class ShieldUseHandler {
@@ -29,18 +27,10 @@ public final class ShieldUseHandler {
     }
 
     public static void bootstrap() {
-        NeoForge.EVENT_BUS.addListener(ShieldUseHandler::tick);
-        NeoForge.EVENT_BUS.addListener(ShieldUseHandler::onIncomingDamage);
     }
 
-    static void tick(EntityTickEvent.Post event) {
-        if (!(event.getEntity() instanceof Mob mob) || !isShieldMob(mob)) {
-            return;
-        }
-        update(mob);
-    }
-
-    static void update(Mob mob) {
+    public static void update(Mob mob) {
+        if (!isShieldMob(mob)) return;
         Defense defense = DEFENSE.get(mob);
         LivingEntity target = mob.getTarget();
         boolean visibleTarget = target != null && target.isAlive()
@@ -140,22 +130,23 @@ public final class ShieldUseHandler {
                 || defense.attackReadyAt >= 0 || now < defense.attackUntil);
     }
 
-    static void onIncomingDamage(LivingIncomingDamageEvent event) {
-        if (event.getSource().is(DamageTypeTags.IS_PROJECTILE)) {
-            if (event.getSource().getDirectEntity() instanceof AbstractArrow
-                    && !(event.getSource().getDirectEntity() instanceof ThrownTrident)
-                    && event.getEntity() instanceof Mob mob && isShieldMob(mob) && canBlock(mob)) {
+    public static boolean onIncomingDamage(LivingEntity entity, DamageSource source) {
+        if (source.is(DamageTypeTags.IS_PROJECTILE)) {
+            if (source.getDirectEntity() instanceof AbstractArrow
+                    && !(source.getDirectEntity() instanceof ThrownTrident)
+                    && entity instanceof Mob mob && isShieldMob(mob) && canBlock(mob)) {
                 Defense defense = DEFENSE.computeIfAbsent(mob, ignored -> new Defense());
                 defense.arrowUntil = mob.level().getGameTime() + ARROW_DEFENSE_TICKS;
-                var attacker = event.getSource().getEntity();
+                var attacker = source.getEntity();
                 defense.arrowOrigin = attacker != null ? attacker.getEyePosition()
-                        : event.getSource().getSourcePosition();
+                        : source.getSourcePosition();
                 if (defense.arrowOrigin == null) defense.arrowOrigin = mob.getEyePosition();
             }
-        } else if (event.getSource().getDirectEntity() instanceof Mob attacker) {
+        } else if (source.getDirectEntity() instanceof Mob attacker) {
             // Also cover custom melee attacks that do not swing an arm.
-            if (!onAttack(attacker, InteractionHand.MAIN_HAND)) event.setCanceled(true);
+            if (!onAttack(attacker, InteractionHand.MAIN_HAND)) return false;
         }
+        return true;
     }
 
     private static final class Defense {

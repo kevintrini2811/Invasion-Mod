@@ -90,8 +90,6 @@ public final class ConfiguredModMobs {
             "NETHER", "SIEGE", "FAST", "MIXED", "RANDOM", "RANDOMHELL");
     private static final List<String> DEFAULT_THEMES = List.of(
             "MIXED", "RANDOM", "RANDOMHELL");
-    private static final Path FILE = FMLPaths.CONFIGDIR.get()
-            .resolve("invasion_mod_mobs.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<ResourceLocation, Entry> ENTRIES = new LinkedHashMap<>();
     private static final Map<ServerLevel, Set<Mob>> TRACKED_MOBS =
@@ -101,6 +99,10 @@ public final class ConfiguredModMobs {
     private static final String STOLEN_BLOCK = "invmodStolenBlock";
 
     private ConfiguredModMobs() {
+    }
+
+    private static Path file() {
+        return FMLPaths.CONFIGDIR.get().resolve("invasion_mod_mobs.json");
     }
 
     public static void bootstrap() {
@@ -166,9 +168,10 @@ public final class ConfiguredModMobs {
     }
 
     private static void refresh(boolean reset) {
+        Path file = file();
         Map<ResourceLocation, Entry> result = new LinkedHashMap<>();
-        if (!reset && Files.isRegularFile(FILE)) {
-            try (Reader reader = Files.newBufferedReader(FILE)) {
+        if (!reset && Files.isRegularFile(file)) {
+            try (Reader reader = Files.newBufferedReader(file)) {
                 JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
                 for (Map.Entry<String, JsonElement> jsonEntry : root.entrySet()) {
                     ResourceLocation id = ResourceLocation.tryParse(jsonEntry.getKey());
@@ -186,7 +189,7 @@ public final class ConfiguredModMobs {
                             readAbilities(value, defaults.abilities()), replacement));
                 }
             } catch (Exception exception) {
-                InvasionMod.LOGGER.error("Could not read {}; leaving it unchanged", FILE, exception);
+                InvasionMod.LOGGER.error("Could not read {}; leaving it unchanged", file, exception);
                 loaded = true;
                 ENTRIES.clear();
                 return;
@@ -271,6 +274,7 @@ public final class ConfiguredModMobs {
     }
 
     private static void write() {
+        Path file = file();
         JsonObject root = new JsonObject();
         root.addProperty("_comment", "Available themes: "
                 + String.join(", ", AVAILABLE_THEMES));
@@ -301,12 +305,12 @@ public final class ConfiguredModMobs {
             root.add(id.toString(), value);
         });
         try {
-            Files.createDirectories(FILE.getParent());
-            try (Writer writer = Files.newBufferedWriter(FILE)) {
+            Files.createDirectories(file.getParent());
+            try (Writer writer = Files.newBufferedWriter(file)) {
                 GSON.toJson(root, writer);
             }
         } catch (IOException exception) {
-            InvasionMod.LOGGER.error("Could not update {}", FILE, exception);
+            InvasionMod.LOGGER.error("Could not update {}", file, exception);
         }
     }
 
@@ -535,10 +539,13 @@ public final class ConfiguredModMobs {
 
     static boolean isAllowedEquipment(Mob mob, ItemStack stack,
             boolean armorAllowed, boolean weaponsAllowed) {
-        EquipmentSlot slot = mob.getEquipmentSlotForItem(stack);
-        return armorAllowed && slot.isArmor()
-                || weaponsAllowed && (EquipmentUtil.isWeapon(stack)
-                        || EquipmentUtil.wantsToPickUpShield(mob, stack));
+        if (weaponsAllowed) {
+            if (EquipmentUtil.isShield(stack)) {
+                return EquipmentUtil.wantsToPickUpShield(mob, stack);
+            }
+            if (EquipmentUtil.isWeapon(stack)) return true;
+        }
+        return armorAllowed && mob.getEquipmentSlotForItem(stack).isArmor();
     }
 
     public static synchronized boolean isActive(EntityType<?> type) {

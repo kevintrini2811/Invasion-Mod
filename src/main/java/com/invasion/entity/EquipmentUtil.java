@@ -25,6 +25,7 @@ public final class EquipmentUtil {
     }
 
     public static boolean isMeleeWeapon(ItemStack stack) {
+        if (stack.getItem() instanceof ProjectileWeaponItem) return false;
         return stack.getItem() instanceof SwordItem
                 || stack.getItem() instanceof DiggerItem
                 || stack.is(ItemTags.SWORDS)
@@ -38,8 +39,7 @@ public final class EquipmentUtil {
     }
 
     public static boolean isShield(ItemStack stack) {
-        return stack.is(Tags.Items.TOOLS_SHIELD)
-                || stack.getItem() instanceof ShieldItem;
+        return stack.is(Tags.Items.TOOLS_SHIELDS) || stack.getItem() instanceof ShieldItem;
     }
 
     public static boolean wantsToPickUpShield(Mob mob, ItemStack stack) {
