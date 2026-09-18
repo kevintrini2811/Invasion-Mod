@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import com.invasion.InvasionMod;
 import java.util.EnumSet;
 
 import org.jetbrains.annotations.Nullable;
@@ -44,7 +45,7 @@ import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 
-/** Silverfish support unit. It is registered but intentionally absent from waves. */
+/** Silverfish support unit that infects nearby hosts. */
 public final class IMSilverfishEntity extends Silverfish
         implements NexusEntity {
     public static final String INFECTED_TAG = "invmod.infected";
@@ -168,6 +169,7 @@ public final class IMSilverfishEntity extends Silverfish
     }
 
     private void infect(LivingEntity target) {
+        if (!InvasionMod.getConfig().enableSilverfish) return;
         target.addTag(INFECTED_TAG);
         if (level() instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.INFESTED,
@@ -399,6 +401,7 @@ public final class IMSilverfishEntity extends Silverfish
 
         @Override
         public boolean canUse() {
+            if (!InvasionMod.getConfig().enableSilverfish) return false;
             target = level().getEntitiesOfClass(LivingEntity.class,
                     getBoundingBox().inflate(SEARCH_RANGE), this::isCandidate)
                     .stream().min(java.util.Comparator.comparingDouble(
@@ -408,7 +411,8 @@ public final class IMSilverfishEntity extends Silverfish
 
         @Override
         public boolean canContinueToUse() {
-            return target != null && target.isAlive() && isCandidate(target);
+            return InvasionMod.getConfig().enableSilverfish
+                    && target != null && target.isAlive() && isCandidate(target);
         }
 
         @Override

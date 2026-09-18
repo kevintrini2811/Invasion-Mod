@@ -68,6 +68,11 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
         net.minecraft.world.entity.Entity entity = event.getEntity();
+        if (!InvasionMod.getConfig().enableSilverfish
+                && entity instanceof IMSilverfishEntity && !event.loadedFromDisk()) {
+            event.setCanceled(true);
+            return;
+        }
         if (converting || !(entity instanceof Mob mob)
                 || !isReplaceableType(mob.getType())) {
             return;
@@ -297,6 +302,9 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
+        if (targetType == InvEntities.SILVERFISH && !InvasionMod.getConfig().enableSilverfish) {
+            return;
+        }
         T converted = targetType.create(world, EntitySpawnReason.CONVERSION);
         if (converted == null) {
             return;

@@ -81,6 +81,9 @@ public interface AttributeUtil {
                     MobEffects.OOZING,
                     MobEffects.WEAVING
             ));
+            if (!InvasionMod.getConfig().enableSilverfish) {
+                unfairEffects.remove(MobEffects.INFESTED);
+            }
             while (--effectAttempts > 0 && !unfairEffects.isEmpty()) {
                 RandomSource random = world.getRandom();
                 if (random.nextInt(100) == 0) {

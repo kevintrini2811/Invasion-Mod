@@ -1,5 +1,6 @@
 package com.invasion.nexus.wave;
 
+import com.invasion.InvasionMod;
 import com.invasion.entity.InvEntities;
 import com.invasion.entity.ZombieVariants;
 import com.invasion.nexus.EntityConstruct;
@@ -78,6 +79,7 @@ public final class BudgetWavePlan {
 
     public static boolean isWaveSpawnAllowed(EntityType<?> type) {
         return type != null
+                && (type != InvEntities.SILVERFISH || InvasionMod.getConfig().enableSilverfish)
                 // Guardians are only post-purchase environmental mobs and
                 // must never be persisted or submitted as a
                 // direct round-budget purchase.
@@ -188,7 +190,8 @@ public final class BudgetWavePlan {
 
     /** Selects any purchasable IM combat mob without exposing it as a purchase. */
     public static EntityConstruct randomMobConstruct(RandomSource random) {
-        Option option = ALL.get(random.nextInt(ALL.size()));
+        List<Option> allowed = ALL.stream().filter(option -> isWaveSpawnAllowed(option.type())).toList();
+        Option option = allowed.get(random.nextInt(allowed.size()));
         return new EntityConstruct(
                 option.type(), 0, option.tier(), option.flavour(),
                 1.0F, option.rules(), 360);
@@ -445,6 +448,7 @@ public final class BudgetWavePlan {
         List<Option> expanded = new ArrayList<>(pool);
         ConfiguredModMobs.activeWaveMobs(theme).forEach(
                 mob -> expanded.add(o(mob.type(), 1, mob.cost())));
+        expanded.removeIf(option -> !isWaveSpawnAllowed(option.type()));
         return List.copyOf(expanded);
     }
 
