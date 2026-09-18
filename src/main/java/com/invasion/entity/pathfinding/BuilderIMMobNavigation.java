@@ -19,6 +19,8 @@ import com.invasion.entity.pathfinding.path.PathAction;
  */
 public class BuilderIMMobNavigation extends IMMobNavigation {
     private boolean acceptingTowerReturnPath;
+    private BlockPos towerExit;
+    private int towerClimbTicks;
 
     public <T extends Mob & NexusEntity> BuilderIMMobNavigation(T entity) {
         super(entity);
@@ -27,6 +29,27 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
     @Override
     public void tick() {
         super.tick();
+        if (towerExit != null) {
+            if (mob.getTarget() != null || ++towerClimbTicks > 20 * 10) {
+                towerExit = null;
+                stop();
+            } else if (mob.blockPosition().getY() >= towerExit.getY()) {
+                towerExit = null;
+                resumeAfterTowerBuild();
+            } else if (isDone()) {
+                returnToTowerBuild(towerExit);
+            }
+            return;
+        }
+        if (mob instanceof PigmanEngineerEntity engineer
+                && !engineer.isBuildingTower()
+                && engineer.hasNexus()
+                && getAIGoal() == Goal.BREAK_NEXUS
+                && engineer.getNexus().getOrigin().getY() - engineer.blockPosition().getY() >= 2
+                && !isDone()
+                && engineer.tryReuseExistingTower()) {
+            return;
+        }
         if (mob instanceof PigmanEngineerEntity engineer
                 && !engineer.isBuildingTower()
                 && engineer.hasNexus()
@@ -41,7 +64,7 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
     @Override
     public boolean moveTo(net.minecraft.world.level.pathfinder.Path path, double speed) {
         if (mob instanceof PigmanEngineerEntity engineer
-                && engineer.isBuildingTower()
+                && (engineer.isBuildingTower() || towerExit != null)
                 && engineer.getTarget() == null
                 && !acceptingTowerReturnPath) {
             return false;
@@ -60,6 +83,12 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
         } finally {
             acceptingTowerReturnPath = false;
         }
+    }
+
+    public void climbTower(BlockPos exit) {
+        towerExit = exit;
+        towerClimbTicks = 0;
+        returnToTowerBuild(exit);
     }
 
     public void resumeAfterTowerBuild() {
