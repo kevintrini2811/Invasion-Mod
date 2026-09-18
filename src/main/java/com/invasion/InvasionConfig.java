@@ -59,6 +59,7 @@ public class InvasionConfig extends Config {
 
     private final Map<ResourceLocation, Float> strengthOverrides = new HashMap<>();
 
+    public volatile boolean enableSilverfish = true;
     public boolean enableLog;
     public boolean debugMode;
     public boolean destructedBlocksDrop = true;
@@ -158,6 +159,7 @@ public class InvasionConfig extends Config {
             }
         });
 
+        enableSilverfish = getPropertyValueBoolean("enable-silverfish", true);
         enableLog = getPropertyValueBoolean("enable-log-file", false);
         destructedBlocksDrop = getPropertyValueBoolean("destructed-blocks-drop", true);
         debugMode = getPropertyValueBoolean("debug", false);
@@ -178,6 +180,7 @@ public class InvasionConfig extends Config {
             writeLine(writer, "# General settings");
             writeProperty(writer, "destructed-blocks-drop");
             writeProperty(writer, "enable-log-file");
+            writeProperty(writer, "enable-silverfish", "Enable IM silverfish spawning and silverfish infestation (default: true)");
             if (debugMode) {
                 writeProperty(writer, "debug");
             }
