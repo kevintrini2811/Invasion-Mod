@@ -612,6 +612,13 @@ public final class ConfiguredModMobs {
         return materials;
     }
 
+    /** Tower work has its own bounded approach timeout and must not trigger a random detour. */
+    public static boolean isWorkingOnEngineerTower(Mob mob) {
+        return mob.goalSelector.getAvailableGoals().stream().anyMatch(wrapped ->
+                wrapped.isRunning() && wrapped.getGoal() instanceof ConfiguredTerrainGoal goal
+                        && goal.activeTower != null);
+    }
+
     /** Recognizes configured invasion allies without changing their Nexus binding. */
     public static boolean isInvasionAlly(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return false;
@@ -650,7 +657,7 @@ public final class ConfiguredModMobs {
         private EngineerTower activeTower;
         private BlockPos towerWorkPosition;
         private int towerApproachTicks;
-        private int towerSearchCooldown;
+        private int nextTowerSearchTick;
         private double lastX = Double.NaN;
         private double lastY;
         private double lastZ;
@@ -668,7 +675,6 @@ public final class ConfiguredModMobs {
             stealBlock = false;
             NexusAccess nexus = activeNexus(mob);
             updateStalledTicks();
-            if (towerSearchCooldown > 0) towerSearchCooldown--;
             if (activeTower != null && nexus != null
                     && allowsEngineerTower(mob.getType(), false)
                     && ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
@@ -676,7 +682,6 @@ public final class ConfiguredModMobs {
             }
             clearTowerWork();
             if (nexus == null || usesSpecialMovement()
-                    || !mob.getNavigation().isDone() && stalledTicks < 20
                     || mob.tickCount % 5 != 0
                     || !((ServerLevel) mob.level()).getGameRules()
                             .getBoolean(GameRules.RULE_MOBGRIEFING)) {
@@ -690,10 +695,12 @@ public final class ConfiguredModMobs {
             BlockPos forward = current.relative(direction);
 
             if (allowsEngineerTower(mob.getType(), false) && mob.onGround()
-                    && !mob.onClimbable() && towerSearchCooldown == 0) {
-                towerSearchCooldown = 40;
+                    && mob.tickCount >= nextTowerSearchTick) {
+                nextTowerSearchTick = mob.tickCount + 40;
                 if (reuseEngineerTower(current, objective)) return nextTowerBlock();
             }
+
+            if (!mob.getNavigation().isDone() && stalledTicks < 20) return false;
 
             if (allowsEndermanBlockTheft(mob.getType(), false)
                     && mob.getPersistentData().getString(STOLEN_BLOCK).isEmpty()) {
@@ -766,7 +773,8 @@ public final class ConfiguredModMobs {
                 }
                 return;
             }
-            mob.getNavigation().stop();
+            if (activeTower != null) EngineerTower.holdWorkPosition(mob);
+            else mob.getNavigation().stop();
             mob.getLookControl().setLookAt(target.getX() + 0.5D,
                     target.getY() + 0.5D, target.getZ() + 0.5D);
             mob.swing(InteractionHand.MAIN_HAND);
@@ -820,6 +828,7 @@ public final class ConfiguredModMobs {
             for (EngineerTower tower : EngineerTowerStorage.of(level).nearby(level, current, objective)) {
                 BlockPos work = tower.workPosition(level);
                 if (work == null || !tower.canBuild(level, this::canClearTowerBlock)) continue;
+                if (EngineerTower.isAtWorkPosition(mob, work)) return beginTower(tower, work);
                 var path = mob.getNavigation().createPath(work, 0);
                 if (path != null && path.canReach() && beginTower(tower, work)) return true;
             }
@@ -859,16 +868,13 @@ public final class ConfiguredModMobs {
                         buildingBlock(mob.getType(), Blocks.OAK_PLANKS).defaultBlockState(), pos -> ACTION_TICKS)) {
                     towerPlan.addLast(new BlockChange(entry.pos(), entry.newBlock().isAir() ? null : entry.newBlock()));
                 }
-                if (towerPlan.isEmpty() && !towerWorkPosition.equals(activeTower.ladderBase())) {
-                    towerWorkPosition = activeTower.ladderBase();
-                    towerApproachTicks = 0;
-                    towerPlan.addLast(new BlockChange(towerWorkPosition, Blocks.LADDER.defaultBlockState()
-                            .setValue(LadderBlock.FACING, activeTower.ladderFacing())));
-                }
             }
             BlockChange change = towerPlan.pollFirst();
             if (change == null) {
+                BlockPos ladder = activeTower.ladderBase();
                 clearTowerWork();
+                // Hand the repaired ladder to the climb goal even when work finished beside it.
+                mob.getNavigation().moveTo(ladder.getX() + 0.5D, ladder.getY(), ladder.getZ() + 0.5D, 1.0D);
                 return false;
             }
             target = change.pos();
@@ -877,9 +883,7 @@ public final class ConfiguredModMobs {
         }
 
         private boolean atTowerWorkPosition() {
-            double dx = mob.getX() - towerWorkPosition.getX() - 0.5D;
-            double dz = mob.getZ() - towerWorkPosition.getZ() - 0.5D;
-            return dx * dx + dz * dz < 0.16D && Math.abs(mob.getY() - towerWorkPosition.getY()) < 0.75D;
+            return EngineerTower.isAtWorkPosition(mob, towerWorkPosition);
         }
 
         private void clearTowerWork() {
