@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LadderBlock;
@@ -46,6 +47,23 @@ public record EngineerTower(BlockPos base, Direction ladderFacing) {
             }
         }
         return false;
+    }
+
+    /** Navigation finishes within a block-sized tolerance, not at its exact center. */
+    public static boolean isAtWorkPosition(Mob mob, BlockPos work) {
+        return Math.abs(mob.getX() - work.getX() - 0.5D) <= 0.75D
+                && Math.abs(mob.getZ() - work.getZ() - 0.5D) <= 0.75D
+                && Math.abs(mob.getY() - work.getY()) < 0.75D;
+    }
+
+    public static void holdWorkPosition(Mob mob) {
+        mob.getNavigation().stop();
+        var movement = mob.getDeltaMovement();
+        mob.setXxa(0);
+        mob.setZza(0);
+        mob.setSpeed(0);
+        mob.setDeltaMovement(0, Math.min(movement.y, 0), 0);
+        mob.getMoveControl().setWantedPosition(mob.getX(), mob.getY(), mob.getZ(), 0);
     }
 
     public BlockPos workPosition(Level level) {

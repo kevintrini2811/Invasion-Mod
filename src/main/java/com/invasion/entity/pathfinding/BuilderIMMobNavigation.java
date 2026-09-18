@@ -28,6 +28,18 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
 
     @Override
     public void tick() {
+        // Claim nearby towers before ordinary navigation starts climbing or mining them.
+        if (towerExit == null && mob instanceof PigmanEngineerEntity engineer
+                && !engineer.isBuildingTower() && engineer.hasNexus()
+                && engineer.getNexus().getOrigin().getY() - engineer.blockPosition().getY() >= 2) {
+            if (isDone()) engineer.tryStartTowerBuild();
+            else engineer.tryReuseExistingTower();
+        }
+        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()
+                && engineer.getTarget() == null && engineer.isAtTowerBuildPosition()) {
+            stop();
+            return;
+        }
         super.tick();
         if (towerExit != null) {
             if (mob.getTarget() != null || ++towerClimbTicks > 20 * 10) {
@@ -39,25 +51,6 @@ public class BuilderIMMobNavigation extends IMMobNavigation {
             } else if (isDone()) {
                 returnToTowerBuild(towerExit);
             }
-            return;
-        }
-        if (mob instanceof PigmanEngineerEntity engineer
-                && !engineer.isBuildingTower()
-                && engineer.hasNexus()
-                && getAIGoal() == Goal.BREAK_NEXUS
-                && engineer.getNexus().getOrigin().getY() - engineer.blockPosition().getY() >= 2
-                && !isDone()
-                && engineer.tryReuseExistingTower()) {
-            return;
-        }
-        if (mob instanceof PigmanEngineerEntity engineer
-                && !engineer.isBuildingTower()
-                && engineer.hasNexus()
-                && getAIGoal() == Goal.BREAK_NEXUS
-                && isDone()
-                && engineer.getNexus().getOrigin().getY()
-                        - engineer.blockPosition().getY() >= 2) {
-            engineer.tryStartTowerBuild();
         }
     }
 

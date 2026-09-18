@@ -26,6 +26,7 @@ import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
 import com.invasion.block.NexusBlockEntity;
 import com.invasion.entity.Miner;
+import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.pathfinding.IMLandPathNodeMaker;
 
 public class MineBlockGoal extends Goal {
@@ -64,6 +65,7 @@ public class MineBlockGoal extends Goal {
     @Override
     public boolean canUse() {
         pendingMiningCenter = null;
+        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()) return false;
         if (!((net.minecraft.server.level.ServerLevel) mob.level())
                 .getGameRules().get(GameRules.MOB_GRIEFING)
                 || navigation.isDone()
@@ -113,6 +115,7 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()) return false;
         if (currentEntry != null) {
             return true;
         }
