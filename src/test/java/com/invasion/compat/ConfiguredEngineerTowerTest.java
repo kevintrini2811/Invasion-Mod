@@ -64,6 +64,15 @@ class ConfiguredEngineerTowerTest {
         Constructor<?> constructor = goalClass.getDeclaredConstructor(Mob.class);
         constructor.setAccessible(true);
         Object goal = constructor.newInstance(mob);
+        var selectorField = Mob.class.getDeclaredField("goalSelector");
+        selectorField.setAccessible(true);
+        var selector = new net.minecraft.world.entity.ai.goal.GoalSelector();
+        selectorField.set(mob, selector);
+        Class<?> climbClass = Class.forName("com.invasion.compat.ConfiguredModMobs$ClimbNexusLadderGoal");
+        var climbConstructor = climbClass.getDeclaredConstructor(Mob.class);
+        climbConstructor.setAccessible(true);
+        var climb = (net.minecraft.world.entity.ai.goal.Goal) climbConstructor.newInstance(mob);
+        selector.addGoal(3, climb);
         EngineerTowerStorage storage = mock(EngineerTowerStorage.class);
         try (var storageAccess = mockStatic(EngineerTowerStorage.class);
                 var config = mockStatic(ConfiguredModMobs.class)) {
@@ -89,6 +98,9 @@ class ConfiguredEngineerTowerTest {
         assertEquals(Blocks.STONE.defaultBlockState(), blocks.get(tower.center().above(4)));
         assertTrue(tower.plan(level, Blocks.OAK_PLANKS.defaultBlockState(), pos -> 20).isEmpty());
         assertEquals(tower.ladderBase(), mob.blockPosition());
+        var requestedLadder = climbClass.getDeclaredField("requestedLadder");
+        requestedLadder.setAccessible(true);
+        assertEquals(tower.ladderBase(), requestedLadder.get(climb));
         verify(mob, never()).setPos(anyDouble(), anyDouble(), anyDouble());
     }
 

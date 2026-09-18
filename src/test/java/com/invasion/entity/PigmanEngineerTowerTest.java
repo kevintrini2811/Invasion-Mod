@@ -150,7 +150,7 @@ class PigmanEngineerTowerTest {
         var navigation = mock(net.minecraft.world.entity.ai.navigation.PathNavigation.class);
         var modifier = mock(com.invasion.entity.ai.builder.TerrainModifier.class);
         var nexus = mock(com.invasion.nexus.NexusAccess.class);
-        var storage = mock(EngineerTowerStorage.class);
+        var storage = new EngineerTowerStorage();
         var tower = new EngineerTower(base, Direction.NORTH);
         var modifierField = PigmanEngineerEntity.class.getDeclaredField("terrainModifier");
         modifierField.setAccessible(true);
@@ -169,20 +169,36 @@ class PigmanEngineerTowerTest {
         when(engineer.getX()).thenReturn(ladderBase.getX() + 0.5D + 0.6D);
         when(engineer.getY()).thenReturn((double) ladderBase.getY());
         when(engineer.getZ()).thenReturn(ladderBase.getZ() + 0.5D);
-        when(engineer.getBuildingBlock()).thenReturn(Blocks.OAK_PLANKS.defaultBlockState());
-        when(engineer.canClearBlock(any())).thenReturn(true);
+        BlockState repairMaterial = type == PigmanEngineerEntity.class
+                ? Blocks.OAK_PLANKS.defaultBlockState() : Blocks.BRICKS.defaultBlockState();
+        BlockState originalMaterial = type == PigmanEngineerEntity.class
+                ? Blocks.BRICKS.defaultBlockState() : Blocks.OAK_PLANKS.defaultBlockState();
+        when(engineer.getBuildingBlock()).thenReturn(repairMaterial);
+        // Ordinary mining may be disabled or reject blocks beside a ladder.
+        when(engineer.canClearBlock(any())).thenReturn(false);
+        when(level.hasChunkAt(any())).thenReturn(true);
+        blocks.clear();
         when(level.getBlockState(any(BlockPos.class))).thenAnswer(call -> {
             BlockPos pos = call.getArgument(0);
             return pos.getY() < base.getY() ? Blocks.STONE.defaultBlockState()
-                    : Blocks.AIR.defaultBlockState();
+                    : blocks.getOrDefault(pos, Blocks.AIR.defaultBlockState());
         });
+        apply(tower.plan(level, originalMaterial, pos -> 20));
+        blocks.remove(base.above());
+        blocks.remove(center.south());
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                for (int y = 1; y <= 3; y++) blocks.put(center.offset(x, y, z), Blocks.STONE.defaultBlockState());
+            }
+        }
+        storage.remember(tower);
         when(modifier.isReadyForTask(null)).thenReturn(true);
         when(modifier.requestTask(anyCollection(), any(), any())).thenReturn(true);
-        when(storage.nearby(level, ladderBase, base.above(10))).thenReturn(List.of(tower));
         doCallRealMethod().when(engineer).tryReuseExistingTower();
         doCallRealMethod().when(engineer).isBuildingTower();
         doCallRealMethod().when(engineer).isAtTowerBuildPosition();
-        try (var storageAccess = mockStatic(EngineerTowerStorage.class);
+        try (var storageAccess = mockStatic(EngineerTowerStorage.class,
+                call -> call.getMethod().getName().equals("of") ? storage : call.callRealMethod());
                 var config = mockStatic(com.invasion.compat.ConfiguredModMobs.class)) {
             storageAccess.when(() -> EngineerTowerStorage.of(level)).thenReturn(storage);
             config.when(() -> com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(any(), anyBoolean()))
@@ -192,7 +208,16 @@ class PigmanEngineerTowerTest {
         assertTrue(engineer.isBuildingTower());
         assertTrue(engineer.isAtTowerBuildPosition());
         verify(navigation, never()).createPath(any(BlockPos.class), anyInt());
-        verify(modifier).requestTask(anyCollection(), any(), any());
+        @SuppressWarnings("unchecked")
+        org.mockito.ArgumentCaptor<java.util.Collection<ModifyBlockEntry>> changes =
+                org.mockito.ArgumentCaptor.forClass(java.util.Collection.class);
+        verify(modifier).requestTask(changes.capture(), any(), any());
+        assertEquals(27, changes.getValue().stream().filter(entry -> entry.newBlock().isAir()).count());
+        apply(List.copyOf(changes.getValue()));
+        assertEquals(originalMaterial, blocks.get(base));
+        assertEquals(repairMaterial, blocks.get(base.above()));
+        assertEquals(repairMaterial, blocks.get(center.south()));
+        assertTrue(tower.plan(level, repairMaterial, pos -> 20).isEmpty());
         for (int second = 0; second < 30; second++) NexusBoundMobLifecycle.tickStationaryPathRecovery(engineer, nexus);
         verify(navigation, never()).moveTo(any(net.minecraft.world.level.pathfinder.Path.class), anyDouble());
         assertFalse(new com.invasion.entity.ai.goal.GoToNexusGoal(engineer).canUse());
