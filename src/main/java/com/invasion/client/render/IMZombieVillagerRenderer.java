@@ -34,12 +34,12 @@ public final class IMZombieVillagerRenderer extends HumanoidMobRenderer<
                 ArmorModelSet.bake(
                         ModelLayers.ZOMBIE_VILLAGER_ARMOR,
                         context.getModelSet(),
-                        HumanoidModel::new);
+                        ZombieVillagerModel::new);
         ArmorModelSet<HumanoidModel<ZombieVillagerRenderState>> babyArmor =
                 ArmorModelSet.bake(
                         ModelLayers.ZOMBIE_VILLAGER_BABY_ARMOR,
                         context.getModelSet(),
-                        HumanoidModel::new);
+                        ZombieVillagerModel::new);
         addLayer(new HumanoidArmorLayer<>(
                 this, adultArmor, babyArmor, context.getEquipmentRenderer()));
     }

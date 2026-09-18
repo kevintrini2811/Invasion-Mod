@@ -56,9 +56,9 @@ public class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
         this.pigman = pigman;
 
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> normalArmor = ArmorModelSet.bake(
-                ModelLayers.ZOMBIE_ARMOR, context.getModelSet(), HumanoidModel::new);
+                ModelLayers.ZOMBIE_ARMOR, context.getModelSet(), ZombieModel::new);
         ArmorModelSet<HumanoidModel<InvasionZombieRenderState>> babyArmor =
-                createLegacyUvBabyArmor();
+                createLegacyUvBabyArmor(false);
         addLayer(new VariantArmorLayer(
                 this, normalArmor, babyArmor, context, false));
         addLayer(new HeadArmorLayer<>(
@@ -87,7 +87,7 @@ public class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                         normalArmor.legs(),
                         normalArmor.feet());
         addLayer(new VariantArmorLayer(
-                this, bruteArmor, bruteArmor, context, true));
+                this, bruteArmor, createLegacyUvBabyArmor(true), context, true));
     }
 
     @Override
@@ -151,13 +151,16 @@ public class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
     }
 
     private static ArmorModelSet<HumanoidModel<InvasionZombieRenderState>>
-            createLegacyUvBabyArmor() {
+            createLegacyUvBabyArmor(boolean brute) {
         return HumanoidModel.createArmorMeshSet(
                         new CubeDeformation(0.5F),
                         new CubeDeformation(1.0F))
-                .map(mesh -> new HumanoidModel<>(LayerDefinition.create(
-                        HumanoidModel.BABY_TRANSFORMER.apply(mesh),
-                        64, 32).bakeRoot()));
+                .map(mesh -> {
+                    var root = LayerDefinition.create(
+                            HumanoidModel.BABY_TRANSFORMER.apply(mesh),
+                            64, 32).bakeRoot();
+                    return brute ? new HumanoidModel<>(root) : new ZombieModel<>(root);
+                });
     }
 
     private final class VariantArmorLayer extends HumanoidArmorLayer<
@@ -182,21 +185,16 @@ public class InvasionZombieRenderer<T extends AbstractIMZombieEntity>
                     babyArmor,
                     context.getEquipmentRenderer());
             this.bruteLayer = bruteLayer;
-            legacyBabyLayer = bruteLayer
-                    ? null
-                    : new HumanoidArmorLayer<>(
-                            parent,
-                            babyArmor,
-                            babyArmor,
-                            context.getEquipmentRenderer());
+            legacyBabyLayer = new HumanoidArmorLayer<>(
+                    parent, babyArmor, babyArmor,
+                    context.getEquipmentRenderer());
         }
 
         @Override
         public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light,
                 InvasionZombieRenderState state, float yRot, float xRot) {
-            boolean usesBruteModel = state.brute && !state.isBaby;
-            if (usesBruteModel == bruteLayer) {
-                if (state.isBaby && legacyBabyLayer != null) {
+            if (state.brute == bruteLayer) {
+                if (state.isBaby) {
                     // The mod skins use the classic adult armor UV layout.
                     // Select its equipment texture while retaining the
                     // already baby-scaled armor geometry.

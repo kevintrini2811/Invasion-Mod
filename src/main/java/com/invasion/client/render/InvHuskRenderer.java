@@ -31,12 +31,12 @@ public final class InvHuskRenderer extends HumanoidMobRenderer<
                 ArmorModelSet.bake(
                         ModelLayers.HUSK_ARMOR,
                         context.getModelSet(),
-                        HumanoidModel::new);
+                        ZombieModel::new);
         ArmorModelSet<HumanoidModel<ZombieRenderState>> babyArmor =
                 ArmorModelSet.bake(
                         ModelLayers.HUSK_BABY_ARMOR,
                         context.getModelSet(),
-                        HumanoidModel::new);
+                        ZombieModel::new);
         addLayer(new HumanoidArmorLayer<>(
                 this, adultArmor, babyArmor,
                 context.getEquipmentRenderer()));
