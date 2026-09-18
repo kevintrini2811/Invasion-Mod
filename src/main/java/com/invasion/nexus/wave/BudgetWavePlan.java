@@ -30,6 +30,7 @@ import com.invasion.compat.ConfiguredModMobs;
 
 /** A complete, persistent purchase plan for one invasion wave. */
 public final class BudgetWavePlan {
+    // Reserved legacy armor bits: saved plans may contain them, but armor rolls at spawn time.
     public static final int RULE_ARMORED = 1;
     public static final int RULE_RANGED = 2;
     public static final int RULE_INFECTED_BONUS = 4;
@@ -502,11 +503,10 @@ public final class BudgetWavePlan {
 	}
 
     private static int rollRules(Theme theme, int wave, RandomSource random) {
-        int rules = RULE_PLANNED | (theme == Theme.ARMORED ? RULE_ARMORED : 0)
+        int rules = RULE_PLANNED
                 | (theme == Theme.RANGED ? RULE_RANGED : 0)
                 | (theme == Theme.SWARM || theme == Theme.SIEGE ? RULE_INFECTED_BONUS : 0);
 		if (random.nextInt(100) < Math.min(100, wave)) rules |= RULE_WEAPON;
-		if (random.nextInt(100) < Math.min(100, wave)) rules |= RULE_ARMOR;
 		if (random.nextInt(100) < Math.min(20, wave)) rules |= RULE_BABY;
 		return rules;
     }
