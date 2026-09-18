@@ -19,7 +19,7 @@ class ZombieTowerBehaviorTest {
         for (String name : new String[] {"goalSelector", "targetSelector"}) {
             var field = Mob.class.getDeclaredField(name);
             field.setAccessible(true);
-            field.set(mob, new GoalSelector());
+            field.set(mob, new GoalSelector(() -> net.minecraft.util.profiling.InactiveProfiler.INSTANCE));
         }
         doCallRealMethod().when(mob).registerGoals();
         doCallRealMethod().when(mob).tryStartTowerBuild();

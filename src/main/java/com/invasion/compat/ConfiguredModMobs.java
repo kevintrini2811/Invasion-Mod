@@ -693,7 +693,7 @@ public final class ConfiguredModMobs {
             updateStalledTicks();
             if (activeTower != null && nexus != null
                     && allowsEngineerTower(mob.getType(), false)
-                    && ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
+                    && ((ServerLevel) mob.level()).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
                 return nextTowerBlock();
             }
             clearTowerWork();
@@ -767,7 +767,7 @@ public final class ConfiguredModMobs {
         public boolean canContinueToUse() {
             return target != null && actionTicks < ACTION_TICKS
                     && towerNexus(mob) != null
-                    && ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING);
+                    && ((ServerLevel) mob.level()).getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
         }
 
         @Override

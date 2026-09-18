@@ -66,7 +66,7 @@ class ConfiguredEngineerTowerTest {
         Object goal = constructor.newInstance(mob);
         var selectorField = Mob.class.getDeclaredField("goalSelector");
         selectorField.setAccessible(true);
-        var selector = new net.minecraft.world.entity.ai.goal.GoalSelector();
+        var selector = new net.minecraft.world.entity.ai.goal.GoalSelector(() -> net.minecraft.util.profiling.InactiveProfiler.INSTANCE);
         selectorField.set(mob, selector);
         Class<?> climbClass = Class.forName("com.invasion.compat.ConfiguredModMobs$ClimbNexusLadderGoal");
         var climbConstructor = climbClass.getDeclaredConstructor(Mob.class);
@@ -111,7 +111,7 @@ class ConfiguredEngineerTowerTest {
         ServerLevel level = mock(ServerLevel.class);
         Mob mob = mock(mobType);
         var navigation = mock(PathNavigation.class);
-        var rules = mock(net.minecraft.world.level.gamerules.GameRules.class);
+        var rules = mock(net.minecraft.world.level.GameRules.class);
         var nexus = mock(com.invasion.nexus.NexusAccess.class);
         var storage = mock(EngineerTowerStorage.class);
         var tower = new EngineerTower(new BlockPos(0, 64, 0), Direction.NORTH);
@@ -127,7 +127,7 @@ class ConfiguredEngineerTowerTest {
         when(navigation.isDone()).thenReturn(false);
         when(nexus.getOrigin()).thenReturn(tower.base().above(10));
         when(level.getGameRules()).thenReturn(rules);
-        when(rules.get(net.minecraft.world.level.gamerules.GameRules.MOB_GRIEFING)).thenReturn(true);
+        when(rules.getBoolean(net.minecraft.world.level.GameRules.RULE_MOBGRIEFING)).thenReturn(true);
         when(level.getBlockState(any(BlockPos.class))).thenAnswer(call -> {
             BlockPos pos = call.getArgument(0);
             return pos.getY() < work.getY() ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
@@ -136,7 +136,7 @@ class ConfiguredEngineerTowerTest {
         Class<?> goalClass = Class.forName("com.invasion.compat.ConfiguredModMobs$ConfiguredTerrainGoal");
         Constructor<?> constructor = goalClass.getDeclaredConstructor(Mob.class);
         constructor.setAccessible(true);
-        var selector = new net.minecraft.world.entity.ai.goal.GoalSelector();
+        var selector = new net.minecraft.world.entity.ai.goal.GoalSelector(() -> net.minecraft.util.profiling.InactiveProfiler.INSTANCE);
         var selectorField = Mob.class.getDeclaredField("goalSelector");
         selectorField.setAccessible(true);
         selectorField.set(mob, selector);

@@ -2,8 +2,6 @@ package com.invasion.entity.ai.builder;
 
 import com.invasion.InvasionMod;
 import com.invasion.compat.ConfiguredModMobs;
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -18,27 +16,44 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 /** Persists tower footprints independently of their builders and building materials. */
 public final class EngineerTowerStorage extends SavedData {
-    private static final Codec<EngineerTower> TOWER_CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            BlockPos.CODEC.fieldOf("base").forGetter(EngineerTower::base),
-            Direction.CODEC.fieldOf("facing").forGetter(EngineerTower::ladderFacing)
-    ).apply(instance, EngineerTower::new));
-    private static final SavedDataType<EngineerTowerStorage> TYPE = new SavedDataType<>(
-            InvasionMod.id("engineer_towers"), EngineerTowerStorage::new,
-            TOWER_CODEC.listOf().xmap(EngineerTowerStorage::new, storage -> List.copyOf(storage.towers)), null);
+    private static final String ID = InvasionMod.id("engineer_towers").toDebugFileName();
     private final Set<EngineerTower> towers = new LinkedHashSet<>();
 
     public EngineerTowerStorage() {}
 
-    private EngineerTowerStorage(List<EngineerTower> saved) {
-        saved.stream().filter(tower -> tower.ladderFacing().getAxis().isHorizontal()).forEach(towers::add);
+    public static EngineerTowerStorage of(ServerLevel level) {
+        return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(
+                EngineerTowerStorage::new, (tag, lookup) -> load(tag), null), ID);
     }
 
-    public static EngineerTowerStorage of(ServerLevel level) {
-        return level.getDataStorage().computeIfAbsent(TYPE);
+    static EngineerTowerStorage load(CompoundTag tag) {
+        EngineerTowerStorage storage = new EngineerTowerStorage();
+        for (Tag element : tag.getList("towers", Tag.TAG_COMPOUND)) {
+            CompoundTag tower = (CompoundTag) element;
+            int facing = tower.getInt("facing");
+            if (!tower.contains("base", Tag.TAG_LONG) || facing < 2 || facing > 5) continue;
+            storage.towers.add(new EngineerTower(BlockPos.of(tower.getLong("base")), Direction.from3DDataValue(facing)));
+        }
+        return storage;
+    }
+
+    @Override
+    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider lookup) {
+        ListTag saved = new ListTag();
+        for (EngineerTower tower : towers) {
+            CompoundTag entry = new CompoundTag();
+            entry.putLong("base", tower.base().asLong());
+            entry.putInt("facing", tower.ladderFacing().get3DDataValue());
+            saved.add(entry);
+        }
+        tag.put("towers", saved);
+        return tag;
     }
 
     public void remember(EngineerTower tower) {
