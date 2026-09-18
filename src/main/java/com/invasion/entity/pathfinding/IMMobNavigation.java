@@ -193,6 +193,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Override
     public void tick() {
+        if (isConfiguredTowerControllingMovement()) {
+            // The configured goal owns work and ladder gravity; only follow its approach path.
+            super.tick();
+            return;
+        }
         // Older ladder navigation could leave or persist no-gravity after an
         // interrupted climb. Ground mobs only use it while this navigator
         // actively owns a ladder climb, so recover any orphaned state.
@@ -301,6 +306,10 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
 	@Override
     protected void followThePath() {
+        if (isConfiguredTowerControllingMovement()) {
+            super.followThePath();
+            return;
+        }
         if (climbingLadder) {
             climbLadder();
             return;
@@ -380,6 +389,11 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 	    }
 	}
 
+    private boolean isConfiguredTowerControllingMovement() {
+        return mob instanceof PigmanEngineerEntity engineer && engineer.usesConfiguredEngineerTower()
+                && com.invasion.compat.ConfiguredModMobs.isWorkingOnEngineerTower(mob);
+    }
+
     private void tickEngineerRecovery(PigmanEngineerEntity engineer) {
         if (waitingForNotify > 0
                 && engineerTaskStartTick >= 0
@@ -437,7 +451,8 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Nullable
     private BlockPos getTargetedLadder() {
-        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()) return null;
+        if (mob instanceof PigmanEngineerEntity engineer
+                && (engineer.isBuildingTower() || engineer.usesConfiguredEngineerTower())) return null;
         if (getPath() == null || getPath().isDone()) {
             return null;
         }

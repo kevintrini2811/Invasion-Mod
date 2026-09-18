@@ -624,11 +624,21 @@ public final class ConfiguredModMobs {
         return materials;
     }
 
+    /** Installs the configured tower controller ahead of native mining for zombie engineers. */
+    public static void addEngineerTowerGoals(Mob mob) {
+        mob.goalSelector.addGoal(0, new ConfiguredTerrainGoal(mob, true));
+        mob.goalSelector.addGoal(0, new ClimbNexusLadderGoal(mob));
+    }
+
+    static NexusAccess towerNexus(Mob mob) {
+        return mob instanceof Combatant<?> combatant ? combatant.getNexus() : activeNexus(mob);
+    }
+
     /** Tower work has its own bounded approach timeout and must not trigger a random detour. */
     public static boolean isWorkingOnEngineerTower(Mob mob) {
         return mob.goalSelector.getAvailableGoals().stream().anyMatch(wrapped ->
-                wrapped.isRunning() && wrapped.getGoal() instanceof ConfiguredTerrainGoal goal
-                        && goal.activeTower != null);
+                wrapped.isRunning() && (wrapped.getGoal() instanceof ConfiguredTerrainGoal goal
+                        && goal.activeTower != null || wrapped.getGoal() instanceof ClimbNexusLadderGoal));
     }
 
     /** Recognizes configured invasion allies without changing their Nexus binding. */
@@ -661,6 +671,7 @@ public final class ConfiguredModMobs {
     private static final class ConfiguredTerrainGoal extends Goal {
         private static final int ACTION_TICKS = 20;
         private final Mob mob;
+        private final boolean towerOnly;
         private BlockPos target;
         private BlockState replacement;
         private boolean stealBlock;
@@ -676,7 +687,12 @@ public final class ConfiguredModMobs {
         private int stalledTicks;
 
         private ConfiguredTerrainGoal(Mob mob) {
+            this(mob, false);
+        }
+
+        private ConfiguredTerrainGoal(Mob mob, boolean towerOnly) {
             this.mob = mob;
+            this.towerOnly = towerOnly;
             setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
         }
 
@@ -685,7 +701,7 @@ public final class ConfiguredModMobs {
             target = null;
             replacement = null;
             stealBlock = false;
-            NexusAccess nexus = activeNexus(mob);
+            NexusAccess nexus = towerNexus(mob);
             updateStalledTicks();
             if (activeTower != null && nexus != null
                     && allowsEngineerTower(mob.getType(), false)
@@ -712,6 +728,12 @@ public final class ConfiguredModMobs {
             }
 
             if (!mob.getNavigation().isDone() && stalledTicks < 20) return false;
+
+            if (towerOnly) {
+                return allowsEngineerTower(mob.getType(), false) && stalledTicks >= 20
+                        && objective.getY() - current.getY() >= 2
+                        && startEngineerTower(current, direction) && nextTowerBlock();
+            }
 
             if (allowsEndermanBlockTheft(mob.getType(), false)
                     && configuredStolenBlock(mob).isEmpty()) {
@@ -755,7 +777,7 @@ public final class ConfiguredModMobs {
         @Override
         public boolean canContinueToUse() {
             return target != null && actionTicks < ACTION_TICKS
-                    && activeNexus(mob) != null
+                    && towerNexus(mob) != null
                     && ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING);
         }
 
@@ -852,6 +874,12 @@ public final class ConfiguredModMobs {
         }
 
         private boolean beginTower(EngineerTower tower, BlockPos work) {
+            if (mob instanceof com.invasion.entity.PigmanEngineerEntity engineer) {
+                engineer.cancelStalledTerrainTask(com.invasion.Notifiable.Status.OUT_OF_RANGE);
+                if (mob.getNavigation() instanceof com.invasion.entity.pathfinding.IMMobNavigation navigation) {
+                    navigation.notifyTask(com.invasion.Notifiable.Status.OUT_OF_RANGE);
+                }
+            }
             activeTower = tower;
             towerWorkPosition = work;
             towerApproachTicks = 0;
@@ -1148,7 +1176,7 @@ public final class ConfiguredModMobs {
         }
 
         @Override public boolean canUse() {
-            if (activeNexus(mob) == null || mob.getTarget() != null && mob.getTarget().isAlive()) return false;
+            if (towerNexus(mob) == null || mob.getTarget() != null && mob.getTarget().isAlive()) return false;
             BlockPos ladder = targetedLadder();
             if (ladder == null) return false;
             if (completedExit
@@ -1176,7 +1204,7 @@ public final class ConfiguredModMobs {
         }
 
         @Override public boolean canContinueToUse() {
-            return activeNexus(mob) != null
+            return towerNexus(mob) != null
                     && (mob.getTarget() == null || !mob.getTarget().isAlive())
                     && mob.getY() < exitY - 0.05D;
         }
@@ -1218,7 +1246,7 @@ public final class ConfiguredModMobs {
                 completedColumnZ = columnZ;
                 completedExitY = exitY;
                 mob.getNavigation().stop();
-                NexusAccess nexus = activeNexus(mob);
+                NexusAccess nexus = towerNexus(mob);
                 if (nexus != null) {
                     mob.getNavigation().moveTo(nexus.getOrigin().getX() + 0.5D,
                             nexus.getOrigin().getY(), nexus.getOrigin().getZ() + 0.5D, 1.0D);
@@ -1230,7 +1258,7 @@ public final class ConfiguredModMobs {
 
         private BlockPos findSafeExit() {
             BlockPos ladderTop = new BlockPos(columnX, exitY - 1, columnZ);
-            NexusAccess nexus = activeNexus(mob);
+            NexusAccess nexus = towerNexus(mob);
             BlockPos best = null;
             double bestDistance = Double.MAX_VALUE;
             for (Direction direction : Direction.Plane.HORIZONTAL) {
