@@ -54,7 +54,7 @@ class ConfiguredLadderClimbTest {
             when(navigation.getPath()).thenReturn(path);
         }
         try (var config = mockStatic(ConfiguredModMobs.class)) {
-            config.when(() -> ConfiguredModMobs.activeNexus(mob)).thenReturn(mock(NexusAccess.class));
+            config.when(() -> ConfiguredModMobs.towerNexus(mob)).thenReturn(mock(NexusAccess.class));
             assertTrue(goal.canUse());
             goal.start();
             verify(mob).setPos(0.5D, 64D, 0.5D);

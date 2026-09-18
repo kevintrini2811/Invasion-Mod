@@ -16,6 +16,11 @@ public class ZombieBuilderEntity extends PigmanEngineerEntity {
     }
 
     @Override
+    public boolean usesConfiguredEngineerTower() {
+        return true;
+    }
+
+    @Override
     protected BlockState getBuildingBlock() {
         return com.invasion.compat.ConfiguredModMobs
                 .buildingBlock(getType(), Blocks.BRICKS).defaultBlockState();

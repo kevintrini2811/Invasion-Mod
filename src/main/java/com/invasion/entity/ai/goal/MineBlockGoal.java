@@ -65,7 +65,8 @@ public class MineBlockGoal extends Goal {
     @Override
     public boolean canUse() {
         pendingMiningCenter = null;
-        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()) return false;
+        if (mob instanceof PigmanEngineerEntity engineer && (engineer.isBuildingTower() || engineer.usesConfiguredEngineerTower()
+                && com.invasion.compat.ConfiguredModMobs.isWorkingOnEngineerTower(mob))) return false;
         if (!((net.minecraft.server.level.ServerLevel) mob.level())
                 .getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
                 || navigation.isDone()
@@ -115,7 +116,8 @@ public class MineBlockGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
-        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()) return false;
+        if (mob instanceof PigmanEngineerEntity engineer && (engineer.isBuildingTower() || engineer.usesConfiguredEngineerTower()
+                && com.invasion.compat.ConfiguredModMobs.isWorkingOnEngineerTower(mob))) return false;
         if (currentEntry != null) {
             return true;
         }

@@ -19,14 +19,14 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfiguredEngineerTowerTest {
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void configuredMobRepairsForeignTowerAndClearsThreeLayersBeforeClimbing(boolean blockedShaft) throws Exception {
+    @org.junit.jupiter.params.provider.MethodSource("towerBuilders")
+    void configuredMobRepairsForeignTowerAndClearsThreeLayersBeforeClimbing(
+            Class<? extends Mob> mobType, boolean blockedShaft) throws Exception {
         ServerLevel level = mock(ServerLevel.class);
-        Mob mob = mock(Mob.class);
+        Mob mob = mock(mobType);
         when(mob.level()).thenReturn(level);
         PathNavigation navigation = mock(PathNavigation.class);
         when(mob.getNavigation()).thenReturn(navigation);
@@ -104,10 +104,12 @@ class ConfiguredEngineerTowerTest {
         verify(mob, never()).setPos(anyDouble(), anyDouble(), anyDouble());
     }
 
-    @org.junit.jupiter.api.Test
-    void searchesWhileWalkingAndStartsAtNavigationArrival() throws Exception {
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(classes = {
+            Mob.class, com.invasion.entity.ZombieBuilderEntity.class, com.invasion.entity.ZombieMinerEntity.class})
+    void searchesWhileWalkingAndStartsAtNavigationArrival(Class<? extends Mob> mobType) throws Exception {
         ServerLevel level = mock(ServerLevel.class);
-        Mob mob = mock(Mob.class);
+        Mob mob = mock(mobType);
         var navigation = mock(PathNavigation.class);
         var rules = mock(net.minecraft.world.level.gamerules.GameRules.class);
         var nexus = mock(com.invasion.nexus.NexusAccess.class);
@@ -134,16 +136,28 @@ class ConfiguredEngineerTowerTest {
         Class<?> goalClass = Class.forName("com.invasion.compat.ConfiguredModMobs$ConfiguredTerrainGoal");
         Constructor<?> constructor = goalClass.getDeclaredConstructor(Mob.class);
         constructor.setAccessible(true);
-        var goal = (net.minecraft.world.entity.ai.goal.Goal) constructor.newInstance(mob);
         var selector = new net.minecraft.world.entity.ai.goal.GoalSelector();
-        selector.addGoal(2, goal);
         var selectorField = Mob.class.getDeclaredField("goalSelector");
         selectorField.setAccessible(true);
         selectorField.set(mob, selector);
+        net.minecraft.world.entity.ai.goal.Goal goal;
+        if (mob instanceof com.invasion.entity.ZombieBuilderEntity zombie) {
+            when(zombie.getNexus()).thenReturn(nexus);
+            ConfiguredModMobs.addEngineerTowerGoals(mob);
+            goal = selector.getAvailableGoals().stream().map(wrapped -> wrapped.getGoal())
+                    .filter(goalClass::isInstance).findFirst().orElseThrow();
+        } else {
+            goal = (net.minecraft.world.entity.ai.goal.Goal) constructor.newInstance(mob);
+            selector.addGoal(2, goal);
+        }
         try (var storageAccess = mockStatic(EngineerTowerStorage.class);
                 var config = mockStatic(ConfiguredModMobs.class)) {
             storageAccess.when(() -> EngineerTowerStorage.of(level)).thenReturn(storage);
-            config.when(() -> ConfiguredModMobs.activeNexus(mob)).thenReturn(nexus);
+            if (mob instanceof com.invasion.entity.ZombieBuilderEntity) {
+                config.when(() -> ConfiguredModMobs.towerNexus(mob)).thenCallRealMethod();
+            } else {
+                config.when(() -> ConfiguredModMobs.towerNexus(mob)).thenReturn(nexus);
+            }
             config.when(() -> ConfiguredModMobs.allowsEngineerTower(any(), anyBoolean())).thenReturn(true);
             config.when(() -> ConfiguredModMobs.buildingBlock(any(), any())).thenReturn(Blocks.OAK_PLANKS);
             config.when(() -> ConfiguredModMobs.isWorkingOnEngineerTower(mob)).thenCallRealMethod();
@@ -157,8 +171,21 @@ class ConfiguredEngineerTowerTest {
             verify(navigation, never()).stop();
             invoke(goal, "clearTowerWork", new Class<?>[0]);
             assertFalse(ConfiguredModMobs.isWorkingOnEngineerTower(mob));
+            if (mob instanceof com.invasion.entity.ZombieBuilderEntity) {
+                mob.tickCount = 45;
+                when(navigation.isDone()).thenReturn(true);
+                config.when(() -> ConfiguredModMobs.allowsEngineerTower(any(), anyBoolean())).thenReturn(false);
+                assertFalse(goal.canUse(), "Disabling engineer_tower must disable the zombie tower controller");
+            }
         }
         verify(navigation, never()).createPath(any(BlockPos.class), anyInt());
+    }
+
+    private static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> towerBuilders() {
+        return java.util.stream.Stream.of(Mob.class, com.invasion.entity.ZombieBuilderEntity.class,
+                com.invasion.entity.ZombieMinerEntity.class).flatMap(type -> java.util.stream.Stream.of(
+                        org.junit.jupiter.params.provider.Arguments.of(type, false),
+                        org.junit.jupiter.params.provider.Arguments.of(type, true)));
     }
 
     private Object invoke(Object goal, String name, Class<?>[] types, Object... args) throws Exception {
