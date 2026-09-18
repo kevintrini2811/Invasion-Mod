@@ -21,6 +21,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class PigmanEngineerTowerTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     private final BlockPos base = new BlockPos(0, 64, 0);
     private final BlockPos center = base.above(3);
     private final BlockPos ladderBase = base.north();

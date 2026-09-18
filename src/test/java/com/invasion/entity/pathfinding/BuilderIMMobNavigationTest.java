@@ -12,6 +12,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class BuilderIMMobNavigationTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void claimsTowerBeforeOrdinaryNavigationOrRecovery(boolean pathDone) throws Exception {

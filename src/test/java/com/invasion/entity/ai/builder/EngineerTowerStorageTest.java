@@ -18,6 +18,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EngineerTowerStorageTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     private final BlockPos base = new BlockPos(0, 64, 0);
     private final EngineerTower tower = new EngineerTower(base, Direction.NORTH);
     private final Map<BlockPos, BlockState> blocks = new HashMap<>();

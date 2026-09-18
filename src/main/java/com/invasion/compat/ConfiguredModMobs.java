@@ -626,8 +626,8 @@ public final class ConfiguredModMobs {
 
     /** Installs the configured tower controller ahead of native mining for zombie engineers. */
     public static void addEngineerTowerGoals(Mob mob) {
-        mob.goalSelector.addGoal(0, new ConfiguredTerrainGoal(mob, true));
-        mob.goalSelector.addGoal(0, new ClimbNexusLadderGoal(mob));
+        ((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector().addGoal(0, new ConfiguredTerrainGoal(mob, true));
+        ((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector().addGoal(0, new ClimbNexusLadderGoal(mob));
     }
 
     static NexusAccess towerNexus(Mob mob) {
@@ -636,7 +636,7 @@ public final class ConfiguredModMobs {
 
     /** Tower work has its own bounded approach timeout and must not trigger a random detour. */
     public static boolean isWorkingOnEngineerTower(Mob mob) {
-        return mob.goalSelector.getAvailableGoals().stream().anyMatch(wrapped ->
+        return ((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector().getAvailableGoals().stream().anyMatch(wrapped ->
                 wrapped.isRunning() && (wrapped.getGoal() instanceof ConfiguredTerrainGoal goal
                         && goal.activeTower != null || wrapped.getGoal() instanceof ClimbNexusLadderGoal));
     }
@@ -911,7 +911,7 @@ public final class ConfiguredModMobs {
             if (change == null) {
                 BlockPos ladder = activeTower.ladderBase();
                 clearTowerWork();
-                mob.goalSelector.getAvailableGoals().forEach(wrapped -> {
+                ((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector().getAvailableGoals().forEach(wrapped -> {
                     if (wrapped.getGoal() instanceof ClimbNexusLadderGoal climb) climb.requestedLadder = ladder;
                 });
                 // Hand the repaired ladder to the climb goal even when work finished beside it.

@@ -21,6 +21,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.junit.jupiter.params.ParameterizedTest;
 
 class ConfiguredEngineerTowerTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     @ParameterizedTest
     @org.junit.jupiter.params.provider.MethodSource("towerBuilders")
     void configuredMobRepairsForeignTowerAndClearsThreeLayersBeforeClimbing(
@@ -68,6 +74,7 @@ class ConfiguredEngineerTowerTest {
         selectorField.setAccessible(true);
         var selector = new net.minecraft.world.entity.ai.goal.GoalSelector();
         selectorField.set(mob, selector);
+        when(((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector()).thenReturn(selector);
         Class<?> climbClass = Class.forName("com.invasion.compat.ConfiguredModMobs$ClimbNexusLadderGoal");
         var climbConstructor = climbClass.getDeclaredConstructor(Mob.class);
         climbConstructor.setAccessible(true);
@@ -140,6 +147,7 @@ class ConfiguredEngineerTowerTest {
         var selectorField = Mob.class.getDeclaredField("goalSelector");
         selectorField.setAccessible(true);
         selectorField.set(mob, selector);
+        when(((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector()).thenReturn(selector);
         net.minecraft.world.entity.ai.goal.Goal goal;
         if (mob instanceof com.invasion.entity.ZombieBuilderEntity zombie) {
             when(zombie.getNexus()).thenReturn(nexus);

@@ -10,6 +10,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class ZombieTowerBehaviorTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     @ParameterizedTest
     @ValueSource(classes = {ZombieBuilderEntity.class, ZombieMinerEntity.class})
     void installsConfiguredControllerAndDisablesNativeTowers(Class<? extends ZombieBuilderEntity> type) throws Exception {
@@ -19,7 +25,13 @@ class ZombieTowerBehaviorTest {
         for (String name : new String[] {"goalSelector", "targetSelector"}) {
             var field = Mob.class.getDeclaredField(name);
             field.setAccessible(true);
-            field.set(mob, new GoalSelector());
+            GoalSelector selector = new GoalSelector();
+            field.set(mob, selector);
+            if (name.equals("goalSelector")) {
+                when(((com.invasion.mixin.MobAccessor) mob).invmod$getGoalSelector()).thenReturn(selector);
+            } else {
+                when(((com.invasion.mixin.MobAccessor) mob).invmod$getTargetSelector()).thenReturn(selector);
+            }
         }
         doCallRealMethod().when(mob).registerGoals();
         doCallRealMethod().when(mob).tryStartTowerBuild();
@@ -28,7 +40,9 @@ class ZombieTowerBehaviorTest {
         assertTrue(mob.usesConfiguredEngineerTower());
         assertFalse(mob.tryStartTowerBuild());
         assertFalse(mob.tryReuseExistingTower());
-        var goals = mob.goalSelector.getAvailableGoals();
+        var goalField = Mob.class.getDeclaredField("goalSelector");
+        goalField.setAccessible(true);
+        var goals = ((GoalSelector) goalField.get(mob)).getAvailableGoals();
         assertEquals(1, goals.stream().filter(wrapped -> wrapped.getPriority() == 0
                 && wrapped.getGoal().getClass().getSimpleName().equals("ConfiguredTerrainGoal")).count());
         assertEquals(1, goals.stream().filter(wrapped -> wrapped.getPriority() == 0
