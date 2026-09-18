@@ -880,6 +880,9 @@ public final class ConfiguredModMobs {
             if (change == null) {
                 BlockPos ladder = activeTower.ladderBase();
                 clearTowerWork();
+                mob.goalSelector.getAvailableGoals().forEach(wrapped -> {
+                    if (wrapped.getGoal() instanceof ClimbNexusLadderGoal climb) climb.requestedLadder = ladder;
+                });
                 // Hand the repaired ladder to the climb goal even when work finished beside it.
                 mob.getNavigation().moveTo(ladder.getX() + 0.5D, ladder.getY(), ladder.getZ() + 0.5D, 1.0D);
                 return false;
@@ -900,9 +903,7 @@ public final class ConfiguredModMobs {
         }
 
         private boolean canClearTowerBlock(BlockPos pos) {
-            BlockState state = mob.level().getBlockState(pos);
-            return !state.is(InvBlocks.NEXUS_CORE) && !BlockMetadata.isIndestructible(state)
-                    && state.getDestroySpeed(mob.level(), pos) >= 0;
+            return EngineerTower.canClear(mob.level(), pos);
         }
 
         private boolean usesSpecialMovement() {
@@ -1135,6 +1136,7 @@ public final class ConfiguredModMobs {
         private int columnZ;
         private int exitY;
         private boolean previousNoGravity;
+        private BlockPos requestedLadder;
         private boolean completedExit;
         private int completedColumnX;
         private int completedColumnZ;
@@ -1180,14 +1182,20 @@ public final class ConfiguredModMobs {
         }
 
         @Override public void start() {
+            requestedLadder = null;
             previousNoGravity = mob.isNoGravity();
+            mob.getNavigation().stop();
             mob.setNoGravity(true);
+            mob.setPos(columnX + 0.5D, mob.getY(), columnZ + 0.5D);
+            mob.getMoveControl().setWantedPosition(columnX + 0.5D, mob.getY(), columnZ + 0.5D, 0);
         }
 
         @Override public void tick() {
+            mob.getNavigation().stop();
             double targetX = columnX + 0.5D;
             double targetZ = columnZ + 0.5D;
             mob.setPos(targetX, mob.getY(), targetZ);
+            mob.getMoveControl().setWantedPosition(targetX, mob.getY(), targetZ, 0);
             mob.setDeltaMovement(0, 0.2D, 0);
             mob.setXxa(0);
             mob.setZza(0);
@@ -1246,14 +1254,33 @@ public final class ConfiguredModMobs {
         }
 
         private BlockPos targetedLadder() {
+            if (requestedLadder != null) {
+                if (canEnterLadder(requestedLadder)) return requestedLadder;
+                requestedLadder = null;
+            }
             BlockPos current = mob.blockPosition();
-            if (mob.level().getBlockState(current).is(Blocks.LADDER)) return current;
+            if (canEnterLadder(current)) return current;
             net.minecraft.world.level.pathfinder.Path path = mob.getNavigation().getPath();
-            if (path == null || path.isDone()) return null;
-            BlockPos next = path.getNextNodePos();
-            if (mob.level().getBlockState(next).is(Blocks.LADDER)) return next;
+            if (path == null) return null;
+            // Vanilla may already have advanced past the ladder node toward the platform.
+            int first = Math.max(0, path.getNextNodeIndex() - 1);
+            int end = Math.min(path.getNodeCount(), path.getNextNodeIndex() + 2);
+            for (int index = first; index < end; index++) {
+                BlockPos node = path.getNode(index).asBlockPos();
+                if (canEnterLadder(node)) return node;
+                if (canEnterLadder(node.below())) return node.below();
+            }
             return null;
         }
+
+        private boolean canEnterLadder(BlockPos pos) {
+            double dx = mob.getX() - pos.getX() - 0.5D;
+            double dz = mob.getZ() - pos.getZ() - 0.5D;
+            return dx * dx + dz * dz <= 6.25D
+                    && mob.getY() >= pos.getY() - 0.5D && mob.getY() <= pos.getY() + 1.5D
+                    && mob.level().getBlockState(pos).is(Blocks.LADDER);
+        }
+
     }
 
     private static final class RangedAttackNexusGoal extends Goal {
