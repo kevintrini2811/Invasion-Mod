@@ -17,7 +17,8 @@ public class ZombieBuilderEntity extends PigmanEngineerEntity {
 
     @Override
     protected BlockState getBuildingBlock() {
-        return Blocks.BRICKS.defaultBlockState();
+        return com.invasion.compat.ConfiguredModMobs
+                .buildingBlock(getType(), Blocks.BRICKS).defaultBlockState();
     }
 
     @Override
