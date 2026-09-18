@@ -331,7 +331,6 @@ public class IMWaveSpawner implements Spawner {
 					spawnConstruct, world, spawnPoint.pos());
 			Mob mob = spawnConstruct.createMob(nexus);
 			equipRandomWaveWeapon(mob, spawnConstruct);
-			equipRandomWaveArmor(mob, spawnConstruct);
 			mob.getPersistentData().putInt("invmodWavePhase", nexus.getWavePhaseToken());
 			mob.getPersistentData().putInt("invmodWaveNumber", nexus.getCurrentWave());
 
@@ -342,6 +341,10 @@ public class IMWaveSpawner implements Spawner {
 				equipWitherSkeletonWeapon(mob, spawnConstruct);
                 applyBabyVariant(mob, spawnConstruct);
                 equipRandomWaveShield(mob);
+                // Finalization creates riders and may supply existing equipment.
+                mob.getSelfAndPassengers().forEach(entity -> {
+                    if (entity instanceof Mob equippedMob) equipRandomWaveArmor(equippedMob);
+                });
                 WaveEquipmentEnchantments.enchantEquipment(mob, nexus.getCurrentWave(), getRandom());
                 markAsInvasionAlly(mob);
                 if (debugMode) {
@@ -693,7 +696,7 @@ public class IMWaveSpawner implements Spawner {
 				weapon.getDefaultInstance());
 	}
 
-	private void equipRandomWaveArmor(Mob mob, EntityConstruct construct) {
+	void equipRandomWaveArmor(Mob mob) {
 		if (mob instanceof com.invasion.entity.IMFatZombieEntity) {
 			return;
 		}
@@ -711,12 +714,8 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		boolean planned = (construct.rules() & BudgetWavePlan.RULE_PLANNED) != 0;
-		int chancePercent = (construct.rules() & (BudgetWavePlan.RULE_ARMORED | BudgetWavePlan.RULE_ARMOR)) != 0
-				? 100 : planned ? 0 : nexus.getRandomEquipmentChancePercent();
-		if (getRandom().nextInt(100) >= chancePercent) {
-			return;
-		}
+		int chancePercent = Math.max(0, Math.min(nexus.getCurrentWave(), 100));
+		if (chancePercent == 0) return;
 
 		List<Item> availableArmor = new ArrayList<>();
 		for (Item armor : randomWaveArmor) {
@@ -743,23 +742,11 @@ public class IMWaveSpawner implements Spawner {
 				availableArmor.add(armor);
 			}
 		}
-		if (availableArmor.isEmpty()) {
-			return;
-		}
-
-		if ((construct.rules() & BudgetWavePlan.RULE_ARMORED) != 0) {
-			for (EquipmentSlot desired : EquipmentSlot.values()) {
-				if (!desired.isArmor()) continue;
-				List<Item> slotArmor = availableArmor.stream().filter(item -> mob.getEquipmentSlotForItem(item.getDefaultInstance()) == desired).toList();
-				if (!slotArmor.isEmpty()) {
-					Item armor = slotArmor.get(getRandom().nextInt(slotArmor.size()));
-					mob.setItemSlot(desired, armor.getDefaultInstance());
-				}
-			}
-		} else {
+		while (!availableArmor.isEmpty() && getRandom().nextInt(100) < chancePercent) {
 			Item armor = availableArmor.get(getRandom().nextInt(availableArmor.size()));
 			EquipmentSlot slot = mob.getEquipmentSlotForItem(armor.getDefaultInstance());
 			mob.setItemSlot(slot, armor.getDefaultInstance());
+			availableArmor.removeIf(item -> mob.getEquipmentSlotForItem(item.getDefaultInstance()) == slot);
 		}
 	}
 
