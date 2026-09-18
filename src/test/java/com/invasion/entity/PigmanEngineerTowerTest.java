@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
+import com.invasion.entity.ai.builder.EngineerTower;
+import com.invasion.entity.ai.builder.EngineerTowerStorage;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +107,38 @@ class PigmanEngineerTowerTest {
         for (int height = 0; height < 3; height++) {
             blocks.remove(base.above(height));
         }
+        for (int height = 0; height <= 3; height++) blocks.remove(ladderBase.above(height));
         assertFalse(existing());
+    }
+
+    @Test
+    void repairsForeignTowerWithCurrentMaterialWithoutReplacingSurvivors() throws Exception {
+        for (BlockState original : List.of(Blocks.BRICKS.defaultBlockState(), Blocks.OAK_PLANKS.defaultBlockState())) {
+            blocks.clear();
+            when(engineer.getBuildingBlock()).thenReturn(original);
+            apply(plan());
+            BlockState repair = original.is(Blocks.BRICKS) ? Blocks.OAK_PLANKS.defaultBlockState()
+                    : Blocks.BRICKS.defaultBlockState();
+            when(engineer.getBuildingBlock()).thenReturn(repair);
+            blocks.remove(base.above());
+            blocks.remove(center.south());
+            assertTrue(existing());
+            apply(plan());
+            assertEquals(original, blocks.get(base));
+            assertEquals(repair, blocks.get(base.above()));
+            assertEquals(repair, blocks.get(center.south()));
+        }
+    }
+
+    @Test
+    void recognizesUnfinishedForeignColumnWithOnlyTwoBlocks() throws Exception {
+        blocks.put(base, Blocks.BRICKS.defaultBlockState());
+        blocks.put(base.above(), Blocks.BRICKS.defaultBlockState());
+        assertTrue(existing());
+        apply(plan());
+        assertEquals(Blocks.BRICKS.defaultBlockState(), blocks.get(base));
+        assertEquals(Blocks.OAK_PLANKS.defaultBlockState(), blocks.get(base.above(2)));
+        assertTrue(plan().isEmpty());
     }
 
     @SuppressWarnings("unchecked")
@@ -116,8 +149,7 @@ class PigmanEngineerTowerTest {
     }
 
     private boolean existing() throws Exception {
-        return (boolean) invoke("isExistingTower",
-                new Class<?>[] {BlockPos.class, Direction.class}, center, Direction.NORTH);
+        return EngineerTowerStorage.isLegacyTower(engineer.level(), new EngineerTower(base, Direction.NORTH));
     }
 
     private boolean buildable() throws Exception {
