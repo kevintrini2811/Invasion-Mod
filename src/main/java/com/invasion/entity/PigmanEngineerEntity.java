@@ -124,7 +124,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(0, new FloatGoal(this));
-        goalSelector.addGoal(0, new MineBlockGoal(this));
+        if (usesConfiguredEngineerTower()) {
+            com.invasion.compat.ConfiguredModMobs.addEngineerTowerGoals(this);
+        }
+        goalSelector.addGoal(usesConfiguredEngineerTower() ? 1 : 0, new MineBlockGoal(this));
         goalSelector.addGoal(1, new AttackNexusGoal<>(this));
         goalSelector.addGoal(1, new MobMeleeAttackGoal(this, 1, false));
         goalSelector.addGoal(2, new GoToNexusGoal(this));
@@ -393,7 +396,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         return directions;
     }
 
+    public boolean usesConfiguredEngineerTower() {
+        return false;
+    }
+
     public boolean tryStartTowerBuild() {
+        if (usesConfiguredEngineerTower()) return false;
         if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
                 || buildingTower || towerBuildCooldown > 0 || !hasNexus()
                 || getTarget() != null || !isStandingOnSolidGround(true)) {
@@ -430,6 +438,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     /** Prefer a nearby surviving tower footprint, including towers with missing ladders. */
     public boolean tryReuseExistingTower() {
+        if (usesConfiguredEngineerTower()) return false;
         if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
                 || buildingTower || towerBuildCooldown > 0 || !hasNexus()
                 || getTarget() != null || !isStandingOnSolidGround(true)) {
