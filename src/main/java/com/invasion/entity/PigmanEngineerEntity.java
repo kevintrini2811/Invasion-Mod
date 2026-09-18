@@ -170,6 +170,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         } else {
             towerInterruptedTicks = 0;
+            if (buildingTower) stopHorizontalMovementForTower();
             if (buildingTower && !towerTaskQueued) {
                 verifyTowerAfterBuild(Notifiable.Status.SUCCESS);
             } else {
@@ -393,13 +394,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public boolean tryStartTowerBuild() {
         if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
                 || buildingTower || towerBuildCooldown > 0 || !hasNexus()
-                || getTarget() != null || !isStandingOnSolidGround()) {
+                || getTarget() != null || !isStandingOnSolidGround(true)) {
             return false;
         }
 
         if (tryReuseExistingTower()) {
             return true;
         }
+        if (onClimbable()) return false;
 
         BlockPos nexusPos = getNexus().getOrigin();
         BlockPos basePos = blockPosition();
@@ -428,7 +430,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public boolean tryReuseExistingTower() {
         if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
                 || buildingTower || towerBuildCooldown > 0 || !hasNexus()
-                || getTarget() != null || !isStandingOnSolidGround()) {
+                || getTarget() != null || !isStandingOnSolidGround(true)) {
             return false;
         }
         towerBuildCooldown = 40;
@@ -438,8 +440,10 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 (ServerLevel) level(), current, nexus)) {
             BlockPos workPosition = tower.workPosition(level());
             if (workPosition == null || !tower.canBuild(level(), this::canClearBlock)) continue;
-            Path approach = getNavigation().createPath(workPosition, 0);
-            if (approach == null || !approach.canReach()) continue;
+            if (!EngineerTower.isAtWorkPosition(this, workPosition)) {
+                Path approach = getNavigation().createPath(workPosition, 0);
+                if (approach == null || !approach.canReach()) continue;
+            }
             if (beginTowerWork(tower.ladderBase(), tower.base(), tower.ladderFacing(), workPosition)) return true;
         }
         return false;
@@ -521,7 +525,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private boolean isStandingOnSolidGround() {
-        if (!onGround() || onClimbable()
+        return isStandingOnSolidGround(false);
+    }
+
+    private boolean isStandingOnSolidGround(boolean allowLadder) {
+        if (!onGround() || !allowLadder && onClimbable()
                 || isInWater() || isInLava()
                 || !level().getBlockState(blockPosition())
                         .getFluidState().isEmpty()) {
@@ -537,16 +545,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         return getTarget() != null || !isAtTowerBuildPosition();
     }
 
-    private boolean isAtTowerBuildPosition() {
-        if (towerBuildPosition == null) {
-            return true;
-        }
-        double targetX = towerBuildPosition.getX() + 0.5D;
-        double targetZ = towerBuildPosition.getZ() + 0.5D;
-        double deltaX = getX() - targetX;
-        double deltaZ = getZ() - targetZ;
-        return deltaX * deltaX + deltaZ * deltaZ < 0.16D
-                && Math.abs(getY() - towerBuildPosition.getY()) < 0.75D;
+    public boolean isAtTowerBuildPosition() {
+        return towerBuildPosition == null || EngineerTower.isAtWorkPosition(this, towerBuildPosition);
     }
 
     private void returnToTowerBuildPosition() {
@@ -593,13 +593,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private void stopHorizontalMovementForTower() {
-        getNavigation().stop();
-        var movement = getDeltaMovement();
-        setXxa(0);
-        setZza(0);
-        setSpeed(0);
-        setDeltaMovement(0, Math.min(movement.y, 0), 0);
-        getMoveControl().setWantedPosition(getX(), getY(), getZ(), 0);
+        EngineerTower.holdWorkPosition(this);
     }
 
     public boolean isBuildingTower() {

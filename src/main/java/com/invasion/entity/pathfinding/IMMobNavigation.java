@@ -437,6 +437,7 @@ public class IMMobNavigation extends GroundPathNavigation implements Navigation 
 
     @Nullable
     private BlockPos getTargetedLadder() {
+        if (mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()) return null;
         if (getPath() == null || getPath().isDone()) {
             return null;
         }

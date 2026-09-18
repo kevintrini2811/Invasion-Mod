@@ -31,6 +31,8 @@ class ConfiguredEngineerTowerTest {
         PathNavigation navigation = mock(PathNavigation.class);
         when(mob.getNavigation()).thenReturn(navigation);
         when(mob.getLookControl()).thenReturn(mock(LookControl.class));
+        when(mob.getMoveControl()).thenReturn(mock(net.minecraft.world.entity.ai.control.MoveControl.class));
+        when(mob.getDeltaMovement()).thenReturn(net.minecraft.world.phys.Vec3.ZERO);
         EngineerTower tower = new EngineerTower(new BlockPos(0, 64, 0), Direction.NORTH);
         BlockPos work = blockedShaft ? tower.ladderBase().north() : tower.ladderBase();
         double[] position = {work.getX() + 0.5D, work.getY(), work.getZ() + 0.5D};
@@ -88,6 +90,63 @@ class ConfiguredEngineerTowerTest {
         assertTrue(tower.plan(level, Blocks.OAK_PLANKS.defaultBlockState(), pos -> 20).isEmpty());
         assertEquals(tower.ladderBase(), mob.blockPosition());
         verify(mob, never()).setPos(anyDouble(), anyDouble(), anyDouble());
+    }
+
+    @org.junit.jupiter.api.Test
+    void searchesWhileWalkingAndStartsAtNavigationArrival() throws Exception {
+        ServerLevel level = mock(ServerLevel.class);
+        Mob mob = mock(Mob.class);
+        var navigation = mock(PathNavigation.class);
+        var rules = mock(net.minecraft.world.level.gamerules.GameRules.class);
+        var nexus = mock(com.invasion.nexus.NexusAccess.class);
+        var storage = mock(EngineerTowerStorage.class);
+        var tower = new EngineerTower(new BlockPos(0, 64, 0), Direction.NORTH);
+        BlockPos work = tower.ladderBase();
+        when(mob.level()).thenReturn(level);
+        when(mob.getNavigation()).thenReturn(navigation);
+        when(mob.onGround()).thenReturn(true);
+        when(mob.onClimbable()).thenReturn(true);
+        when(mob.blockPosition()).thenReturn(work);
+        when(mob.getX()).thenReturn(work.getX() + 0.5D + 0.6D);
+        when(mob.getY()).thenReturn((double) work.getY());
+        when(mob.getZ()).thenReturn(work.getZ() + 0.5D);
+        when(navigation.isDone()).thenReturn(false);
+        when(nexus.getOrigin()).thenReturn(tower.base().above(10));
+        when(level.getGameRules()).thenReturn(rules);
+        when(rules.get(net.minecraft.world.level.gamerules.GameRules.MOB_GRIEFING)).thenReturn(true);
+        when(level.getBlockState(any(BlockPos.class))).thenAnswer(call -> {
+            BlockPos pos = call.getArgument(0);
+            return pos.getY() < work.getY() ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
+        });
+        when(storage.nearby(level, work, nexus.getOrigin())).thenReturn(java.util.List.of(tower));
+        Class<?> goalClass = Class.forName("com.invasion.compat.ConfiguredModMobs$ConfiguredTerrainGoal");
+        Constructor<?> constructor = goalClass.getDeclaredConstructor(Mob.class);
+        constructor.setAccessible(true);
+        var goal = (net.minecraft.world.entity.ai.goal.Goal) constructor.newInstance(mob);
+        var selector = new net.minecraft.world.entity.ai.goal.GoalSelector();
+        selector.addGoal(2, goal);
+        var selectorField = Mob.class.getDeclaredField("goalSelector");
+        selectorField.setAccessible(true);
+        selectorField.set(mob, selector);
+        try (var storageAccess = mockStatic(EngineerTowerStorage.class);
+                var config = mockStatic(ConfiguredModMobs.class)) {
+            storageAccess.when(() -> EngineerTowerStorage.of(level)).thenReturn(storage);
+            config.when(() -> ConfiguredModMobs.activeNexus(mob)).thenReturn(nexus);
+            config.when(() -> ConfiguredModMobs.allowsEngineerTower(any(), anyBoolean())).thenReturn(true);
+            config.when(() -> ConfiguredModMobs.buildingBlock(any(), any())).thenReturn(Blocks.OAK_PLANKS);
+            config.when(() -> ConfiguredModMobs.isWorkingOnEngineerTower(mob)).thenCallRealMethod();
+            assertTrue(goal.canUse(), "Reuse must not wait until the Nexus path stalls");
+            selector.getAvailableGoals().iterator().next().start();
+            clearInvocations(navigation);
+            assertTrue(ConfiguredModMobs.isWorkingOnEngineerTower(mob));
+            for (int second = 0; second < 30; second++) {
+                com.invasion.entity.NexusBoundMobLifecycle.tickStationaryPathRecovery(mob, nexus);
+            }
+            verify(navigation, never()).stop();
+            invoke(goal, "clearTowerWork", new Class<?>[0]);
+            assertFalse(ConfiguredModMobs.isWorkingOnEngineerTower(mob));
+        }
+        verify(navigation, never()).createPath(any(BlockPos.class), anyInt());
     }
 
     private Object invoke(Object goal, String name, Class<?>[] types, Object... args) throws Exception {

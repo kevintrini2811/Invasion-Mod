@@ -45,7 +45,8 @@ public class GoToNexusGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return (mob.getTarget() == null
+        return !(mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower())
+                && (mob.getTarget() == null
                     || mob instanceof PigmanEngineerEntity
                     || mob instanceof ZombieBuilderEntity)
                 && nexusEntity.hasGoal(HasAiGoals.Goal.BREAK_NEXUS)
