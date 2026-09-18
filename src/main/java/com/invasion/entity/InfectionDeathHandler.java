@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import com.invasion.InvasionMod;
 import com.invasion.nexus.IHasNexus;
 import com.invasion.nexus.NexusAccess;
 import com.invasion.nexus.WorldNexusStorage;
@@ -31,6 +32,9 @@ public final class InfectionDeathHandler {
         // Consume the marker immediately so another death callback cannot
         // release a second group from the same host.
         host.removeTag(IMSilverfishEntity.INFECTED_TAG);
+        if (!InvasionMod.getConfig().enableSilverfish && !(host instanceof EnderMan)) {
+            return;
+        }
         NexusAccess nexus = host instanceof IHasNexus nexusHost
                 ? nexusHost.getNexus()
                 : WorldNexusStorage.of(level).getNexus()

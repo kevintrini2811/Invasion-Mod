@@ -278,6 +278,9 @@ public final class VanillaMobSpawnReplacement {
             return;
         }
 
+        if (targetType == InvEntities.SILVERFISH && !InvasionMod.getConfig().enableSilverfish) {
+            return;
+        }
         T converted = targetType.create(world, EntitySpawnReason.CONVERSION);
         if (converted == null) {
             return;
