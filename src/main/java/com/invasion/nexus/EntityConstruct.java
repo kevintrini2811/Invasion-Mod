@@ -1,5 +1,6 @@
 package com.invasion.nexus;
 
+import com.invasion.InvasionMod;
 import com.invasion.entity.IMSilverfishEntity;
 import com.invasion.entity.ZombieVariants;
 import com.invasion.entity.IMEndermiteEntity;
@@ -60,7 +61,8 @@ public record EntityConstruct (
 
     private static void applyWaveInfection(
             Mob entity, @Nullable NexusAccess nexus, int rules) {
-        if (nexus == null || entity instanceof IMSilverfishEntity
+        if (!InvasionMod.getConfig().enableSilverfish
+                || nexus == null || entity instanceof IMSilverfishEntity
                 || entity instanceof IMEndermiteEntity) {
             return;
         }
