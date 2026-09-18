@@ -78,6 +78,14 @@ public record EngineerTower(BlockPos base, Direction ladderFacing) {
         return !state.is(Blocks.LADDER) && !state.getCollisionShape(level, pos).isEmpty();
     }
 
+    /** Tower clearance may remove obstructions beside ladders, unlike ordinary path mining. */
+    public static boolean canClear(Level level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return !state.is(com.invasion.block.InvBlocks.NEXUS_CORE)
+                && !com.invasion.block.BlockMetadata.isIndestructible(state)
+                && state.getDestroySpeed(level, pos) >= 0;
+    }
+
     public boolean canBuild(Level level, Predicate<BlockPos> canClearBlock) {
         BlockPos ladderBase = ladderBase();
         BlockPos towerBase = base;

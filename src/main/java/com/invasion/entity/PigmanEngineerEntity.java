@@ -441,7 +441,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         for (EngineerTower tower : EngineerTowerStorage.of((ServerLevel) level()).nearby(
                 (ServerLevel) level(), current, nexus)) {
             BlockPos workPosition = tower.workPosition(level());
-            if (workPosition == null || !tower.canBuild(level(), this::canClearBlock)) continue;
+            if (workPosition == null || !tower.canBuild(level(), pos -> EngineerTower.canClear(level(), pos))) continue;
             if (!EngineerTower.isAtWorkPosition(this, workPosition)) {
                 Path approach = getNavigation().createPath(workPosition, 0);
                 if (approach == null || !approach.canReach()) continue;
@@ -575,7 +575,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private boolean canBuildTowerAt(BlockPos ladderBase, BlockPos towerBase) {
         Direction facing = Direction.getNearest(ladderBase.getX() - towerBase.getX(), 0,
                 ladderBase.getZ() - towerBase.getZ(), Direction.NORTH);
-        return new EngineerTower(towerBase, facing).canBuild(level(), this::canClearBlock);
+        return new EngineerTower(towerBase, facing).canBuild(level(), pos -> EngineerTower.canClear(level(), pos));
     }
 
     private List<ModifyBlockEntry> createTowerPlan(BlockPos ladderBase, BlockPos towerBase, Direction facing) {
