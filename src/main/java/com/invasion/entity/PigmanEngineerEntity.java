@@ -1,7 +1,6 @@
 package com.invasion.entity;
 
 import com.invasion.Notifiable;
-import com.invasion.block.BlockMetadata;
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
 import com.invasion.entity.ai.builder.TerrainDigger;
 import com.invasion.entity.ai.builder.TerrainModifier;
@@ -55,6 +54,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private static final int BRIDGE_PLANK_BUILD_TIME = 45;
     private static final int TOWER_PLANK_BUILD_TIME = 45;
     private static final int TOWER_LADDER_BUILD_TIME = 25;
+    private static final int TOWER_CLEARANCE = 3;
+    private static final int TOWER_SEARCH_RADIUS = 8;
     private static final int TOWER_INTERRUPTION_TIMEOUT = 20 * 10;
 
     @Override
@@ -76,12 +77,14 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     // Reaches the far upper corner of a 3x3 tower platform while the
     // engineer remains at the ladder base during construction.
-    private final TerrainModifier terrainModifier = new TerrainModifier(this, 6.0F);
+    private final TerrainModifier terrainModifier = new TerrainModifier(this, 7.0F);
     private final TerrainDigger terrainDigger = new TerrainDigger(this, terrainModifier, 1.0F);
     private boolean buildingTower;
+    private boolean towerTaskQueued;
     private int towerBuildCooldown;
     private int towerInterruptedTicks;
     private BlockPos towerBuildPosition;
+    private BlockPos towerLadderBase;
     private BlockPos towerPlatformCenter;
 
 
@@ -170,7 +173,11 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         } else {
             towerInterruptedTicks = 0;
-            terrainModifier.onUpdate();
+            if (buildingTower && !towerTaskQueued) {
+                verifyTowerAfterBuild(Notifiable.Status.SUCCESS);
+            } else {
+                terrainModifier.onUpdate();
+            }
         }
         towerBuildCooldown = Math.max(0, towerBuildCooldown - 1);
 
@@ -387,8 +394,12 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     public boolean tryStartTowerBuild() {
         if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
                 || buildingTower || towerBuildCooldown > 0 || !hasNexus()
-                || !isStandingOnSolidGround()) {
+                || getTarget() != null || !isStandingOnSolidGround()) {
             return false;
+        }
+
+        if (tryReuseExistingTower()) {
+            return true;
         }
 
         BlockPos nexusPos = getNexus().getOrigin();
@@ -411,41 +422,146 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             return false;
         }
 
-        List<ModifyBlockEntry> entries = createTowerPlan(
-                basePos, towerBase, ladderFacing);
-        if (entries.isEmpty()) {
-            towerBuildCooldown = 40;
+        return beginTowerWork(basePos, towerBase, ladderFacing, basePos);
+    }
+
+    /** Prefer a nearby surviving tower footprint, including towers with missing ladders. */
+    public boolean tryReuseExistingTower() {
+        if (!com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(getType(), true)
+                || buildingTower || towerBuildCooldown > 0 || !hasNexus()
+                || getTarget() != null || !isStandingOnSolidGround()) {
             return false;
         }
+        towerBuildCooldown = 40;
+        BlockPos current = blockPosition();
+        BlockPos nexus = getNexus().getOrigin();
+        List<BlockPos> centers = new ArrayList<>();
+        for (BlockPos pos : BlockPos.betweenClosed(
+                current.offset(-TOWER_SEARCH_RADIUS, 1, -TOWER_SEARCH_RADIUS),
+                current.offset(TOWER_SEARCH_RADIUS, 5, TOWER_SEARCH_RADIUS))) {
+            if (level().hasChunkAt(pos) && pos.getY() <= nexus.getY()
+                    && level().getBlockState(pos).is(getBuildingBlock().getBlock())) {
+                centers.add(pos.immutable());
+            }
+        }
+        centers.sort(Comparator.comparingDouble(pos -> pos.distSqr(current)));
+        for (BlockPos center : centers) {
+            for (Direction facing : Direction.Plane.HORIZONTAL) {
+                BlockPos towerBase = center.below(3);
+                BlockPos ladderBase = towerBase.relative(facing);
+                if (!isExistingTower(center, facing)
+                        || !level().getBlockState(ladderBase.below())
+                                .isCollisionShapeFullBlock(level(), ladderBase.below())
+                        || !canBuildTowerAt(ladderBase, towerBase)) {
+                    continue;
+                }
+                // A blocked bottom ladder must be repaired from outside the shaft.
+                BlockPos workPosition = ladderBase;
+                if (isTowerApproachBlocked(ladderBase) || isTowerApproachBlocked(ladderBase.above())) {
+                    workPosition = ladderBase.relative(facing);
+                }
+                BlockPos floor = workPosition.below();
+                if (!level().getBlockState(floor).isCollisionShapeFullBlock(level(), floor)
+                        || isTowerApproachBlocked(workPosition)
+                        || isTowerApproachBlocked(workPosition.above())) {
+                    continue;
+                }
+                Path approach = getNavigation().createPath(workPosition, 0);
+                if (approach == null || !approach.canReach()) {
+                    continue;
+                }
+                if (beginTowerWork(ladderBase, towerBase, facing, workPosition)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
+    private boolean isExistingTower(BlockPos center, Direction facing) {
+        // A broad deck and a surviving column distinguish towers from bridges.
+        // No ownership metadata is needed, so towers survive saves and builder deaths.
+        int deckBlocks = 0;
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                BlockPos pos = center.offset(x, 0, z);
+                if (!pos.equals(center.relative(facing))
+                        && level().getBlockState(pos).is(getBuildingBlock().getBlock())) {
+                    deckBlocks++;
+                }
+            }
+        }
+        int supports = 0;
+        for (int height = 1; height <= 3; height++) {
+            BlockPos support = center.below(height);
+            if (level().getBlockState(support).isCollisionShapeFullBlock(level(), support)) {
+                supports++;
+            }
+        }
+        if (deckBlocks < 6 || supports < 2) {
+            return false;
+        }
+        BlockState opening = level().getBlockState(center.relative(facing));
+        if (opening.is(getBuildingBlock().getBlock())) {
+            return false;
+        }
+        for (int height = 0; height <= 3; height++) {
+            BlockState ladder = level().getBlockState(center.relative(facing).below(height));
+            if (ladder.is(Blocks.LADDER)
+                    && ladder.getValue(LadderBlock.FACING) != facing) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isTowerApproachBlocked(BlockPos pos) {
+        BlockState state = level().getBlockState(pos);
+        return !state.is(Blocks.LADDER) && !state.getCollisionShape(level(), pos).isEmpty();
+    }
+
+    private boolean beginTowerWork(
+            BlockPos basePos, BlockPos towerBase, Direction ladderFacing, BlockPos workPosition) {
+        if (!terrainModifier.isReadyForTask(null)) {
+            return false;
+        }
+        List<ModifyBlockEntry> entries = createTowerPlan(basePos, towerBase, ladderFacing);
         stopHorizontalMovementForTower();
         buildingTower = true;
         towerInterruptedTicks = 0;
-        towerBuildPosition = basePos;
+        towerBuildPosition = workPosition;
+        towerLadderBase = basePos;
         towerPlatformCenter = towerBase.above(3);
-        boolean accepted = terrainModifier.requestTask(
+        towerTaskQueued = !entries.isEmpty();
+        boolean accepted = entries.isEmpty() || terrainModifier.requestTask(
                 entries,
-                this::verifyTowerClearanceAfterBuild,
+                this::verifyTowerAfterBuild,
                 this::onTowerBlockChanged);
         if (!accepted) {
-            buildingTower = false;
-            towerInterruptedTicks = 0;
-            towerBuildPosition = null;
-            towerPlatformCenter = null;
+            finishTowerBuild(Notifiable.Status.UNMODIFIABLE);
         }
         return accepted;
     }
 
-    private void verifyTowerClearanceAfterBuild(Notifiable.Status status) {
+    private void verifyTowerAfterBuild(Notifiable.Status status) {
         if (status == Notifiable.Status.SUCCESS
                 && towerPlatformCenter != null) {
-            List<ModifyBlockEntry> clearance = createTowerClearancePlan(
-                    towerPlatformCenter);
-            if (!clearance.isEmpty()
-                    && terrainModifier.requestTask(
-                            clearance,
-                            this::verifyTowerClearanceAfterBuild,
-                            this::onTowerBlockChanged)) {
+            if (!canBuildTowerAt(towerLadderBase, towerPlatformCenter.below(3))) {
+                finishTowerBuild(Notifiable.Status.UNMODIFIABLE);
+                return;
+            }
+            BlockPos towerBase = towerPlatformCenter.below(3);
+            Direction facing = Direction.getApproximateNearest(
+                    towerLadderBase.getX() - towerBase.getX(), 0,
+                    towerLadderBase.getZ() - towerBase.getZ());
+            List<ModifyBlockEntry> repairs = createTowerPlan(
+                    towerLadderBase, towerBase, facing);
+            if (!repairs.isEmpty()) {
+                towerTaskQueued = terrainModifier.requestTask(
+                        repairs, this::verifyTowerAfterBuild, this::onTowerBlockChanged);
+                if (!towerTaskQueued) {
+                    finishTowerBuild(Notifiable.Status.UNMODIFIABLE);
+                }
                 return;
             }
         }
@@ -453,15 +569,17 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private void finishTowerBuild(Notifiable.Status status) {
+        BlockPos platform = towerPlatformCenter;
         buildingTower = false;
         towerInterruptedTicks = 0;
         towerBuildPosition = null;
+        towerLadderBase = null;
         towerPlatformCenter = null;
         towerBuildCooldown = status == Notifiable.Status.SUCCESS ? 20 : 80;
         if (status == Notifiable.Status.SUCCESS
                 && getNavigation()
                         instanceof BuilderIMMobNavigation navigation) {
-            navigation.resumeAfterTowerBuild();
+            navigation.climbTower(platform.above());
         }
     }
 
@@ -517,6 +635,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     private void cancelStalledTowerBuild() {
         terrainModifier.cancelTask(Notifiable.Status.OUT_OF_RANGE);
+        if (buildingTower) {
+            finishTowerBuild(Notifiable.Status.OUT_OF_RANGE);
+        }
         getNavigation().stop();
         towerBuildCooldown = 80;
     }
@@ -533,7 +654,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             BlockState ladderSpace =
                     level().getBlockState(ladderBase.above(height));
             if (!ladderSpace.is(Blocks.LADDER)
-                    && !ladderSpace.canBeReplaced()) {
+                    && !ladderSpace.canBeReplaced()
+                    && !canClearBlock(ladderBase.above(height))) {
                 return false;
             }
         }
@@ -555,14 +677,15 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             }
         }
         BlockState exitSpace = level().getBlockState(ladderOpening);
-        if (!exitSpace.is(Blocks.LADDER) && !exitSpace.canBeReplaced()) {
+        if (!exitSpace.is(Blocks.LADDER) && !exitSpace.canBeReplaced()
+                && !canClearBlock(ladderOpening)) {
             return false;
         }
 
         // The engineer must be able to stand anywhere on the completed deck.
-        // Reject a tower site only when one of the two clearance layers
+        // Reject a tower site only when one of the three clearance layers
         // contains a block that the engineer cannot remove.
-        for (int clearanceHeight = 1; clearanceHeight <= 2;
+        for (int clearanceHeight = 1; clearanceHeight <= TOWER_CLEARANCE;
                 clearanceHeight++) {
             for (int x = -1; x <= 1; x++) {
                 for (int z = -1; z <= 1; z++) {
@@ -571,7 +694,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                     BlockState clearanceState =
                             level().getBlockState(clearancePos);
                     if (!clearanceState.isAir()
-                            && BlockMetadata.isIndestructible(clearanceState)) {
+                            && !canClearBlock(clearancePos)) {
                         return false;
                     }
                 }
@@ -584,16 +707,24 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             BlockPos ladderBase,
             BlockPos towerBase,
             Direction ladderFacing) {
-        List<ModifyBlockEntry> entries = new ArrayList<>(33);
+        List<ModifyBlockEntry> entries = new ArrayList<>(42);
         BlockState planks = getBuildingBlock();
         BlockState ladder = Blocks.LADDER.defaultBlockState()
                 .setValue(LadderBlock.FACING, ladderFacing);
 
         BlockPos platformCenter = towerBase.above(3);
 
-        // Phase 1: clear two full blocks of headroom before placing any
+        // Phase 1: clear three full blocks of headroom before placing any
         // ladders, so the engineer cannot climb into an unfinished exit.
         entries.addAll(createTowerClearancePlan(platformCenter));
+
+        for (int height = 0; height <= 3; height++) {
+            BlockPos pos = ladderBase.above(height);
+            BlockState state = level().getBlockState(pos);
+            if (!state.is(Blocks.LADDER) && !state.canBeReplaced()) {
+                entries.add(ModifyBlockEntry.ofDeletion(pos, (int) getBlockRemovalCost(pos)));
+            }
+        }
 
         // Phase 2: three solid support blocks, accepting existing full blocks.
         for (int height = 0; height < 3; height++) {
@@ -608,7 +739,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         // Phase 3: ladders on the side of the column facing the engineer.
         for (int height = 0; height < 3; height++) {
             BlockPos ladderPos = ladderBase.above(height);
-            if (!level().getBlockState(ladderPos).is(Blocks.LADDER)) {
+            if (level().getBlockState(ladderPos) != ladder) {
                 entries.add(new ModifyBlockEntry(
                         ladderPos, ladder, TOWER_LADDER_BUILD_TIME));
             }
@@ -623,7 +754,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
             entries.add(new ModifyBlockEntry(
                     platformCenter, planks, TOWER_PLANK_BUILD_TIME));
         }
-        if (!level().getBlockState(ladderOpening).is(Blocks.LADDER)) {
+        if (level().getBlockState(ladderOpening) != ladder) {
             entries.add(new ModifyBlockEntry(
                     ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
         }
@@ -646,8 +777,8 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     private List<ModifyBlockEntry> createTowerClearancePlan(
             BlockPos platformCenter) {
-        List<ModifyBlockEntry> entries = new ArrayList<>(18);
-        for (int clearanceHeight = 1; clearanceHeight <= 2;
+        List<ModifyBlockEntry> entries = new ArrayList<>(27);
+        for (int clearanceHeight = 1; clearanceHeight <= TOWER_CLEARANCE;
                 clearanceHeight++) {
             for (int x = -1; x <= 1; x++) {
                 for (int z = -1; z <= 1; z++) {
