@@ -1,7 +1,7 @@
 package com.invasion.entity;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
@@ -139,6 +139,66 @@ class PigmanEngineerTowerTest {
         assertEquals(Blocks.BRICKS.defaultBlockState(), blocks.get(base));
         assertEquals(Blocks.OAK_PLANKS.defaultBlockState(), blocks.get(base.above(2)));
         assertTrue(plan().isEmpty());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(classes = {
+            PigmanEngineerEntity.class, ZombieBuilderEntity.class, ZombieMinerEntity.class})
+    void startsRepairAtNavigationArrivalWithoutAnotherPath(Class<? extends PigmanEngineerEntity> type) throws Exception {
+        engineer = mock(type);
+        ServerLevel level = mock(ServerLevel.class);
+        var navigation = mock(net.minecraft.world.entity.ai.navigation.PathNavigation.class);
+        var modifier = mock(com.invasion.entity.ai.builder.TerrainModifier.class);
+        var nexus = mock(com.invasion.nexus.NexusAccess.class);
+        var storage = mock(EngineerTowerStorage.class);
+        var tower = new EngineerTower(base, Direction.NORTH);
+        var modifierField = PigmanEngineerEntity.class.getDeclaredField("terrainModifier");
+        modifierField.setAccessible(true);
+        modifierField.set(engineer, modifier);
+        when(engineer.level()).thenReturn(level);
+        when(engineer.getNavigation()).thenReturn(navigation);
+        when(engineer.getMoveControl()).thenReturn(mock(net.minecraft.world.entity.ai.control.MoveControl.class));
+        when(engineer.getDeltaMovement()).thenReturn(net.minecraft.world.phys.Vec3.ZERO);
+        when(engineer.hasNexus()).thenReturn(true);
+        when(engineer.getNexus()).thenReturn(nexus);
+        when(nexus.getOrigin()).thenReturn(base.above(10));
+        when(engineer.onGround()).thenReturn(true);
+        when(engineer.onClimbable()).thenReturn(true);
+        when(engineer.blockPosition()).thenReturn(ladderBase);
+        // Vanilla navigation can stop here, outside the old 0.4-block work radius.
+        when(engineer.getX()).thenReturn(ladderBase.getX() + 0.5D + 0.6D);
+        when(engineer.getY()).thenReturn((double) ladderBase.getY());
+        when(engineer.getZ()).thenReturn(ladderBase.getZ() + 0.5D);
+        when(engineer.getBuildingBlock()).thenReturn(Blocks.OAK_PLANKS.defaultBlockState());
+        when(engineer.canClearBlock(any())).thenReturn(true);
+        when(level.getBlockState(any(BlockPos.class))).thenAnswer(call -> {
+            BlockPos pos = call.getArgument(0);
+            return pos.getY() < base.getY() ? Blocks.STONE.defaultBlockState()
+                    : Blocks.AIR.defaultBlockState();
+        });
+        when(modifier.isReadyForTask(null)).thenReturn(true);
+        when(modifier.requestTask(anyCollection(), any(), any())).thenReturn(true);
+        when(storage.nearby(level, ladderBase, base.above(10))).thenReturn(List.of(tower));
+        doCallRealMethod().when(engineer).tryReuseExistingTower();
+        doCallRealMethod().when(engineer).isBuildingTower();
+        doCallRealMethod().when(engineer).isAtTowerBuildPosition();
+        try (var storageAccess = mockStatic(EngineerTowerStorage.class);
+                var config = mockStatic(com.invasion.compat.ConfiguredModMobs.class)) {
+            storageAccess.when(() -> EngineerTowerStorage.of(level)).thenReturn(storage);
+            config.when(() -> com.invasion.compat.ConfiguredModMobs.allowsEngineerTower(any(), anyBoolean()))
+                    .thenReturn(true);
+            assertTrue(engineer.tryReuseExistingTower());
+        }
+        assertTrue(engineer.isBuildingTower());
+        assertTrue(engineer.isAtTowerBuildPosition());
+        verify(navigation, never()).createPath(any(BlockPos.class), anyInt());
+        verify(modifier).requestTask(anyCollection(), any(), any());
+        for (int second = 0; second < 30; second++) NexusBoundMobLifecycle.tickStationaryPathRecovery(engineer, nexus);
+        verify(navigation, never()).moveTo(any(net.minecraft.world.level.pathfinder.Path.class), anyDouble());
+        assertFalse(new com.invasion.entity.ai.goal.GoToNexusGoal(engineer).canUse());
+        var mining = new com.invasion.entity.ai.goal.MineBlockGoal(engineer);
+        assertFalse(mining.canUse());
+        assertFalse(mining.canContinueToUse());
     }
 
     @SuppressWarnings("unchecked")

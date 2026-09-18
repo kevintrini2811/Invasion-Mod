@@ -72,7 +72,9 @@ public final class NexusBoundMobLifecycle {
     /** Checks one mob once per second and sends stationary mobs along a detour. */
     public static void tickStationaryPathRecovery(Mob mob, NexusAccess nexus) {
         if (mob instanceof StationaryPathRecoveryExcluded
-                || mob.getTarget() != null) {
+                || mob.getTarget() != null
+                || mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower()
+                || com.invasion.compat.ConfiguredModMobs.isWorkingOnEngineerTower(mob)) {
             STATIONARY_STATES.remove(mob);
             return;
         }
