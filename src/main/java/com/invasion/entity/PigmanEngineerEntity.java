@@ -1,5 +1,8 @@
 package com.invasion.entity;
 
+import com.invasion.entity.ai.builder.EngineerTower;
+import com.invasion.entity.ai.builder.EngineerTowerStorage;
+
 import com.invasion.Notifiable;
 import com.invasion.entity.ai.builder.ModifyBlockEntry;
 import com.invasion.entity.ai.builder.TerrainDigger;
@@ -42,7 +45,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 
@@ -52,10 +54,6 @@ import java.util.List;
 
 public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     private static final int BRIDGE_PLANK_BUILD_TIME = 45;
-    private static final int TOWER_PLANK_BUILD_TIME = 45;
-    private static final int TOWER_LADDER_BUILD_TIME = 25;
-    private static final int TOWER_CLEARANCE = 3;
-    private static final int TOWER_SEARCH_RADIUS = 8;
     private static final int TOWER_INTERRUPTION_TIMEOUT = 20 * 10;
 
     @Override
@@ -438,89 +436,15 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         towerBuildCooldown = 40;
         BlockPos current = blockPosition();
         BlockPos nexus = getNexus().getOrigin();
-        List<BlockPos> centers = new ArrayList<>();
-        for (BlockPos pos : BlockPos.betweenClosed(
-                current.offset(-TOWER_SEARCH_RADIUS, 1, -TOWER_SEARCH_RADIUS),
-                current.offset(TOWER_SEARCH_RADIUS, 5, TOWER_SEARCH_RADIUS))) {
-            if (level().hasChunkAt(pos) && pos.getY() <= nexus.getY()
-                    && level().getBlockState(pos).is(getBuildingBlock().getBlock())) {
-                centers.add(pos.immutable());
-            }
-        }
-        centers.sort(Comparator.comparingDouble(pos -> pos.distSqr(current)));
-        for (BlockPos center : centers) {
-            for (Direction facing : Direction.Plane.HORIZONTAL) {
-                BlockPos towerBase = center.below(3);
-                BlockPos ladderBase = towerBase.relative(facing);
-                if (!isExistingTower(center, facing)
-                        || !level().getBlockState(ladderBase.below())
-                                .isCollisionShapeFullBlock(level(), ladderBase.below())
-                        || !canBuildTowerAt(ladderBase, towerBase)) {
-                    continue;
-                }
-                // A blocked bottom ladder must be repaired from outside the shaft.
-                BlockPos workPosition = ladderBase;
-                if (isTowerApproachBlocked(ladderBase) || isTowerApproachBlocked(ladderBase.above())) {
-                    workPosition = ladderBase.relative(facing);
-                }
-                BlockPos floor = workPosition.below();
-                if (!level().getBlockState(floor).isCollisionShapeFullBlock(level(), floor)
-                        || isTowerApproachBlocked(workPosition)
-                        || isTowerApproachBlocked(workPosition.above())) {
-                    continue;
-                }
-                Path approach = getNavigation().createPath(workPosition, 0);
-                if (approach == null || !approach.canReach()) {
-                    continue;
-                }
-                if (beginTowerWork(ladderBase, towerBase, facing, workPosition)) {
-                    return true;
-                }
-            }
+        for (EngineerTower tower : EngineerTowerStorage.of((ServerLevel) level()).nearby(
+                (ServerLevel) level(), current, nexus)) {
+            BlockPos workPosition = tower.workPosition(level());
+            if (workPosition == null || !tower.canBuild(level(), this::canClearBlock)) continue;
+            Path approach = getNavigation().createPath(workPosition, 0);
+            if (approach == null || !approach.canReach()) continue;
+            if (beginTowerWork(tower.ladderBase(), tower.base(), tower.ladderFacing(), workPosition)) return true;
         }
         return false;
-    }
-
-    private boolean isExistingTower(BlockPos center, Direction facing) {
-        // A broad deck and a surviving column distinguish towers from bridges.
-        // No ownership metadata is needed, so towers survive saves and builder deaths.
-        int deckBlocks = 0;
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos pos = center.offset(x, 0, z);
-                if (!pos.equals(center.relative(facing))
-                        && level().getBlockState(pos).is(getBuildingBlock().getBlock())) {
-                    deckBlocks++;
-                }
-            }
-        }
-        int supports = 0;
-        for (int height = 1; height <= 3; height++) {
-            BlockPos support = center.below(height);
-            if (level().getBlockState(support).isCollisionShapeFullBlock(level(), support)) {
-                supports++;
-            }
-        }
-        if (deckBlocks < 6 || supports < 2) {
-            return false;
-        }
-        BlockState opening = level().getBlockState(center.relative(facing));
-        if (opening.is(getBuildingBlock().getBlock())) {
-            return false;
-        }
-        for (int height = 0; height <= 3; height++) {
-            BlockState ladder = level().getBlockState(center.relative(facing).below(height));
-            if (ladder.is(Blocks.LADDER)
-                    && ladder.getValue(LadderBlock.FACING) != facing) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean isTowerApproachBlocked(BlockPos pos) {
-        BlockState state = level().getBlockState(pos);
-        return !state.is(Blocks.LADDER) && !state.getCollisionShape(level(), pos).isEmpty();
     }
 
     private boolean beginTowerWork(
@@ -542,6 +466,9 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 this::onTowerBlockChanged);
         if (!accepted) {
             finishTowerBuild(Notifiable.Status.UNMODIFIABLE);
+        }
+        if (accepted) {
+            EngineerTowerStorage.of((ServerLevel) level()).remember(new EngineerTower(towerBase, ladderFacing));
         }
         return accepted;
     }
@@ -646,157 +573,19 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
     }
 
     private boolean canBuildTowerAt(BlockPos ladderBase, BlockPos towerBase) {
-        for (int height = 0; height < 3; height++) {
-            BlockPos supportPos = towerBase.above(height);
-            BlockState support = level().getBlockState(supportPos);
-            if (!support.isCollisionShapeFullBlock(level(), supportPos)
-                    && !support.canBeReplaced()) {
-                return false;
-            }
-
-            BlockState ladderSpace =
-                    level().getBlockState(ladderBase.above(height));
-            if (!ladderSpace.is(Blocks.LADDER)
-                    && !ladderSpace.canBeReplaced()
-                    && !canClearBlock(ladderBase.above(height))) {
-                return false;
-            }
-        }
-
-        BlockPos platformCenter = towerBase.above(3);
-        BlockPos ladderOpening = ladderBase.above(3);
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos platformPos = platformCenter.offset(x, 0, z);
-                if (platformPos.equals(ladderOpening)) {
-                    continue;
-                }
-                BlockState platformState = level().getBlockState(platformPos);
-                if (!platformState.isCollisionShapeFullBlock(
-                                level(), platformPos)
-                        && !platformState.canBeReplaced()) {
-                    return false;
-                }
-            }
-        }
-        BlockState exitSpace = level().getBlockState(ladderOpening);
-        if (!exitSpace.is(Blocks.LADDER) && !exitSpace.canBeReplaced()
-                && !canClearBlock(ladderOpening)) {
-            return false;
-        }
-
-        // The engineer must be able to stand anywhere on the completed deck.
-        // Reject a tower site only when one of the three clearance layers
-        // contains a block that the engineer cannot remove.
-        for (int clearanceHeight = 1; clearanceHeight <= TOWER_CLEARANCE;
-                clearanceHeight++) {
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    BlockPos clearancePos = platformCenter.offset(
-                            x, clearanceHeight, z);
-                    BlockState clearanceState =
-                            level().getBlockState(clearancePos);
-                    if (!clearanceState.isAir()
-                            && !canClearBlock(clearancePos)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return true;
+        Direction facing = Direction.getNearest(ladderBase.getX() - towerBase.getX(), 0,
+                ladderBase.getZ() - towerBase.getZ(), Direction.NORTH);
+        return new EngineerTower(towerBase, facing).canBuild(level(), this::canClearBlock);
     }
 
-    private List<ModifyBlockEntry> createTowerPlan(
-            BlockPos ladderBase,
-            BlockPos towerBase,
-            Direction ladderFacing) {
-        List<ModifyBlockEntry> entries = new ArrayList<>(42);
-        BlockState planks = getBuildingBlock();
-        BlockState ladder = Blocks.LADDER.defaultBlockState()
-                .setValue(LadderBlock.FACING, ladderFacing);
-
-        BlockPos platformCenter = towerBase.above(3);
-
-        // Phase 1: clear three full blocks of headroom before placing any
-        // ladders, so the engineer cannot climb into an unfinished exit.
-        entries.addAll(createTowerClearancePlan(platformCenter));
-
-        for (int height = 0; height <= 3; height++) {
-            BlockPos pos = ladderBase.above(height);
-            BlockState state = level().getBlockState(pos);
-            if (!state.is(Blocks.LADDER) && !state.canBeReplaced()) {
-                entries.add(ModifyBlockEntry.ofDeletion(pos, (int) getBlockRemovalCost(pos)));
-            }
-        }
-
-        // Phase 2: three solid support blocks, accepting existing full blocks.
-        for (int height = 0; height < 3; height++) {
-            BlockPos supportPos = towerBase.above(height);
-            if (!level().getBlockState(supportPos)
-                    .isCollisionShapeFullBlock(level(), supportPos)) {
-                entries.add(new ModifyBlockEntry(
-                        supportPos, planks, TOWER_PLANK_BUILD_TIME));
-            }
-        }
-
-        // Phase 3: ladders on the side of the column facing the engineer.
-        for (int height = 0; height < 3; height++) {
-            BlockPos ladderPos = ladderBase.above(height);
-            if (level().getBlockState(ladderPos) != ladder) {
-                entries.add(new ModifyBlockEntry(
-                        ladderPos, ladder, TOWER_LADDER_BUILD_TIME));
-            }
-        }
-
-        // Phase 4: build the platform centre first so the exit ladder has
-        // support. Placing the ladder immediately afterwards guarantees that
-        // the climbable column reaches through the platform before the
-        // remaining deck blocks are filled in.
-        BlockPos ladderOpening = ladderBase.above(3);
-        if (level().getBlockState(platformCenter).canBeReplaced()) {
-            entries.add(new ModifyBlockEntry(
-                    platformCenter, planks, TOWER_PLANK_BUILD_TIME));
-        }
-        if (level().getBlockState(ladderOpening) != ladder) {
-            entries.add(new ModifyBlockEntry(
-                    ladderOpening, ladder, TOWER_LADDER_BUILD_TIME));
-        }
-
-        // Phase 5: complete the 3x3 platform footprint. The ladder cell stays
-        // open as the only way through the deck.
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                BlockPos platformPos = platformCenter.offset(x, 0, z);
-                if (!platformPos.equals(platformCenter)
-                        && !platformPos.equals(ladderOpening)
-                        && level().getBlockState(platformPos).canBeReplaced()) {
-                    entries.add(new ModifyBlockEntry(
-                            platformPos, planks, TOWER_PLANK_BUILD_TIME));
-                }
-            }
-        }
-
-        return entries;
+    private List<ModifyBlockEntry> createTowerPlan(BlockPos ladderBase, BlockPos towerBase, Direction facing) {
+        return new EngineerTower(towerBase, facing).plan(level(), getBuildingBlock(),
+                pos -> (int) getBlockRemovalCost(pos));
     }
 
-    private List<ModifyBlockEntry> createTowerClearancePlan(
-            BlockPos platformCenter) {
-        List<ModifyBlockEntry> entries = new ArrayList<>(27);
-        for (int clearanceHeight = 1; clearanceHeight <= TOWER_CLEARANCE;
-                clearanceHeight++) {
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    BlockPos clearancePos = platformCenter.offset(
-                            x, clearanceHeight, z);
-                    if (!level().getBlockState(clearancePos).isAir()) {
-                        entries.add(ModifyBlockEntry.ofDeletion(
-                                clearancePos,
-                                (int) getBlockRemovalCost(clearancePos)));
-                    }
-                }
-            }
-        }
-        return entries;
+    private List<ModifyBlockEntry> createTowerClearancePlan(BlockPos center) {
+        return new EngineerTower(center.below(3), Direction.NORTH).clearancePlan(level(),
+                pos -> (int) getBlockRemovalCost(pos));
     }
 
     /** The solid block used for bridges, tower supports and platforms. */

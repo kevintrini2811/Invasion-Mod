@@ -6,6 +6,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
+import com.invasion.entity.ai.builder.EngineerTower;
+import com.invasion.entity.ai.builder.EngineerTowerStorage;
+import com.invasion.entity.ai.builder.ModifyBlockEntry;
 import com.invasion.block.BlockMetadata;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.EquipmentUtil;
@@ -601,6 +604,14 @@ public final class ConfiguredModMobs {
         return entry == null ? fallback : entry.abilities().buildingBlock();
     }
 
+    public static synchronized Set<Block> towerMaterials() {
+        Set<Block> materials = new java.util.HashSet<>(List.of(Blocks.OAK_PLANKS, Blocks.BRICKS, Blocks.COBBLESTONE));
+        ENTRIES.values().stream().filter(entry -> entry.abilities().engineerTower())
+                .forEach(entry -> materials.add(entry.abilities().buildingBlock()));
+        materials.remove(Blocks.AIR);
+        return materials;
+    }
+
     /** Recognizes configured invasion allies without changing their Nexus binding. */
     public static boolean isInvasionAlly(Mob mob) {
         if (!(mob.level() instanceof ServerLevel level)) return false;
@@ -636,6 +647,10 @@ public final class ConfiguredModMobs {
         private boolean stealBlock;
         private final Deque<BlockChange> towerPlan = new ArrayDeque<>();
         private int actionTicks;
+        private EngineerTower activeTower;
+        private BlockPos towerWorkPosition;
+        private int towerApproachTicks;
+        private int towerSearchCooldown;
         private double lastX = Double.NaN;
         private double lastY;
         private double lastZ;
@@ -653,19 +668,31 @@ public final class ConfiguredModMobs {
             stealBlock = false;
             NexusAccess nexus = activeNexus(mob);
             updateStalledTicks();
+            if (towerSearchCooldown > 0) towerSearchCooldown--;
+            if (activeTower != null && nexus != null
+                    && allowsEngineerTower(mob.getType(), false)
+                    && ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
+                return nextTowerBlock();
+            }
+            clearTowerWork();
             if (nexus == null || usesSpecialMovement()
                     || !mob.getNavigation().isDone() && stalledTicks < 20
                     || mob.tickCount % 5 != 0
                     || !((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING)) {
                 return false;
             }
-            if (!towerPlan.isEmpty()) return nextTowerBlock();
 
             BlockPos current = mob.blockPosition();
             BlockPos objective = mob.getTarget() != null && mob.getTarget().isAlive()
                     ? mob.getTarget().blockPosition() : nexus.getOrigin();
             Direction direction = horizontalDirection(current, objective);
             BlockPos forward = current.relative(direction);
+
+            if (allowsEngineerTower(mob.getType(), false) && mob.onGround()
+                    && !mob.onClimbable() && towerSearchCooldown == 0) {
+                towerSearchCooldown = 40;
+                if (reuseEngineerTower(current, objective)) return nextTowerBlock();
+            }
 
             if (allowsEndermanBlockTheft(mob.getType(), false)
                     && mob.getPersistentData().getStringOr(STOLEN_BLOCK, "").isEmpty()) {
@@ -709,7 +736,8 @@ public final class ConfiguredModMobs {
         @Override
         public boolean canContinueToUse() {
             return target != null && actionTicks < ACTION_TICKS
-                    && activeNexus(mob) != null;
+                    && activeNexus(mob) != null
+                    && ((ServerLevel) mob.level()).getGameRules().get(GameRules.MOB_GRIEFING);
         }
 
         @Override
@@ -725,6 +753,18 @@ public final class ConfiguredModMobs {
 
         @Override
         public void tick() {
+            if (activeTower != null && !atTowerWorkPosition()) {
+                if (++towerApproachTicks > 200) {
+                    clearTowerWork();
+                    actionTicks = ACTION_TICKS;
+                    return;
+                }
+                if (mob.getNavigation().isDone() || towerApproachTicks % 20 == 1) {
+                    mob.getNavigation().moveTo(towerWorkPosition.getX() + 0.5D,
+                            towerWorkPosition.getY(), towerWorkPosition.getZ() + 0.5D, 1.0D);
+                }
+                return;
+            }
             mob.getNavigation().stop();
             mob.getLookControl().setLookAt(target.getX() + 0.5D,
                     target.getY() + 0.5D, target.getZ() + 0.5D);
@@ -733,7 +773,7 @@ public final class ConfiguredModMobs {
 
             ServerLevel level = (ServerLevel) mob.level();
             if (replacement == null) {
-                if (canMine(target)) {
+                if (activeTower != null ? canClearTowerBlock(target) : canMine(target)) {
                     if (stealBlock) {
                         BlockState stolenState = level.getBlockState(target);
                         int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS
@@ -751,12 +791,14 @@ public final class ConfiguredModMobs {
                     }
                     stalledTicks = 0;
                 }
-            } else if (canReplace(target)) {
+            } else if (canReplace(target) || activeTower != null
+                    && replacement.is(Blocks.LADDER) && level.getBlockState(target).is(Blocks.LADDER)) {
                 int flags = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS;
                 level.setBlock(target, replacement, flags);
                 level.playSound(null, target, replacement.getSoundType().getPlaceSound(),
                         net.minecraft.sounds.SoundSource.BLOCKS);
-                if (target.equals(mob.blockPosition())) {
+                if (target.equals(mob.blockPosition())
+                        && replacement.isCollisionShapeFullBlock(level, target)) {
                     mob.setPos(mob.getX(), mob.getY() + 1.0D, mob.getZ());
                     mob.fallDistance = 0;
                 }
@@ -772,50 +814,83 @@ public final class ConfiguredModMobs {
             mob.getNavigation().stop();
         }
 
-        private boolean startEngineerTower(BlockPos ladderBase, Direction direction) {
-            BlockPos towerBase = ladderBase.relative(direction);
-            BlockPos platformCenter = towerBase.above(3);
-            BlockPos ladderOpening = ladderBase.above(3);
-            for (int height = 0; height < 3; height++) {
-                if (!canReplace(towerBase.above(height))
-                        || !canReplace(ladderBase.above(height))) return false;
+        private boolean reuseEngineerTower(BlockPos current, BlockPos objective) {
+            ServerLevel level = (ServerLevel) mob.level();
+            for (EngineerTower tower : EngineerTowerStorage.of(level).nearby(level, current, objective)) {
+                BlockPos work = tower.workPosition(level);
+                if (work == null || !tower.canBuild(level, this::canClearTowerBlock)) continue;
+                var path = mob.getNavigation().createPath(work, 0);
+                if (path != null && path.canReach() && beginTower(tower, work)) return true;
             }
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    BlockPos deck = platformCenter.offset(x, 0, z);
-                    if (!deck.equals(ladderOpening) && !canReplace(deck)) return false;
-                    for (int clearance = 1; clearance <= 2; clearance++) {
-                        if (!mob.level().getBlockState(deck.above(clearance)).isAir()) return false;
-                    }
-                }
-            }
+            return false;
+        }
 
-            BlockState planks = buildingBlock(mob.getType(), Blocks.OAK_PLANKS).defaultBlockState();
-            BlockState ladder = Blocks.LADDER.defaultBlockState()
-                    .setValue(LadderBlock.FACING, direction.getOpposite());
-            for (int height = 0; height < 3; height++) {
-                towerPlan.addLast(new BlockChange(towerBase.above(height), planks));
-                towerPlan.addLast(new BlockChange(ladderBase.above(height), ladder));
+        private boolean startEngineerTower(BlockPos ladderBase, Direction direction) {
+            EngineerTower tower = new EngineerTower(ladderBase.relative(direction), direction.getOpposite());
+            return mob.onGround() && !mob.onClimbable()
+                    && tower.canBuild(mob.level(), this::canClearTowerBlock) && beginTower(tower, ladderBase);
+        }
+
+        private boolean beginTower(EngineerTower tower, BlockPos work) {
+            activeTower = tower;
+            towerWorkPosition = work;
+            towerApproachTicks = 0;
+            towerPlan.clear();
+            for (ModifyBlockEntry entry : tower.plan(mob.level(),
+                    buildingBlock(mob.getType(), Blocks.OAK_PLANKS).defaultBlockState(), pos -> ACTION_TICKS)) {
+                towerPlan.addLast(new BlockChange(entry.pos(), entry.newBlock().isAir() ? null : entry.newBlock()));
             }
-            towerPlan.addLast(new BlockChange(platformCenter, planks));
-            towerPlan.addLast(new BlockChange(ladderOpening, ladder));
-            for (int x = -1; x <= 1; x++) {
-                for (int z = -1; z <= 1; z++) {
-                    BlockPos deck = platformCenter.offset(x, 0, z);
-                    if (!deck.equals(platformCenter) && !deck.equals(ladderOpening)) {
-                        towerPlan.addLast(new BlockChange(deck, planks));
-                    }
-                }
-            }
+            // Even an intact tower needs an approach before the ladder goal can take over.
+            if (towerPlan.isEmpty()) towerPlan.addLast(new BlockChange(tower.ladderBase(),
+                    Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, tower.ladderFacing())));
+            EngineerTowerStorage.of((ServerLevel) mob.level()).remember(tower);
             return true;
         }
 
         private boolean nextTowerBlock() {
+            if (!activeTower.canBuild(mob.level(), this::canClearTowerBlock)) {
+                clearTowerWork();
+                return false;
+            }
+            if (towerPlan.isEmpty()) {
+                // Recheck after concurrent builders or interrupted work before allowing the climb.
+                for (ModifyBlockEntry entry : activeTower.plan(mob.level(),
+                        buildingBlock(mob.getType(), Blocks.OAK_PLANKS).defaultBlockState(), pos -> ACTION_TICKS)) {
+                    towerPlan.addLast(new BlockChange(entry.pos(), entry.newBlock().isAir() ? null : entry.newBlock()));
+                }
+                if (towerPlan.isEmpty() && !towerWorkPosition.equals(activeTower.ladderBase())) {
+                    towerWorkPosition = activeTower.ladderBase();
+                    towerApproachTicks = 0;
+                    towerPlan.addLast(new BlockChange(towerWorkPosition, Blocks.LADDER.defaultBlockState()
+                            .setValue(LadderBlock.FACING, activeTower.ladderFacing())));
+                }
+            }
             BlockChange change = towerPlan.pollFirst();
-            if (change == null) return false;
+            if (change == null) {
+                clearTowerWork();
+                return false;
+            }
             target = change.pos();
             replacement = change.state();
             return true;
+        }
+
+        private boolean atTowerWorkPosition() {
+            double dx = mob.getX() - towerWorkPosition.getX() - 0.5D;
+            double dz = mob.getZ() - towerWorkPosition.getZ() - 0.5D;
+            return dx * dx + dz * dz < 0.16D && Math.abs(mob.getY() - towerWorkPosition.getY()) < 0.75D;
+        }
+
+        private void clearTowerWork() {
+            activeTower = null;
+            towerWorkPosition = null;
+            towerPlan.clear();
+        }
+
+        private boolean canClearTowerBlock(BlockPos pos) {
+            BlockState state = mob.level().getBlockState(pos);
+            return !state.is(InvBlocks.NEXUS_CORE) && !BlockMetadata.isIndestructible(state)
+                    && state.getDestroySpeed(mob.level(), pos) >= 0;
         }
 
         private boolean usesSpecialMovement() {
