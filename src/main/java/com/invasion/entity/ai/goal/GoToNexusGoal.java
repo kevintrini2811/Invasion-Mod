@@ -43,7 +43,8 @@ public class GoToNexusGoal extends Goal {
 
     @Override
     public boolean canUse() {
-        return !(mob instanceof PigmanEngineerEntity engineer && engineer.isBuildingTower())
+        return !(mob instanceof PigmanEngineerEntity engineer && (engineer.isBuildingTower() || engineer.usesConfiguredEngineerTower()
+                && com.invasion.compat.ConfiguredModMobs.isWorkingOnEngineerTower(mob)))
                 && (mob.getTarget() == null
                     || mob instanceof PigmanEngineerEntity
                     || mob instanceof ZombieBuilderEntity)

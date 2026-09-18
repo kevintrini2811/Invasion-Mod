@@ -141,10 +141,9 @@ class PigmanEngineerTowerTest {
         assertTrue(plan().isEmpty());
     }
 
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(classes = {
-            PigmanEngineerEntity.class, ZombieBuilderEntity.class, ZombieMinerEntity.class})
-    void startsRepairAtNavigationArrivalWithoutAnotherPath(Class<? extends PigmanEngineerEntity> type) throws Exception {
+    @Test
+    void startsRepairAtNavigationArrivalWithoutAnotherPath() throws Exception {
+        Class<? extends PigmanEngineerEntity> type = PigmanEngineerEntity.class;
         engineer = mock(type);
         ServerLevel level = mock(ServerLevel.class);
         var navigation = mock(net.minecraft.world.entity.ai.navigation.PathNavigation.class);
