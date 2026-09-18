@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.JsonOps;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
@@ -13,11 +11,16 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.saveddata.SavedDataType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EngineerTowerStorageTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     private final BlockPos base = new BlockPos(0, 64, 0);
     private final EngineerTower tower = new EngineerTower(base, Direction.NORTH);
     private final Map<BlockPos, BlockState> blocks = new HashMap<>();
@@ -62,12 +65,7 @@ class EngineerTowerStorageTest {
         storage.remember(tower);
         blocks.put(tower.center().west(), Blocks.DIAMOND_BLOCK.defaultBlockState());
         blocks.put(tower.center().east(), Blocks.EMERALD_BLOCK.defaultBlockState());
-        var field = EngineerTowerStorage.class.getDeclaredField("TYPE");
-        field.setAccessible(true);
-        SavedDataType<EngineerTowerStorage> type = (SavedDataType<EngineerTowerStorage>) field.get(null);
-        Codec<EngineerTowerStorage> codec = type.codec();
-        var encoded = codec.encodeStart(JsonOps.INSTANCE, storage).getOrThrow();
-        EngineerTowerStorage loaded = codec.parse(JsonOps.INSTANCE, encoded).getOrThrow();
+        EngineerTowerStorage loaded = EngineerTowerStorage.load(storage.save(new net.minecraft.nbt.CompoundTag()));
         assertEquals(java.util.List.of(tower), loaded.nearby(level, base.east(16), base.above(10)));
         when(level.hasChunkAt(tower.center().west())).thenReturn(false);
         assertTrue(loaded.nearby(level, base.east(16), base.above(10)).isEmpty());

@@ -491,7 +491,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
                 return;
             }
             BlockPos towerBase = towerPlatformCenter.below(3);
-            Direction facing = Direction.getApproximateNearest(
+            Direction facing = Direction.getNearest(
                     towerLadderBase.getX() - towerBase.getX(), 0,
                     towerLadderBase.getZ() - towerBase.getZ());
             List<ModifyBlockEntry> repairs = createTowerPlan(
@@ -580,7 +580,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
 
     private boolean canBuildTowerAt(BlockPos ladderBase, BlockPos towerBase) {
         Direction facing = Direction.getNearest(ladderBase.getX() - towerBase.getX(), 0,
-                ladderBase.getZ() - towerBase.getZ(), Direction.NORTH);
+                ladderBase.getZ() - towerBase.getZ());
         return new EngineerTower(towerBase, facing).canBuild(level(), pos -> EngineerTower.canClear(level(), pos));
     }
 

@@ -10,6 +10,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class ZombieTowerBehaviorTest {
+    @org.junit.jupiter.api.BeforeAll
+    static void bootstrapMinecraft() {
+        net.minecraft.SharedConstants.tryDetectVersion();
+        net.minecraft.server.Bootstrap.bootStrap();
+    }
+
     @ParameterizedTest
     @ValueSource(classes = {ZombieBuilderEntity.class, ZombieMinerEntity.class})
     void installsConfiguredControllerAndDisablesNativeTowers(Class<? extends ZombieBuilderEntity> type) throws Exception {
@@ -19,7 +25,7 @@ class ZombieTowerBehaviorTest {
         for (String name : new String[] {"goalSelector", "targetSelector"}) {
             var field = Mob.class.getDeclaredField(name);
             field.setAccessible(true);
-            field.set(mob, new GoalSelector());
+            field.set(mob, new GoalSelector(() -> net.minecraft.util.profiling.InactiveProfiler.INSTANCE));
         }
         doCallRealMethod().when(mob).registerGoals();
         doCallRealMethod().when(mob).tryStartTowerBuild();
