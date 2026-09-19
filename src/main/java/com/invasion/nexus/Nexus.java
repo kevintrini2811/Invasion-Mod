@@ -534,6 +534,15 @@ public class Nexus implements ControllableNexusAccess {
     }
 
     @Override
+    public void notifySpawnsSkipped(int count) {
+        phaseMobsLeft = Math.max(0, phaseMobsLeft - count);
+        mobsLeftInWave = Math.max(0, mobsLeftInWave - count);
+        mobsToKillInWave = Math.max(0, mobsToKillInWave - count);
+        lastMobsLeftInWave = mobsLeftInWave;
+        storage.setDirty();
+    }
+
+    @Override
     public void notifyExternalWaveMobKilled(Entity entity) {
         nexusKills++;
         boolean belongsToCurrentWave = com.invasion.entity.WaveMobData.get(
@@ -993,9 +1002,11 @@ public class Nexus implements ControllableNexusAccess {
 				loadedPhaseMobs++;
 			}
 		}
+        boolean timedOut = world.getGameTime() - lastPhaseKillTick >= 2 * 60 * 20;
+        if (timedOut) waveSpawner.finishSpawning();
 		return phaseMobsLeft <= 0 || mobsLeftInWave <= 0
 				|| waveSpawner.isWaveComplete() && loadedPhaseMobs == 0
-				|| world.getGameTime() - lastPhaseKillTick >= 2 * 60 * 20;
+                || timedOut;
 	}
 
     private void beginWave(Wave wave) throws WaveSpawnerException {
