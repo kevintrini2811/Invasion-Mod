@@ -50,6 +50,7 @@ import com.invasion.compat.ConfiguredModMobs;
 
 public class IMWaveSpawner implements Spawner {
 	private static final int MAX_SPAWN_TRIES = 20;
+    private static final int SPAWN_FAILURE_GRACE_MILLIS = 30_000;
 	public static final int MIN_SPAWN_RADIUS = 8;
 	private static final int NORMAL_SPAWN_HEIGHT = 30;
 	private static final int MIN_SPAWN_POINTS_TO_KEEP = 15;
@@ -59,6 +60,7 @@ public class IMWaveSpawner implements Spawner {
 	private static final int SPAWN_POINT_PROBES_PER_TICK = 256;
 
 	private SpawnPointContainer spawnPointContainer = new SpawnPointContainer();
+    private SpawnLayer spawnPointLayer = SpawnLayer.BOTH;
 	private final List<Combatant<?>> respawnQueue = new ArrayList<>();
 
 	private final NexusAccess nexus;
@@ -157,6 +159,7 @@ public class IMWaveSpawner implements Spawner {
 		if (!active) {
 			return;
 		}
+        if (spawnPointLayer != InvasionMod.getConfig().spawnLayer) startSpawnPointGeneration();
 		if (!advanceSpawnPointGeneration()) {
 			return;
 		}
@@ -167,15 +170,26 @@ public class IMWaveSpawner implements Spawner {
 			return;
 		}
 
-		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
-			startSpawnPointGeneration();
-			return;
-		}
 		currentWave.doNextSpawns(elapsedMillis, this);
-		if (currentWave.isComplete()) {
-			waveComplete = true;
-		}
+        if (currentWave.isComplete()) {
+            waveComplete = true;
+        } else if (elapsed >= (long) currentWave.getWaveTotalTime() + SPAWN_FAILURE_GRACE_MILLIS) {
+            finishSpawning();
+        }
 	}
+
+    /** Completes a timed-out phase without counting missing mobs as kills. */
+    public void finishSpawning() {
+        if (!active || waveComplete || currentWave == null) return;
+        int missing = Math.max(0, currentWave.getTotalMobAmount() - successfulSpawns);
+        currentWave.discardPendingSpawns();
+        waveComplete = true;
+        if (missing > 0) {
+            nexus.notifySpawnsSkipped(missing);
+            nexus.getParticipants().sendWarning("invmod.message.nexus.spawn_failed", missing,
+                    InvasionMod.getConfig().spawnLayer.value());
+        }
+    }
 
 	public int resumeFromState(Wave wave) throws WaveSpawnerException {
 		long savedElapsed = elapsed;
@@ -243,8 +257,14 @@ public class IMWaveSpawner implements Spawner {
 
 	public void askForRespawn(Combatant<?> entity) {
 		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) > 10) {
-			SpawnPoint spawnPoint = spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID);
-			if (spawnPoint != null) {
+            SpawnPoint spawnPoint = InvasionMod.getConfig().spawnLayer == SpawnLayer.BOTH
+                    ? spawnPointContainer.getRandomSpawnPoint(SpawnType.HUMANOID)
+                    : spawnPointContainer.getRandomSpawnPoints(
+                    SpawnType.HUMANOID, Ints.ANY, MAX_SPAWN_TRIES).stream()
+                    .filter(point -> InvasionMod.getConfig().spawnLayer.allows(
+                            (ServerLevel) nexus.getWorld(), point.pos(), (Mob) entity.asEntity()))
+                    .findFirst().orElse(null);
+            if (spawnPoint != null) {
 			    spawnPoint.applyTo(entity.asEntity());
 			    entity.resetHealth();
 				respawnQueue.add(entity);
@@ -256,7 +276,12 @@ public class IMWaveSpawner implements Spawner {
 		ServerLevel world = (ServerLevel)nexus.getWorld();
 		for (int i = respawnQueue.size() - 1; i >= 0; i--) {
 			Combatant<?> combatant = respawnQueue.get(i);
-			if (world.addFreshEntity(combatant.asEntity())) {
+            Mob mob = (Mob) combatant.asEntity();
+            if (!InvasionMod.getConfig().spawnLayer.allows(world, mob.blockPosition(), mob)) {
+                respawnQueue.remove(i);
+                continue;
+            }
+            if (world.addFreshEntity(combatant.asEntity())) {
 				markAsInvasionAlly((Mob)combatant.asEntity());
 				world.broadcastEntityEvent(combatant.asEntity(), (byte)60);
 				respawnQueue.remove(i);
@@ -329,7 +354,8 @@ public class IMWaveSpawner implements Spawner {
 			}
 			spawnConstruct = replaceWaterSpawnedDrownedWithGuardian(
 					spawnConstruct, world, spawnPoint.pos());
-			Mob mob = spawnConstruct.createMob(nexus);
+            Mob mob = spawnConstruct.createMob(nexus);
+            if (!InvasionMod.getConfig().spawnLayer.allows(world, spawnPoint.pos(), mob)) continue;
 			equipRandomWaveWeapon(mob, spawnConstruct);
 			mob.getPersistentData().putInt("invmodWavePhase", nexus.getWavePhaseToken());
 			mob.getPersistentData().putInt("invmodWaveNumber", nexus.getCurrentWave());
@@ -804,8 +830,12 @@ public class IMWaveSpawner implements Spawner {
 		}
 		List<SpawnPoint> spawnPoints = spawnPointGeneration.spawnPoints;
 		BlockPos origin = spawnPointGeneration.origin;
-		SpawnPointContainer generatedPoints = new SpawnPointContainer();
-		if (spawnPoints.size() > MIN_SPAWN_POINTS_TO_KEEP) {
+        boolean restricted = InvasionMod.getConfig().spawnLayer != SpawnLayer.BOTH;
+        SpawnPointContainer generatedPoints = new SpawnPointContainer(restricted);
+        if (restricted || spawnPoints.size() <= MIN_SPAWN_POINTS_TO_KEEP) {
+            // Restricted layers need every elevation, including surface points above caves.
+            for (SpawnPoint point : spawnPoints) generatedPoints.addSpawnPointXZ(point);
+        } else {
 			int i;
 			int amountToRemove = (int) ((spawnPoints.size() - MIN_SPAWN_POINTS_TO_KEEP) * SPAWN_POINT_CULL_RATE);
 			for (i = spawnPoints.size() - 1; i >= spawnPoints.size() - amountToRemove; i--) {
@@ -824,12 +854,10 @@ public class IMWaveSpawner implements Spawner {
 				generatedPoints.addSpawnPointXZ(spawnPoints.get(i));
 			}
 		}
+        spawnPointLayer = InvasionMod.getConfig().spawnLayer;
 		spawnPointContainer = generatedPoints;
 		spawnPointGeneration = null;
 		InvasionMod.LOGGER.debug("Found {} spawn points for next nexus wave", spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID));
-		if (spawnPointContainer.getNumberOfSpawnPoints(SpawnType.HUMANOID) < 10) {
-			throw new WaveSpawnerException("Not enough spawn points for type " + SpawnType.HUMANOID);
-		}
 		return true;
 	}
 

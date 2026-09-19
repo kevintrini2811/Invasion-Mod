@@ -1,4 +1,5 @@
 {
+  "invmod.message.nexus.spawn_failed": "%s mobs could not spawn and were skipped. Check spawn-layer in invasion_config.cfg (current: %s).",
   "invmod.config.title": "Invasion Configuration",
   "invmod.config.empty": "This configuration file is empty.",
   "invmod.config.editor": "Configuration editor",

@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.invasion.InvasionMod;
+import com.invasion.nexus.spawns.SpawnLayer;
 import com.invasion.compat.ConfiguredModMobs;
 import java.io.Reader;
 import java.io.Writer;
@@ -69,6 +70,7 @@ public final class InvasionConfigScreen extends Screen {
                     properties.load(reader);
                 }
             }
+            properties.putIfAbsent("spawn-layer", "both");
             mobs = Files.exists(MOBS)
                     ? JsonParser.parseString(Files.readString(MOBS)).getAsJsonObject()
                     : new JsonObject();
@@ -171,7 +173,14 @@ public final class InvasionConfigScreen extends Screen {
             String value = properties.getProperty(key, "");
             int y = 56 + index % PAGE_SIZE * 24;
             labels.add(new Label(key, left, y + 6));
-            if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
+            if (key.equals("spawn-layer")) {
+                addRenderableWidget(Button.builder(Component.literal(SpawnLayer.parse(value).value()), button -> {
+                    SpawnLayer current = SpawnLayer.parse(properties.getProperty(key));
+                    SpawnLayer next = SpawnLayer.values()[(current.ordinal() + 1) % SpawnLayer.values().length];
+                    properties.setProperty(key, next.value());
+                    button.setMessage(Component.literal(next.value()));
+                }).bounds(left + width - 180, y, 180, 20).build());
+            } else if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
                 boolean initial = Boolean.parseBoolean(value);
                 addRenderableWidget(coloredBooleanBuilder(initial).displayOnlyValue().create(
                         left + width - 130, y, 130, 20, Component.literal(key),

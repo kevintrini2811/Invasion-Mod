@@ -22,11 +22,25 @@ public class SpawnPointContainer {
     private boolean sorted;
     private Random random = new Random();
 
+    private final boolean preserveHeights;
+
+    public SpawnPointContainer() {
+        this(false);
+    }
+
+    public SpawnPointContainer(boolean preserveHeights) {
+        this.preserveHeights = preserveHeights;
+    }
+
+    private Column column(SpawnPoint point) {
+        return new Column(point.pos().getX(), preserveHeights ? point.pos().getY() : 0, point.pos().getZ());
+    }
+
     public void addSpawnPointXZ(SpawnPoint spawnPoint) {
         List<SpawnPoint> spawnList = spawnPoints.computeIfAbsent(spawnPoint.type(), i -> new ArrayList<>());
         Map<Column, Integer> columns = spawnPointColumns.computeIfAbsent(
                 spawnPoint.type(), i -> new HashMap<>());
-        Column column = new Column(spawnPoint.pos().getX(), spawnPoint.pos().getZ());
+        Column column = column(spawnPoint);
         Integer oldIndex = columns.get(column);
         if (oldIndex == null) {
             columns.put(column, spawnList.size());
@@ -46,7 +60,7 @@ public class SpawnPointContainer {
     public SpawnPoint getRandomSpawnPoint(SpawnType spawnType, Ints angle) {
         int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
         int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
-        List<SpawnPoint> spawnList = spawnPoints.get(spawnType);
+        List<SpawnPoint> spawnList = spawnPoints.getOrDefault(spawnType, List.of());
         if (spawnList.isEmpty()) {
             return null;
         }
@@ -125,7 +139,7 @@ public class SpawnPointContainer {
             columns.clear();
             for (int i = 0; i < spawnList.size(); i++) {
                 SpawnPoint point = spawnList.get(i);
-                columns.put(new Column(point.pos().getX(), point.pos().getZ()), i);
+                columns.put(column(point), i);
             }
             sorted = true;
         }
@@ -136,7 +150,7 @@ public class SpawnPointContainer {
         return index < 0 ? -index - 1 : index;
     }
 
-    private record Column(int x, int z) {
+    private record Column(int x, int y, int z) {
     }
 
     public int getNumberOfSpawnPoints(SpawnType type) {
@@ -146,7 +160,7 @@ public class SpawnPointContainer {
     public int getNumberOfSpawnPoints(SpawnType spawnType, Ints angle) {
         int minAngle = angle.min().orElse(-EntityPattern.MAX_ANGLE);
         int maxAngle = angle.max().orElse(EntityPattern.MAX_ANGLE);
-        List<SpawnPoint> spawnList = spawnPoints.get(spawnType);
+        List<SpawnPoint> spawnList = spawnPoints.getOrDefault(spawnType, List.of());
         if (spawnList.isEmpty() || (maxAngle - minAngle) >= 360) {
             return spawnList.size();
         }

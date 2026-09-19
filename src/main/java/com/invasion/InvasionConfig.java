@@ -27,6 +27,7 @@ import com.invasion.entity.PigmanEngineerEntity;
 import com.invasion.entity.QueenSpiderEntity;
 import com.invasion.entity.ThrowerEntity;
 import com.invasion.nexus.Combatant;
+import com.invasion.nexus.spawns.SpawnLayer;
 
 public class InvasionConfig extends Config {
     private static final Map<String, Integer> DEFAULT_MOB_HEALTHS = Util.make(new HashMap<>(), m -> {
@@ -59,6 +60,7 @@ public class InvasionConfig extends Config {
 
     private final Map<Identifier, Float> strengthOverrides = new HashMap<>();
 
+    public volatile SpawnLayer spawnLayer = SpawnLayer.BOTH;
     public volatile boolean enableSilverfish = true;
     public boolean enableLog;
     public boolean debugMode;
@@ -159,6 +161,8 @@ public class InvasionConfig extends Config {
             }
         });
 
+        spawnLayer = SpawnLayer.parse(getPropertyValueString("spawn-layer", "both"));
+        setProperty("spawn-layer", spawnLayer.value());
         enableSilverfish = getPropertyValueBoolean("enable-silverfish", true);
         enableLog = getPropertyValueBoolean("enable-log-file", false);
         destructedBlocksDrop = getPropertyValueBoolean("destructed-blocks-drop", true);
@@ -178,6 +182,7 @@ public class InvasionConfig extends Config {
             writeLine(writer, "# Delete this file to restore defaults");
             writer.newLine();
             writeLine(writer, "# General settings");
+            writeProperty(writer, "spawn-layer", "Wave spawn locations: both (default), underground, surface, miners only. Miners only allows underground spawns only for mobs with mining enabled.");
             writeProperty(writer, "destructed-blocks-drop");
             writeProperty(writer, "enable-log-file");
             writeProperty(writer, "enable-silverfish", "Enable IM silverfish spawning and silverfish infestation (default: true)");
