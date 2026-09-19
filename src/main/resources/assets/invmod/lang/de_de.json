@@ -1,5 +1,6 @@
 {
     "entity.invmod.big_thrower": "IM Großer Werfer",
+  "invmod.message.nexus.spawn_failed": "%s Mobs konnten nicht spawnen und wurden übersprungen. Prüfe spawn-layer in invasion_config.cfg (aktuell: %s).",
   "invmod.config.title": "Invasion-Konfiguration",
   "invmod.config.empty": "Diese Konfigurationsdatei ist leer.",
   "invmod.config.editor": "Konfigurationseditor",
