@@ -96,5 +96,8 @@ public interface NexusAccess {
     default void notifyExternalWaveMobKilled(Entity entity) {
     }
 
+    default void notifySpawnsSkipped(int count) {
+    }
+
     void damage(DamageSource source, int amount);
 }

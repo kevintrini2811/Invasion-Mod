@@ -83,6 +83,27 @@ class NexusLifecycleTest {
         nexus = new Nexus(world, storage, UUID.randomUUID(), ORIGIN);
     }
 
+    @Test
+    void skippedSpawnsReduceOutstandingTargetsWithoutAwardingKills() throws Exception {
+        for (String name : List.of("phaseMobsLeft", "mobsLeftInWave", "mobsToKillInWave")) {
+            var field = Nexus.class.getDeclaredField(name);
+            field.setAccessible(true);
+            field.setInt(nexus, 5);
+        }
+        nexus.notifySpawnsSkipped(2);
+        assertEquals(3, nexus.getMobsLeftInPhase());
+        assertEquals(3, nexus.getMobsLeftInWave());
+        assertEquals(3, nexus.getMobsToKillInWave());
+        for (String name : List.of("phaseKills", "nexusKills")) {
+            var field = Nexus.class.getDeclaredField(name);
+            field.setAccessible(true);
+            assertEquals(0, field.getInt(nexus));
+        }
+        nexus.notifySpawnsSkipped(10);
+        assertEquals(0, nexus.getMobsLeftInPhase());
+        assertEquals(0, nexus.getMobsLeftInWave());
+    }
+
     @AfterEach
     void tearDown() {
         waveSpawners.close();
