@@ -22,6 +22,7 @@ outlet.allowSnapshotsForProject = false
 outlet.mcVersionRange = ">=${project.minecraft_version}"
 
 group = project.group
+version = '1.0.0'
 description = project.displayname
 archivesBaseName = project.name
 
@@ -100,4 +101,3 @@ modrinth {
        required.project 'P7dR8mSH' // Fabric API
     }
 }
-

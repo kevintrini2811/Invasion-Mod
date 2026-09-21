@@ -22,11 +22,7 @@ public class Wave {
         int numberOfSpawns = 0;
         elapsed += elapsedMillis;
         for (WaveEntry entry : entries) {
-			// Keep processing missed/blocked constructs after their scheduling
-			// window. Otherwise a transient collision during the last batch can
-			// leave the phase permanently short of its planned mob count.
-			boolean schedulingWindowPassed = entry.getTime().max().orElse(Integer.MAX_VALUE) < elapsed;
-            if (entry.getTime().matches(elapsed) || schedulingWindowPassed && !entry.isSpawnComplete()) {
+            if (entry.getTime().test(elapsed)) {
                 numberOfSpawns += entry.doNextSpawns(elapsedMillis, spawner);
             }
         }
@@ -46,7 +42,7 @@ public class Wave {
     }
 
     public boolean isComplete() {
-		return elapsed > waveTotalTime && entries.stream().allMatch(WaveEntry::isSpawnComplete);
+        return elapsed > waveTotalTime;
     }
 
     public void resetWave() {

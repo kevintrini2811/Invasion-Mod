@@ -2,16 +2,18 @@ package com.invasion.nexus;
 
 import java.util.List;
 import java.util.UUID;
-import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
+
 import com.invasion.nexus.ai.AttackerAI;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public interface NexusAccess {
     long BIND_EXPIRE_TIME = 300000L;
-    long TICKS_PER_DAY = 24000L;
+    long TICKS_PER_DAY = World.field_30969;//24000
     long SUNSET_TIME = 12000L;
     long HALF_DAY_TIME = 14000L;
     long NIGHT_TIME = 16000L;
@@ -39,40 +41,10 @@ public interface NexusAccess {
     }
 
     default int getZombieBuilderChancePercent() {
-        return Math.clamp(getProgressionLevel(), 1, 100);
+        return Math.max(1, Math.min(100, getProgressionLevel()));
     }
 
-    default int getChargedCreeperChancePercent() {
-        return Math.clamp(getProgressionLevel() - 9, 0, 100);
-    }
-
-    default int getRandomEquipmentChancePercent() {
-        return Math.clamp(getProgressionLevel(), 1, 100);
-    }
-
-    default int getBabyZombieChancePercent() {
-        return Math.clamp(getProgressionLevel(), 1, 20);
-    }
-
-    default int getWitherSkeletonChancePercent() {
-        return Math.clamp(getProgressionLevel() - 7, 0, 100);
-    }
-
-    default int getMobsLeftInWave() {
-        return 0;
-    }
-
-    default int getMobsToKillInWave() {
-        return 0;
-    }
-
-	default int getWavePhaseToken() { return 0; }
-
-    default int getHealthPercent() {
-        return 0;
-    }
-
-    Level getWorld();
+    World getWorld();
 
     AttackerAI getAttackerAI();
 
@@ -80,7 +52,7 @@ public interface NexusAccess {
 
     boolean isActive();
 
-    List<Component> getStatus();
+    List<Text> getStatus();
 
     void notifyCombatantRemoved(Combatant<?> combatant, Entity.RemovalReason reason);
 

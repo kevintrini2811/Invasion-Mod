@@ -20,11 +20,6 @@ public class SpawnProxyEntity extends MobEntity {
     }
 
     @Override
-    public boolean canBeSeenAsEnemy() {
-        return false;
-    }
-
-    @Override
     public void tick() {
         if (!getWorld().isClient) {
             generateMobGroup(getWorld(), entity -> {

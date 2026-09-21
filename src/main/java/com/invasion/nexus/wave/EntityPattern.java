@@ -2,17 +2,16 @@ package com.invasion.nexus.wave;
 
 import com.invasion.nexus.EntityConstruct;
 import com.invasion.nexus.wave.pool.Select;
-import net.minecraft.advancements.predicates.MinMaxBounds.Ints;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.predicate.NumberRange.IntRange;
+import net.minecraft.util.math.random.Random;
 
 public record EntityPattern(
-        Select<EntityType<? extends Mob>> typePool,
+        Select<EntityType<? extends MobEntity>> typePool,
         Select<Integer> tierPool,
         Select<Integer> texturePool,
-        Select<Integer> flavourPool,
-        int rules) {
+        Select<Integer> flavourPool) {
     public static final int MAX_ANGLE = 360;
     public static final int MAX_VALID_ANGLE = 180;
 
@@ -21,33 +20,32 @@ public record EntityPattern(
     private static final int OPEN_TEXTURE = 0;
     private static final int OPEN_SCALING = 0;
 
-    public EntityConstruct generateEntityConstruct(RandomSource random) {
-        return generateEntityConstruct(random, Ints.ANY);
+    public EntityConstruct generateEntityConstruct(Random random) {
+        return generateEntityConstruct(random, IntRange.ANY);
     }
 
-    public EntityConstruct generateEntityConstruct(RandomSource random, Ints angle) {
-        EntityType<? extends Mob> type = typePool.selectNext(random);
+    public EntityConstruct generateEntityConstruct(Random random, IntRange angle) {
+        EntityType<? extends MobEntity> type = typePool.selectNext(random);
         Integer tier = tierPool.selectNext(random);
         Integer texture = texturePool.selectNext(random);
         Integer flavour = flavourPool.selectNext(random);
         return new EntityConstruct(type,
-                texture == null ? OPEN_TEXTURE : texture,
                 tier == null ? DEFAULT_TIER : tier,
-                flavour == null ? DEFAULT_FLAVOUR : flavour, OPEN_SCALING, angle.min().orElse(-MAX_VALID_ANGLE), angle.max().orElse(MAX_VALID_ANGLE), rules);
+                texture == null ? OPEN_TEXTURE : texture,
+                flavour == null ? DEFAULT_FLAVOUR : flavour, OPEN_SCALING, angle.min().orElse(-MAX_VALID_ANGLE), angle.max().orElse(MAX_VALID_ANGLE));
     }
 
     public static final class Builder {
-        private final Select.PoolBuilder<EntityType<? extends Mob>, Float> typePool = Select.random();
+        private final Select.PoolBuilder<EntityType<? extends MobEntity>, Float> typePool = Select.random();
         private final Select.PoolBuilder<Integer, Float> tierPool = Select.random();
         private final Select.PoolBuilder<Integer, Float> texturePool = Select.random();
         private final Select.PoolBuilder<Integer, Float> flavourPool = Select.random();
-        private int rules;
 
-        public Builder(EntityType<? extends Mob> entityType) {
+        public Builder(EntityType<? extends MobEntity> entityType) {
             addType(entityType, 1);
         }
 
-        public Builder addType(EntityType<? extends Mob> entityType, float weight) {
+        public Builder addType(EntityType<? extends MobEntity> entityType, float weight) {
             typePool.entry(entityType, weight);
             return this;
         }
@@ -67,10 +65,8 @@ public record EntityPattern(
             return this;
         }
 
-        public Builder rules(int rules) { this.rules = rules; return this; }
-
         public EntityPattern build() {
-            return new EntityPattern(typePool.build(), tierPool.build(), texturePool.build(), flavourPool.build(), rules);
+            return new EntityPattern(typePool.build(), tierPool.build(), texturePool.build(), flavourPool.build());
         }
     }
 }
