@@ -52,7 +52,7 @@ public final class ShieldUseHandler {
             DEFENSE.remove(mob);
             defense = null;
         }
-        boolean attacking = mob.swinging && mob.swingingArm == InteractionHand.MAIN_HAND
+        boolean attacking = mob.isSwinging() && mob.getCurrentSwing().hand() == InteractionHand.MAIN_HAND
                 || defense != null && (now < defense.attackUntil || defense.attackReadyAt >= 0
                         || now < defense.blockedUntil);
         if (canBlock(mob) && !attacking && (visibleTarget || arrowDefense)) {

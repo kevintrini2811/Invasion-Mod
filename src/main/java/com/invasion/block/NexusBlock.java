@@ -5,7 +5,6 @@ import com.invasion.nexus.WorldNexusStorage;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.item.InvItems;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -31,7 +30,6 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 public class NexusBlock extends BaseEntityBlock {
-    private static final MapCodec<NexusBlock> CODEC = Block.simpleCodec(NexusBlock::new);
     public static final BooleanProperty LIT = BooleanProperty.create("lit");
 
     public NexusBlock(Properties settings) {
@@ -42,11 +40,6 @@ public class NexusBlock extends BaseEntityBlock {
     @Override
     protected RenderShape getRenderShape(BlockState state) {
         return RenderShape.MODEL;
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.invasion.entity.ai.builder;
 
+import com.invasion.entity.pathfinding.PathingUtil;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -33,7 +34,7 @@ public class TerrainDigger implements ITerrainDig, Notifiable {
         List<ModifyBlockEntry> removals = new ArrayList<>();
         for (BlockPos removal : digger.getBlockRemovalOrder(pos)) {
             BlockState state = digger.getTerrain().getBlockState(removal);
-            if (!state.isAir() && state.blocksMotion()) {
+            if (!state.isAir() && PathingUtil.blocksMotion(state)) {
                 if (!digger.canClearBlock(removal)) {
                     return false;
                 }

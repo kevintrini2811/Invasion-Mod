@@ -1,5 +1,7 @@
 package com.invasion.entity;
 
+import net.minecraft.tags.BlockTags;
+import com.invasion.entity.pathfinding.PathingUtil;
 import java.util.Optional;
 import com.invasion.entity.ai.goal.AttackNexusGoal;
 import com.invasion.entity.ai.goal.CarryBlockingBlockGoal;
@@ -209,16 +211,16 @@ public final class IMEndermanEntity extends IMMobEntity {
 
         BlockPos.MutableBlockPos ground = new BlockPos.MutableBlockPos(x, y, z);
         while (ground.getY() > level().getMinY()
-                && !level().getBlockState(ground).blocksMotion()) {
+                && !PathingUtil.blocksMotion(level().getBlockState(ground))) {
             ground.move(Direction.DOWN);
         }
         BlockState groundState = level().getBlockState(ground);
-        if (!groundState.blocksMotion() || groundState.getFluidState().is(FluidTags.WATER)) {
+        if (!PathingUtil.blocksMotion(groundState) || groundState.getFluidState().is(FluidTags.WATER)) {
             return false;
         }
 
         Vec3 oldPosition = position();
-        if (!randomTeleport(x, y, z, true)) {
+        if (!randomTeleport(x, y, z, true, BlockTags.ENDERMAN_DOES_NOT_TELEPORT_TO)) {
             return false;
         }
         level().gameEvent(GameEvent.TELEPORT, oldPosition, GameEvent.Context.of(this));

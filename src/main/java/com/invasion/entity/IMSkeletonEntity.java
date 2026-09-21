@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import org.jetbrains.annotations.Nullable;
 
 import com.invasion.entity.ai.goal.AttackNexusGoal;
@@ -302,6 +303,6 @@ public class IMSkeletonEntity extends IMMobEntity
                         14.0F - world.getDifficulty().getId() * 2.0F));
         playSound(SoundEvents.SNOW_GOLEM_SHOOT, 1.0F,
                 0.4F / (getRandom().nextFloat() * 0.4F + 0.8F));
-        swing(InteractionHand.MAIN_HAND);
+        swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
     }
 }

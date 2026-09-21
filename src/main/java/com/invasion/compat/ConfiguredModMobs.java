@@ -1,5 +1,6 @@
 package com.invasion.compat;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -810,7 +811,7 @@ public final class ConfiguredModMobs {
             else mob.getNavigation().stop();
             mob.getLookControl().setLookAt(target.getX() + 0.5D,
                     target.getY() + 0.5D, target.getZ() + 0.5D);
-            mob.swing(InteractionHand.MAIN_HAND);
+            mob.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
             if (++actionTicks < ACTION_TICKS) return;
 
             ServerLevel level = (ServerLevel) mob.level();
@@ -1108,7 +1109,7 @@ public final class ConfiguredModMobs {
             if (attackCooldown > 0) attackCooldown--;
             double range = Math.max(4.0D, mob.getBbWidth() * 0.5D + 1.0D);
             if (mob.distanceToSqr(target) <= range * range && attackCooldown == 0) {
-                mob.swing(InteractionHand.MAIN_HAND);
+                mob.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
                 nexus.damage(mob.damageSources().mobAttack(mob), 2);
                 attackCooldown = 20;
             }
@@ -1387,7 +1388,7 @@ public final class ConfiguredModMobs {
         @Override public void tick() {
             mob.getLookControl().setLookAt(PosUtils.center(nexus.getOrigin()));
             if (--cooldown <= 0) {
-                mob.swing(InteractionHand.MAIN_HAND);
+                mob.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
                 nexus.damage(mob.damageSources().mobAttack(mob), 2);
                 cooldown = 20;
             }

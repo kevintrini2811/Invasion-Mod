@@ -1,5 +1,6 @@
 package com.invasion.mixin;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import com.invasion.entity.ShieldUseHandler;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
@@ -26,9 +27,10 @@ public abstract class ShieldCombatMixin {
         }
     }
 
-    @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;Z)V", at = @At("HEAD"), cancellable = true)
-    private void invasion$lowerShield(InteractionHand hand, boolean sendToSelf, CallbackInfo ci) {
-        if (!ShieldUseHandler.onAttack((LivingEntity)(Object)this, hand)) ci.cancel();
+    @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z", at = @At("HEAD"), cancellable = true)
+    private void invasion$lowerShield(InteractionHand hand, SwingAnimation animation,
+            boolean sendToSelf, CallbackInfoReturnable<Boolean> cir) {
+        if (!ShieldUseHandler.onAttack((LivingEntity)(Object)this, hand)) cir.setReturnValue(false);
     }
 
     @Inject(method = "applyItemBlocking", at = @At("HEAD"), cancellable = true)

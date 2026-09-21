@@ -73,7 +73,7 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
                 for (Direction direction : Direction.Plane.HORIZONTAL) {
                     BlockPos surface = currentNode.asBlockPos().relative(direction);
                     BlockPos ledge = surface.above();
-                    if (worldMap.getBlockState(surface).blocksMotion()
+                    if (PathingUtil.blocksMotion(worldMap.getBlockState(surface))
                             && isClearClimbingSpace(worldMap, ledge)) {
                         pathBuilder.addNode(ledge, PathAction.NONE);
                     }
@@ -82,13 +82,13 @@ public class BurrowerNavigation extends AbstractParametricNavigator {
 
             private boolean isClearClimbingSpace(BlockGetter worldMap, BlockPos pos) {
                 BlockState state = worldMap.getBlockState(pos);
-                return state.isAir() || !state.blocksMotion();
+                return state.isAir() || !PathingUtil.blocksMotion(state);
             }
 
             private boolean hasClimbingSurface(BlockGetter worldMap, BlockPos pos) {
                 for (Direction direction : Direction.Plane.HORIZONTAL) {
                     BlockState state = worldMap.getBlockState(pos.relative(direction));
-                    if (!state.isAir() && state.blocksMotion()) {
+                    if (!state.isAir() && PathingUtil.blocksMotion(state)) {
                         return true;
                     }
                 }

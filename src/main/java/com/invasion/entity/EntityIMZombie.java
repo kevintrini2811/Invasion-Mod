@@ -694,7 +694,7 @@ public class EntityIMZombie extends AbstractIMZombieEntity {
     }
 
     private void spreadTarFire() {
-        for (BlockPos pos : BlockPos.withinManhattan(blockPosition(), 2, 2, 2)) {
+        for (BlockPos pos : BlockPos.withinBoxByManhattanDistance(blockPosition(), 2, 2, 2)) {
             var state = level().getBlockState(pos);
             if (state.isAir() || state.ignitedByLava()) {
                 level().setBlockAndUpdate(pos, Blocks.FIRE.defaultBlockState());

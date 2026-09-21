@@ -626,7 +626,7 @@ public class IMNavigation implements Navigation {
             if (d * vecX + d1 * vecZ >= 0) {
                 BlockState block = theEntity.level().getBlockState(p);
 
-                if (!block.isAir() && block.blocksMotion()) {
+                if (!block.isAir() && PathingUtil.blocksMotion(block)) {
                     return false;
                 }
             }
@@ -637,7 +637,7 @@ public class IMNavigation implements Navigation {
 	protected boolean isPositionClearFrom(BlockPos from, BlockPos to, EntityIMLiving entity) {
 		if (to.getY() > from.getY()) {
 			BlockState block = theEntity.level().getBlockState(from.offset(0, Mth.ceil(entity.getBbHeight()), 0));
-			if (!block.isAir() && block.blocksMotion()) {
+			if (!block.isAir() && PathingUtil.blocksMotion(block)) {
 				return false;
 			}
 		}
@@ -648,7 +648,7 @@ public class IMNavigation implements Navigation {
 	protected boolean isPositionClear(BlockPos pos, EntityIMLiving entity) {
 	    return BlockPos.betweenClosedStream(entity.getDimensions(entity.getPose()).makeBoundingBox(com.invasion.util.math.PosUtils.bottomCenter(pos))).allMatch(p -> {
 	        BlockState block = theEntity.level().getBlockState(p);
-	        return block.isAir() || !block.blocksMotion();
+	        return block.isAir() || !PathingUtil.blocksMotion(block);
 	    });
 	}
 

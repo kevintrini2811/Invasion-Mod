@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import net.minecraft.tags.BlockTags;
 import com.invasion.entity.pathfinding.IMMobNavigation;
 import com.invasion.nexus.Combatant;
 import com.invasion.nexus.EntityConstruct;
@@ -69,7 +70,7 @@ public final class IMEndermiteEntity extends Endermite
             double x = living.getX() + Math.cos(angle) * distance;
             double y = living.getY() + random.nextInt(33) - 16;
             double z = living.getZ() + Math.sin(angle) * distance;
-            if (living.randomTeleport(x, y, z, true)) {
+            if (living.randomTeleport(x, y, z, true, BlockTags.ENDERMAN_DOES_NOT_TELEPORT_TO)) {
                 kill(level);
                 return true;
             }

@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import com.invasion.entity.ai.builder.EngineerTower;
 import com.invasion.entity.ai.builder.EngineerTowerStorage;
 
@@ -229,7 +230,7 @@ public class PigmanEngineerEntity extends IMMobEntity implements Miner {
         if (!level().isClientSide()
                 && terrainModifier.isBusy()
                 && (!buildingTower || !isTowerBuildInterrupted())) {
-            swing(InteractionHand.MAIN_HAND);
+            swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
             PathAction currentAction = getNavigatorNew().getCurrentWorkingAction();
             if (currentAction == PathAction.NONE) {
                 setItemSlot(EquipmentSlot.MAINHAND, getMiningTool().getDefaultInstance());

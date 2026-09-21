@@ -157,7 +157,7 @@ public class ImpEnitty extends IMMobEntity
     }
 
     private boolean tryIgniteNearbyBlock(ServerLevel world) {
-        for (BlockPos fuelPos : BlockPos.withinManhattan(
+        for (BlockPos fuelPos : BlockPos.withinBoxByManhattanDistance(
                 blockPosition(), 2, 1, 2)) {
             if (!world.getBlockState(fuelPos).ignitedByLava()) {
                 continue;

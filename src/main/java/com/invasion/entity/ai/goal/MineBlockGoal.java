@@ -1,5 +1,6 @@
 package com.invasion.entity.ai.goal;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import java.util.EnumSet;
 import java.util.Collections;
 import java.util.Set;
@@ -144,7 +145,7 @@ public class MineBlockGoal extends Goal {
             currentEntry = null;
             return;
         }
-        mob.swing(InteractionHand.MAIN_HAND);
+        mob.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
         mob.getLookControl().setLookAt(com.invasion.util.math.PosUtils.center(pos));
 
         float speedMultiplier = mob instanceof Miner miner

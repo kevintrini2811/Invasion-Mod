@@ -42,6 +42,11 @@ public interface PathingUtil {
         return state.is(BlockTags.CLIMBABLE);
     }
 
+    /** Preserves the terrain obstruction rule used before Minecraft 26.3. */
+    static boolean blocksMotion(BlockState state) {
+        return state.isSolid() && !state.is(Blocks.COBWEB) && !state.is(Blocks.BAMBOO_SAPLING);
+    }
+
     static boolean isAirOrReplaceable(BlockState state) {
         return state.isAir() || state.canBeReplaced();
     }

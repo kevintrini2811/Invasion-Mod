@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Enderman;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 
 /** Releases IM support parasites when a permanently infected host dies. */
@@ -32,7 +32,7 @@ public final class InfectionDeathHandler {
         // Consume the marker immediately so another death callback cannot
         // release a second group from the same host.
         host.removeTag(IMSilverfishEntity.INFECTED_TAG);
-        if (!InvasionMod.getConfig().enableSilverfish && !(host instanceof EnderMan)) {
+        if (!InvasionMod.getConfig().enableSilverfish && !(host instanceof Enderman)) {
             return;
         }
         NexusAccess nexus = host instanceof IHasNexus nexusHost
@@ -41,7 +41,7 @@ public final class InfectionDeathHandler {
                         .filter(NexusAccess::isActive).orElse(null);
         int amount = 1 + level.getRandom().nextInt(4);
         for (int i = 0; i < amount; i++) {
-            LivingEntity parasite = host instanceof EnderMan
+            LivingEntity parasite = host instanceof Enderman
                     ? InvEntities.ENDERMITE.create(
                             level, EntitySpawnReason.TRIGGERED)
                     : InvEntities.SILVERFISH.create(

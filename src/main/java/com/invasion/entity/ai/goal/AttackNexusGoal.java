@@ -1,5 +1,6 @@
 package com.invasion.entity.ai.goal;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import com.invasion.InvasionMod;
 import com.invasion.entity.HasAiGoals;
 import com.invasion.entity.NexusEntity;
@@ -46,7 +47,7 @@ public class AttackNexusGoal<E extends PathfinderMob & NexusEntity> extends Goal
     public void tick() {
         if (--cooldown <= 0) {
             if (mob.findDistanceToNexus() <= 4) {
-                mob.swing(InteractionHand.MAIN_HAND);
+                mob.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
                 mob.getNexus().damage(mob.damageSources().mobAttack(mob), 2);
             }
             cooldown = 20;

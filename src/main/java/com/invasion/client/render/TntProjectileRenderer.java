@@ -44,9 +44,9 @@ public final class TntProjectileRenderer
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         poseStack.pushPose();
         poseStack.translate(0.0F, 0.5F, 0.0F);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-90.0F));
+        poseStack.rotate(Axis.YP.rotationDegrees(-90.0F));
         poseStack.translate(-0.5F, -0.5F, 0.5F);
-        poseStack.mulPose(Axis.YP.rotationDegrees(90.0F));
+        poseStack.rotate(Axis.YP.rotationDegrees(90.0F));
         TntMinecartRenderer.submitWhiteSolidBlock(state.blockState, poseStack,
                 collector, state.lightCoords, false, state.outlineColor);
         poseStack.popPose();

@@ -101,7 +101,7 @@ public class IMZoglinEntity extends EntityIMLiving implements HoglinBase {
                     dashDirection.x * DASH_SPEED,
                     getDeltaMovement().y,
                     dashDirection.z * DASH_SPEED);
-            hurtMarked = true;
+            syncVelocity = true;
             destroyDashObstacles(level);
             hitDashTarget(level);
             dashTicks--;
