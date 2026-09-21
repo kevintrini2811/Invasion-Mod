@@ -30,9 +30,9 @@ public class SpiderEggEntityRenderer extends EntityRenderer<SpiderEggEntity, Ent
     public void submit(EntityRenderState state, PoseStack poseStack,
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.XP.rotationDegrees(180));
+        poseStack.rotate(Axis.XP.rotationDegrees(180));
         collector.submitModel(model, state, poseStack, TEXTURE, state.lightCoords,
-                0, EntityRenderState.NO_OUTLINE, null);
+                0, EntityRenderState.NO_OUTLINE);
         poseStack.popPose();
         super.submit(state, poseStack, collector, cameraState);
     }

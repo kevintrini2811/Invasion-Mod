@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.143'
+    id 'net.neoforged.moddev' version '2.0.147'
 }
 
 version = project.mod_version
@@ -12,7 +12,7 @@ base {
 }
 
 tasks.named('jar') {
-    archiveFileName = "${project.name}-${project.version}-26.2neoforge.jar"
+    archiveFileName = "${project.name}-${project.version}-${project.minecraft_version}neoforge.jar"
 }
 
 java {
@@ -67,9 +67,11 @@ neoForge {
 
 dependencies {
     compileOnly "mezz.jei:jei-${project.minecraft_version}-neoforge-api:${project.jei_version}"
+    // No 26.3 releases yet; these optional integrations compile against the latest APIs.
+    // They are never bundled or added to the runtime classpath.
     compileOnly "maven.modrinth:mutant-monsters:26.2.1"
     compileOnly "maven.modrinth:BOCJKD49:neoforge-4.0.27+mc26.2"
-    compileOnly "maven.modrinth:G1hIVOrD:5.0.3"
+    compileOnly "maven.modrinth:G1hIVOrD:6.0.0"
     testImplementation platform('org.junit:junit-bom:6.0.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.mockito:mockito-core:5.21.0'

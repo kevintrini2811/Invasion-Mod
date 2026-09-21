@@ -36,7 +36,7 @@ side="BOTH"
 [[dependencies.invmod]]
 modId="jei"
 type="optional"
-versionRange="[30.15,)"
+versionRange="[31.0,)"
 ordering="AFTER"
 side="CLIENT"
 

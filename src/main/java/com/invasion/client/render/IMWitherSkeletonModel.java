@@ -14,10 +14,10 @@ public final class IMWitherSkeletonModel
         super.setupAnim(state);
         if (state.carryingSkull) {
             float attackSwing = (float) Math.sin(
-                    state.attackTime * Math.PI);
+                    state.swingAnimation * Math.PI);
             float attackEase = (float) Math.sin(
-                    (1.0F - (1.0F - state.attackTime)
-                            * (1.0F - state.attackTime)) * Math.PI);
+                    (1.0F - (1.0F - state.swingAnimation)
+                            * (1.0F - state.swingAnimation)) * Math.PI);
             rightArm.zRot = 0.0F;
             leftArm.zRot = 0.0F;
             rightArm.yRot = -(0.1F - attackSwing * 0.6F);

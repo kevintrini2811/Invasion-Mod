@@ -33,10 +33,10 @@ public final class BoulderProjectileRenderer
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         poseStack.pushPose();
         poseStack.translate(0.0F, 0.25F, 0.0F);
-        poseStack.mulPose(Axis.XP.rotationDegrees(state.ageInTicks * 12.0F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(state.ageInTicks * 7.0F));
+        poseStack.rotate(Axis.XP.rotationDegrees(state.ageInTicks * 12.0F));
+        poseStack.rotate(Axis.YP.rotationDegrees(state.ageInTicks * 7.0F));
         collector.submitModel(model, state, poseStack, TEXTURE, state.lightCoords,
-                0, EntityRenderState.NO_OUTLINE, null);
+                0, EntityRenderState.NO_OUTLINE);
         poseStack.popPose();
         super.submit(state, poseStack, collector, cameraState);
     }

@@ -1,5 +1,6 @@
 package com.invasion.entity.ai.goal;
 
+import net.minecraft.world.item.component.SwingAnimation;
 import java.util.EnumSet;
 import com.invasion.block.InvBlocks;
 import com.invasion.entity.IMEndermanEntity;
@@ -128,7 +129,7 @@ public final class CarryBlockingBlockGoal extends Goal {
         mob.getNavigation().stop();
         mob.getLookControl().setLookAt(
                 com.invasion.util.math.PosUtils.center(target));
-        mob.swing(InteractionHand.MAIN_HAND);
+        mob.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT);
         if (mob.level().getBlockState(target) != expectedState) {
             return;
         }

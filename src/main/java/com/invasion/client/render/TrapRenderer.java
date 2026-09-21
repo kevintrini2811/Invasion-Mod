@@ -35,10 +35,10 @@ public final class TrapRenderer extends EntityRenderer<TrapEntity, TrapRenderSta
     public void submit(TrapRenderState state, PoseStack poseStack,
             SubmitNodeCollector collector, CameraRenderState cameraState) {
         poseStack.pushPose();
-        poseStack.mulPose(Axis.XP.rotationDegrees(180));
+        poseStack.rotate(Axis.XP.rotationDegrees(180));
         poseStack.scale(1.3F, 1.3F, 1.3F);
         collector.submitModel(model, state, poseStack, TEXTURE, state.lightCoords,
-                0, -1, null);
+                0, -1);
         poseStack.popPose();
         super.submit(state, poseStack, collector, cameraState);
     }

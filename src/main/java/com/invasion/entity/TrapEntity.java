@@ -1,5 +1,6 @@
 package com.invasion.entity;
 
+import net.minecraft.util.Prediction;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
@@ -144,7 +145,7 @@ public class TrapEntity extends Entity {
         if (tickCount > 30 && getTrapType() == Type.EMPTY) {
             ItemStack drop = InvItems.EMPTY_TRAP.getDefaultInstance();
             if (!player.addItem(drop)) {
-                player.drop(drop, false);
+                player.drop(drop, false, Prediction.SERVER_ONLY);
             }
             playSound(SoundEvents.ITEM_PICKUP, 1, 1);
             discard();
@@ -161,7 +162,7 @@ public class TrapEntity extends Entity {
         if (curItem.is(InvItems.MATERIAL_PROBE)) {
             ItemStack drop = getTrapType().getDroppedStack();
             if (!player.addItem(drop)) {
-                player.drop(drop, false);
+                player.drop(drop, false, Prediction.SERVER_ONLY);
             }
             playSound(SoundEvents.ITEM_PICKUP, 1, 1);
             discard();
@@ -197,7 +198,7 @@ public class TrapEntity extends Entity {
 
     private void doFireball(float size, int initialDamage) {
         int sz = Mth.ceil(size);
-        for (BlockPos pos : BlockPos.withinManhattan(blockPosition(), sz, sz, sz)) {
+        for (BlockPos pos : BlockPos.withinBoxByManhattanDistance(blockPosition(), sz, sz, sz)) {
             if (!pos.equals(blockPosition())) {
                 BlockState state = level().getBlockState(pos);
                 if (state.isAir() || state.ignitedByLava()) {

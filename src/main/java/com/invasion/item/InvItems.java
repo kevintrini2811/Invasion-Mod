@@ -28,7 +28,10 @@ import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.nbt.CompoundTag;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
-import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
+import net.minecraft.world.item.component.CookingFuel;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ResolvableInt;
+import net.minecraft.world.level.storage.loot.providers.number.floats.ResolvableFloat;
+import net.minecraft.world.level.storage.loot.providers.number.floats.ContextFloatProviders;
 
 public interface InvItems {
     List<Item> REGISTRY = new ArrayList<>();
@@ -55,8 +58,12 @@ public interface InvItems {
     Item CATALYST_MIXTURE = register("catalyst_mixture", p -> new Item(p));
     Item STABLE_CATALYST_MIXTURE = register("stable_catalyst_mixture", p -> new Item(p));
 
-    Item NEXUS_CATALYST = register("nexus_catalyst", p -> new Item(p));
-    Item STABLE_NEXUS_CATALYST = register("stable_nexus_catalyst", p -> new Item(p));
+    Item NEXUS_CATALYST = register("nexus_catalyst", p -> new Item(p.component(
+            DataComponents.COOKING_FUEL, new CookingFuel(new ResolvableInt.Constant(10),
+                    ResolvableFloat.fromKey(ContextFloatProviders.COOKING_DEFAULT_SPEED_MULTIPLIER)))));
+    Item STABLE_NEXUS_CATALYST = register("stable_nexus_catalyst", p -> new Item(p.component(
+            DataComponents.COOKING_FUEL, new CookingFuel(new ResolvableInt.Constant(16),
+                    ResolvableFloat.fromKey(ContextFloatProviders.COOKING_DEFAULT_SPEED_MULTIPLIER)))));
     Item STRONG_NEXUS_CATALYST = register("strong_nexus_catalyst", p -> new Item(p));
 
     Item DAMPING_AGENT = register("damping_agent", p -> new Item(p));
@@ -244,11 +251,4 @@ public interface InvItems {
         }
     }
 
-    static void fuelBurnTime(FurnaceFuelBurnTimeEvent event) {
-        if (event.getItemStack().is(NEXUS_CATALYST)) {
-            event.setBurnTime(10);
-        } else if (event.getItemStack().is(STABLE_NEXUS_CATALYST)) {
-            event.setBurnTime(16);
-        }
-    }
 }

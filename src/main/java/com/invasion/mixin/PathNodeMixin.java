@@ -4,7 +4,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import com.mojang.datafixers.util.Function3;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.invasion.entity.pathfinding.path.ActionablePathNode;
@@ -31,15 +33,21 @@ abstract class PathNodeMixin implements ActionablePathNode {
         ((ActionablePathNode)info.getReturnValue()).setAction(action);
     }
 
-    @Inject(method = "writeToStream", at = @At("RETURN"))
-    private void invasion_after_write(FriendlyByteBuf buf, CallbackInfo info) {
-        buf.writeEnum(action);
+    @Inject(method = "createDebugStreamCodec", at = @At("RETURN"), cancellable = true)
+    private static <N extends Node> void invasion$includePathAction(
+            Function3<Integer, Integer, Integer, N> factory,
+            CallbackInfoReturnable<StreamCodec<ByteBuf, N>> info) {
+        StreamCodec<ByteBuf, N> vanilla = info.getReturnValue();
+        info.setReturnValue(StreamCodec.of((buffer, node) -> {
+            vanilla.encode(buffer, node);
+            new FriendlyByteBuf(buffer).writeEnum(((ActionablePathNode) node).getAction());
+        }, buffer -> {
+            N node = vanilla.decode(buffer);
+            ((ActionablePathNode) node).setAction(new FriendlyByteBuf(buffer).readEnum(PathAction.class));
+            return node;
+        }));
     }
 
-    @Inject(method = "readContents", at = @At("RETURN"))
-    private static void invasion_after_readFromBuf(FriendlyByteBuf buf, Node target, CallbackInfo info) {
-        ((ActionablePathNode)target).setAction(buf.readEnum(PathAction.class));
-    }
     /**
      * @reason Added toString output for debugging path node actions.
      * @author Cedric

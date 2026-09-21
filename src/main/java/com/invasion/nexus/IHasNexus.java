@@ -39,7 +39,7 @@ public interface IHasNexus {
 
     @Nullable
     static NexusAccess findNexus(Level world, BlockPos center) {
-        for (BlockPos pos : BlockPos.withinManhattan(center, 8, 5, 8)) {
+        for (BlockPos pos : BlockPos.withinBoxByManhattanDistance(center, 8, 5, 8)) {
             if (world.getBlockState(pos).is(InvBlocks.NEXUS_CORE)) {
                 if (world.getBlockEntity(pos) instanceof NexusBlockEntity nexus) {
                     return nexus.getNexus();

@@ -22,6 +22,7 @@ import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BlocksAttacks;
+import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.damagesource.DamageContainer;
@@ -67,6 +68,24 @@ class ShieldUseHandlerTest {
         when(mob.isUsingItem()).thenReturn(true);
         when(mob.getUsedItemHand()).thenReturn(InteractionHand.OFF_HAND);
         when(mob.getUseItem()).thenReturn(shield);
+    }
+
+    @Test
+    void mainHandSwingLowersShieldUntilAnimationEnds() {
+        visibleTarget();
+        usingShield();
+        when(mob.isSwinging()).thenReturn(true);
+        when(mob.getCurrentSwing()).thenReturn(new LivingEntity.SwingDescription(
+                InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, 0));
+
+        ShieldUseHandler.update(mob);
+        verify(mob).stopUsingItem();
+        verify(mob, never()).startUsingItem(InteractionHand.OFF_HAND);
+
+        when(mob.isSwinging()).thenReturn(false);
+        when(mob.isUsingItem()).thenReturn(false);
+        ShieldUseHandler.update(mob);
+        verify(mob).startUsingItem(InteractionHand.OFF_HAND);
     }
 
     private void arrowHit() {

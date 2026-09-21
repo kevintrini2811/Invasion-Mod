@@ -23,11 +23,11 @@ final class IMWitherSkeletonSkullLayer extends RenderLayer<
         poseStack.pushPose();
         poseStack.translate(0.0F, -0.075F, 0.325F);
         poseStack.translate(0.0F, 0.6875F, -0.75F);
-        poseStack.mulPose(Axis.XP.rotationDegrees(20.0F));
-        poseStack.mulPose(Axis.YP.rotationDegrees(-90.0F));
+        poseStack.rotate(Axis.XP.rotationDegrees(20.0F));
+        poseStack.rotate(Axis.YP.rotationDegrees(-90.0F));
         poseStack.translate(0.25F, 0.1875F, 0.25F);
         poseStack.scale(-0.5F, -0.5F, 0.5F);
-        poseStack.mulPose(Axis.YP.rotationDegrees(90.0F));
+        poseStack.rotate(Axis.YP.rotationDegrees(90.0F));
         state.skullModel.submit(
                 poseStack, collector, light,
                 OverlayTexture.NO_OVERLAY, state.outlineColor);

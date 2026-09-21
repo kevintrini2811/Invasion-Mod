@@ -55,7 +55,6 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 import net.minecraft.core.registries.Registries;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -90,7 +89,6 @@ public class InvasionMod {
         NeoForge.EVENT_BUS.addListener(this::playerSleepInBed);
 		NeoForge.EVENT_BUS.addListener(this::blockPlaced);
 		NeoForge.EVENT_BUS.addListener(this::livingDeath);
-        NeoForge.EVENT_BUS.addListener(this::fuelBurnTime);
         NeoForge.EVENT_BUS.addListener(this::tagsUpdated);
 
         BoundIMMobRegistry.bootstrap();
@@ -168,10 +166,6 @@ public class InvasionMod {
 
     private void addCreativeItems(BuildCreativeModeTabContentsEvent event) {
         InvItems.addCreativeItems(event);
-    }
-
-    private void fuelBurnTime(FurnaceFuelBurnTimeEvent event) {
-        InvItems.fuelBurnTime(event);
     }
 
     private void tagsUpdated(TagsUpdatedEvent event) {

@@ -8,14 +8,15 @@ import net.minecraft.world.damagesource.DamageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import net.minecraft.world.item.component.SwingAnimation;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
 public abstract class ShieldCombatMixin {
-    @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;Z)V", at = @At("HEAD"), cancellable = true)
-    private void invasion$lowerShield(InteractionHand hand, boolean sendToSelf, CallbackInfo ci) {
-        if (!ShieldUseHandler.onAttack((LivingEntity)(Object)this, hand)) ci.cancel();
+    @Inject(method = "swing(Lnet/minecraft/world/InteractionHand;Lnet/minecraft/world/item/component/SwingAnimation;Z)Z", at = @At("HEAD"), cancellable = true)
+    private void invasion$lowerShield(InteractionHand hand, SwingAnimation animation,
+            boolean sendToSelf, CallbackInfoReturnable<Boolean> cir) {
+        if (!ShieldUseHandler.onAttack((LivingEntity)(Object)this, hand)) cir.setReturnValue(false);
     }
 
     @Inject(method = "applyItemBlocking", at = @At("HEAD"), cancellable = true)
